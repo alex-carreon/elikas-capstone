@@ -17,6 +17,9 @@
       <a href="#prerequisites">Prerequisites</a>
     </li>
     <li>
+      <a href="#how-it-works">How It Works</a>
+    </li>
+    <li>
       <a href="#roadmap">Roadmap</a>
       <ul>
         <li><a href="#phase-1-basic-prototyping">Phase 1: Basic Prototyping</a></li>
@@ -35,9 +38,9 @@
 
 The Flood Sensor module uses ultrasonic sound waves to monitor water levels in real-time. By calculating the distance between the sensor and the water surface, this component can detect rising water levels and provide early warnings for potential flooding. 
 
-This module is designed to sit inside a weather-resistant housing, utilizing the waterproof capabilities of the AJ-SR04M probe to ensure longevity in high-humidity environments. It integrates with the **Elikas Capstone** ecosystem via Wi-Fi to report data.
-<p align="right">(<a href="#readme-top">back to top</a>)</p>
+This module is designed to sit inside a weather-resistant housing, utilizing the waterproof capabilities of the AJ-SR04M probe to ensure longevity in high-humidity environments. It integrates with the **eLikas Capstone** ecosystem via Wi-Fi to report data.
 
+<p align="right">(<a href="#readme-top">back to top</a>)</p>
 
 
 ### Hardware
@@ -74,6 +77,24 @@ To flash and monitor the sensor, the following are needed:
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
+## How It Works
+
+### Distance Calculation
+The ultrasonic sensor is able to determine distance by emitting sound waves on the transducer and measuring the time it takes to bounce back to the receiver after hitting the surface of an object (both of which are integrated on the waterproof AJN-SR04M sensor). 
+
+Using the speed of sound (343 m/s), the distance can be calculated:
+
+```
+Distance = Speed × Time
+         = 343 m/s × Pulse Duration
+```
+
+However, since the measured time includes both the forward and return trip, the result must be divided by two. In the code, this is simplified using a conversion factor:
+
+```
+float distance = (duration * 0.034) / 2.0;
+```
+
 ## Roadmap
 - [x] **Phase 1: Basic Prototyping**
     - [x] Hardware assembly (ESP32 + AJ-SR04M)
@@ -82,7 +103,7 @@ To flash and monitor the sensor, the following are needed:
 - [ ] **Phase 2: Data Handling & Connectivity**
     - [ ] **JSON Serialization:** Implement `ArduinoJson` to package distance, sensor ID, and timestamp.
     - [ ] **Wi-Fi Provisioning:** Implement `WiFiManager` to allow users to configure Wi-Fi credentials.
-    - [ ] **HTTP POST Integration:** Develop the client to push JSON payloads to the Elikas backend API.
+    - [ ] **HTTP POST Integration:** Develop the client to push JSON payloads to the eLikas backend API.
           
 - [ ] **Phase 3: Logic & Reliability**
     - [ ] **Signal Filtering:** Implement a moving average algorithm to stabilize water surface readings.
