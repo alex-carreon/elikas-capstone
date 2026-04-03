@@ -10,19 +10,24 @@
       <a href="#about-the-project">About The Project</a>
       <ul>
         <li><a href="#hardware">Hardware</a></li>
-        <li><a href="#the-aj-sr04m-sensor">The AJ-SR04M Sensor</a></li>
+        <li><a href="#wiring--logic-level-shifting">Wiring & Logic Level Shifting</a></li>
       </ul>
     </li>
     <li>
-      <a href="#getting-started">Getting Started</a>
+      <a href="#prerequisites">Prerequisites</a>
+    </li>
+    <li>
+      <a href="#roadmap">Roadmap</a>
       <ul>
-        <li><a href="#prerequisites">Prerequisites</a></li>
-        <li><a href="#installation">Installation</a></li>
+        <li><a href="#phase-1-basic-prototyping">Phase 1: Basic Prototyping</a></li>
+        <li><a href="#phase-2-data-handling--connectivity">Phase 2: Data Handling & Connectivity</a></li>
+        <li><a href="#phase-3-logic--reliability">Phase 3: Logic & Reliability</a></li>
+        <li><a href="#phase-4-final-hardware--power">Phase 4: Final Hardware & Power</a></li>
+        <li><a href="#phase-5-deployment">Phase 5: Deployment</a></li>
       </ul>
     </li>
   </ol>
 </details>
-
 
 
 <!-- ABOUT THE PROJECT -->
@@ -69,7 +74,7 @@ To flash and monitor the sensor, the following are needed:
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
-
+## Roadmap
 - [x] **Phase 1: Basic Prototyping**
     - [x] Hardware assembly (ESP32 + AJ-SR04M)
     - [x] Basic distance measurement logic
