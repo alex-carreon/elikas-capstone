@@ -19,6 +19,15 @@ void setup() {
   //Configure pin roles
   pinMode(TRIG_PIN, OUTPUT); // transducer 
   pinMode(ECHO_PIN, INPUT); // receiver
+
+  //Connect to WiFi
+  WiFi.begin(ssid, password);
+  Serial.print("Connecting to WiFi");
+  while (WiFi.status() != WL_CONNECTED) {
+    delay(500);
+    Serial.print(".");
+  }
+  Serial.println("\nConnected! IP: " + WiFi.localIP().toString());
 }
 
 void loop() {
