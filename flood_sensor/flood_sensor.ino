@@ -1,9 +1,12 @@
 #include "secrets.h"
 #include <ArduinoJson.h>
+#include <WiFi.h>
 
-const char* ssid     = SECRET_SSID;
-const char* password = SECRET_PASS;
-const char* api_key  = SECRET_API_KEY;
+const char* ssid      = SECRET_SSID;
+const char* password  = SECRET_PASS;
+const char* api_key   = SECRET_API_KEY;
+const char* serverUrl = SECRET_SERVER;
+const char* sensorId  = SECRET_SENSOR;
 
 // define the pin connections on the sensor
 #define TRIG_PIN 5 // gpio pin 5 sends the ultrasonic pulse
