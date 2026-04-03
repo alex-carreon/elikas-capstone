@@ -95,6 +95,15 @@ However, since the measured time includes both the forward and return trip, the 
 float distance = (duration * 0.034) / 2.0;
 ```
 
+To ensure reliable readings, the code filters out invalid values:
+```
+if (duration == 0) return -1;
+if (distance < 20 || distance > 450) return -1;
+```
+
+<p align="right">(<a href="#readme-top">back to top</a>)</p>
+
+
 ## Roadmap
 - [x] **Phase 1: Basic Prototyping**
     - [x] Hardware assembly (ESP32 + AJ-SR04M)
