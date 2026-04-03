@@ -1,3 +1,10 @@
+#include "secrets.h"
+#include <ArduinoJson.h>
+
+const char* ssid     = SECRET_SSID;
+const char* password = SECRET_PASS;
+const char* api_key  = SECRET_API_KEY;
+
 // define the pin connections on the sensor
 #define TRIG_PIN 5 // gpio pin 5 sends the ultrasonic pulse
 #define ECHO_PIN 18 // gpio pin 18 listens for the returning signal
@@ -17,7 +24,13 @@ void loop() {
   if (distance < 0) {
     Serial.println("No reading / out of range");
   } else {
-    Serial.printf("Distance: %.2f cm\n", distance);
+    //Serial.printf("Distance: %.2f cm\n", distance);
+    JsonDocument doc;
+    doc["api_key"] = api_key;
+    doc["sensor_id"] = "TEST_001";
+    doc["distance_cm"] = distance;
+    serializeJsonPretty(doc, Serial);
+    Serial.println();
   }
 
   delay(1000);
