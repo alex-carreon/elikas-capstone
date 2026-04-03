@@ -1,6 +1,7 @@
 #include "secrets.h"
 #include <ArduinoJson.h>
 #include <WiFi.h>
+#include <HTTPClient.h>
 
 const char* ssid      = SECRET_SSID;
 const char* password  = SECRET_PASS;
@@ -39,10 +40,23 @@ void loop() {
     //Serial.printf("Distance: %.2f cm\n", distance);
     JsonDocument doc;
     doc["api_key"] = api_key;
-    doc["sensor_id"] = "TEST_001";
+    doc["sensor_id"] = sensorId;
     doc["distance_cm"] = distance;
     serializeJsonPretty(doc, Serial);
     Serial.println();
+
+    String payload;
+    serializeJson(doc, payload);
+
+    if (WiFi.status() == WL_CONNECTED) {
+      HTTPClient http;
+      http.begin(serverUrl);
+      http.addHeader("Content-Type", "application/json");
+
+      int responseCode = http.POST(payload);
+      Serial.printf("Response code: %d\n", responseCode);
+      http.end();
+    }
   }
 
   delay(1000);
