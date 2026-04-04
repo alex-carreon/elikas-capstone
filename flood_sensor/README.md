@@ -61,7 +61,7 @@ The prototype assembly uses a modular approach with an ESP32 Shield to simplify 
 
 
 #### Wiring & Logic Level Shifting
-Because the ESP32 operates on 3.3V logic, it cannot safely receive the 5V return signal from the AJ-SR04M. To prevent GPIO damage, there is a voltage divider using 1k$\Omega$ and 2k$\Omega$ resistors.
+Because the ESP32 operates on 3.3V logic, it cannot safely receive the 5V return signal from the AJ-SR04M. To prevent GPIO damage, there is a voltage divider using 1kΩ and 2kΩ resistors.
 
 | AJ-SR04M Pin | Shield / ESP32 Pin | Logic Level | Connection Type | Description |
 | :--- | :--- | :--- | :--- | :--- |
