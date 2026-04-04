@@ -8,9 +8,9 @@
 #include <HTTPClient.h>
 #include <Preferences.h>  // esp32's non-volatile storage (nvs)
 
-const char* api_key     = SECRET_API_KEY;
-const char* serverUrl   = SECRET_SERVER;
-const char* sensorId    = SECRET_SENSOR;
+const char* api_key = SECRET_API_KEY;
+const char* serverUrl = SECRET_SERVER;
+const char* sensorId = SECRET_SENSOR;
 
 bool shouldSaveConfig = false;
 
@@ -29,9 +29,9 @@ void setup() {
   while (millis() - startWait < 3000) {  // 3-second window to press 'R'
     if (Serial.available() > 0 && Serial.read() == 'R') {
         WiFiManager wm;
-        wm.resetSettings();  // wipe saved wifi credentials
+        wm.resetSettings();  // wipe saved wifi config
         preferences.begin("sensor", false);  // access nvs read-write mode (false)
-        preferences.clear();   // delete saved hotspot password 
+        preferences.clear();   // delete saved ap password 
         preferences.end();   // end nvs session
         Serial.println("!!! ALL SETTINGS WIPED !!! Restarting...");
         delay(1000);
@@ -39,54 +39,15 @@ void setup() {
     }
   }
 
-  String savedPass = getPortalPassword();
-  Serial.println("Current Setup Password: " + savedPass);
-
-  // configure wifi manager
-  WiFiManager wm;
-  wm.setSaveConfigCallback(saveConfigCallback);  // tells wm to trip the flag if a config is saved
-  wm.setConfigPortalTimeout(180);   // close the portal and restart if nobody connects to configure it within 3 minutes
-
-  // hides custom password field under advanced settings
-  String html = "<details><summary><b>Advanced Settings</b></summary><br>Set New Setup Password";
-  WiFiManagerParameter custom_ap_pass(
-    "ap_pass",  // key for nvs
-    html.c_str(),  // html string preceding input
-    savedPass.c_str(),  // pre-fill input with current password
-    32,  // max length
-    "minlength='8' required title='Password must be at least 8 characters'" // textbox enforcement of 8-char minimum
-  );
-  WiFiManagerParameter custom_html_closer("</details><br>");
-  wm.addParameter(&custom_ap_pass);
-  wm.addParameter(&custom_html_closer);
-
-  // starts the setup AP if not connected
-  if (!wm.autoConnect("FloodSensor-Setup", savedPass.c_str())) {
-    Serial.println("Failed to connect, restarting...");
-    delay(3000);
-    ESP.restart();
-  }
-
-  // if sensor is wifi configured, save the ap password
-  if (shouldSaveConfig) {
-    String newPass = String(custom_ap_pass.getValue());  // retrieve value of portal textbox
-    if (newPass.length() >= 8) {
-      preferences.begin("sensor", false);
-      preferences.putString("ap_pass", newPass);  // write new password into nvs
-      preferences.end();
-      Serial.println("New password saved to memory: " + newPass);
-    } else {
-      Serial.println("Error: Password too short! Ignored.");
-    }
-  }
+  manageConnection(true);
 
   Serial.println("Connected! IP: " + WiFi.localIP().toString());
 }
 
-void loop() {
-  ensureWifiConnection();
 
-  // --- Distance Logic ----
+void loop() {
+  manageConnection(false);
+
   float distance = readDistance();
 
   if (distance < 0) {
@@ -97,6 +58,7 @@ void loop() {
 
   delay(10000);
 }
+
 
 float readDistance() {
   digitalWrite(TRIG_PIN, LOW); 
@@ -120,7 +82,7 @@ float readDistance() {
 }
 
 
-// trips the flag whenever the user clicks Save in the wifi config portal
+// trips the flag whenever the user clicks save in the wifi config portal
 void saveConfigCallback () {
   shouldSaveConfig = true;
 }
@@ -143,22 +105,56 @@ String getUniqueDefaultPass() {
   return String(uniquePW);
 }
 
-void ensureWifiConnection() {
-  if (WiFi.status() != WL_CONNECTED) {
+void manageConnection(bool isInitialSetup) {
+  // if already connected and NOT the initial setup, do nothing
+  if (WiFi.status() == WL_CONNECTED && !isInitialSetup) return;
+
+  if (!isInitialSetup) {
     Serial.println("WiFi Connection Lost! Re-launching Config Portal...");
-    WiFiManager wm;
-    wm.setConnectTimeout(30);
-    wm.setConfigPortalTimeout(300); // set 5 minutes to reconfigure a connection or reconnect
-    String savedPass = getPortalPassword();
+  }
 
-    // if reconnection fails, restart the device and initiate a full setup flow
-    if (!wm.autoConnect("FloodSensor-Setup", savedPass.c_str())) {
-      Serial.println("Failed to reconnect. Restarting...");
-      delay(3000);
-      ESP.restart();
+  WiFiManager wm;
+  String savedPass = getPortalPassword();
+  Serial.println("Current Setup Password: " + savedPass);
+
+  // hides custom password field under advanced settings
+  String html = "<details><summary><b>Advanced Settings</b></summary><br>Set New Setup Password";
+  WiFiManagerParameter custom_ap_pass(
+    "ap_pass",  // key for nvs
+    html.c_str(),  // html string preceding input
+    savedPass.c_str(),  // pre-fill input with current password
+    32,  // max length
+    "minlength='8' required title='Password must be at least 8 characters'" // textbox enforcement of 8-char minimum
+  );
+  WiFiManagerParameter html_closer("</details><br>");
+
+  wm.addParameter(&custom_ap_pass);
+  wm.addParameter(&html_closer);
+
+  // configure basic timeouts
+  wm.setConfigPortalTimeout(300); 
+  wm.setConnectTimeout(30);
+  wm.setSaveConfigCallback(saveConfigCallback); // tells wm to trip the flag if a config is saved
+
+  // if reconnection fails, restart the device and initiate a full setup flow
+  if (!wm.autoConnect("FloodSensor-Setup", savedPass.c_str())) {
+    Serial.println("Failed to reconnect. Restarting...");
+    delay(3000);
+    ESP.restart();
+  }
+
+  // if sensor is wifi configured, save the ap password
+  if (shouldSaveConfig) {
+    String newPass = String(custom_ap_pass.getValue());  // retrieve value of portal textbox
+    if (newPass.length() >= 8) {
+      preferences.begin("sensor", false);
+      preferences.putString("ap_pass", newPass);  // write new password into nvs if valid
+      preferences.end();
+      Serial.println("New password saved to memory: " + newPass);
+    } else {
+      Serial.println("Error: Password too short! Ignored.");
     }
-
-    Serial.println("Reconnected! IP: " + WiFi.localIP().toString());
+    shouldSaveConfig = false; // reset the flag so it doesn't loop save
   }
 }
 
