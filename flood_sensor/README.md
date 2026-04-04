@@ -62,7 +62,7 @@ Because the ESP32 operates on 3.3V logic, it cannot safely receive the 5V return
 | :--- | :--- | :--- | :--- | :--- |
 | VCC | 5V | 5V | Direct | Main power from the Shield's 5V rail |
 | GND | GND | 0V | Direct | Common ground for sensor and resistors | 
-| Trig | GPIO 5 | 3.3V | Direct | Pulse trigger sent from ESP32 to sensor |
+| Trig | GPIO 19 | 3.3V | Direct | Pulse trigger sent from ESP32 to sensor |
 | Echo | GPIO 18 | 3.3V | In-line Solder | Voltage Divider: 1kΩ (Series) + 2kΩ (to GND) |
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
