@@ -121,15 +121,41 @@ If the device needs to be moved to a new location or the Setup Password is forgo
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
 
+### NTP Implementation & Timestamping
+The module utilizes the Network Time Protocol (NTP) to timestamp sensor readings. Instead of relying on a dedicated Real-Time Clock (RTC) module, the ESP32 leverages its internet connectivity to synchronize with atomic-clock-referenced time servers. This approach reduces both hardware complexity and overall system cost while maintaining accurate timekeeping.
+
+Upon successful Wi-Fi connection, the device initializes time synchronization using two configured NTP servers.
+```
+const char *ntpServer1 = "pool.ntp.org";
+const char *ntpServer2 = "pool.ntp.org";
+```
+1. **NTP Pool** (`pool.ntp.org`) - The ESP32 automatically resolves this domain to a nearby server (typically within or near the Philippines), ensuring low latency. Since this is a global, distributed cluster of volunteer-operated time servers, multiple servers can respond if one becomes unavailable.
+2. **NIST Time Servers** (`time.nist.gov`) - Operated by the U.S. National Institute of Standards and Technology (NIST), these servers provide highly accurate time derived from atomic clocks. They serve as a reliable secondary reference to validate synchronization.
+
+The system is currently configured with a GMT+8 offset (28800 seconds) to align with Philippine Standard Time, with daylight saving time disabled. Both of these settings can be modified for other time zones by modifying the seconds values of `gmtOffset_sec` and `daylightOffset_sec`.
+
+```
+const long gmtOffset_sec = 28800;   // GMT +8 for manila
+const int daylightOffset_sec = 0;  // DST off per PST
+```
+
+All HTTP POST requests are withheld until the internal clock has been successfully synchronized with an NTP server, preventing invalid timestamps (e.g., Unix epoch `1970-01-01 00:00:00`) from being recorded in the database.
+
+Using the strftime function, the raw system time is converted into a standardized string formatted as `YYYY-MM-DD HH:MM:SS`. This format allows lexicographic sorting (i.e., timestamps can be ordered even as simple strings) and aligns with most databases' `DATETIME` standards. 
+
+<p align="right">(<a href="#readme-top">back to top</a>)</p>
+
+
 ### Data Transmission (JSON API)
-Data is transmitted via HTTP POST requests to the server endpoint (currently to a webhook for testing but intended for the eLikas backend). Each payload is formatted as a JSON object.
+Data is transmitted via HTTP POST requests to the server endpoint using `HTTPClient.h`(currently to a webhook for testing but intended for the eLikas backend). Each payload is formatted as a JSON object using `ArduinoJson.h`.
 
 **JSON Structure**
 ```
 {
-  "api_key": "YOUR_SECURE_KEY",
+  "api_key": "A_SECURE_KEY",
   "sensor_id": "SN-001",
-  "distance_cm": 145.2
+  "distance_cm": 145.2,
+  "timestamp": "2026-04-11 14:27:21"
 }
 ```
 
@@ -145,6 +171,7 @@ Data is transmitted via HTTP POST requests to the server endpoint (currently to 
     - [x] **JSON Serialization:** Use `ArduinoJson` to structure data
     - [x] **Wi-Fi Provisioning:** Implement `WiFiManager` with custom password logic
     - [x] **HTTP POST Integration:** Can push JSON Payloads
+    - [x] **NTP Timestamping:** Synchronize system clock with global time servers 
           
 - [ ] **Phase 3: Logic & Reliability**
     - [ ] **Signal Filtering:** Implement a moving average algorithm to stabilize water surface readings.
