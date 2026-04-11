@@ -50,7 +50,7 @@ void setup() {
 
   manageConnection(true);
 
-  sntp_set_time_sync_notification_cb(timeAvailable); 
+  sntp_set_time_sync_notification_cb(timeAvailable);   // trip time sync flag
   configTime(gmtOffset_sec, daylightOffset_sec, ntpServer1, ntpServer2);
 
   Serial.println("Connected! IP: " + WiFi.localIP().toString());
@@ -198,10 +198,12 @@ void sendFloodData(float distance) {
   http.end();
 }
 
+// triggered whenever time is synchronized with the NTP server
 void timeAvailable(struct timeval *t) {
   Serial.println("Got time adjustment from NTP!");
-  timeSynchronized = true;
+  timeSynchronized = true;   // set flag to allow data logging to begin
 }
+
 
 String getFormattedTime() {
   struct tm timeinfo;
@@ -210,7 +212,7 @@ String getFormattedTime() {
     return "IDLE_TIME";
   }
   char buffer[64];
-  strftime(buffer, sizeof(buffer), "%Y-%m-%d %H:%M:%S", &timeinfo);
+  strftime(buffer, sizeof(buffer), "%Y-%m-%d %H:%M:%S", &timeinfo);   // formats time into "YYYY-MM-DD HH:MM:SS" if successful
 
   return String(buffer);
 }
