@@ -7,12 +7,21 @@
 #include <WiFiManager.h>
 #include <HTTPClient.h>
 #include <Preferences.h>  // esp32's non-volatile storage (nvs)
+#include "time.h"
+#include "esp_sntp.h"
 
 const char* api_key = SECRET_API_KEY;
 const char* serverUrl = SECRET_SERVER;
 const char* sensorId = SECRET_SENSOR;
 
+//NTP settings
+const char *ntpServer1 = "pool.ntp.org";
+const char *ntpServer2 = "time.nist.gov";
+const long gmtOffset_sec = 28800;   // GMT +8 for manila
+const int daylightOffset_sec = 0;  // DST off per PST
+
 bool shouldSaveConfig = false;
+bool timeSynchronized = false;
 
 Preferences preferences;
 
@@ -41,6 +50,9 @@ void setup() {
 
   manageConnection(true);
 
+  sntp_set_time_sync_notification_cb(timeAvailable); 
+  configTime(gmtOffset_sec, daylightOffset_sec, ntpServer1, ntpServer2);
+
   Serial.println("Connected! IP: " + WiFi.localIP().toString());
 }
 
@@ -48,12 +60,17 @@ void setup() {
 void loop() {
   manageConnection(false);
 
-  float distance = readDistance();
+  if (timeSynchronized) {
+    float distance = readDistance();
 
-  if (distance < 0) {
-    Serial.println("No reading / out of range");
-  } else {
-    sendFloodData(distance);
+    if (distance < 0) {
+      Serial.println("No reading / out of range");
+    } else {
+      sendFloodData(distance);
+    }
+  }
+  else {
+    Serial.println("Waiting for NTP sync before logging...");
   }
 
   delay(10000);
@@ -159,10 +176,13 @@ void manageConnection(bool isInitialSetup) {
 }
 
 void sendFloodData(float distance) {
+  String currentTimestamp = getFormattedTime();
+
   JsonDocument doc;
   doc["api_key"] = api_key;
   doc["sensor_id"] = sensorId;
   doc["distance_cm"] = distance;
+  doc["timestamp"] = currentTimestamp;
   serializeJsonPretty(doc, Serial);
   Serial.println();
 
@@ -176,4 +196,21 @@ void sendFloodData(float distance) {
   int responseCode = http.POST(payload);
   Serial.printf("Response code: %d\n", responseCode);
   http.end();
+}
+
+void timeAvailable(struct timeval *t) {
+  Serial.println("Got time adjustment from NTP!");
+  timeSynchronized = true;
+}
+
+String getFormattedTime() {
+  struct tm timeinfo;
+  if (!getLocalTime(&timeinfo)) {
+    Serial.println("No time available (yet)");
+    return "IDLE_TIME";
+  }
+  char buffer[64];
+  strftime(buffer, sizeof(buffer), "%Y-%m-%d %H:%M:%S", &timeinfo);
+
+  return String(buffer);
 }
