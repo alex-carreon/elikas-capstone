@@ -1,0 +1,33 @@
+Folder PATH listing
+Volume serial number is 88F1-4173
+C:.
+|   .gitignore
+|   eslint.config.js
+|   FrontendStructure.txt
+|   index.html
+|   package-lock.json
+|   package.json
+|   README.md
+|   tsconfig.app.json
+|   tsconfig.json
+|   tsconfig.node.json
+|   vite.config.ts
+|   
++---node_modules (No need to know abt these)
+|
+|               
++---public
+|       favicon.svg
+|       icons.svg
+|       
+\---src
+    |   App.css
+    |   App.tsx
+    |   index.css
+    |   main.tsx
+    |   
+    \---assets
+            hero.png
+            react.svg
+            vite.svg
+            
