@@ -4,6 +4,7 @@ import { ArrowLeftIcon } from "lucide-react";
 import colors from "@/constants/colors";
 import TextField from "@/components/TextField";
 import ButtonComp from "@/components/Button";
+import Select from "@/components/SelectDropdown";
 
 function FormRegistration() {
   return (
@@ -19,13 +20,13 @@ function FormRegistration() {
         </div>
         <div className="flex justify-center flex-col">
           <h1
-            className="font-BeVietnamPro text-2xl text-center font-bold"
+            className="BeVietnamPro text-2xl text-center font-bold"
             style={{ color: colors.heading }}
           >
             Create your Account
           </h1>
           <p
-            className="font-BeVietnamPro text-sm text-center p-1"
+            className="text-sm text-center p-1"
             style={{ color: colors.heading }}
           >
             Fill all the needed information
@@ -51,15 +52,20 @@ function FormRegistration() {
             id="R-EMAILfield"
           />
           <TextField
+            label="Contact Number"
+            placeholder="639023456789"
+            inputType="tel"
+            id="R-EMAILfield"
+          />
+          <TextField
             label="City"
             placeholder="Enter your current city of residence"
             inputType="text"
             id="R-CITYfield"
           />
-          <TextField
+          <Select
             label="Barangay"
-            placeholder="Enter your current barangay of residence"
-            inputType="text"
+            placeholder="Select your barangay"
             id="R-BRGYfield"
           />
           <TextField
@@ -78,7 +84,7 @@ function FormRegistration() {
           />
         </div>
         <div className="w-full flex justify-center items-center m-0">
-          <Link to="/" className="w-full max-w-xs">
+          <Link to="/Registration/Verify" className="w-full max-w-xs">
             <ButtonComp
               text="Next"
               variant="primary"

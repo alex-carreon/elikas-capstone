@@ -16,13 +16,13 @@ function CarouselCard({ img, alt, header, text }: CardProps) {
         <img src={img} alt={alt} className="w-40 h-40" />
         <br />
         <h3
-          className={"font-BeVietnamPro text-2xl text-center font-bold p-2"}
+          className={"BeVietnamPro text-2xl text-center font-bold p-2"}
           style={{ color: colors.heading }}
         >
           {header}
         </h3>
         <p
-          className={"font-BeVietnamPro text-sm text-center p-2"}
+          className={"text-sm text-center p-1"}
           style={{ color: colors.heading }}
         >
           {text}
