@@ -1,6 +1,7 @@
 import LogIn from "./Authentication/LogIn";
 import SplashRegistration from "./Authentication/SplashRegistration";
 import FormRegistration from "./Authentication/FormRegistration";
+import EmailVerif from "./Authentication/EmailVerif";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 
 function App() {
@@ -12,6 +13,7 @@ function App() {
         <Route path="/Registration">
           <Route path="Splash" element={<SplashRegistration />} />
           <Route path="Form" element={<FormRegistration />} />
+          <Route path="Verify" element={<EmailVerif />} />
         </Route>
       </Routes>
     </BrowserRouter>
