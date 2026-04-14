@@ -182,7 +182,7 @@ void sendFloodData(float distance) {
   doc["api_key"] = api_key;
   doc["sensor_id"] = sensorId;
   doc["distance_cm"] = distance;
-  doc["timestamp"] = currentTimestamp;
+  doc["log_time"] = currentTimestamp;
   serializeJsonPretty(doc, Serial);
   Serial.println();
 
