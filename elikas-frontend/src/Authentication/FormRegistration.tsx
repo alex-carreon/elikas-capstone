@@ -20,13 +20,13 @@ function FormRegistration() {
         </div>
         <div className="flex justify-center flex-col">
           <h1
-            className="font-BeVietnamPro text-2xl text-center font-bold"
+            className="BeVietnamPro text-2xl text-center font-bold"
             style={{ color: colors.heading }}
           >
             Create your Account
           </h1>
           <p
-            className="font-BeVietnamPro text-sm text-center p-1"
+            className="text-sm text-center p-1"
             style={{ color: colors.heading }}
           >
             Fill all the needed information
