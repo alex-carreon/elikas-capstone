@@ -8,31 +8,49 @@ import {
 } from "@/components/ui/select";
 import { Field, FieldLabel } from "./ui/field";
 import colors from "@/constants/colors";
+import { useState } from "react";
 
 interface SelectDropdownProps {
+  value: string;
+  onValueChange: (val: string) => void;
   label: string;
   id: string;
   placeholder: string;
+  onSubmit?: (e: React.ChangeEvent<HTMLInputElement>) => void;
+  error?: string;
+  options: { label: string; value: string }[];
 }
 
-function SelectDropdown({ label, id, placeholder }: SelectDropdownProps) {
+function SelectDropdown({
+  label,
+  id,
+  placeholder,
+  error,
+  onValueChange,
+  options,
+  value,
+  onSubmit,
+}: SelectDropdownProps) {
   return (
     <Field>
       <FieldLabel className={"text-sm w-s"} style={{ color: colors.label }}>
         {label}
       </FieldLabel>
-      <Select id={id}>
-        <SelectTrigger>
+      <Select onValueChange={(val: string | null) => onValueChange(val ?? "")}>
+        <SelectTrigger id={id}>
           <SelectValue placeholder={placeholder} />
         </SelectTrigger>
         <SelectContent>
           <SelectGroup>
-            <SelectItem value="Addition Hills">Addition Hills</SelectItem>
-            <SelectItem value="Batis">Batis</SelectItem>
-            <SelectItem value="Balong Bato">Balong Bato</SelectItem>
+            {options.map((option) => (
+              <SelectItem key={option.value} value={option.value}>
+                {option.label}
+              </SelectItem>
+            ))}
           </SelectGroup>
         </SelectContent>
       </Select>
+      {error && <p className="text-red-500 text-sm mt-1">{error}</p>}
     </Field>
   );
 }
