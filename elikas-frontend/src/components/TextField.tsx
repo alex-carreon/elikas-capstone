@@ -20,6 +20,9 @@ interface TextFieldProps {
   iconOnClick?: () => {};
   isPassword?: boolean;
   id: string;
+  isRequired?: boolean;
+  onSubmit?: (e: React.ChangeEvent<HTMLInputElement>) => void;
+  error?: string;
 }
 
 function TextField({
@@ -30,8 +33,12 @@ function TextField({
   inputType,
   isPassword,
   id,
+  isRequired = false,
+  onSubmit,
+  error,
 }: TextFieldProps) {
   const [showPassword, setShowPassword] = useState(false);
+
   return (
     <div className="flex flex-col w-full max-w-s self-center">
       <Field className="flex shrink">
@@ -40,10 +47,12 @@ function TextField({
         </FieldLabel>
         <InputGroup>
           <InputGroupInput
+            required={isRequired}
             className="w-full max-w-s h-9 outline-1 outline-gray-400 rounded-sm p-3 placeholder:text-sm"
             placeholder={placeholder}
             type={showPassword ? "text" : inputType}
             id={id}
+            onChange={onSubmit}
           ></InputGroupInput>
           <InputGroupAddon>
             {Icon && <Icon style={{ color: colors.activeIcon }}></Icon>}
@@ -62,6 +71,7 @@ function TextField({
           )}
         </InputGroup>
       </Field>
+      {error && <p className="text-red-500 text-sm mt-1">{error}</p>}
     </div>
   );
 }
