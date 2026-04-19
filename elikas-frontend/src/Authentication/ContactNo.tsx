@@ -80,7 +80,10 @@ function ContactNo() {
                 type="submit"
               ></ButtonComp>
               {/* </Link> */}
-              <Link to="/Registration/Verify" className="w-full max-w-xs">
+              <Link
+                to="/Registration/CustomProfile"
+                className="w-full max-w-xs"
+              >
                 <ButtonComp
                   text="Skip"
                   variant="outline"
