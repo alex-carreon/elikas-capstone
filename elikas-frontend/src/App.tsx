@@ -5,6 +5,7 @@ import EmailVerif from "./Authentication/EmailVerif";
 import ContactNo from "./Authentication/ContactNo";
 import CustomizeProfile from "./Authentication/CustomizeProfile";
 import Permissions from "./Authentication/Permissions";
+import Finish from "./Authentication/Finish";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 
 function App() {
@@ -20,6 +21,7 @@ function App() {
           <Route path="Contact" element={<ContactNo />} />
           <Route path="CustomProfile" element={<CustomizeProfile />} />
           <Route path="Permissions" element={<Permissions />} />
+          <Route path="Finish" element={<Finish />} />
         </Route>
       </Routes>
     </BrowserRouter>
