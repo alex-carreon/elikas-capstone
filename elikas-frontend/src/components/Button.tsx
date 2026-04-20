@@ -7,9 +7,17 @@ interface ButtonProps {
   onClick?: () => void;
   id: string;
   type?: "button" | "submit" | "reset";
+  isDisabled?: boolean;
 }
 
-function ButtonComp({ text, variant, onClick, id, type }: ButtonProps) {
+function ButtonComp({
+  text,
+  variant,
+  onClick,
+  id,
+  type,
+  isDisabled,
+}: ButtonProps) {
   if (variant === "primary") {
     return (
       <Button
@@ -17,6 +25,7 @@ function ButtonComp({ text, variant, onClick, id, type }: ButtonProps) {
         className="size-lg w-full max-w-xs h-10 bg-gradient-to-r from-[#FFA011] to-[#F3C962]"
         id={id}
         type={type}
+        disabled={isDisabled}
       >
         {text}
       </Button>
@@ -28,6 +37,7 @@ function ButtonComp({ text, variant, onClick, id, type }: ButtonProps) {
         className="size-lg w-full max-w-xs h-10 bg-transparent"
         style={{ borderColor: colors.heading }}
         id={id}
+        disabled={isDisabled}
       >
         {text}
       </Button>
