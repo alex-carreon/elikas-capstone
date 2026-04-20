@@ -4,8 +4,12 @@ import Logo from "@/components/Logo";
 import colors from "@/constants/colors";
 import Switch from "@/components/Switch";
 import ButtonComp from "@/components/Button";
+import CheckBox from "@/components/CheckBox";
+import { useState } from "react";
 
 function Permissions() {
+  const [checked, setChecked] = useState(false);
+
   return (
     <div className="min-h-screen flex justify-center p-6">
       <div className="w-full max-w-sm flex flex-col">
@@ -40,14 +44,41 @@ function Permissions() {
                 id="R-CamSwitch"
               />
             </div>
+            <div>
+              <CheckBox
+                text="I agree to the Terms and Conditions of eLikas. This field is required."
+                id="R-CheckboxTerms"
+                checked={checked}
+                onCheckedChange={(val) => {
+                  setChecked(!!val);
+                }}
+              />
+              <p className="text-xs pt-4" style={{ color: colors.label }}>
+                Read the{" "}
+                <a href="" className="underline">
+                  Terms and Conditions
+                </a>{" "}
+                here.
+              </p>
+            </div>
             <div className="w-full flex justify-center items-center m-0">
-              <Link to="/" className="w-full max-w-xs">
+              {!checked ? (
                 <ButtonComp
                   text="Next"
                   variant="primary"
                   id="R-NextPermissions"
+                  isDisabled={!checked}
                 ></ButtonComp>
-              </Link>
+              ) : (
+                <Link to="/" className="w-full max-w-xs">
+                  <ButtonComp
+                    text="Next"
+                    variant="primary"
+                    id="R-NextPermissions"
+                    isDisabled={!checked}
+                  ></ButtonComp>
+                </Link>
+              )}
             </div>
           </div>
         </div>
