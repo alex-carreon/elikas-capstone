@@ -8,7 +8,6 @@ import {
 } from "@/components/ui/select";
 import { Field, FieldLabel } from "./ui/field";
 import colors from "@/constants/colors";
-import { useState } from "react";
 
 interface SelectDropdownProps {
   value: string;
