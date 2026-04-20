@@ -70,7 +70,7 @@ function Permissions() {
                   isDisabled={!checked}
                 ></ButtonComp>
               ) : (
-                <Link to="/" className="w-full max-w-xs">
+                <Link to="/Registration/Finish" className="w-full max-w-xs">
                   <ButtonComp
                     text="Next"
                     variant="primary"
