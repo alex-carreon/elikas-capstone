@@ -6,6 +6,8 @@ import ContactNo from "./Authentication/ContactNo";
 import CustomizeProfile from "./Authentication/CustomizeProfile";
 import Permissions from "./Authentication/Permissions";
 import Finish from "./Authentication/Finish";
+import Navbar from "./Navbar/GuestNavbar";
+import Map from "./Map";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 
 function App() {
@@ -22,6 +24,10 @@ function App() {
           <Route path="CustomProfile" element={<CustomizeProfile />} />
           <Route path="Permissions" element={<Permissions />} />
           <Route path="Finish" element={<Finish />} />
+        </Route>
+
+        <Route element={<Navbar />}>
+          <Route path="/Guest" element={<Map />} />
         </Route>
       </Routes>
     </BrowserRouter>
