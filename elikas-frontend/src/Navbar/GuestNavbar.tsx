@@ -8,7 +8,7 @@ function Navbar() {
   return (
     <>
       <div className="fixed top-0 left-0 z-50 w-full h-content flex justify-center">
-        <div className="w-full max-w-sm flex flex-row justify-between items-center p-3 shadow-lg">
+        <div className="w-full max-w-md flex flex-row justify-between items-center p-3 shadow-lg bg-white">
           <Link to="/Login">
             <div>
               <ButtonComp text="Sign-in" variant="primary" id="G01-SignIn" />
