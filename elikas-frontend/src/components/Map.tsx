@@ -6,11 +6,24 @@ import {
   Popup,
   useMap,
   Circle,
+  Polyline,
 } from "react-leaflet";
 import leaflet from "leaflet";
-import { LatLng } from "leaflet";
+import { LatLng, divIcon } from "leaflet";
 import "leaflet-routing-machine";
 import colors from "@/constants/colors";
+import FloodIcon from "@/assets/Map/FloodIcon.svg?react";
+import PinIcon from "@/assets/Map/Pins.svg?react";
+import { renderToString } from "react-dom/server";
+
+interface PinProps {
+  Long: number;
+  Lat: number;
+}
+
+interface PolylineProps {
+  position: [number, number][];
+}
 
 function LocationMarker() {
   const [position, setPosition] = useState(null);
@@ -82,6 +95,44 @@ function Routing() {
   return null;
 }
 
+function getMidpoint(positions: [number, number][]): [number, number] {
+  const avgLat = positions.reduce((sum, p) => sum + p[0], 0) / positions.length;
+  const avgLng = positions.reduce((sum, p) => sum + p[1], 0) / positions.length;
+  return [avgLat, avgLng];
+}
+
+function RoadMapping({ position }: PolylineProps) {
+  const midpoint = getMidpoint(position);
+
+  const icon = divIcon({
+    html: renderToString(<FloodIcon width={36} height={36} />),
+    className: "",
+    iconAnchor: [12, 12],
+  });
+  return (
+    <>
+      <Polyline positions={position} weight={6} />
+      <Marker position={midpoint} icon={icon} />
+    </>
+  );
+}
+
+function PinMarking({ Long, Lat }: PinProps) {
+  const icon = divIcon({
+    html: renderToString(<PinIcon width={50} height={50} />),
+    className: "",
+    iconAnchor: [12, 12],
+  });
+
+  return (
+    <Marker position={[Long, Lat]} icon={icon}>
+      <Popup>
+        A pretty CSS3 popup. <br /> Easily customizable.
+      </Popup>
+    </Marker>
+  );
+}
+
 function Map() {
   return (
     <div className="w-full max-w-md" style={{ height: 100 }}>
@@ -91,17 +142,14 @@ function Map() {
           url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
         />
         <Routing />
-        <Marker position={[14.56380669640196, 120.99479534109231]}>
-          <Popup>
-            A pretty CSS3 popup. <br /> Easily customizable.
-          </Popup>
-        </Marker>
-        <Marker position={[14.565518250363224, 120.99809311129499]}>
-          <Popup>
-            A pretty CSS3 popup. <br /> Easily customizable.
-          </Popup>
-        </Marker>
+        <PinMarking Long={14.565518250363224} Lat={120.99809311129499} />
         <LocationMarker />
+        <RoadMapping
+          position={[
+            [14.565561313458806, 120.99694416069873],
+            [14.565961485258084, 120.9979076376789],
+          ]}
+        />
       </MapContainer>
     </div>
   );
