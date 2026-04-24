@@ -15,6 +15,8 @@ import colors from "@/constants/colors";
 import FloodIcon from "@/assets/Map/FloodIcon.svg?react";
 import PinIcon from "@/assets/Map/Pins.svg?react";
 import { renderToString } from "react-dom/server";
+import ButtonComp from "./Button";
+import { Routing } from "@/lib/mapUtils";
 
 interface PinProps {
   Long: number;
@@ -53,46 +55,6 @@ function LocationMarker() {
       pathOptions={{ color: "white", fillColor: "#569FFF", fillOpacity: 10 }}
     ></Circle>
   );
-}
-
-function Routing() {
-  const [position, setPosition] = useState<LatLng | null>(null);
-  const map = useMap();
-
-  // For getting location
-  useEffect(() => {
-    map.locate({ setView: true, maxZoom: 50 });
-
-    const onLocationFound = (e) => {
-      setPosition(e.latlng);
-    };
-
-    map.on("locationfound", onLocationFound);
-
-    return () => {
-      map.off("locationfound", onLocationFound);
-    };
-  }, [map]);
-
-  //   For Routing
-  useEffect(() => {
-    if (!position) return;
-
-    const routeControl = leaflet.Routing.control({
-      waypoints: [
-        leaflet.latLng(position.lat, position.lng),
-        leaflet.latLng(14.565518250363224, 120.99809311129499),
-      ],
-      collapsible: true,
-      addWaypoints: false,
-      draggableWaypoints: false,
-      lineOptions: { styles: [{ color: colors.heading, weight: 4 }] },
-    }).addTo(map);
-
-    return () => map.removeControl(routeControl);
-  }, [map, position]);
-
-  return null;
 }
 
 function getMidpoint(positions: [number, number][]): [number, number] {
@@ -134,6 +96,12 @@ function PinMarking({ Long, Lat }: PinProps) {
 }
 
 function Map() {
+  const [showRoute, setShowRoute] = useState(false);
+
+  const handlePressRoute = () => {
+    setShowRoute(true);
+  };
+
   return (
     <div className="w-full max-w-md" style={{ height: 100 }}>
       <MapContainer style={{ height: "100vh", width: "100%" }}>
@@ -141,7 +109,7 @@ function Map() {
           attribution='&copy; <a href="https://openstreetmap.org">OpenStreetMap</a> contributors'
           url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
         />
-        <Routing />
+        {/* <Routing /> */}
         <PinMarking Long={14.565518250363224} Lat={120.99809311129499} />
         <LocationMarker />
         <RoadMapping
@@ -150,7 +118,16 @@ function Map() {
             [14.565961485258084, 120.9979076376789],
           ]}
         />
+        {showRoute && <Routing />}
       </MapContainer>
+      <div className="fixed bottom-0 left-0 w-full flex justify-center">
+        <ButtonComp
+          text="Find Evac Center"
+          variant="important"
+          id="Map-Drawer"
+          onClick={handlePressRoute}
+        />
+      </div>
     </div>
   );
 }
