@@ -10,6 +10,13 @@
 #include "time.h"
 #include "esp_sntp.h"
 
+#include <ArduinoOTA.h>
+
+#include <Arduino.h>
+#include <AsyncTCP.h>
+#include <ESPAsyncWebServer.h>
+#include <WebSerial.h>
+
 const char* api_key = SECRET_API_KEY;
 const char* serverUrl = SECRET_SERVER;
 const char* sensorId = SECRET_SENSOR;
@@ -24,7 +31,10 @@ bool shouldSaveConfig = false;
 bool timeSynchronized = false;
 
 Preferences preferences;
+AsyncWebServer server(80);
 
+unsigned long lastSendTime = 0;
+const unsigned long sendInterval = 10000;
 
 void setup() {
   Serial.begin(115200);
@@ -33,7 +43,7 @@ void setup() {
 
   // !!! will be replaced with a physical reset button 
   // emergency factory reset
-  Serial.println("\n--- BOOTING --- \nPress 'R' now to Factory Reset...");
+  WebSerial.println("\n--- BOOTING --- \nPress 'R' now to Factory Reset...");
   unsigned long startWait = millis();
   while (millis() - startWait < 3000) {  // 3-second window to press 'R'
     if (Serial.available() > 0 && Serial.read() == 'R') {
@@ -42,7 +52,7 @@ void setup() {
         preferences.begin("sensor", false);  // access nvs read-write mode (false)
         preferences.clear();   // delete saved ap password 
         preferences.end();   // end nvs session
-        Serial.println("!!! ALL SETTINGS WIPED !!! Restarting...");
+        WebSerial.println("!!! ALL SETTINGS WIPED !!! Restarting...");
         delay(1000);
         ESP.restart();
     }
@@ -53,27 +63,48 @@ void setup() {
   sntp_set_time_sync_notification_cb(timeAvailable);   // trip time sync flag
   configTime(gmtOffset_sec, daylightOffset_sec, ntpServer1, ntpServer2);
 
-  Serial.println("Connected! IP: " + WiFi.localIP().toString());
+  ArduinoOTA.begin();
+
+  WebSerial.begin(&server);
+
+  WebSerial.onMessage([](uint8_t *data, size_t len) {
+    Serial.printf("Received %lu bytes from WebSerial: ", len);
+    Serial.write(data, len);
+    Serial.println();
+    WebSerial.println("Received Data...");
+    String d = "";
+    for(size_t i = 0; i < len; i++){
+      d += char(data[i]);
+    }
+    WebSerial.println(d);
+  });
+ 
+  // Start AsyncWebServer
+  server.begin();
+
+  WebSerial.println("Connected! IP: " + WiFi.localIP().toString());
 }
 
 
 void loop() {
   manageConnection(false);
+  ArduinoOTA.handle();
+  WebSerial.loop();
 
-  if (timeSynchronized) {
-    float distance = readDistance();
-
-    if (distance < 0) {
-      Serial.println("No reading / out of range");
+  unsigned long now = millis();
+  if (now - lastSendTime >= sendInterval) {
+    lastSendTime = now;
+    if (timeSynchronized) {
+      float distance = readDistance();
+      if (distance < 0) {
+        WebSerial.println("No reading / out of range");
+      } else {
+        sendFloodData(distance);
+      }
     } else {
-      sendFloodData(distance);
+      WebSerial.println("Waiting for NTP sync...");
     }
   }
-  else {
-    Serial.println("Waiting for NTP sync before logging...");
-  }
-
-  delay(10000);
 }
 
 
@@ -127,12 +158,12 @@ void manageConnection(bool isInitialSetup) {
   if (WiFi.status() == WL_CONNECTED && !isInitialSetup) return;
 
   if (!isInitialSetup) {
-    Serial.println("WiFi Connection Lost! Re-launching Config Portal...");
+    WebSerial.println("WiFi Connection Lost! Re-launching Config Portal...");
   }
 
   WiFiManager wm;
   String savedPass = getPortalPassword();
-  Serial.println("Current Setup Password: " + savedPass);
+  WebSerial.println("Current Setup Password: " + savedPass);
 
   // hides custom password field under advanced settings
   String html = "<details><summary><b>Advanced Settings</b></summary><br>Set New Setup Password";
@@ -155,7 +186,7 @@ void manageConnection(bool isInitialSetup) {
 
   // if reconnection fails, restart the device and initiate a full setup flow
   if (!wm.autoConnect("FloodSensor-Setup", savedPass.c_str())) {
-    Serial.println("Failed to reconnect. Restarting...");
+    WebSerial.println("Failed to reconnect. Restarting...");
     delay(3000);
     ESP.restart();
   }
@@ -167,9 +198,9 @@ void manageConnection(bool isInitialSetup) {
       preferences.begin("sensor", false);
       preferences.putString("ap_pass", newPass);  // write new password into nvs if valid
       preferences.end();
-      Serial.println("New password saved to memory: " + newPass);
+      WebSerial.println("New password saved to memory: " + newPass);
     } else {
-      Serial.println("Error: Password too short! Ignored.");
+      WebSerial.println("Error: Password too short! Ignored.");
     }
     shouldSaveConfig = false; // reset the flag so it doesn't loop save
   }
@@ -183,11 +214,10 @@ void sendFloodData(float distance) {
   doc["sensor_id"] = sensorId;
   doc["distance_cm"] = distance;
   doc["log_time"] = currentTimestamp;
-  serializeJsonPretty(doc, Serial);
-  Serial.println();
 
   String payload;
   serializeJson(doc, payload);
+  WebSerial.println(payload);
 
   HTTPClient http;
   http.begin(serverUrl);
@@ -200,7 +230,7 @@ void sendFloodData(float distance) {
 
 // triggered whenever time is synchronized with the NTP server
 void timeAvailable(struct timeval *t) {
-  Serial.println("Got time adjustment from NTP!");
+  WebSerial.println("Got time adjustment from NTP!");
   timeSynchronized = true;   // set flag to allow data logging to begin
 }
 
@@ -208,7 +238,7 @@ void timeAvailable(struct timeval *t) {
 String getFormattedTime() {
   struct tm timeinfo;
   if (!getLocalTime(&timeinfo)) {
-    Serial.println("No time available (yet)");
+    WebSerial.println("No time available (yet)");
     return "IDLE_TIME";
   }
   char buffer[64];
