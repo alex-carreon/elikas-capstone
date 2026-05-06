@@ -3,7 +3,6 @@ import {
   MapContainer,
   TileLayer,
   Marker,
-  Popup,
   useMap,
   Circle,
   Polyline,
@@ -16,12 +15,8 @@ import FloodIcon from "@/assets/Map/FloodIcon.svg?react";
 import PinIcon from "@/assets/Map/Pins.svg?react";
 import { renderToString } from "react-dom/server";
 import ButtonComp from "./Button";
-import { Routing } from "@/lib/mapUtils";
-
-interface PinProps {
-  Long: number;
-  Lat: number;
-}
+import { Routing, PinMarking, FlyToLocation } from "@/lib/mapUtils";
+import DrawerComp from "./Drawer";
 
 interface PolylineProps {
   position: [number, number][];
@@ -79,39 +74,35 @@ function RoadMapping({ position }: PolylineProps) {
   );
 }
 
-function PinMarking({ Long, Lat }: PinProps) {
-  const icon = divIcon({
-    html: renderToString(<PinIcon width={50} height={50} />),
-    className: "",
-    iconAnchor: [12, 12],
-  });
-
-  return (
-    <Marker position={[Long, Lat]} icon={icon}>
-      <Popup>
-        A pretty CSS3 popup. <br /> Easily customizable.
-      </Popup>
-    </Marker>
-  );
-}
-
 function Map() {
   const [showRoute, setShowRoute] = useState(false);
+  const [open, setOpen] = useState(false);
+  const [selectedPin, setSelectedPin] = useState(null);
+  const [position, setPosition] = useState(null);
+  const [flyTrigger, setFlyTrigger] = useState(0);
+
+  const handlePinClick = (pin) => {
+    setSelectedPin(pin);
+    setOpen(true);
+    setPosition(pin);
+    setFlyTrigger((prev) => prev + 1);
+  };
 
   const handlePressRoute = () => {
     setShowRoute(true);
   };
 
   return (
-    <div className="w-full max-w-md" style={{ height: 100 }}>
+    <div className="w-full max-w-md" style={{ height: "100vh" }}>
       <MapContainer style={{ height: "100vh", width: "100%" }}>
         <TileLayer
           attribution='&copy; <a href="https://openstreetmap.org">OpenStreetMap</a> contributors'
           url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
         />
         {/* <Routing /> */}
-        <PinMarking Long={14.565518250363224} Lat={120.99809311129499} />
+        <PinMarking onPinClick={handlePinClick} />
         <LocationMarker />
+        <FlyToLocation position={position} flyTrigger={flyTrigger} />
         <RoadMapping
           position={[
             [14.565561313458806, 120.99694416069873],
@@ -120,7 +111,12 @@ function Map() {
         />
         {showRoute && <Routing />}
       </MapContainer>
-      <div className="fixed bottom-0 left-0 w-full flex justify-center">
+      <DrawerComp
+        open={open}
+        onOpenChange={setOpen}
+        selectedPin={selectedPin}
+      />
+      <div className="fixed bottom-0 left-0 w-full flex justify-center mb-8">
         <ButtonComp
           text="Find Evac Center"
           variant="important"
