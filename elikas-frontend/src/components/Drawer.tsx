@@ -1,32 +1,66 @@
 import {
   Drawer,
-  DrawerClose,
   DrawerContent,
   DrawerDescription,
-  DrawerFooter,
   DrawerHeader,
   DrawerTitle,
-  DrawerTrigger,
 } from "@/components/ui/drawer";
-import { Button } from "@/components/ui/button";
+import { useEffect, useState } from "react";
+import { cn } from "@/lib/utils";
+import Button from "./Button";
 
-function DrawerComp() {
+interface Pin {
+  id: number;
+  name: string;
+  description: string;
+  lat: number;
+  long: number;
+}
+
+interface DrawerProps {
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+  selectedPin: Pin | null;
+}
+
+function DrawerComp({ open, onOpenChange, selectedPin }: DrawerProps) {
+  const [expanded, setExpanded] = useState(false);
+
+  useEffect(() => {
+    if (!open) setExpanded(false);
+  }, [open]);
+
   return (
-    <Drawer>
-      <DrawerTrigger className="fixed bottom-0 left-0 z-50 w-full h-content flex justify-center bg-white">
-        Open
-      </DrawerTrigger>
-      <DrawerContent>
+    <Drawer open={open} onOpenChange={onOpenChange}>
+      <DrawerContent
+        className={cn(
+          "transition-all duration-300 inset-x-0 mx-auto w-full max-w-md",
+          expanded ? "h-[80vh]" : "h-[200px]",
+        )}
+      >
+        <div className="flex justify-center">
+          <Button
+            text={expanded ? "Press to Collapse" : "Press to Expand"}
+            id="Drawer-Handle"
+            variant="outline"
+            onClick={() => setExpanded(!expanded)}
+          ></Button>
+        </div>
         <DrawerHeader>
-          <DrawerTitle>Are you absolutely sure?</DrawerTitle>
+          <DrawerTitle>{selectedPin?.name}</DrawerTitle>
           <DrawerDescription>This action cannot be undone.</DrawerDescription>
         </DrawerHeader>
-        <DrawerFooter>
-          <Button>Submit</Button>
-          <DrawerClose>
-            <Button variant="outline">Cancel</Button>
-          </DrawerClose>
-        </DrawerFooter>
+        <div
+          className={cn(
+            "p-4 overflow-auto transition-opacity duration-300",
+            expanded ? "opacity-100" : "opacity-0 pointer-events-none",
+          )}
+        >
+          <p>
+            Coordinates: {selectedPin?.lat}, {selectedPin?.long}
+          </p>
+          <p>{selectedPin?.description}</p>
+        </div>
       </DrawerContent>
     </Drawer>
   );
