@@ -99,12 +99,12 @@ function LogIn() {
               {/* </Link> */}
             </div>
           </form>
-          <div className="flex justify-start flex-col content-center mx-auto">
-            <p className={"text-sm flex justify-self-center"}>
+          <div className="flex justify-start flex-col content-center mx-auto text-sm">
+            <p className={"flex justify-self-center truncate"}>
               Don't have an account yet? &nbsp;
               <Link to="/Registration/Splash" id="L-Register">
                 <span
-                  className={"text-sm flex justify-self-center underline"}
+                  className={"flex justify-self-center underline truncate"}
                   style={{ color: colors.activeIcon }}
                 >
                   Register Now
