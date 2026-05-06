@@ -9,6 +9,16 @@
   .BeVietnamPro {
     font-family: "Be Vietnam Pro", sans-serif;
   }
+
+  .leaflet-container {
+    z-index: 0 !important;
+  }
+
+  .leaflet-top.leaflet-right .leaflet-routing-container {
+    visibility: hidden;
+    height: 0;
+    width: 0;
+  }
 }
 
 @custom-variant dark (&:is(.dark *));
