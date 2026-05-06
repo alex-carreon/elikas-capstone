@@ -1,13 +1,19 @@
+import { Drawer, DrawerContent, DrawerHeader } from "@/components/ui/drawer";
+import { ChevronDownIcon } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
 import {
-  Drawer,
-  DrawerContent,
-  DrawerDescription,
-  DrawerHeader,
-  DrawerTitle,
-} from "@/components/ui/drawer";
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger,
+} from "@/components/ui/collapsible";
 import { useEffect, useState } from "react";
 import { cn } from "@/lib/utils";
-import Button from "./Button";
+import ButtonComp from "./Button";
+import DrawerIcon from "@/assets/Map/Drawer.svg";
+import AccoIcon from "@/assets/Map/AccomodationIcon.svg";
+import CrIcon from "@/assets/Map/CrIcon.svg";
+import colors from "@/constants/colors";
 
 interface Pin {
   id: number;
@@ -35,32 +41,91 @@ function DrawerComp({ open, onOpenChange, selectedPin }: DrawerProps) {
       <DrawerContent
         className={cn(
           "transition-all duration-300 inset-x-0 mx-auto w-full max-w-md",
-          expanded ? "h-[80vh]" : "h-[200px]",
+          expanded ? "h-[80vh]" : "h-[240px]",
         )}
       >
-        <div className="flex justify-center">
-          <Button
+        <div className="flex justify-center ml-4 mr-4">
+          <ButtonComp
             text={expanded ? "Press to Collapse" : "Press to Expand"}
             id="Drawer-Handle"
             variant="outline"
             onClick={() => setExpanded(!expanded)}
-          ></Button>
+          ></ButtonComp>
         </div>
         <DrawerHeader>
-          <DrawerTitle>{selectedPin?.name}</DrawerTitle>
-          <DrawerDescription>This action cannot be undone.</DrawerDescription>
+          <div className="flex flex-row gap-2">
+            <img src={DrawerIcon} className="w-10" />
+            <div>
+              <p className="text-lg font-semibold">{selectedPin?.name}</p>
+              <p className="text-xs text-left font-semibold italic">
+                Persistent
+              </p>
+            </div>
+          </div>
+          <p className="text-left text-xs italic">
+            Information Last Updated by 01/01/26
+          </p>
+          <div className="mt-2">
+            <ul className="list-disc pl-8 text-left text-xs">
+              <li>
+                <b>Address</b>: Purok 3, San Isidro, near Barangay Hall
+              </li>
+              <li>
+                <b>Arrive in</b>: 25 minutes
+              </li>
+            </ul>
+          </div>
         </DrawerHeader>
         <div
           className={cn(
-            "p-4 overflow-auto transition-opacity duration-300",
+            "px-4 overflow-auto transition-opacity duration-300",
             expanded ? "opacity-100" : "opacity-0 pointer-events-none",
           )}
         >
-          <p>
-            Coordinates: {selectedPin?.lat}, {selectedPin?.long}
-          </p>
-          <p>{selectedPin?.description}</p>
+          <Collapsible className="rounded-md data-[state=open]:bg-muted">
+            <CollapsibleTrigger asChild>
+              <Button variant="ghost" className="group w-full">
+                Facilities Available
+                <ChevronDownIcon className="ml-auto group-data-[state=open]:rotate-180" />
+                <p className="text-xs italic">Press to see more</p>
+              </Button>
+              <div className="flex flex-row w-full justify-evenly gap-2 px-2.5 pt-1">
+                <div className="flex flex-1 flex-row items-center gap-1">
+                  <img src={AccoIcon} />
+                  <p className="text-xs">Accomodation</p>
+                </div>
+                <div className="flex flex-1 flex-row items-center gap-1">
+                  <img src={CrIcon} />
+                  <p className="text-xs">Comfort Room</p>
+                </div>
+              </div>
+            </CollapsibleTrigger>
+            <CollapsibleContent className="flex flex-col items-start px-2.5 pt-0 text-sm">
+              <div className="flex flex-row w-full justify-evenly mt-2">
+                <div className="flex flex-1 flex-row items-center gap-1">
+                  <img src={AccoIcon} />
+                  <p className="text-xs">Accomodation</p>
+                </div>
+                <div className="flex flex-1 flex-row items-center gap-1">
+                  <img src={CrIcon} />
+                  <p className="text-xs">Comfort Room</p>
+                </div>
+              </div>
+              <p className="text-sm pt-4">Not Available</p>
+              <div className="flex flex-row w-full justify-evenly mt-2">
+                <div className="flex flex-1 flex-row items-center gap-1">
+                  <img src={AccoIcon} />
+                  <p className="text-xs">Accomodation</p>
+                </div>
+                <div className="flex flex-1 flex-row items-center gap-1">
+                  <img src={CrIcon} />
+                  <p className="text-xs">Comfort Room</p>
+                </div>
+              </div>
+            </CollapsibleContent>
+          </Collapsible>
         </div>
+        <hr className="border-gray-400 m-4"></hr>
       </DrawerContent>
     </Drawer>
   );
