@@ -1,5 +1,5 @@
 import { Drawer, DrawerContent, DrawerHeader } from "@/components/ui/drawer";
-import { ChevronDownIcon } from "lucide-react";
+import { ChevronDownIcon, ShieldCheck } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   Collapsible,
@@ -32,13 +32,14 @@ interface DrawerProps {
 
 function DrawerComp({ open, onOpenChange, selectedPin }: DrawerProps) {
   const [expanded, setExpanded] = useState(false);
+  const [verified, setVerified] = useState(true);
 
   useEffect(() => {
     if (!open) setExpanded(false);
   }, [open]);
 
   return (
-    <Drawer open={open} onOpenChange={onOpenChange}>
+    <Drawer open={open} onOpenChange={onOpenChange} modal={false}>
       <DrawerContent
         className={cn(
           "transition-all duration-300 inset-x-0 mx-auto w-full max-w-md",
@@ -57,7 +58,17 @@ function DrawerComp({ open, onOpenChange, selectedPin }: DrawerProps) {
           <div className="flex flex-row gap-2">
             <img src={DrawerIcon} className="w-10" />
             <div>
-              <p className="text-lg font-semibold">{selectedPin?.name}</p>
+              <div className="flex flex-row">
+                <p className="text-lg font-semibold">{selectedPin?.name}</p>
+                {verified ? (
+                  <ShieldCheck
+                    fill="#20BF55"
+                    strokeWidth={1}
+                    color="white"
+                    size={18}
+                  />
+                ) : null}
+              </div>
               <p className="text-xs text-left font-semibold italic">
                 Persistent
               </p>
