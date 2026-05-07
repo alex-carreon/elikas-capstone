@@ -7,7 +7,7 @@ import colors from "@/constants/colors";
 import PinIcon from "@/assets/Map/Pins.svg?react";
 import { renderToString } from "react-dom/server";
 
-const pins = [
+export const pins = [
   {
     id: 1,
     name: "Atrium",
@@ -24,7 +24,7 @@ const pins = [
   },
 ];
 
-export function Routing() {
+export function Routing({ onPinSelected }) {
   const [position, setPosition] = useState<LatLng | null>(null);
   const map = useMap();
 
@@ -47,11 +47,22 @@ export function Routing() {
   useEffect(() => {
     if (!position) return;
 
+    const destination = leaflet.latLng(pins[0].long, pins[0].lat);
+
+    // const matchedPin = pins.find(
+    //   (pin) => pin.lat === destination.lat && pin.long === destination.lng,
+    // );
+
+    const matchedPin = pins[0];
+
+    console.log("Routing: calling onPinSelected with", matchedPin);
+
+    if (matchedPin) {
+      onPinSelected(matchedPin);
+    }
+
     const routeControl = leaflet.Routing.control({
-      waypoints: [
-        leaflet.latLng(position.lat, position.lng),
-        leaflet.latLng(14.565518250363224, 120.99809311129499),
-      ],
+      waypoints: [leaflet.latLng(position.lat, position.lng), destination],
       collapsible: true,
       addWaypoints: false,
       draggableWaypoints: false,

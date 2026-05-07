@@ -12,7 +12,7 @@ import "leaflet-routing-machine";
 import FloodIcon from "@/assets/Map/FloodIcon.svg?react";
 import { renderToString } from "react-dom/server";
 import ButtonComp from "./Button";
-import { Routing, PinMarking, FlyToLocation } from "@/lib/mapUtils";
+import { Routing, PinMarking, FlyToLocation, pins } from "@/lib/mapUtils";
 import DrawerComp from "./Drawer";
 
 interface PolylineProps {
@@ -74,6 +74,7 @@ function RoadMapping({ position }: PolylineProps) {
 function Map() {
   const [showRoute, setShowRoute] = useState(false);
   const [open, setOpen] = useState(false);
+  const [openFromRoute, setOpenFromRoute] = useState(false);
   const [selectedPin, setSelectedPin] = useState(null);
   const [position, setPosition] = useState(null);
   const [flyTrigger, setFlyTrigger] = useState(0);
@@ -87,7 +88,28 @@ function Map() {
 
   const handlePressRoute = () => {
     setShowRoute(true);
+    setSelectedPin(null);
+    setOpenFromRoute(true);
+    console.log("selectedPin after route:", selectedPin);
   };
+
+  const handleDrawerClose = (isOpen) => {
+    setOpen(isOpen);
+
+    if (!isOpen) {
+      setShowRoute(false);
+      setSelectedPin(null);
+    }
+  };
+
+  useEffect(() => {
+    console.log("selectedPin changed:", selectedPin);
+    console.log("openFromRoute:", openFromRoute);
+    if (selectedPin && openFromRoute) {
+      setOpen(true);
+      setOpenFromRoute(false);
+    }
+  }, [selectedPin, openFromRoute]);
 
   return (
     <div className="w-full max-w-md" style={{ height: "90vh" }}>
@@ -106,11 +128,11 @@ function Map() {
             [14.565961485258084, 120.9979076376789],
           ]}
         />
-        {showRoute && <Routing />}
+        {showRoute && <Routing onPinSelected={setSelectedPin} />}
       </MapContainer>
       <DrawerComp
         open={open}
-        onOpenChange={setOpen}
+        onOpenChange={handleDrawerClose}
         selectedPin={selectedPin}
       />
       <div className="fixed bottom-0 left-0 w-full flex justify-center mb-8">
