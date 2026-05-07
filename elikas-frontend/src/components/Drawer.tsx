@@ -1,7 +1,6 @@
 import { Drawer, DrawerContent, DrawerHeader } from "@/components/ui/drawer";
 import { ChevronDownIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
 import {
   Collapsible,
   CollapsibleContent,
@@ -13,7 +12,9 @@ import ButtonComp from "./Button";
 import DrawerIcon from "@/assets/Map/Drawer.svg";
 import AccoIcon from "@/assets/Map/AccomodationIcon.svg";
 import CrIcon from "@/assets/Map/CrIcon.svg";
-import colors from "@/constants/colors";
+import CSIcon from "@/assets/Map/CrowdsourceIcon.svg";
+import Photo from "@/assets/Map/SamplePhoto.png";
+import PostRow from "./PostRow";
 
 interface Pin {
   id: number;
@@ -65,7 +66,7 @@ function DrawerComp({ open, onOpenChange, selectedPin }: DrawerProps) {
           <p className="text-left text-xs italic">
             Information Last Updated by 01/01/26
           </p>
-          <div className="mt-2">
+          <div className="mt-4">
             <ul className="list-disc pl-8 text-left text-xs">
               <li>
                 <b>Address</b>: Purok 3, San Isidro, near Barangay Hall
@@ -83,7 +84,7 @@ function DrawerComp({ open, onOpenChange, selectedPin }: DrawerProps) {
           )}
         >
           <Collapsible className="rounded-md data-[state=open]:bg-muted">
-            <CollapsibleTrigger asChild>
+            <CollapsibleTrigger>
               <Button variant="ghost" className="group w-full">
                 Facilities Available
                 <ChevronDownIcon className="ml-auto group-data-[state=open]:rotate-180" />
@@ -101,31 +102,65 @@ function DrawerComp({ open, onOpenChange, selectedPin }: DrawerProps) {
               </div>
             </CollapsibleTrigger>
             <CollapsibleContent className="flex flex-col items-start px-2.5 pt-0 text-sm">
-              <div className="flex flex-row w-full justify-evenly mt-2">
-                <div className="flex flex-1 flex-row items-center gap-1">
+              <div className="flex flex-row w-full gap-7">
+                <div className="flex flex-row items-center gap-1">
                   <img src={AccoIcon} />
                   <p className="text-xs">Accomodation</p>
                 </div>
-                <div className="flex flex-1 flex-row items-center gap-1">
+                <div className="flex flex-row items-center gap-1">
                   <img src={CrIcon} />
                   <p className="text-xs">Comfort Room</p>
                 </div>
               </div>
               <p className="text-sm pt-4">Not Available</p>
-              <div className="flex flex-row w-full justify-evenly mt-2">
-                <div className="flex flex-1 flex-row items-center gap-1">
+              <div className="flex flex-row w-full gap-7 mt-2">
+                <div className="flex flex-row items-center gap-1">
                   <img src={AccoIcon} />
                   <p className="text-xs">Accomodation</p>
                 </div>
-                <div className="flex flex-1 flex-row items-center gap-1">
+                <div className="flex flex-row items-center gap-1">
                   <img src={CrIcon} />
                   <p className="text-xs">Comfort Room</p>
                 </div>
               </div>
             </CollapsibleContent>
           </Collapsible>
+          <hr className="border-gray-400 m-4"></hr>
+          <div className="px-2.5">
+            <div className="flex flex-row items-center gap-2">
+              <img src={CSIcon} className="w-12" />
+              <p className="text-base">
+                <b>Crowdsourced Updates</b>
+              </p>
+            </div>
+            <div className="flex flex-col gap-2 mb-4">
+              {/* Post Row */}
+              <PostRow
+                username="Kurt Hacinas"
+                timePosted="3:30pm"
+                description="Bring your own water"
+                locationVerified
+                upVotesCount={20}
+                downVotesCount={12}
+                flagCount={1}
+                expiryDays={30}
+                image={Photo}
+              />
+              <PostRow
+                username="Kurt Hacinas"
+                timePosted="3:30pm"
+                description="Bring your own water"
+                locationVerified
+                upVotesCount={20}
+                downVotesCount={12}
+                flagCount={1}
+                expiryDays={30}
+                image={Photo}
+              />
+              {/* Post Row */}
+            </div>
+          </div>
         </div>
-        <hr className="border-gray-400 m-4"></hr>
       </DrawerContent>
     </Drawer>
   );
