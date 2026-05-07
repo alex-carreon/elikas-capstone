@@ -7,12 +7,9 @@ import {
   Circle,
   Polyline,
 } from "react-leaflet";
-import leaflet from "leaflet";
-import { LatLng, divIcon } from "leaflet";
+import { divIcon } from "leaflet";
 import "leaflet-routing-machine";
-import colors from "@/constants/colors";
 import FloodIcon from "@/assets/Map/FloodIcon.svg?react";
-import PinIcon from "@/assets/Map/Pins.svg?react";
 import { renderToString } from "react-dom/server";
 import ButtonComp from "./Button";
 import { Routing, PinMarking, FlyToLocation } from "@/lib/mapUtils";
@@ -93,8 +90,8 @@ function Map() {
   };
 
   return (
-    <div className="w-full max-w-md" style={{ height: "100vh" }}>
-      <MapContainer style={{ height: "100vh", width: "100%" }}>
+    <div className="w-full max-w-md" style={{ height: "90vh" }}>
+      <MapContainer style={{ height: "90vh", width: "100%" }}>
         <TileLayer
           attribution='&copy; <a href="https://openstreetmap.org">OpenStreetMap</a> contributors'
           url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
