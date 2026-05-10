@@ -12,7 +12,7 @@ import { EyeClosed } from "lucide-react";
 import { Eye } from "lucide-react";
 
 interface TextFieldProps {
-  label: string;
+  label?: string;
   placeholder?: string;
   icon?: LucideIcon;
   endIcon?: LucideIcon;
