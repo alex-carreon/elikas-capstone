@@ -7,7 +7,9 @@ import CustomizeProfile from "./Authentication/CustomizeProfile";
 import Permissions from "./Authentication/Permissions";
 import Finish from "./Authentication/Finish";
 import Navbar from "./Navbar/GuestNavbar";
+import ConstNavbar from "./Navbar/ConstNavbar";
 import Map from "./Map";
+import Hotlines from "@/Hotlines";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 
 function App() {
@@ -28,6 +30,10 @@ function App() {
 
         <Route element={<Navbar />}>
           <Route path="/Guest" element={<Map />} />
+        </Route>
+
+        <Route element={<ConstNavbar />}>
+          <Route path="/Hotlines" element={<Hotlines />} />
         </Route>
       </Routes>
     </BrowserRouter>
