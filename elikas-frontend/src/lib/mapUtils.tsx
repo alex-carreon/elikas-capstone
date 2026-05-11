@@ -8,7 +8,7 @@ import PinIcon from "@/assets/Map/Pins.svg?react";
 import { renderToString } from "react-dom/server";
 import MarkerClusterGroup from "react-leaflet-cluster";
 import FloodIcon from "@/assets/Map/FloodIcon.svg?react";
-import { Pin } from "lucide-react";
+import BlankPin from "@/assets/Map/BlankPin.svg?react";
 
 export const pins = [
   {
@@ -137,7 +137,7 @@ export function Routing({ onPinSelected, selectedPin }) {
 
     const matchedPin = selectedPin;
 
-    console.log("Routing: calling onPinSelected with", matchedPin);
+    // console.log("Routing: calling onPinSelected with", matchedPin);
 
     if (matchedPin) {
       onPinSelected(matchedPin);
@@ -175,6 +175,7 @@ export function PinMarking({ onPinClick }) {
       html: `<div style="background-color: #FFA011; color: ${colors.heading}; border-radius: 50%; width: 40px; height: 40px; display: flex; align-items: center; justify-content: center; font-size: 14px;">${cluster.getChildCount()}</div>`,
       className: "cluster-marker",
       iconSize: point(40, 40, true),
+      iconAnchor: [25, 50],
     });
   };
 
@@ -235,7 +236,7 @@ export function RoadMapping({ position }: PolylineProps) {
   const icon = divIcon({
     html: renderToString(<FloodIcon width={36} height={36} />),
     className: "",
-    iconAnchor: [12, 12],
+    iconAnchor: [18, 20],
   });
   return (
     <>
@@ -243,4 +244,28 @@ export function RoadMapping({ position }: PolylineProps) {
       <Marker position={midpoint} icon={icon} />
     </>
   );
+}
+
+export function MapClickHandler({ onPinClick, clickedLoc, setClickedLoc }) {
+  // const [clickedLoc, setClickedLoc] = useState<[number, number] | null>(null);
+  const map = useMap();
+  const icon = divIcon({
+    html: renderToString(<BlankPin width={50} height={50} />),
+    className: "",
+    iconAnchor: [25, 50],
+  });
+
+  useEffect(() => {
+    const handleClick = (e) => {
+      const { lat, lng } = e.latlng;
+      // console.log("Clicked at:", lat, lng);
+      setClickedLoc([lat, lng]);
+      onPinClick({ lat, long: lng });
+    };
+
+    map.on("click", handleClick);
+    return () => map.off("click", handleClick);
+  }, [map]);
+
+  return clickedLoc ? <Marker position={clickedLoc} icon={icon} /> : null;
 }

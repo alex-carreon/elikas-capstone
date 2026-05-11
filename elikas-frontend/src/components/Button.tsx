@@ -25,7 +25,6 @@ function ButtonComp({
       <Button
         onClick={onClick}
         className={`w-full max-w-xs h-10 bg-gradient-to-r from-[#FFA011] to-[#F3C962]`}
-        size={size}
         id={id}
         type={type}
         disabled={isDisabled}
