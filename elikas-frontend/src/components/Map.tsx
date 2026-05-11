@@ -8,6 +8,8 @@ import {
   FlyToLocation,
   RoadMapping,
   NearestRouting,
+  MapClickHandler,
+  pins,
 } from "@/lib/mapUtils";
 import DrawerComp from "./Drawer";
 import MarkerClusterGroup from "react-leaflet-cluster";
@@ -51,6 +53,8 @@ function Map() {
   const [selectedPin, setSelectedPin] = useState(null);
   const [position, setPosition] = useState(null);
   const [flyTrigger, setFlyTrigger] = useState(0);
+  const [newPin, setNewPin] = useState(false);
+  const [clickedLoc, setClickedLoc] = useState<[number, number] | null>(null);
 
   const handlePinClick = (pin) => {
     setSelectedPin(pin);
@@ -60,6 +64,9 @@ function Map() {
     setShowNearestRoute(false);
     setShowRoute(false);
     setOpenFromRoute(false);
+
+    const isExisting = !!pin.id;
+    setNewPin(!isExisting);
   };
 
   const handlePressRoute = () => {
@@ -85,6 +92,7 @@ function Map() {
       setShowNearestRoute(false);
       setSelectedPin(null);
       setOpenFromRoute(false);
+      setClickedLoc(null);
     }
   };
 
@@ -111,6 +119,11 @@ function Map() {
       style={{ height: "90vh" }}
     >
       <MapContainer style={{ height: "90vh", width: "100%" }}>
+        <MapClickHandler
+          onPinClick={handlePinClick}
+          setClickedLoc={setClickedLoc}
+          clickedLoc={clickedLoc}
+        />
         <TileLayer
           attribution='&copy; <a href="https://openstreetmap.org">OpenStreetMap</a> contributors'
           url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
@@ -149,6 +162,7 @@ function Map() {
         onOpenChange={handleDrawerClose}
         selectedPin={selectedPin}
         onFindRoute={handlePressRoute}
+        newPin={newPin}
       />
       <div className="fixed bottom-0 left-0 w-full flex justify-center mb-8">
         <ButtonComp
