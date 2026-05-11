@@ -8,7 +8,7 @@ interface ButtonProps {
   id: string;
   type?: "button" | "submit" | "reset";
   isDisabled?: boolean;
-  size?: string;
+  size?: "small" | "medium" | "large";
 }
 
 function ButtonComp({
@@ -24,7 +24,8 @@ function ButtonComp({
     return (
       <Button
         onClick={onClick}
-        className={`size-${size} w-full max-w-xs h-10 bg-gradient-to-r from-[#FFA011] to-[#F3C962]`}
+        className={`w-full max-w-xs h-10 bg-gradient-to-r from-[#FFA011] to-[#F3C962]`}
+        size={size}
         id={id}
         type={type}
         disabled={isDisabled}
