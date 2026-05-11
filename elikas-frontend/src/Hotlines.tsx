@@ -5,6 +5,7 @@ import {
   InputGroupInput,
 } from "@/components/ui/input-group";
 import HotlineRow from "./components/HotlineRow";
+import { Button } from "@/components/ui/button";
 
 function Hotlines() {
   return (
@@ -17,16 +18,28 @@ function Hotlines() {
             <b>Emergency Hotline Directory</b>
           </p>
         </div>
-        {/* Search and Filter */}
-        <div className="w-full max-w-md flex justify-end items-center gap-2">
-          <InputGroup className="w-1/2">
-            <InputGroupInput className="text-sm h-8"></InputGroupInput>
-            <InputGroupAddon align="inline-end">
-              <Search />
-            </InputGroupAddon>
-          </InputGroup>
-          <Filter size={18} />
+        {/* Search and Filter and Add button */}
+        <div className="w-full max-w-md flex flex-row justify-between">
+          <div>
+            {/* <Button
+              size="sm"
+              className="w-24 bg-gradient-to-r from-[#FFA011] to-[#F3C962]"
+              id="Hotline-Add"
+            >
+              Add Hotline
+            </Button> */}
+          </div>
+          <div className="flex justify-end items-center gap-2">
+            <InputGroup className="w-2/3">
+              <InputGroupInput className="text-sm h-8"></InputGroupInput>
+              <InputGroupAddon align="inline-end">
+                <Search />
+              </InputGroupAddon>
+            </InputGroup>
+            <Filter size={18} />
+          </div>
         </div>
+
         {/* Hotline rows */}
         <div className="w-full max-w-md flex flex-col justify-start gap-4">
           <HotlineRow />
