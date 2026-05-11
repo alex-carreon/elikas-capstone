@@ -18,7 +18,7 @@ function Hotlines() {
           </p>
         </div>
         {/* Search and Filter */}
-        <div className="w-full flex justify-end items-center gap-2">
+        <div className="w-full max-w-md flex justify-end items-center gap-2">
           <InputGroup className="w-1/2">
             <InputGroupInput className="text-sm h-8"></InputGroupInput>
             <InputGroupAddon align="inline-end">
@@ -28,7 +28,7 @@ function Hotlines() {
           <Filter size={18} />
         </div>
         {/* Hotline rows */}
-        <div className="w-full flex flex-col justify-start gap-4">
+        <div className="w-full max-w-md flex flex-col justify-start gap-4">
           <HotlineRow />
           <HotlineRow />
           <HotlineRow />

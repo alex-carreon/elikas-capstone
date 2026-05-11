@@ -1,14 +1,35 @@
-import { PinIcon, Smartphone, Copy, Phone, Edit } from "lucide-react";
+import {
+  PinIcon,
+  Smartphone,
+  Copy,
+  Phone,
+  Edit,
+  CopyCheck,
+} from "lucide-react";
+import { useState } from "react";
+
 function HotlineRow() {
+  const [copy, setCopy] = useState(false);
+
+  const HandleCopy = () => {
+    navigator.clipboard.writeText("(02) 8854-2211");
+    setCopy(true);
+    setTimeout(() => setCopy(false), 2000);
+  };
+
   return (
-    <div>
+    <div className="">
       <p className="italic text-xs">Last Update: Feb 10, 2026</p>
       <div className="bg-[#FFE6A9] p-4 rounded-xl border-black border-solid border-1 flex flex-col gap-1">
         <div className="flex flex-row justify-between">
           <p>
             <b>Medical and Health</b>
           </p>
-          <Copy />
+          {copy ? (
+            <CopyCheck size={20} />
+          ) : (
+            <Copy onClick={HandleCopy} size={20} />
+          )}
           {/* <Edit /> */}
         </div>
         <div className="flex flex-row text-sm items-center">
