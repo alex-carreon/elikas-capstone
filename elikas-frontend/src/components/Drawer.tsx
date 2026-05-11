@@ -1,5 +1,10 @@
-import { Drawer, DrawerContent, DrawerHeader } from "@/components/ui/drawer";
-import { ChevronDownIcon, ShieldCheck } from "lucide-react";
+import {
+  Drawer,
+  DrawerClose,
+  DrawerContent,
+  DrawerHeader,
+} from "@/components/ui/drawer";
+import { ChevronDownIcon, ShieldCheck, CircleX } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   Collapsible,
@@ -28,31 +33,45 @@ interface DrawerProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   selectedPin: Pin | null;
+  onFindRoute: (findRoute: boolean) => void;
 }
 
-function DrawerComp({ open, onOpenChange, selectedPin }: DrawerProps) {
+function DrawerComp({
+  open,
+  onOpenChange,
+  selectedPin,
+  onFindRoute,
+}: DrawerProps) {
   const [expanded, setExpanded] = useState(false);
-  const [verified, setVerified] = useState(true);
+  const [verified, setVerified] = useState(false);
 
   useEffect(() => {
     if (!open) setExpanded(false);
   }, [open]);
 
   return (
-    <Drawer open={open} onOpenChange={onOpenChange} modal={false}>
+    <Drawer
+      open={open}
+      onOpenChange={onOpenChange}
+      modal={false}
+      shouldScaleBackground={false}
+    >
       <DrawerContent
         className={cn(
           "transition-all duration-300 inset-x-0 mx-auto w-full max-w-md",
           expanded ? "h-[80vh]" : "h-[240px]",
         )}
       >
-        <div className="flex justify-center ml-4 mr-4">
+        <div className="flex justify-center gap-2">
           <ButtonComp
             text={expanded ? "Press to Collapse" : "Press to Expand"}
             id="Drawer-Handle"
             variant="outline"
             onClick={() => setExpanded(!expanded)}
           ></ButtonComp>
+          <DrawerClose>
+            <CircleX size={28} fill="#CECECE" strokeWidth={1} />
+          </DrawerClose>
         </div>
         <DrawerHeader>
           <div className="flex flex-row gap-2">
@@ -77,7 +96,15 @@ function DrawerComp({ open, onOpenChange, selectedPin }: DrawerProps) {
           <p className="text-left text-xs italic">
             Information Last Updated by 01/01/26
           </p>
-          <div className="mt-4">
+          <Button
+            size="sm"
+            className="w-26 h-8 bg-gradient-to-r bg-[#F3C962] rounded-2xl"
+            id="Drawer-RouteBtn"
+            onClick={() => onFindRoute(true)}
+          >
+            Show Route
+          </Button>
+          <div className="mt-2">
             <ul className="list-disc pl-8 text-left text-xs">
               <li>
                 <b>Address</b>: Purok 3, San Isidro, near Barangay Hall

@@ -1,23 +1,17 @@
-import { useEffect, useState } from "react";
-import {
-  MapContainer,
-  TileLayer,
-  Marker,
-  useMap,
-  Circle,
-  Polyline,
-} from "react-leaflet";
-import { divIcon } from "leaflet";
+import { use, useEffect, useState } from "react";
+import { MapContainer, TileLayer, useMap, Circle } from "react-leaflet";
 import "leaflet-routing-machine";
-import FloodIcon from "@/assets/Map/FloodIcon.svg?react";
-import { renderToString } from "react-dom/server";
 import ButtonComp from "./Button";
-import { Routing, PinMarking, FlyToLocation, pins } from "@/lib/mapUtils";
+import {
+  Routing,
+  PinMarking,
+  FlyToLocation,
+  RoadMapping,
+  NearestRouting,
+} from "@/lib/mapUtils";
 import DrawerComp from "./Drawer";
-
-interface PolylineProps {
-  position: [number, number][];
-}
+import MarkerClusterGroup from "react-leaflet-cluster";
+import { divIcon, point } from "leaflet";
 
 function LocationMarker() {
   const [position, setPosition] = useState(null);
@@ -49,29 +43,8 @@ function LocationMarker() {
   );
 }
 
-function getMidpoint(positions: [number, number][]): [number, number] {
-  const avgLat = positions.reduce((sum, p) => sum + p[0], 0) / positions.length;
-  const avgLng = positions.reduce((sum, p) => sum + p[1], 0) / positions.length;
-  return [avgLat, avgLng];
-}
-
-function RoadMapping({ position }: PolylineProps) {
-  const midpoint = getMidpoint(position);
-
-  const icon = divIcon({
-    html: renderToString(<FloodIcon width={36} height={36} />),
-    className: "",
-    iconAnchor: [12, 12],
-  });
-  return (
-    <>
-      <Polyline positions={position} weight={6} />
-      <Marker position={midpoint} icon={icon} />
-    </>
-  );
-}
-
 function Map() {
+  const [showNearestRoute, setShowNearestRoute] = useState(false);
   const [showRoute, setShowRoute] = useState(false);
   const [open, setOpen] = useState(false);
   const [openFromRoute, setOpenFromRoute] = useState(false);
@@ -84,10 +57,21 @@ function Map() {
     setOpen(true);
     setPosition(pin);
     setFlyTrigger((prev) => prev + 1);
+    setShowNearestRoute(false);
+    setShowRoute(false);
+    setOpenFromRoute(false);
   };
 
   const handlePressRoute = () => {
     setShowRoute(true);
+    // setSelectedPin(null);
+    setOpenFromRoute(true);
+    console.log("selectedPin after route:", selectedPin);
+  };
+
+  const handleNearestRoute = () => {
+    setShowNearestRoute(true);
+    setShowRoute(false);
     setSelectedPin(null);
     setOpenFromRoute(true);
     console.log("selectedPin after route:", selectedPin);
@@ -98,7 +82,9 @@ function Map() {
 
     if (!isOpen) {
       setShowRoute(false);
+      setShowNearestRoute(false);
       setSelectedPin(null);
+      setOpenFromRoute(false);
     }
   };
 
@@ -111,8 +97,19 @@ function Map() {
     }
   }, [selectedPin, openFromRoute]);
 
+  const createClusterCustomIcon = (cluster) => {
+    return divIcon({
+      html: `<div style="background-color: #5F80AA; color: white; border-radius: 50%; width: 40px; height: 40px; display: flex; align-items: center; justify-content: center; font-size: 14px;">${cluster.getChildCount()}</div>`,
+      className: "cluster-marker",
+      iconSize: point(40, 40, true),
+    });
+  };
+
   return (
-    <div className="w-full max-w-md" style={{ height: "90vh" }}>
+    <div
+      className="w-full max-w-md pointer-events-auto"
+      style={{ height: "90vh" }}
+    >
       <MapContainer style={{ height: "90vh", width: "100%" }}>
         <TileLayer
           attribution='&copy; <a href="https://openstreetmap.org">OpenStreetMap</a> contributors'
@@ -122,25 +119,43 @@ function Map() {
         <PinMarking onPinClick={handlePinClick} />
         <LocationMarker />
         <FlyToLocation position={position} flyTrigger={flyTrigger} />
-        <RoadMapping
-          position={[
-            [14.565561313458806, 120.99694416069873],
-            [14.565961485258084, 120.9979076376789],
-          ]}
-        />
-        {showRoute && <Routing onPinSelected={setSelectedPin} />}
+
+        <MarkerClusterGroup
+          iconCreateFunction={createClusterCustomIcon}
+          maxClusterRadius={50}
+          chunkedLoading
+        >
+          <RoadMapping
+            position={[
+              [14.563073993490859, 120.99483862617527],
+              [14.564512191308419, 120.99417612053263],
+            ]}
+          />
+          <RoadMapping
+            position={[
+              [14.565561313458806, 120.99694416069873],
+              [14.565961485258084, 120.9979076376789],
+            ]}
+          />
+        </MarkerClusterGroup>
+
+        {showNearestRoute && <NearestRouting onPinSelected={setSelectedPin} />}
+        {showRoute && !showNearestRoute && selectedPin && (
+          <Routing onPinSelected={setSelectedPin} selectedPin={selectedPin} />
+        )}
       </MapContainer>
       <DrawerComp
         open={open}
         onOpenChange={handleDrawerClose}
         selectedPin={selectedPin}
+        onFindRoute={handlePressRoute}
       />
       <div className="fixed bottom-0 left-0 w-full flex justify-center mb-8">
         <ButtonComp
           text="Find Evac Center"
           variant="important"
-          id="Map-Drawer"
-          onClick={handlePressRoute}
+          id="Map-NearestRouteBtn"
+          onClick={handleNearestRoute}
         />
       </div>
     </div>
