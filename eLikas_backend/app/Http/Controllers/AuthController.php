@@ -16,7 +16,7 @@ class AuthController extends Controller
     public function __construct(protected FirebaseAuth $firebaseAuth) {}
 
     // ---------------------------------------------------------------
-    // REGISTER — called when a Citizen signs up
+    // REGISTER — called when a Citizen signs up [testing commit]
     // ---------------------------------------------------------------
     public function register(Request $request)
     {
