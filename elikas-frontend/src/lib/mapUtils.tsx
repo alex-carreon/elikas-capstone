@@ -1,11 +1,13 @@
 import { useEffect, useState } from "react";
-import { useMap, Marker } from "react-leaflet";
-import leaflet from "leaflet";
+import { useMap, Marker, Polyline } from "react-leaflet";
+import leaflet, { point } from "leaflet";
 import { LatLng, divIcon } from "leaflet";
 import "leaflet-routing-machine";
 import colors from "@/constants/colors";
 import PinIcon from "@/assets/Map/Pins.svg?react";
 import { renderToString } from "react-dom/server";
+import MarkerClusterGroup from "react-leaflet-cluster";
+import FloodIcon from "@/assets/Map/FloodIcon.svg?react";
 
 export const pins = [
   {
@@ -77,20 +79,36 @@ export function Routing({ onPinSelected }) {
 }
 
 export function PinMarking({ onPinClick }) {
+  const createClusterCustomIcon = (cluster) => {
+    return divIcon({
+      html: `<div style="background-color: #FFA011; color: ${colors.heading}; border-radius: 50%; width: 40px; height: 40px; display: flex; align-items: center; justify-content: center; font-size: 14px;">${cluster.getChildCount()}</div>`,
+      className: "cluster-marker",
+      iconSize: point(40, 40, true),
+    });
+  };
+
   const icon = divIcon({
     html: renderToString(<PinIcon width={50} height={50} />),
     className: "",
     iconAnchor: [12, 12],
   });
 
-  return pins.map((pin) => (
-    <Marker
-      key={pin.id}
-      position={[pin.long, pin.lat]}
-      icon={icon}
-      eventHandlers={{ click: () => onPinClick(pin) }}
-    />
-  ));
+  return (
+    <MarkerClusterGroup
+      iconCreateFunction={createClusterCustomIcon}
+      maxClusterRadius={50}
+      chunkedLoading
+    >
+      {pins.map((pin) => (
+        <Marker
+          key={pin.id}
+          position={[pin.long, pin.lat]}
+          icon={icon}
+          eventHandlers={{ click: () => onPinClick(pin) }}
+        />
+      ))}
+    </MarkerClusterGroup>
+  );
 }
 
 export function FlyToLocation({
@@ -108,4 +126,30 @@ export function FlyToLocation({
     }
   }, [flyTrigger]);
   return null;
+}
+
+interface PolylineProps {
+  position: [number, number][];
+}
+
+function getMidpoint(positions: [number, number][]): [number, number] {
+  const avgLat = positions.reduce((sum, p) => sum + p[0], 0) / positions.length;
+  const avgLng = positions.reduce((sum, p) => sum + p[1], 0) / positions.length;
+  return [avgLat, avgLng];
+}
+
+export function RoadMapping({ position }: PolylineProps) {
+  const midpoint = getMidpoint(position);
+
+  const icon = divIcon({
+    html: renderToString(<FloodIcon width={36} height={36} />),
+    className: "",
+    iconAnchor: [12, 12],
+  });
+  return (
+    <>
+      <Polyline positions={position} weight={6} color="#5F80AA" />
+      <Marker position={midpoint} icon={icon} />
+    </>
+  );
 }

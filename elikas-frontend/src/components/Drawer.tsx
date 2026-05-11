@@ -1,5 +1,10 @@
-import { Drawer, DrawerContent, DrawerHeader } from "@/components/ui/drawer";
-import { ChevronDownIcon, ShieldCheck } from "lucide-react";
+import {
+  Drawer,
+  DrawerClose,
+  DrawerContent,
+  DrawerHeader,
+} from "@/components/ui/drawer";
+import { ChevronDownIcon, ShieldCheck, CircleX } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   Collapsible,
@@ -39,20 +44,28 @@ function DrawerComp({ open, onOpenChange, selectedPin }: DrawerProps) {
   }, [open]);
 
   return (
-    <Drawer open={open} onOpenChange={onOpenChange} modal={false}>
+    <Drawer
+      open={open}
+      onOpenChange={onOpenChange}
+      modal={false}
+      shouldScaleBackground={false}
+    >
       <DrawerContent
         className={cn(
           "transition-all duration-300 inset-x-0 mx-auto w-full max-w-md",
           expanded ? "h-[80vh]" : "h-[240px]",
         )}
       >
-        <div className="flex justify-center ml-4 mr-4">
+        <div className="flex justify-center gap-2">
           <ButtonComp
             text={expanded ? "Press to Collapse" : "Press to Expand"}
             id="Drawer-Handle"
             variant="outline"
             onClick={() => setExpanded(!expanded)}
           ></ButtonComp>
+          <DrawerClose>
+            <CircleX size={28} fill="#CECECE" strokeWidth={1} />
+          </DrawerClose>
         </div>
         <DrawerHeader>
           <div className="flex flex-row gap-2">
