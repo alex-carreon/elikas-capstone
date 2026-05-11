@@ -1,10 +1,19 @@
 import Logo from "@/components/Logo";
 import { ArrowLeftIcon } from "lucide-react";
 import { Link } from "react-router";
-import InputOTPComp from "@/components/InputOTP";
+// import InputOTPComp from "@/components/InputOTP";
 import colors from "@/constants/colors";
+import ButtonComp from "@/components/Button";
 
 function EmailVerif() {
+  const emailData = localStorage.getItem("email");
+
+  // const handleVerify = (e:React.FormEvent) => {
+  //   e.preventDefault();
+
+  //   //Call API here - try !response.ok return error, else redirect, catch server error
+  // }
+
   return (
     <div className="min-h-screen flex justify-center p-6">
       <div className="w-full max-w-sm flex flex-col">
@@ -28,12 +37,27 @@ function EmailVerif() {
               className="text-sm text-center p-1"
               style={{ color: colors.heading }}
             >
-              An email was sent to sample@mail.com. Copy the code and enter it
-              below to verify your account!
+              An email was sent to <b>{emailData}</b>. Copy the code and enter
+              it below to verify your account!
             </p>
           </div>
-          <div className="flex justify-center">
-            <InputOTPComp id="R-EmailVerify" />
+          <div className="flex justify-center items-center flex-col gap-2">
+            {/* <p className="text-xs text-red-500 font-bold">
+              You're lying it aint verified
+            </p> */}
+            <Link to="/Registration/CustomProfile" className="w-full max-w-xs">
+              <ButtonComp
+                text="Verify Email"
+                variant="primary"
+                id="R-VerifyEmail"
+              />
+            </Link>
+
+            <ButtonComp
+              text="Resend Email Verification"
+              variant="outline"
+              id="R-ResendEmail"
+            />
           </div>
         </div>
       </div>
