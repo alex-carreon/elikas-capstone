@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { use, useEffect, useState } from "react";
 import { MapContainer, TileLayer, useMap, Circle } from "react-leaflet";
 import "leaflet-routing-machine";
 import ButtonComp from "./Button";
@@ -7,6 +7,7 @@ import {
   PinMarking,
   FlyToLocation,
   RoadMapping,
+  NearestRouting,
 } from "@/lib/mapUtils";
 import DrawerComp from "./Drawer";
 import MarkerClusterGroup from "react-leaflet-cluster";
@@ -43,6 +44,7 @@ function LocationMarker() {
 }
 
 function Map() {
+  const [showNearestRoute, setShowNearestRoute] = useState(false);
   const [showRoute, setShowRoute] = useState(false);
   const [open, setOpen] = useState(false);
   const [openFromRoute, setOpenFromRoute] = useState(false);
@@ -55,10 +57,21 @@ function Map() {
     setOpen(true);
     setPosition(pin);
     setFlyTrigger((prev) => prev + 1);
+    setShowNearestRoute(false);
+    setShowRoute(false);
+    setOpenFromRoute(false);
   };
 
   const handlePressRoute = () => {
     setShowRoute(true);
+    // setSelectedPin(null);
+    setOpenFromRoute(true);
+    console.log("selectedPin after route:", selectedPin);
+  };
+
+  const handleNearestRoute = () => {
+    setShowNearestRoute(true);
+    setShowRoute(false);
     setSelectedPin(null);
     setOpenFromRoute(true);
     console.log("selectedPin after route:", selectedPin);
@@ -69,7 +82,9 @@ function Map() {
 
     if (!isOpen) {
       setShowRoute(false);
+      setShowNearestRoute(false);
       setSelectedPin(null);
+      setOpenFromRoute(false);
     }
   };
 
@@ -124,19 +139,23 @@ function Map() {
           />
         </MarkerClusterGroup>
 
-        {showRoute && <Routing onPinSelected={setSelectedPin} />}
+        {showNearestRoute && <NearestRouting onPinSelected={setSelectedPin} />}
+        {showRoute && !showNearestRoute && selectedPin && (
+          <Routing onPinSelected={setSelectedPin} selectedPin={selectedPin} />
+        )}
       </MapContainer>
       <DrawerComp
         open={open}
         onOpenChange={handleDrawerClose}
         selectedPin={selectedPin}
+        onFindRoute={handlePressRoute}
       />
       <div className="fixed bottom-0 left-0 w-full flex justify-center mb-8">
         <ButtonComp
           text="Find Evac Center"
           variant="important"
-          id="Map-Drawer"
-          onClick={handlePressRoute}
+          id="Map-NearestRouteBtn"
+          onClick={handleNearestRoute}
         />
       </div>
     </div>
