@@ -33,11 +33,17 @@ interface DrawerProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   selectedPin: Pin | null;
+  onFindRoute: (findRoute: boolean) => void;
 }
 
-function DrawerComp({ open, onOpenChange, selectedPin }: DrawerProps) {
+function DrawerComp({
+  open,
+  onOpenChange,
+  selectedPin,
+  onFindRoute,
+}: DrawerProps) {
   const [expanded, setExpanded] = useState(false);
-  const [verified, setVerified] = useState(true);
+  const [verified, setVerified] = useState(false);
 
   useEffect(() => {
     if (!open) setExpanded(false);
@@ -90,7 +96,15 @@ function DrawerComp({ open, onOpenChange, selectedPin }: DrawerProps) {
           <p className="text-left text-xs italic">
             Information Last Updated by 01/01/26
           </p>
-          <div className="mt-4">
+          <Button
+            size="sm"
+            className="w-26 h-8 bg-gradient-to-r bg-[#F3C962] rounded-2xl"
+            id="Drawer-RouteBtn"
+            onClick={() => onFindRoute(true)}
+          >
+            Show Route
+          </Button>
+          <div className="mt-2">
             <ul className="list-disc pl-8 text-left text-xs">
               <li>
                 <b>Address</b>: Purok 3, San Isidro, near Barangay Hall

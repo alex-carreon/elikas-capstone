@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { useMap, Marker, Polyline } from "react-leaflet";
 import leaflet, { point } from "leaflet";
 import { LatLng, divIcon } from "leaflet";
@@ -8,27 +8,106 @@ import PinIcon from "@/assets/Map/Pins.svg?react";
 import { renderToString } from "react-dom/server";
 import MarkerClusterGroup from "react-leaflet-cluster";
 import FloodIcon from "@/assets/Map/FloodIcon.svg?react";
+import { Pin } from "lucide-react";
 
 export const pins = [
   {
     id: 1,
     name: "Atrium",
     description: "First Location",
-    lat: 120.99809311129499,
-    long: 14.565518250363224,
+    lat: 14.565518250363224,
+    long: 120.99809311129499,
   },
   {
     id: 2,
     name: "Taft Campus",
     description: "Second Location",
-    lat: 120.99487633908883,
-    long: 14.56390127681799,
+    lat: 14.563803477668346,
+    long: 120.99479571081709,
   },
 ];
 
-export function Routing({ onPinSelected }) {
+type PinType = (typeof pins)[0];
+
+function getNearestWaypoint(
+  userLatLng: LatLng,
+  waypoints: typeof pins,
+): PinType | null {
+  let nearest: PinType | null = null;
+  let minDist = Infinity;
+
+  waypoints.forEach((point) => {
+    const dist = userLatLng.distanceTo(leaflet.latLng(point.lat, point.long));
+    if (dist < minDist) {
+      minDist = dist;
+      nearest = point;
+    }
+  });
+
+  return nearest;
+}
+
+export function NearestRouting({ onPinSelected }) {
   const [position, setPosition] = useState<LatLng | null>(null);
   const map = useMap();
+  const routeControlRef = useRef<any>(null);
+
+  // For getting location
+  useEffect(() => {
+    map.locate({ setView: true, maxZoom: 50 });
+
+    const onLocationFound = (e) => {
+      setPosition(e.latlng);
+    };
+
+    map.on("locationfound", onLocationFound);
+
+    return () => {
+      map.off("locationfound", onLocationFound);
+    };
+  }, [map]);
+
+  useEffect(() => {
+    if (!position) return;
+
+    const nearest = getNearestWaypoint(position, pins);
+    if (!nearest) return;
+
+    onPinSelected?.(nearest);
+    if (routeControlRef.current) {
+      routeControlRef.current.remove();
+    }
+
+    routeControlRef.current = leaflet.Routing.control({
+      waypoints: [position, leaflet.latLng(nearest.lat, nearest.long)],
+      router: new leaflet.Routing.OSRMv1({
+        serviceUrl: "https://router.project-osrm.org/route/v1",
+      }),
+      collapsible: true,
+      addWaypoints: false,
+      draggableWaypoints: false,
+      fitSelectedRoutes: true,
+      lineOptions: { styles: [{ color: colors.heading, weight: 4 }] },
+      createMarker: function (i, waypoint) {
+        if (i === 0) {
+          return leaflet.marker(waypoint.latLng);
+        }
+        return null;
+      },
+    }).addTo(map);
+
+    return () => {
+      routeControlRef.current.remove();
+    };
+  }, [position, map]);
+
+  return null;
+}
+
+export function Routing({ onPinSelected, selectedPin }) {
+  const [position, setPosition] = useState<LatLng | null>(null);
+  const map = useMap();
+  const routeControlRef = useRef<any>(null);
 
   // For getting location
   useEffect(() => {
@@ -47,15 +126,16 @@ export function Routing({ onPinSelected }) {
 
   //   For Routing
   useEffect(() => {
-    if (!position) return;
+    if (!position || !selectedPin) return;
 
-    const destination = leaflet.latLng(pins[0].long, pins[0].lat);
+    const destination = leaflet.latLng(selectedPin.lat, selectedPin.long);
 
-    // const matchedPin = pins.find(
-    //   (pin) => pin.lat === destination.lat && pin.long === destination.lng,
-    // );
+    if (routeControlRef.current) {
+      (routeControlRef.current as any).remove();
+      routeControlRef.current = null;
+    }
 
-    const matchedPin = pins[0];
+    const matchedPin = selectedPin;
 
     console.log("Routing: calling onPinSelected with", matchedPin);
 
@@ -63,17 +143,28 @@ export function Routing({ onPinSelected }) {
       onPinSelected(matchedPin);
     }
 
-    const routeControl = leaflet.Routing.control({
+    routeControlRef.current = leaflet.Routing.control({
       waypoints: [leaflet.latLng(position.lat, position.lng), destination],
       collapsible: true,
       addWaypoints: false,
       draggableWaypoints: false,
       fitSelectedRoutes: true,
       lineOptions: { styles: [{ color: colors.heading, weight: 4 }] },
+      createMarker: function (i, waypoint) {
+        if (i === 0) {
+          return leaflet.marker(waypoint.latLng);
+        }
+        return null;
+      },
     }).addTo(map);
 
-    return () => map.removeControl(routeControl);
-  }, [map, position]);
+    return () => {
+      if (routeControlRef.current) {
+        (routeControlRef.current as any).remove();
+        routeControlRef.current = null;
+      }
+    };
+  }, [map, position, selectedPin]);
 
   return null;
 }
@@ -102,7 +193,7 @@ export function PinMarking({ onPinClick }) {
       {pins.map((pin) => (
         <Marker
           key={pin.id}
-          position={[pin.long, pin.lat]}
+          position={[pin.lat, pin.long]}
           icon={icon}
           eventHandlers={{ click: () => onPinClick(pin) }}
         />
@@ -122,7 +213,7 @@ export function FlyToLocation({
 
   useEffect(() => {
     if (position) {
-      map.flyTo([position.long, position.lat], 18);
+      map.flyTo([position.lat, position.long], 18);
     }
   }, [flyTrigger]);
   return null;
