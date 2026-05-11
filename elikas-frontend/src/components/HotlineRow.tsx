@@ -3,7 +3,7 @@ import {
   Smartphone,
   Copy,
   Phone,
-  Edit,
+  // Edit,
   CopyCheck,
 } from "lucide-react";
 import { useState } from "react";

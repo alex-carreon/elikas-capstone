@@ -1,4 +1,4 @@
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import Logo from "../components/Logo";
 import { ArrowLeftIcon } from "lucide-react";
 import colors from "@/constants/colors";
@@ -16,21 +16,32 @@ function FormRegistration() {
   const [pw, setPw] = useState("");
   const [confirmPw, setConfirmPw] = useState("");
   const [errors, setErrors] = useState({ pw: "", confirmPw: "" });
+  const navigate = useNavigate();
+
+  localStorage.setItem(
+    "registrationData",
+    JSON.stringify({ ln, fn, email, city, brgy }),
+  );
+
+  localStorage.setItem("email", email);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    console.log(ln, fn, email, city, brgy, pw, confirmPw);
 
     if (pw != confirmPw) {
       setErrors({
         pw: "Password do not match",
         confirmPw: "Password do not match",
       });
-    } else
+    } else {
       setErrors({
         pw: "",
         confirmPw: "",
       });
+
+      navigate("/Registration/Verify");
+    }
+
     //Call API here - try !response.ok return error, else redirect, catch server error
     // setErrors({
     //   email: "Invalid email or password",
@@ -131,14 +142,14 @@ function FormRegistration() {
             />
           </div>
           <div className="w-full flex justify-center items-center m-0">
-            <Link to="/Registration/Verify" className="w-full max-w-xs">
-              <ButtonComp
-                text="Next"
-                variant="primary"
-                id="R-FormSubmit"
-                type="submit"
-              ></ButtonComp>
-            </Link>
+            {/* <Link to="/Registration/Verify" className="w-full max-w-xs"> */}
+            <ButtonComp
+              text="Next"
+              variant="primary"
+              id="R-FormSubmit"
+              type="submit"
+            ></ButtonComp>
+            {/* </Link> */}
           </div>
         </form>
       </div>
