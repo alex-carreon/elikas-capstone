@@ -1,4 +1,4 @@
-import { Link } from "react-router";
+import { Link, useNavigate } from "react-router";
 import { ArrowLeftIcon } from "lucide-react";
 import Logo from "@/components/Logo";
 import colors from "@/constants/colors";
@@ -15,10 +15,15 @@ function randomSeed(): string {
 function CustomizeProfile() {
   const [username, setUsername] = useState("");
   const [seed, setSeed] = useState("Felix");
+
+  const navigate = useNavigate();
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    console.log(username);
-    console.log(seed);
+    localStorage.setItem("username", username);
+    localStorage.setItem("avatarSeed", seed);
+
+    navigate("/Registration/Permissions");
   };
 
   const avatar = createAvatar(bigSmile, {

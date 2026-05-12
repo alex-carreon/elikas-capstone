@@ -6,47 +6,70 @@ import TextField from "@/components/TextField";
 import ButtonComp from "@/components/Button";
 import Select from "@/components/SelectDropdown";
 import { useState } from "react";
+import {
+  createUserWithEmailAndPassword,
+  sendEmailVerification,
+} from "@firebase/auth";
+import { auth } from "@/firebase";
 
 function FormRegistration() {
-  const [ln, setLn] = useState("");
-  const [fn, setFn] = useState("");
+  const [last_name, setLn] = useState("");
+  const [first_name, setFn] = useState("");
   const [email, setEmail] = useState("");
   const [city, setCity] = useState("");
   const [brgy, setBrgy] = useState("");
   const [pw, setPw] = useState("");
   const [confirmPw, setConfirmPw] = useState("");
-  const [errors, setErrors] = useState({ pw: "", confirmPw: "" });
+  const [errors, setErrors] = useState({ pw: "", confirmPw: "", email: "" });
   const navigate = useNavigate();
 
-  localStorage.setItem(
-    "registrationData",
-    JSON.stringify({ ln, fn, email, city, brgy }),
-  );
-
-  localStorage.setItem("email", email);
-
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    try {
+      const userCredential = await createUserWithEmailAndPassword(
+        auth,
+        email,
+        pw,
+      );
 
-    if (pw != confirmPw) {
-      setErrors({
-        pw: "Password do not match",
-        confirmPw: "Password do not match",
-      });
-    } else {
-      setErrors({
-        pw: "",
-        confirmPw: "",
-      });
+      const firebaseUser = userCredential.user;
+
+      await sendEmailVerification(firebaseUser);
+
+      localStorage.setItem("firebaseUser", firebaseUser.uid);
+      localStorage.setItem("last_name", last_name);
+      localStorage.setItem("first_name", first_name);
+      localStorage.setItem("email", email);
+      localStorage.setItem("brgy", brgy);
 
       navigate("/Registration/Verify");
+    } catch (err: string | any) {
+      if (err.code === "auth/email-already-in-use") {
+        setErrors({
+          email: "This email is already registered.",
+          pw: "",
+          confirmPw: "",
+        });
+      } else if (err.code === "auth/weak-password") {
+        setErrors({
+          pw: "Password must be at least 6 characters.",
+          confirmPw: "",
+          email: "",
+        });
+      } else if (pw != confirmPw) {
+        setErrors({
+          email: " ",
+          pw: "Password do not match",
+          confirmPw: "Password do not match",
+        });
+      } else {
+        setErrors({
+          pw: "",
+          confirmPw: "",
+          email: " ",
+        });
+      }
     }
-
-    //Call API here - try !response.ok return error, else redirect, catch server error
-    // setErrors({
-    //   email: "Invalid email or password",
-    //   password: "Invalid email or password",
-    // });
   };
 
   return (
@@ -99,14 +122,16 @@ function FormRegistration() {
               id="R-EMAILfield"
               isRequired
               onSubmit={(e) => setEmail(e.target.value)}
+              error={errors.email}
             />
-            <TextField
+            <Select
+              value={city}
+              onValueChange={setCity}
               label="City"
-              placeholder="Enter your current city of residence"
-              inputType="text"
+              placeholder="Select your city"
               id="R-CITYfield"
-              isRequired
               onSubmit={(e) => setCity(e.target.value)}
+              options={[{ label: "San Juan", value: "10" }]}
             />
             <Select
               value={brgy}
@@ -116,8 +141,8 @@ function FormRegistration() {
               id="R-BRGYfield"
               onSubmit={(e) => setBrgy(e.target.value)}
               options={[
-                { label: "Batis", value: "Batis" },
-                { label: "Balong Bato", value: "Balong Bato" },
+                { label: "Salapan", value: "11" },
+                { label: "Batis", value: "12" },
               ]}
             />
             <TextField
@@ -156,5 +181,4 @@ function FormRegistration() {
     </div>
   );
 }
-
 export default FormRegistration;
