@@ -17,8 +17,6 @@ Route::middleware('firebase.auth')->group(function () {
 
     Route::get('/profile', [ProfileController::class, 'profile']);
     Route::put('/profile', [ProfileController::class, 'updateProfile']);
-    
-    Route::get('/users', [ProfileController::class, 'allUsers']);
 
 });
 
@@ -26,5 +24,7 @@ Route::middleware('firebase.auth')->group(function () {
 Route::middleware(['firebase.auth', 'is.admin'])->prefix('admin')->group(function () {
 
     Route::post('/users', [AdminController::class, 'createUser']);
+
+    Route::get('/users', [ProfileController::class, 'allUsers']);
 
 });
