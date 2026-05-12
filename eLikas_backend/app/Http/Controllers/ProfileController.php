@@ -102,18 +102,6 @@ class ProfileController extends Controller
     public function allUsers(Request $request)
     {
         try {
-
-            // Current logged in user
-            $currentUser = $request->attributes->get('firebase_user');
-
-            // Check if admin
-            if ($currentUser->role->role_name !== 'Admin') {
-
-                return response()->json([
-                    'error' => 'Unauthorized'
-                ], 403);
-            }
-
             // Fetch all users
             $users = User::with([
                 'role',
