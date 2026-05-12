@@ -21,6 +21,7 @@
       <ul>
         <li><a href="#distance-calculation">Distance Calculation</a></li>
         <li><a href="#connectivity">Connectivity</a></li>
+        <li><a href="#connectivity">Over-the-Air (OTA) Updates</a></li>
         <li><a href="#data-transmission-json-api">Data Transmission (JSON API)</a></li>
       </ul>
     </li>
@@ -116,7 +117,7 @@ The module can be deployed without hardcoding Wi-Fi credentials using Wi-Fi Prov
   3. A web portal will allow the user to select a local SSID and enter the password
       >**Security**: The setup access point (AP) password can be changed from the default password under the Advanced Settings toggle within the web portal. This password is saved to the ESP32's NVS memory and persists through reboots.
 
-If the device needs to be moved to a new location or the Setup Password is forgotten, send the character 'R' via Serial Monitor (115200 baud) within the first 3 seconds of boot. This wipes all saved Wi-Fi credentials and resets the setup AP password to the default (eLikas-XXXX).
+If the device needs to be moved to a new location or the Setup Password is forgotten, send the character 'R' via Serial Monitor (115200 baud). This wipes all saved Wi-Fi credentials and resets the setup AP password to the default (eLikas-XXXX).
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
@@ -127,7 +128,7 @@ The module utilizes the Network Time Protocol (NTP) to timestamp sensor readings
 Upon successful Wi-Fi connection, the device initializes time synchronization using two configured NTP servers.
 ```
 const char *ntpServer1 = "pool.ntp.org";
-const char *ntpServer2 = "pool.ntp.org";
+const char *ntpServer2 = "time.nist.gov";
 ```
 1. **NTP Pool** (`pool.ntp.org`) - The ESP32 automatically resolves this domain to a nearby server (typically within or near the Philippines), ensuring low latency. Since this is a global, distributed cluster of volunteer-operated time servers, multiple servers can respond if one becomes unavailable.
 2. **NIST Time Servers** (`time.nist.gov`) - Operated by the U.S. National Institute of Standards and Technology (NIST), these servers provide highly accurate time derived from atomic clocks. They serve as a reliable secondary reference to validate synchronization.
@@ -142,6 +143,27 @@ const int daylightOffset_sec = 0;  // DST off per PST
 All HTTP POST requests are withheld until the internal clock has been successfully synchronized with an NTP server, preventing invalid timestamps (e.g., Unix epoch `1970-01-01 00:00:00`) from being recorded in the database.
 
 Using the strftime function, the raw system time is converted into a standardized string formatted as `YYYY-MM-DD HH:MM:SS`. This format allows lexicographic sorting (i.e., timestamps can be ordered even as simple strings) and aligns with most databases' `DATETIME` standards. 
+
+<p align="right">(<a href="#readme-top">back to top</a>)</p>
+
+
+### Over-the-Air (OTA) Updates
+The module supports remote firmware updates by checking for new releases on GitHub at every boot. This is handled entirely over Wi-Fi using `HTTPClient.h` and the ESP32's built-in `Update` library, with no physical access to the device required.
+
+**Update Flow**
+
+1. On boot, the device queries the GitHub Releases API for the latest release tag of the configured repository:
+```
+GET https://api.github.com/repos/{owner}/{repo}/releases/latest
+```
+2. The returned `tag_name` is compared against the current version of the firmware (`currentFirmwareVersion`). If they match, the device boots normally.
+3. If a newer version is detected, the release assets are scanned for a file matching the configured `firmware_asset_name`. The matching asset's download URL is then constructed:
+```
+GET https://api.github.com/repos/{owner}/{repo}/releases/assets/{asset_id}
+```
+4. The `.bin` file is streamed into `Update.write()`. Progress is reported in 5% increments. On a successful write, `Update.end()` finalizes the update and the device restarts with the new firmware.
+
+All GitHub API requests are authenticated using a Personal Access Token (PAT) stored in `secrets.h` to support private repositories.
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
@@ -174,9 +196,9 @@ Data is transmitted via HTTP POST requests to the server endpoint using `HTTPCli
     - [x] **NTP Timestamping:** Synchronize system clock with global time servers 
           
 - [ ] **Phase 3: Logic & Reliability**
+    - [x] **Over-the-Air (OTA) Updates:** Enable remote firmware updates 
     - [ ] **Signal Filtering:** Implement a moving average algorithm to stabilize water surface readings.
     - [ ] **Power Management:** Configure ESP32 Deep Sleep cycles to maximize battery life between transmissions.
-    - [ ] **Over-the-Air (OTA) Updates:** Enable remote firmware updates since the sensor will be in a waterproof housing.
 
 - [ ] **Phase 4: Final Hardware & Power**
     - [ ] **Power Circuitry:** Solder 2x rechargeable Li-ion batteries with an optional TP4056/Solar charging module.
