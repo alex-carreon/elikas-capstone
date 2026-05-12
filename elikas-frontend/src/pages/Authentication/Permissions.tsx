@@ -6,7 +6,7 @@ import Switch from "@/components/Switch";
 import ButtonComp from "@/components/Button";
 import CheckBox from "@/components/CheckBox";
 import { useState } from "react";
-import { auth } from "../firebase";
+import { auth } from "../../firebase";
 
 function Permissions() {
   const [checked, setChecked] = useState(false);

@@ -7,14 +7,14 @@ import {
   CarouselContent,
   CarouselItem,
 } from "@/components/ui/carousel";
-import Logo from "../components/Logo";
+import Logo from "../../components/Logo";
 import { ArrowLeftIcon } from "lucide-react";
 import { Link } from "react-router-dom";
 import React, { useEffect, useState } from "react";
 import { type CarouselApi } from "@/components/ui/carousel";
-import ButtonComp from "../components/Button";
+import ButtonComp from "../../components/Button";
 import { Circle } from "lucide-react";
-import CarouselCard from "../components/CarouselCard";
+import CarouselCard from "../../components/CarouselCard";
 
 function SplashRegistration() {
   const [api, setApi] = useState<CarouselApi>();

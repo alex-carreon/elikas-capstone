@@ -1,5 +1,5 @@
 import { Link, useNavigate } from "react-router-dom";
-import Logo from "../components/Logo";
+import Logo from "../../components/Logo";
 import { ArrowLeftIcon } from "lucide-react";
 import colors from "@/constants/colors";
 import TextField from "@/components/TextField";
