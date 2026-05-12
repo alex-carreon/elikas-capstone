@@ -1,4 +1,4 @@
-import MapComp from "./components/Map";
+import MapComp from "@/components/Map";
 import ButtonComp from "./components/Button";
 import "leaflet/dist/leaflet.css";
 import { Routing } from "@/lib/mapUtils";
