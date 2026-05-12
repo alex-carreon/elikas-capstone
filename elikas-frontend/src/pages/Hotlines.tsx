@@ -4,7 +4,7 @@ import {
   InputGroupAddon,
   InputGroupInput,
 } from "@/components/ui/input-group";
-import HotlineRow from "./components/HotlineRow";
+import HotlineRow from "../components/HotlineRow";
 // import { Button } from "@/components/ui/button";
 
 function Hotlines() {
