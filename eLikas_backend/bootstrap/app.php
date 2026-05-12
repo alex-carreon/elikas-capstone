@@ -14,6 +14,7 @@ return Application::configure(basePath: dirname(__DIR__))
     ->withMiddleware(function (Middleware $middleware): void {
         $middleware->alias([
         'firebase.auth' => \App\Http\Middleware\FirebaseAuthMiddleware::class,
+        'is.admin' => \App\Http\Middleware\IsAdminMiddleware::class,
     ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {

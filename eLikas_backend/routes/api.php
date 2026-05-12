@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\AdminController;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\ProfileController;
@@ -17,5 +18,12 @@ Route::middleware('firebase.auth')->group(function () {
     Route::get('/profile', [ProfileController::class, 'profile']);
     Route::put('/profile', [ProfileController::class, 'updateProfile']);
     Route::get('/users', [ProfileController::class, 'allUsers']);
+
+});
+
+// ADMIN ROUTES
+Route::middleware(['firebase.auth', 'is.admin'])->prefix('admin')->group(function () {
+
+    Route::post('/users', [AdminController::class, 'createUser']);
 
 });
