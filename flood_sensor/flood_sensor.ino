@@ -18,7 +18,7 @@
 #include <Update.h>
 #include <ArduinoOTA.h>
 
-const char* currentFirmwareVersion = "1.0.0";
+const char* currentFirmwareVersion = "1.0.1";
 const char* sensorId = SECRET_SENSOR;
 
 // Github Repo Details
