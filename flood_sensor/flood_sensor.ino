@@ -7,8 +7,11 @@
 #include <WiFiManager.h>
 #include <HTTPClient.h>
 #include <Preferences.h>  // esp32's non-volatile storage (nvs)
+
 #include "time.h"
 #include "esp_sntp.h"
+
+#include <Update.h>
 
 #include <ArduinoOTA.h>
 
@@ -16,6 +19,14 @@
 #include <AsyncTCP.h>
 #include <ESPAsyncWebServer.h>
 #include <WebSerial.h>
+
+const char* currentFirmwareVersion = "1.0.0";
+
+// Github Repo Details
+const char* github_owner = GITHUB_OWNER;
+const char* github_repo = GITHUB_REPO;
+const char* firmware_asset_name = FIRMWARE_ASSET;
+const char* github_pat = SECRET_GITHUB_PAT;
 
 const char* api_key = SECRET_API_KEY;
 const char* serverUrl = SECRET_SERVER;
@@ -41,23 +52,6 @@ void setup() {
   pinMode(TRIG_PIN, OUTPUT);
   pinMode(ECHO_PIN, INPUT);
 
-  // !!! will be replaced with a physical reset button 
-  // emergency factory reset
-  WebSerial.println("\n--- BOOTING --- \nPress 'R' now to Factory Reset...");
-  unsigned long startWait = millis();
-  while (millis() - startWait < 3000) {  // 3-second window to press 'R'
-    if (Serial.available() > 0 && Serial.read() == 'R') {
-        WiFiManager wm;
-        wm.resetSettings();  // wipe saved wifi config
-        preferences.begin("sensor", false);  // access nvs read-write mode (false)
-        preferences.clear();   // delete saved ap password 
-        preferences.end();   // end nvs session
-        WebSerial.println("!!! ALL SETTINGS WIPED !!! Restarting...");
-        delay(1000);
-        ESP.restart();
-    }
-  }
-
   manageConnection(true);
 
   sntp_set_time_sync_notification_cb(timeAvailable);   // trip time sync flag
@@ -76,13 +70,37 @@ void setup() {
     for(size_t i = 0; i < len; i++){
       d += char(data[i]);
     }
+    d.trim();
+
     WebSerial.println(d);
+
+    if (d == "status") {
+      printStatus();
+    } 
+    
+    // !!! will be replaced with a physical reset button 
+    // emergency factory reset
+    if (d == "R") {
+      WebSerial.println("Factory Reset...");
+      WiFiManager wm;
+      wm.resetSettings();  // wipe saved wifi config
+      preferences.begin("sensor", false);  // access nvs read-write mode (false)
+      preferences.clear();   // delete saved ap password 
+      preferences.end();   // end nvs session
+      WebSerial.println("!!! ALL SETTINGS WIPED !!! Restarting...");
+      delay(1000);
+      ESP.restart();
+    }
+
+    if (d == "update") {
+      checkForFirmwareUpdate();
+    } 
   });
  
   // Start AsyncWebServer
   server.begin();
 
-  WebSerial.println("Connected! IP: " + WiFi.localIP().toString());
+  checkForFirmwareUpdate();
 }
 
 
@@ -206,6 +224,171 @@ void manageConnection(bool isInitialSetup) {
   }
 }
 
+void printStatus() {
+  WebSerial.println("Connected! IP: " + WiFi.localIP().toString());
+  WebSerial.print("Firmware Version: ");
+  WebSerial.println(currentFirmwareVersion);
+}
+
+void checkForFirmwareUpdate() {
+  if (WiFi.status() != WL_CONNECTED) {
+    WebSerial.println("WiFi not connected. Skipping update check.");
+    return;
+  }
+
+  String apiUrl = "https://api.github.com/repos/" + String(github_owner) + "/" + String(github_repo) + "/releases/latest";
+
+  WebSerial.println("---------------------------------");
+  WebSerial.println("Checking for new firmware...");
+  WebSerial.println("Fetching release info from: " + apiUrl);
+
+  HTTPClient http;
+  http.begin(apiUrl);  
+  http.addHeader("Authorization", "token " + String(github_pat));
+  http.addHeader("Accept", "application/vnd.github.v3+json");
+  http.setUserAgent("ESP32-OTA-Client");
+
+  WebSerial.println("Sending API request...");
+  int httpCode = http.GET();
+
+  if (httpCode != HTTP_CODE_OK) {
+    WebSerial.printf("API request failed. HTTP code: %d\n", httpCode);
+    WebSerial.println("Full response: " + http.getString());  // Print error
+    http.end();
+    return;
+  }
+  WebSerial.printf("API request successful (HTTP %d). Parsing JSON.\n", httpCode);
+  JsonDocument doc;
+  DeserializationError error = deserializeJson(doc, http.getStream());
+  http.end();
+
+  if (error) {
+    WebSerial.println("Failed to parse JSON: " + String(error.c_str()));
+    return;
+  }
+
+  String latestVersion = doc["tag_name"].as<String>();
+  if (latestVersion.isEmpty() || latestVersion == "null") {
+    WebSerial.println("Could not find 'tag_name' in JSON response.");
+    return;
+  }
+  WebSerial.println("Current Version: " + String(currentFirmwareVersion));
+  WebSerial.println("Latest Version:  " + latestVersion);
+
+  if (latestVersion != currentFirmwareVersion) {
+    WebSerial.println(">>> New firmware available! <<<");
+    WebSerial.println("Searching for asset named: " + String(firmware_asset_name));
+    String firmwareUrl = "";
+    JsonArray assets = doc["assets"].as<JsonArray>();
+
+    for (JsonObject asset : assets) {
+      String assetName = asset["name"].as<String>();
+      WebSerial.println("Found asset: " + assetName);
+
+      if (assetName == String(firmware_asset_name)) {
+        String assetId = asset["id"].as<String>();
+        firmwareUrl = "https://api.github.com/repos/" + String(github_owner) + "/" + String(github_repo) + "/releases/assets/" + assetId;
+        WebSerial.println("Found matching asset! Preparing to download.");
+        break;
+      }
+    }
+
+    if (firmwareUrl.isEmpty()) {
+      WebSerial.println("Error: Could not find the specified firmware asset in the release.");
+      return;
+    }
+    downloadAndApplyFirmware(firmwareUrl);
+
+  } else {
+    WebSerial.println("Device is up to date. No update needed.");
+  }
+  WebSerial.println("---------------------------------");
+}
+
+void downloadAndApplyFirmware(String url) {
+  HTTPClient http;
+  WebSerial.println("Starting firmware download from: " + url);
+
+  http.setFollowRedirects(HTTPC_STRICT_FOLLOW_REDIRECTS);
+  http.setUserAgent("ESP32-OTA-Client");
+  http.begin(url);
+  http.addHeader("Accept", "application/octet-stream");
+  http.addHeader("Authorization", "token " + String(github_pat));
+
+  int httpCode = http.GET();
+  if (httpCode != HTTP_CODE_OK) {
+    WebSerial.printf("Download failed, HTTP code: %d\n", httpCode);
+    http.end();
+    return;
+  }
+
+  int contentLength = http.getSize();
+  if (contentLength <= 0) {
+    WebSerial.println("Error: Invalid content length.");
+    http.end();
+    return;
+  }
+
+  // Begin the OTA update
+  if (!Update.begin(contentLength)) {
+    WebSerial.printf("Update begin failed: %s\n", Update.errorString());
+    http.end();
+    return;
+  }
+  WebSerial.println("Writing firmware... (this may take a moment)");
+  WiFiClient* stream = http.getStreamPtr();
+  uint8_t buff[1024];  
+  size_t totalWritten = 0;
+  int lastProgress = -1;
+
+  while (totalWritten < contentLength) {
+    int available = stream->available();
+    if (available > 0) {
+      int readLen = stream->read(buff, min((size_t)available, sizeof(buff)));
+      if (readLen < 0) {
+        WebSerial.println("Error reading from stream");
+        Update.abort();
+        http.end();
+        return;
+      }
+
+      if (Update.write(buff, readLen) != readLen) {
+        WebSerial.printf("Error: Update.write failed: %s\n", Update.errorString());
+        Update.abort();
+        http.end();
+        return;
+      }
+
+      totalWritten += readLen;
+      int progress = (int)((totalWritten * 100L) / contentLength);
+      if (progress > lastProgress && (progress % 5 == 0 || progress == 100)) {
+        WebSerial.printf("Progress: %d%%", progress);
+        WebSerial.println();
+        if (progress == 100) {
+          WebSerial.println(); 
+        } else {
+          WebSerial.print("\r"); 
+        }
+        lastProgress = progress;
+      }
+    }
+    delay(1);
+  }
+  WebSerial.println();
+
+  if (totalWritten != contentLength) {
+    WebSerial.printf("Error: Write incomplete. Wrote %d of %d bytes\n", totalWritten, contentLength);
+    Update.abort();
+  } else if (!Update.end()) {  // Finalize the update
+    WebSerial.printf("Error: Update end failed: %s\n", Update.errorString());
+  } else {
+    WebSerial.println("Update complete! Restarting...");
+    delay(1000);
+    ESP.restart();
+  }
+  http.end();
+}
+
 void sendFloodData(float distance) {
   String currentTimestamp = getFormattedTime();
 
@@ -224,7 +407,7 @@ void sendFloodData(float distance) {
   http.addHeader("Content-Type", "application/json");
 
   int responseCode = http.POST(payload);
-  Serial.printf("Response code: %d\n", responseCode);
+  WebSerial.printf("Response code: %d\n", responseCode);
   http.end();
 }
 
