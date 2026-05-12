@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
+use App\Models\User;
 
 class ProfileController extends Controller
 {
@@ -93,6 +94,59 @@ class ProfileController extends Controller
 
             return response()->json([
                 'error' => 'Failed to update profile',
+                'details' => $e->getMessage()
+            ], 500);
+        }
+    }
+
+    public function allUsers(Request $request)
+    {
+        try {
+
+            // Current logged in user
+            $currentUser = $request->attributes->get('firebase_user');
+
+            // Check if admin
+            if ($currentUser->role->role_name !== 'Admin') {
+
+                return response()->json([
+                    'error' => 'Unauthorized'
+                ], 403);
+            }
+
+            // Fetch all users
+            $users = User::with([
+                'role',
+                'name',
+                'phoneNumber',
+                'indivAcc.location'
+            ])->get();
+
+            // Format response
+            $formattedUsers = $users->map(function ($user) {
+
+                return [
+                    'id' => $user->id,
+                    'username' => $user->username,
+                    'email' => $user->email,
+
+                    'role' => $user->role?->role_name,
+
+                    'first_name' => $user->name?->first_name,
+                    'last_name' => $user->name?->last_name,
+
+                    'phone' => $user->phoneNumber?->phone_no,
+
+                    'location' => $user->indivAcc?->location?->name,
+                ];
+            });
+
+            return response()->json($formattedUsers);
+
+        } catch (\Exception $e) {
+
+            return response()->json([
+                'error' => 'Failed to fetch users',
                 'details' => $e->getMessage()
             ], 500);
         }
