@@ -17,6 +17,7 @@ Route::middleware('firebase.auth')->group(function () {
 
     Route::get('/profile', [ProfileController::class, 'profile']);
     Route::put('/profile', [ProfileController::class, 'updateProfile']);
+    
     Route::get('/users', [ProfileController::class, 'allUsers']);
 
 });
