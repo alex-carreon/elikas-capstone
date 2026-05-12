@@ -1,7 +1,7 @@
 import { Card } from "@/components/ui/card";
-import carousel1 from "../assets/Registration/Carousel1.svg";
-import carousel2 from "../assets/Registration/Carousel2.svg";
-import carousel3 from "../assets/Registration/Carousel3.svg";
+import carousel1 from "@/assets/Registration/Carousel1.svg";
+import carousel2 from "@/assets/Registration/Carousel2.svg";
+import carousel3 from "@/assets/Registration/Carousel3.svg";
 import {
   Carousel,
   CarouselContent,
