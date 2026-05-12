@@ -8,8 +8,8 @@ import Permissions from "./pages/Authentication/Permissions";
 import Finish from "./pages/Authentication/Finish";
 import Navbar from "./Navbar/GuestNavbar";
 import ConstNavbar from "./Navbar/ConstNavbar";
-import Map from "./Map";
-import Hotlines from "@/Hotlines";
+import Map from "@/pages/Map";
+import Hotlines from "@/pages/Hotlines";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 
 function App() {
