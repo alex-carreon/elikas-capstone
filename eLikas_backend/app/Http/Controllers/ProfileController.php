@@ -35,4 +35,66 @@ class ProfileController extends Controller
             ], 500);
         }
     }
+
+    public function updateProfile(Request $request)
+    {
+        try {
+
+            $user = $request->attributes->get('firebase_user');
+
+            // Validation
+            $request->validate([
+                'username' => 'nullable|string|max:255',
+                'first_name' => 'nullable|string|max:255',
+                'last_name' => 'nullable|string|max:255',
+                'phone' => 'nullable|string|max:20',
+                'location_id' => 'nullable|integer',
+            ]);
+
+            // Update users table
+            if ($request->filled('username')) {
+                $user->username = $request->username;
+                $user->save();
+            }
+
+            // Update name table
+            if ($user->name) {
+
+                $user->name->update([
+                    'first_name' => $request->first_name ?? $user->name->first_name,
+                    'last_name'  => $request->last_name ?? $user->name->last_name,
+                ]);
+
+            }
+
+            // Update phone number table
+            if ($user->phoneNumber) {
+
+                $user->phoneNumber->update([
+                    'phone_no' => $request->phone ?? $user->phoneNumber->phone_no,
+                ]);
+
+            }
+
+            // Update individual account table
+            if ($user->indivAcc) {
+
+                $user->indivAcc->update([
+                    'location_id' => $request->location_id ?? $user->indivAcc->location_id,
+                ]);
+
+            }
+
+            return response()->json([
+                'message' => 'Profile updated successfully'
+            ]);
+
+        } catch (\Exception $e) {
+
+            return response()->json([
+                'error' => 'Failed to update profile',
+                'details' => $e->getMessage()
+            ], 500);
+        }
+    }
 }
