@@ -37,7 +37,9 @@ function SelectDropdown({
       </FieldLabel>
       <Select onValueChange={(val: string | null) => onValueChange(val ?? "")}>
         <SelectTrigger id={id}>
-          <SelectValue placeholder={placeholder} />
+          {options.find((option) => option.value === value)?.label ||
+            placeholder}
+          {/* <SelectValue placeholder={placeholder} /> */}
         </SelectTrigger>
         <SelectContent>
           <SelectGroup>
