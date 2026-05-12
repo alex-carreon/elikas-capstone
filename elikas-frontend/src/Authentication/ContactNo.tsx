@@ -4,13 +4,14 @@ import TextField from "@/components/TextField";
 import colors from "@/constants/colors";
 import { ArrowLeftIcon } from "lucide-react";
 import { useState } from "react";
-import { Link } from "react-router";
+import { Link, useNavigate } from "react-router";
 
 function ContactNo() {
   const [contact, setContact] = useState("");
   const [errors, setErrors] = useState({ contact: "" });
 
   const contactValidate = /^639\d{9}$/;
+  const navigate = useNavigate();
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -20,10 +21,13 @@ function ContactNo() {
       setErrors({
         contact: "Invalid Contact Number",
       });
-    } else
+    } else {
       setErrors({
         contact: "",
       });
+      localStorage.setItem("contact", contact);
+      navigate("/Registration/CustomProfile");
+    }
   };
 
   return (
