@@ -1,14 +1,73 @@
 import { ArrowLeftIcon } from "lucide-react";
-import { Link } from "react-router";
+import { Link, useNavigate } from "react-router";
 import Logo from "@/components/Logo";
 import colors from "@/constants/colors";
 import Switch from "@/components/Switch";
 import ButtonComp from "@/components/Button";
 import CheckBox from "@/components/CheckBox";
 import { useState } from "react";
+import { auth } from "../firebase";
 
 function Permissions() {
   const [checked, setChecked] = useState(false);
+  // const [formData, setFormData] = useState({});
+  const [error, setError] = useState("");
+  // const [success, setSuccess] = useState("");
+  const navigate = useNavigate();
+
+  const formData = {
+    fn: localStorage.getItem("first_name") ?? "",
+    ln: localStorage.getItem("last_name") ?? "",
+    email: localStorage.getItem("email") ?? "",
+    // pw: localStorage.getItem("pw") ?? "",
+    username: localStorage.getItem("username") ?? "",
+    phone: localStorage.getItem("phone") ?? "",
+    loc: localStorage.getItem("brgy") ?? "",
+  };
+
+  // const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  //   setFormData({ ...formData, [e.target.name]: e.target.value });
+  // };
+
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+    e.preventDefault();
+    setError("");
+
+    console.log("FORM DATA:", formData);
+
+    try {
+      const response = await fetch("http://127.0.0.1:8000/api/auth/register", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Accept: "application/json",
+        },
+        body: JSON.stringify({
+          username: formData.username,
+          email: formData.email,
+          first_name: formData.fn,
+          last_name: formData.ln,
+          phone: formData.phone,
+          location_id: Number(formData.loc),
+          firebase_uid: localStorage.getItem("firebaseUser"),
+        }),
+      });
+      const result = await response.json();
+
+      console.log("REGISTER RESULT:", result);
+
+      if (!response.ok) {
+        const firebaseUser = auth.currentUser;
+        if (firebaseUser) {
+          await firebaseUser.delete();
+        }
+        throw new Error(result.message || "Registration failed");
+      }
+      navigate("/Registration/Form");
+    } catch (err: string | any) {
+      setError(err.message || "An error occurred during registration");
+    }
+  };
 
   return (
     <div className="min-h-screen flex justify-center p-6">
@@ -62,23 +121,27 @@ function Permissions() {
               </p>
             </div>
             <div className="w-full flex justify-center items-center m-0">
-              {!checked ? (
-                <ButtonComp
-                  text="Next"
-                  variant="primary"
-                  id="R-NextPermissions"
-                  isDisabled={!checked}
-                ></ButtonComp>
-              ) : (
-                <Link to="/Registration/Finish" className="w-full max-w-xs">
+              <form onSubmit={handleSubmit} className="w-full">
+                <p>{error}</p>
+                {!checked ? (
                   <ButtonComp
                     text="Next"
                     variant="primary"
                     id="R-NextPermissions"
                     isDisabled={!checked}
+                    type="submit"
                   ></ButtonComp>
-                </Link>
-              )}
+                ) : (
+                  <ButtonComp
+                    text="Next"
+                    variant="primary"
+                    id="R-NextPermissions"
+                    isDisabled={!checked}
+                    onClick={() => handleSubmit}
+                    type="submit"
+                  ></ButtonComp>
+                )}
+              </form>
             </div>
           </div>
         </div>

@@ -1,18 +1,44 @@
 import Logo from "@/components/Logo";
 import { ArrowLeftIcon } from "lucide-react";
-import { Link } from "react-router";
-// import InputOTPComp from "@/components/InputOTP";
+import { Link, useNavigate } from "react-router";
 import colors from "@/constants/colors";
 import ButtonComp from "@/components/Button";
+import { auth } from "@/firebase";
+import { sendEmailVerification } from "firebase/auth";
+import { useState } from "react";
 
 function EmailVerif() {
   const emailData = localStorage.getItem("email");
+  const navigate = useNavigate();
 
-  // const handleVerify = (e:React.FormEvent) => {
-  //   e.preventDefault();
+  const [message, setMessage] = useState("");
 
-  //   //Call API here - try !response.ok return error, else redirect, catch server error
-  // }
+  const handleResend = async () => {
+    try {
+      const user = auth.currentUser;
+
+      if (!user) {
+        throw new Error("Please register again first.");
+      }
+
+      await sendEmailVerification(user);
+      setMessage("Verification email sent again. Check your inbox/spam.");
+    } catch (err: string | any) {
+      setMessage(err.message);
+    }
+  };
+
+  const checkVerification = async () => {
+    if (auth.currentUser) {
+      await auth.currentUser.reload();
+
+      if (auth.currentUser.emailVerified) {
+        navigate("/Registration/Contact");
+      } else {
+        setMessage("Still not verified.");
+      }
+    }
+  };
 
   return (
     <div className="min-h-screen flex justify-center p-6">
@@ -45,18 +71,24 @@ function EmailVerif() {
             {/* <p className="text-xs text-red-500 font-bold">
               You're lying it aint verified
             </p> */}
-            <Link to="/Registration/CustomProfile" className="w-full max-w-xs">
-              <ButtonComp
-                text="Verify Email"
-                variant="primary"
-                id="R-VerifyEmail"
-              />
-            </Link>
+            <p
+              className="text-sm text-center p-1"
+              style={{ color: colors.heading }}
+            >
+              {message}
+            </p>
+            <ButtonComp
+              text="Verify Email"
+              variant="primary"
+              id="R-VerifyEmail"
+              onClick={checkVerification}
+            />
 
             <ButtonComp
               text="Resend Email Verification"
               variant="outline"
               id="R-ResendEmail"
+              onClick={handleResend}
             />
           </div>
         </div>
