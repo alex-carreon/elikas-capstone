@@ -11,16 +11,15 @@
 #include "time.h"
 #include "esp_sntp.h"
 
-#include <Update.h>
-
-#include <ArduinoOTA.h>
-
 #include <Arduino.h>
 #include <AsyncTCP.h>
 #include <ESPAsyncWebServer.h>
 #include <WebSerial.h>
+#include <Update.h>
+#include <ArduinoOTA.h>
 
 const char* currentFirmwareVersion = "1.0.0";
+const char* sensorId = SECRET_SENSOR;
 
 // Github Repo Details
 const char* github_owner = GITHUB_OWNER;
@@ -28,11 +27,11 @@ const char* github_repo = GITHUB_REPO;
 const char* firmware_asset_name = FIRMWARE_ASSET;
 const char* github_pat = SECRET_GITHUB_PAT;
 
+// API Info
 const char* api_key = SECRET_API_KEY;
 const char* serverUrl = SECRET_SERVER;
-const char* sensorId = SECRET_SENSOR;
 
-//NTP settings
+// NTP settings
 const char *ntpServer1 = "pool.ntp.org";
 const char *ntpServer2 = "time.nist.gov";
 const long gmtOffset_sec = 28800;   // GMT +8 for manila
