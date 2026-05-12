@@ -14,14 +14,12 @@ export const pins = [
   {
     id: 1,
     name: "Atrium",
-    description: "First Location",
     lat: 14.565518250363224,
     long: 120.99809311129499,
   },
   {
     id: 2,
     name: "Taft Campus",
-    description: "Second Location",
     lat: 14.563803477668346,
     long: 120.99479571081709,
   },
