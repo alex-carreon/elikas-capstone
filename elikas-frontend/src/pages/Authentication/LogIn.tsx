@@ -1,9 +1,9 @@
-import eLikasLogo from "../assets/logo.svg";
-import "../App.css";
-import colors from "../../constants/colors";
-import TextField from "../../components/TextField";
-import CheckBox from "../../components/CheckBox";
-import ButtonComp from "../../components/Button";
+import eLikasLogo from "@/assets/logo.svg";
+import "@/App.css";
+import colors from "@/constants/colors";
+import TextField from "@/components/TextField";
+import CheckBox from "@/components/CheckBox";
+import ButtonComp from "@/components/Button";
 import { Mail } from "lucide-react";
 import { Lock } from "lucide-react";
 import { Link } from "react-router-dom";
