@@ -21,8 +21,9 @@ function Permissions() {
     email: localStorage.getItem("email") ?? "",
     // pw: localStorage.getItem("pw") ?? "",
     username: localStorage.getItem("username") ?? "",
-    phone: localStorage.getItem("phone") ?? "",
+    phone: localStorage.getItem("contact") ?? "",
     loc: localStorage.getItem("brgy") ?? "",
+    firebase_uid: localStorage.getItem("firebaseUser") ?? "",
   };
 
   // const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
