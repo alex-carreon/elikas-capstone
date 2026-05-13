@@ -6,11 +6,15 @@ import ContactNo from "./pages/Authentication/ContactNo";
 import CustomizeProfile from "./pages/Authentication/CustomizeProfile";
 import Permissions from "./pages/Authentication/Permissions";
 import Finish from "./pages/Authentication/Finish";
-import Navbar from "./Navbar/GuestNavbar";
+import GuestNavbar from "./Navbar/GuestNavbar";
+import AuthNavbar from "./Navbar/AuthNavbar";
 import ConstNavbar from "./Navbar/ConstNavbar";
 import Map from "@/pages/Map";
 import Hotlines from "@/pages/Hotlines";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
+import Settings from "./pages/Settings";
+import { AuthProvider } from "./context/AuthContext";
+import ProtectedRoute from "./components/ProtectedRoutes";
 
 function App() {
   return (
@@ -28,8 +32,19 @@ function App() {
           <Route path="Finish" element={<Finish />} />
         </Route>
 
-        <Route element={<Navbar />}>
-          <Route path="/Guest" element={<Map />} />
+        <Route element={<ProtectedRoute />}>
+          <Route element={<AuthNavbar />}>
+            <Route path="/Map" element={<Map />} />
+          </Route>
+
+          <Route element={<ConstNavbar />}>
+            <Route path="/Hotlines" element={<Hotlines />} />
+            <Route path="/Settings" element={<Settings />} />
+          </Route>
+        </Route>
+
+        <Route element={<GuestNavbar />}>
+          <Route path="/" element={<Map />} />
         </Route>
 
         <Route element={<ConstNavbar />}>

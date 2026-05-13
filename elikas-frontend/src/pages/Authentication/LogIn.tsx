@@ -8,21 +8,84 @@ import { Mail } from "lucide-react";
 import { Lock } from "lucide-react";
 import { Link } from "react-router-dom";
 import { useState } from "react";
+import { auth } from "@/firebase";
+import { signInWithEmailAndPassword } from "@firebase/auth";
 
 function LogIn() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [errors, setErrors] = useState({ email: "", password: "" });
+  const [errors, setErrors] = useState({
+    email: "",
+    password: "",
+    general: "",
+  });
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     console.log(email, password);
+    console.log("Submitting login form with:", { email, password });
 
-    //Call API here - try !response.ok return error, else redirect, catch server error
-    // setErrors({
-    //   email: "Invalid email or password",
-    //   password: "Invalid email or password",
-    // });
+    try {
+      // Step 1: Sign in with Firebase — checks email + password
+      const userCredential = await signInWithEmailAndPassword(
+        auth,
+        email,
+        password,
+      );
+
+      if (!userCredential.user.emailVerified) {
+        // Optionally sign them out so they can't access protected routes
+        await auth.signOut();
+        throw new Error("Please verify your email before logging in.");
+      }
+
+      // Step 2: Get the ID token — this is proof of identity sent to Laravel
+      const token = await userCredential.user.getIdToken();
+
+      console.log("Firebase Token:", token); // to see the token
+
+      // Step 3: Send token to Laravel to get the user's role
+      const response = await fetch("http://localhost:8000/api/auth/login", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      const userData = await response.json();
+
+      if (!response.ok) {
+        throw new Error(userData.error || "Login failed");
+      }
+
+      // Step 4: Save user info so other pages can access it
+      localStorage.setItem("user", JSON.stringify(userData));
+
+      // Step 5: Redirect based on role
+      if (userData.role === "admin") {
+        window.location.href = "/admin-dashboard";
+      } else if (userData.role === "brgy_op") {
+        window.location.href = "/barangay-dashboard";
+      } else {
+        window.location.href = "/Map";
+      }
+    } catch (err: string | any) {
+      if (
+        err.code === "auth/user-not-found" ||
+        err.code === "auth/wrong-password" ||
+        err.code === "auth/invalid-credential"
+      ) {
+        setErrors({ ...errors, general: "Incorrect email or password." });
+      } else if (err.code === "auth/too-many-requests") {
+        setErrors({
+          ...errors,
+          general: "Too many failed attempts. Please try again later.",
+        });
+      } else {
+        setErrors(err.message);
+      }
+    }
   };
 
   return (
