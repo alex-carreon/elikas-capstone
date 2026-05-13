@@ -17,7 +17,7 @@ function Navbar() {
           <div>
             <LogoComp />
           </div>
-          <Link to="">
+          <Link to="/Hotlines">
             <div className="flex flex-col justify-center items-center">
               <Phone style={{ color: colors.heading }} />
               <p

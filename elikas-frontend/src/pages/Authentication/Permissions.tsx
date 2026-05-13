@@ -64,7 +64,8 @@ function Permissions() {
         }
         throw new Error(result.message || "Registration failed");
       }
-      navigate("/Registration/Form");
+      localStorage.clear();
+      navigate("/Finish");
     } catch (err: string | any) {
       setError(err.message || "An error occurred during registration");
     }
@@ -87,7 +88,7 @@ function Permissions() {
               className="BeVietnamPro text-2xl text-center font-bold"
               style={{ color: colors.heading }}
             >
-              Lastly, we would to ask for your permission...
+              Lastly, we would like to ask for your permission...
             </h1>
           </div>
 
@@ -121,29 +122,30 @@ function Permissions() {
                 here.
               </p>
             </div>
-            <div className="w-full flex justify-center items-center m-0">
-              <form onSubmit={handleSubmit} className="w-full">
-                <p>{error}</p>
-                {!checked ? (
-                  <ButtonComp
-                    text="Next"
-                    variant="primary"
-                    id="R-NextPermissions"
-                    isDisabled={!checked}
-                    type="submit"
-                  ></ButtonComp>
-                ) : (
-                  <ButtonComp
-                    text="Next"
-                    variant="primary"
-                    id="R-NextPermissions"
-                    isDisabled={!checked}
-                    onClick={() => handleSubmit}
-                    type="submit"
-                  ></ButtonComp>
-                )}
-              </form>
-            </div>
+            <form
+              onSubmit={handleSubmit}
+              className="w-full flex justify-center items-center m-0"
+            >
+              <p>{error}</p>
+              {!checked ? (
+                <ButtonComp
+                  text="Next"
+                  variant="primary"
+                  id="R-NextPermissions"
+                  isDisabled={!checked}
+                  type="submit"
+                ></ButtonComp>
+              ) : (
+                <ButtonComp
+                  text="Next"
+                  variant="primary"
+                  id="R-NextPermissions"
+                  isDisabled={!checked}
+                  onClick={() => handleSubmit}
+                  type="submit"
+                ></ButtonComp>
+              )}
+            </form>
           </div>
         </div>
       </div>
