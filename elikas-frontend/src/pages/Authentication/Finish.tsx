@@ -3,8 +3,14 @@ import { ArrowLeftIcon } from "lucide-react";
 import Logo from "@/components/Logo";
 import colors from "@/constants/colors";
 import ButtonComp from "@/components/Button";
+import { auth } from "@/firebase";
 
 function Finish() {
+  const test = () => {
+    const user = auth.currentUser;
+    console.log("Current User: ", user);
+  };
+
   return (
     <div className="min-h-screen flex justify-center p-6">
       <div className="w-full max-w-sm flex flex-col">
@@ -38,6 +44,7 @@ function Finish() {
                   text="Get Started!"
                   variant="primary"
                   id="R-FinRegis"
+                  onClick={test}
                 ></ButtonComp>
               </Link>
             </div>
