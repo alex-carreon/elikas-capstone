@@ -1,6 +1,6 @@
 import { Link, Outlet } from "react-router";
 import LogoComp from "../components/Logo";
-import { Phone, MapPin, CircleUser } from "lucide-react";
+import { Phone, MapPin, CircleUser, MessageSquare } from "lucide-react";
 import colors from "@/constants/colors";
 import {
   DropdownMenu,
@@ -9,8 +9,11 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { useUserContext } from "@/context/AuthContext";
 
 function AuthNavbar() {
+  const { role } = useUserContext();
+
   return (
     <>
       <div className="fixed top-0 left-0 z-50 w-full h-content flex justify-center">
@@ -19,6 +22,19 @@ function AuthNavbar() {
             <LogoComp />
           </div>
           <div className="flex flex-row gap-1">
+            {role === "brgy_op" && (
+              <Link to="">
+                <div className="flex flex-col justify-center items-center">
+                  <MessageSquare style={{ color: colors.heading }} />
+                  <p
+                    className="text-xs text-center p-1"
+                    style={{ color: colors.label }}
+                  >
+                    SMS
+                  </p>
+                </div>
+              </Link>
+            )}
             <Link to="/Hotlines">
               <div className="flex flex-col justify-center items-center">
                 <Phone style={{ color: colors.heading }} />
