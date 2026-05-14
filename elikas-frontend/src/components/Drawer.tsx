@@ -2,7 +2,9 @@ import {
   Drawer,
   DrawerClose,
   DrawerContent,
+  DrawerDescription,
   DrawerHeader,
+  DrawerTitle,
 } from "@/components/ui/drawer";
 import { ChevronDownIcon, ShieldCheck, CircleX } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -105,6 +107,10 @@ function DrawerComp({
               </DrawerClose>
             </div>
             <DrawerHeader>
+              <DrawerTitle>
+                {" "}
+                <DrawerDescription />
+              </DrawerTitle>
               <div className="flex flex-row gap-2">
                 <img src={DrawerIcon} className="w-10" />
                 <div>
@@ -131,7 +137,9 @@ function DrawerComp({
                 size="sm"
                 className="w-26 h-8 bg-gradient-to-r bg-[#F3C962] rounded-2xl"
                 id="Drawer-RouteBtn"
-                onClick={() => onFindRoute(true)}
+                onClick={() => {
+                  (onFindRoute(true), setExpanded(false));
+                }}
               >
                 Show Route
               </Button>
@@ -153,12 +161,12 @@ function DrawerComp({
               )}
             >
               <Collapsible className="rounded-md data-[state=open]:bg-muted">
-                <CollapsibleTrigger>
-                  <Button variant="ghost" className="group w-full">
+                <CollapsibleTrigger className="group w-full flex flex-col items-start">
+                  <div className="flex flex-row items-center">
                     Facilities Available
                     <ChevronDownIcon className="ml-auto group-data-[state=open]:rotate-180" />
                     <p className="text-xs italic">Press to see more</p>
-                  </Button>
+                  </div>
                   <div className="flex flex-row w-full justify-evenly gap-2 px-2.5 pt-1">
                     <div className="flex flex-1 flex-row items-center gap-1">
                       <img src={AccoIcon} />
@@ -171,23 +179,23 @@ function DrawerComp({
                   </div>
                 </CollapsibleTrigger>
                 <CollapsibleContent className="flex flex-col items-start px-2.5 pt-0 text-sm">
-                  <div className="flex flex-row w-full gap-7">
-                    <div className="flex flex-row items-center gap-1">
+                  <div className="flex flex-row w-full justify-evenly gap-2 pr-2.5 pt-1">
+                    <div className="flex flex-1 flex-row items-center gap-1">
                       <img src={AccoIcon} />
                       <p className="text-xs">Accomodation</p>
                     </div>
-                    <div className="flex flex-row items-center gap-1">
+                    <div className="flex flex-1 flex-row items-center gap-1 ml-3">
                       <img src={CrIcon} />
                       <p className="text-xs">Comfort Room</p>
                     </div>
                   </div>
                   <p className="text-sm pt-4">Not Available</p>
-                  <div className="flex flex-row w-full gap-7 mt-2">
-                    <div className="flex flex-row items-center gap-1">
+                  <div className="flex flex-row w-full justify-evenly gap-2 pr-2.5 pt-1">
+                    <div className="flex flex-1 flex-row items-center gap-1">
                       <img src={AccoIcon} />
                       <p className="text-xs">Accomodation</p>
                     </div>
-                    <div className="flex flex-row items-center gap-1">
+                    <div className="flex flex-1 flex-row items-center gap-1 ml-3">
                       <img src={CrIcon} />
                       <p className="text-xs">Comfort Room</p>
                     </div>
