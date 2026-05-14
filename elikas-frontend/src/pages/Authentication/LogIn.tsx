@@ -59,14 +59,12 @@ function LogIn() {
         throw new Error(userData.error || "Login failed");
       }
 
-      // Step 4: Save user info so other pages can access it
-      localStorage.setItem("user", JSON.stringify(userData));
+      // // Step 4: Save user info so other pages can access it
+      // localStorage.setItem("user", JSON.stringify(userData));
 
       // Step 5: Redirect based on role
       if (userData.role === "admin") {
         window.location.href = "/admin-dashboard";
-      } else if (userData.role === "brgy_op") {
-        window.location.href = "/barangay-dashboard";
       } else {
         window.location.href = "/Map";
       }
