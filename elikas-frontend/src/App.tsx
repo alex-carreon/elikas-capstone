@@ -15,6 +15,7 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import Settings from "./pages/Settings";
 import { AuthProvider } from "./context/AuthContext";
 import ProtectedRoute from "./components/ProtectedRoutes";
+import SMS from "./pages/SMS";
 
 function App() {
   return (
@@ -38,8 +39,13 @@ function App() {
           </Route>
 
           <Route element={<ConstNavbar />}>
-            <Route path="/Hotlines" element={<Hotlines />} />
             <Route path="/Settings" element={<Settings />} />
+          </Route>
+        </Route>
+
+        <Route element={<ProtectedRoute userRole={"brgy_op"} />}>
+          <Route element={<ConstNavbar />}>
+            <Route path="/SMS" element={<SMS />} />
           </Route>
         </Route>
 
