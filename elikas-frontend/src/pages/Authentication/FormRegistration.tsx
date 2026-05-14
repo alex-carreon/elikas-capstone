@@ -37,6 +37,11 @@ function FormRegistration() {
       await sendEmailVerification(firebaseUser);
 
       localStorage.setItem("firebaseUser", firebaseUser.uid);
+
+      if (pw != confirmPw) {
+        throw new Error("Passwords do not match");
+      }
+
       localStorage.setItem("last_name", last_name);
       localStorage.setItem("first_name", first_name);
       localStorage.setItem("email", email);
@@ -56,7 +61,7 @@ function FormRegistration() {
           confirmPw: "",
           email: "",
         });
-      } else if (pw != confirmPw) {
+      } else if (err instanceof Error) {
         setErrors({
           email: " ",
           pw: "Password do not match",
