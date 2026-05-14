@@ -264,7 +264,7 @@ export function MapClickHandler({ onPinClick, clickedLoc, setClickedLoc }) {
   });
 
   useEffect(() => {
-    const handleClick = (e) => {
+    const handleClick = (e: any) => {
       const { lat, lng } = e.latlng;
       // console.log("Clicked at:", lat, lng);
       setClickedLoc([lat, lng]);
