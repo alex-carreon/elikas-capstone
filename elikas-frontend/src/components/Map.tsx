@@ -1,5 +1,5 @@
-import { use, useEffect, useState } from "react";
-import { MapContainer, TileLayer, useMap, Circle } from "react-leaflet";
+import { useRef, useEffect, useState } from "react";
+import { MapContainer, TileLayer, useMap, CircleMarker } from "react-leaflet";
 import "leaflet-routing-machine";
 import ButtonComp from "./Button";
 import {
@@ -9,39 +9,64 @@ import {
   RoadMapping,
   NearestRouting,
   MapClickHandler,
-  pins,
 } from "@/lib/mapUtils";
 import DrawerComp from "./Drawer";
 import MarkerClusterGroup from "react-leaflet-cluster";
-import { divIcon, point } from "leaflet";
+import { divIcon, point, type LocationEvent, LatLng } from "leaflet";
+import CurrentLocation from "@/assets/Map/currentLocation.svg?react";
 
-function LocationMarker() {
-  const [position, setPosition] = useState(null);
+function LocationMarker({ flyToLocation }: { flyToLocation: boolean }) {
+  const [position, setPosition] = useState<LatLng | null>(null);
+  // const [hasLocated, setHasLocated] = useState(false);
   const map = useMap();
 
+  const hasLocated = useRef(false);
+
+  // Auto find location
   useEffect(() => {
+    if (hasLocated.current === true) return;
+
+    // Locate user, zooms into location, how much zoom
     map.locate({ setView: true, maxZoom: 50 });
 
-    const onLocationFound = (e) => {
+    // For rendering the marker
+    // e contains lat and long
+    // If it's the first time, map.flyTo flies to the specific location
+    const onLocationFound = (e: LocationEvent) => {
       setPosition(e.latlng);
       map.flyTo(e.latlng, map.getZoom());
+      hasLocated.current = true;
     };
+
+    // listens when to trigger onLocationFound
 
     map.on("locationfound", onLocationFound);
 
+    // clean up - switches event off
     return () => {
       map.off("locationfound", onLocationFound);
     };
   }, [map]);
 
-  return position === null ? (
-    position
-  ) : (
-    <Circle
+  // find location on click
+  useEffect(() => {
+    if (flyToLocation && position) {
+      map.flyTo(position, map.getZoom());
+      console.log("hasLocated3: ", hasLocated);
+    }
+  }, [flyToLocation, position, map]);
+
+  return position === null ? null : (
+    <CircleMarker
       center={position}
-      radius={5}
-      pathOptions={{ color: "white", fillColor: "#569FFF", fillOpacity: 10 }}
-    ></Circle>
+      radius={8}
+      pathOptions={{
+        color: "white",
+        fillColor: "#569FFF",
+        fillOpacity: 1,
+        weight: 2,
+      }}
+    ></CircleMarker>
   );
 }
 
@@ -51,15 +76,16 @@ function Map() {
   const [open, setOpen] = useState(false);
   const [openFromRoute, setOpenFromRoute] = useState(false);
   const [selectedPin, setSelectedPin] = useState(null);
-  const [position, setPosition] = useState(null);
+  // const [position, setPosition] = useState(null);
   const [flyTrigger, setFlyTrigger] = useState(0);
   const [newPin, setNewPin] = useState(false);
   const [clickedLoc, setClickedLoc] = useState<[number, number] | null>(null);
+  const [showLocation, setShowLocation] = useState(false);
 
+  // Have pin's type to be needed information from db
   const handlePinClick = (pin) => {
     setSelectedPin(pin);
     setOpen(true);
-    setPosition(pin);
     setFlyTrigger((prev) => prev + 1);
     setShowNearestRoute(false);
     setShowRoute(false);
@@ -84,7 +110,7 @@ function Map() {
     console.log("selectedPin after route:", selectedPin);
   };
 
-  const handleDrawerClose = (isOpen) => {
+  const handleDrawerClose = (isOpen: boolean) => {
     setOpen(isOpen);
 
     if (!isOpen) {
@@ -105,7 +131,7 @@ function Map() {
     }
   }, [selectedPin, openFromRoute]);
 
-  const createClusterCustomIcon = (cluster) => {
+  const createClusterCustomIcon = (cluster: any) => {
     return divIcon({
       html: `<div style="background-color: #5F80AA; color: white; border-radius: 50%; width: 40px; height: 40px; display: flex; align-items: center; justify-content: center; font-size: 14px;">${cluster.getChildCount()}</div>`,
       className: "cluster-marker",
@@ -130,9 +156,8 @@ function Map() {
         />
         {/* <Routing /> */}
         <PinMarking onPinClick={handlePinClick} />
-        <LocationMarker />
-        <FlyToLocation position={position} flyTrigger={flyTrigger} />
-
+        <LocationMarker flyToLocation={showLocation} />
+        <FlyToLocation position={selectedPin} flyTrigger={flyTrigger} />
         <MarkerClusterGroup
           iconCreateFunction={createClusterCustomIcon}
           maxClusterRadius={50}
@@ -151,11 +176,10 @@ function Map() {
             ]}
           />
         </MarkerClusterGroup>
-
         {showNearestRoute && <NearestRouting onPinSelected={setSelectedPin} />}
         {showRoute && !showNearestRoute && selectedPin && (
           <Routing onPinSelected={setSelectedPin} selectedPin={selectedPin} />
-        )}
+        )}{" "}
       </MapContainer>
       <DrawerComp
         open={open}
@@ -164,13 +188,19 @@ function Map() {
         onFindRoute={handlePressRoute}
         newPin={newPin}
       />
-      <div className="fixed bottom-0 left-0 w-full flex justify-center mb-8">
-        <ButtonComp
-          text="Find Evac Center"
-          variant="important"
-          id="Map-NearestRouteBtn"
-          onClick={handleNearestRoute}
-        />
+      <div className="fixed bottom-0 left-0 w-full flex justify-center items-center">
+        <div className="flex flex-col w-full max-w-md items-center justify-center mb-8">
+          <CurrentLocation
+            className="w-14 h-14 self-end m-4 drop-shadow-xl"
+            onClick={() => setShowLocation((prev) => !prev)}
+          />
+          <ButtonComp
+            text="Find Evac Center"
+            variant="important"
+            id="Map-NearestRouteBtn"
+            onClick={handleNearestRoute}
+          />
+        </div>
       </div>
     </div>
   );

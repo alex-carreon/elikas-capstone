@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react";
 import { useMap, Marker, Polyline } from "react-leaflet";
-import leaflet, { point } from "leaflet";
+import leaflet, { point, type LocationEvent } from "leaflet";
 import { LatLng, divIcon } from "leaflet";
 import "leaflet-routing-machine";
 import colors from "@/constants/colors";
@@ -45,6 +45,7 @@ function getNearestWaypoint(
   return nearest;
 }
 
+// Add properties based on the pin info from db
 export function NearestRouting({ onPinSelected }) {
   const [position, setPosition] = useState<LatLng | null>(null);
   const map = useMap();
@@ -54,7 +55,7 @@ export function NearestRouting({ onPinSelected }) {
   useEffect(() => {
     map.locate({ setView: true, maxZoom: 50 });
 
-    const onLocationFound = (e) => {
+    const onLocationFound = (e: LocationEvent) => {
       setPosition(e.latlng);
     };
 
@@ -85,14 +86,22 @@ export function NearestRouting({ onPinSelected }) {
       addWaypoints: false,
       draggableWaypoints: false,
       fitSelectedRoutes: true,
-      lineOptions: { styles: [{ color: colors.heading, weight: 4 }] },
-      createMarker: function (i, waypoint) {
+      lineOptions: {
+        styles: [
+          {
+            color: colors.heading,
+            weight: 4,
+          },
+        ],
+      },
+      createMarker: function (i: number, waypoint: any) {
         if (i === 0) {
           return leaflet.marker(waypoint.latLng);
         }
         return null;
       },
-    }).addTo(map);
+    } as any).addTo(map);
+    // Kulit ni typescript - as any meaning thats my styles dont bother them
 
     return () => {
       routeControlRef.current.remove();
@@ -102,6 +111,7 @@ export function NearestRouting({ onPinSelected }) {
   return null;
 }
 
+// Add properties based on the pin info from db
 export function Routing({ onPinSelected, selectedPin }) {
   const [position, setPosition] = useState<LatLng | null>(null);
   const map = useMap();
@@ -111,7 +121,7 @@ export function Routing({ onPinSelected, selectedPin }) {
   useEffect(() => {
     map.locate({ setView: true, maxZoom: 50 });
 
-    const onLocationFound = (e) => {
+    const onLocationFound = (e: LocationEvent) => {
       setPosition(e.latlng);
     };
 
@@ -135,8 +145,6 @@ export function Routing({ onPinSelected, selectedPin }) {
 
     const matchedPin = selectedPin;
 
-    // console.log("Routing: calling onPinSelected with", matchedPin);
-
     if (matchedPin) {
       onPinSelected(matchedPin);
     }
@@ -148,13 +156,13 @@ export function Routing({ onPinSelected, selectedPin }) {
       draggableWaypoints: false,
       fitSelectedRoutes: true,
       lineOptions: { styles: [{ color: colors.heading, weight: 4 }] },
-      createMarker: function (i, waypoint) {
+      createMarker: function (i: number, waypoint: any) {
         if (i === 0) {
           return leaflet.marker(waypoint.latLng);
         }
         return null;
       },
-    }).addTo(map);
+    } as any).addTo(map);
 
     return () => {
       if (routeControlRef.current) {
@@ -167,8 +175,9 @@ export function Routing({ onPinSelected, selectedPin }) {
   return null;
 }
 
+// Add properties based on the pin info from db
 export function PinMarking({ onPinClick }) {
-  const createClusterCustomIcon = (cluster) => {
+  const createClusterCustomIcon = (cluster: any) => {
     return divIcon({
       html: `<div style="background-color: #FFA011; color: ${colors.heading}; border-radius: 50%; width: 40px; height: 40px; display: flex; align-items: center; justify-content: center; font-size: 14px;">${cluster.getChildCount()}</div>`,
       className: "cluster-marker",
@@ -244,6 +253,7 @@ export function RoadMapping({ position }: PolylineProps) {
   );
 }
 
+// Add properties based on the pin info from db
 export function MapClickHandler({ onPinClick, clickedLoc, setClickedLoc }) {
   // const [clickedLoc, setClickedLoc] = useState<[number, number] | null>(null);
   const map = useMap();
@@ -262,7 +272,9 @@ export function MapClickHandler({ onPinClick, clickedLoc, setClickedLoc }) {
     };
 
     map.on("click", handleClick);
-    return () => map.off("click", handleClick);
+    return () => {
+      map.off("click", handleClick);
+    };
   }, [map]);
 
   return clickedLoc ? <Marker position={clickedLoc} icon={icon} /> : null;
