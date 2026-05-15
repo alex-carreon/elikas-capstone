@@ -44,7 +44,9 @@ class FirebaseAuthMiddleware
 
             // Attach user to request
             $request->attributes->set('firebase_user', $userAuth->user);
+            
 
+            // Pass request forward
             return $next($request);
 
         } catch (\Exception $e) {
