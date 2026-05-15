@@ -24,8 +24,10 @@ class ProfileController extends Controller
                 'last_name'  => $user->name?->last_name,
 
                 'phone' => $user->phoneNumber?->phone_no,
-
                 'location' => $user->indivAcc?->location?->name,
+
+                'created_at' => $user->created_at,
+                'deactivated_at' => $user->deactivated_at
             ]);
 
         } catch (\Exception $e) {
@@ -124,8 +126,10 @@ class ProfileController extends Controller
                     'last_name' => $user->name?->last_name,
 
                     'phone' => $user->phoneNumber?->phone_no,
-
                     'location' => $user->indivAcc?->location?->name,
+
+                    'created_at' => $user->created_at,
+                    'deactivated_at' => $user->deactivated_at
                 ];
             });
 
@@ -135,6 +139,55 @@ class ProfileController extends Controller
 
             return response()->json([
                 'error' => 'Failed to fetch users',
+                'details' => $e->getMessage()
+            ], 500);
+        }
+    }
+
+    public function deactivateUser($id)
+    {
+        try {
+            $user = User::findOrFail($id);
+
+            $user->deactivated_at = now();
+            $user->save();
+
+            return response()->json([
+                'message' => 'User deactivated successfully',
+                'user_id' => $user->id,
+                'deactivated_at' => $user->deactivated_at
+            ]);
+
+        } catch (\Exception $e) {
+            return response()->json([
+                'error' => 'Failed to deactivate user',
+                'details' => $e->getMessage()
+            ], 500);
+        }
+    }
+
+    public function deactivateSelf(Request $request)
+    {
+        try {
+            $user = $request->attributes->get('firebase_user');
+
+            if (!$user) {
+                return response()->json([
+                    'error' => 'Unauthorized user'
+                ], 401);
+            }
+
+            $user->deactivated_at = now();
+            $user->save();
+
+            return response()->json([
+                'message' => 'Account deactivated successfully',
+                'deactivated_at' => $user->deactivated_at
+            ]);
+
+        } catch (\Exception $e) {
+            return response()->json([
+                'error' => 'Failed to deactivate account',
                 'details' => $e->getMessage()
             ], 500);
         }
