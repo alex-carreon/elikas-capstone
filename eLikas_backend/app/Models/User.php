@@ -43,6 +43,7 @@ class User extends Model
 
 	protected $casts = [
 		'role_id' => 'int',
+		'created_at' => 'datetime',
 		'deactivated_at' => 'datetime'
 	];
 
