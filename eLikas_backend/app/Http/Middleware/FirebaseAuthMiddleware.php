@@ -26,7 +26,7 @@ class FirebaseAuthMiddleware
             }
 
             // Verify Firebase token
-            $verifiedToken = $this->firebaseAuth->verifyIdToken($token);
+            $verifiedToken = $this->firebaseAuth->verifyIdToken($token, true);
 
             // Get Firebase UID
             $firebaseUid = $verifiedToken->claims()->get('sub');
