@@ -13,10 +13,8 @@ import Map from "@/pages/Map";
 import Hotlines from "@/pages/Hotlines";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import Settings from "@/pages/Settings";
-import { AuthProvider } from "./context/AuthContext";
 import ProtectedRoute from "./components/ProtectedRoutes";
 import SMS from "./pages/SMS";
-import AlertModal from "./components/AlertModal";
 
 function App() {
   return (
