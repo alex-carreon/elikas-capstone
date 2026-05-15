@@ -46,6 +46,15 @@ class FirebaseAuthMiddleware
             $request->attributes->set('firebase_user', $userAuth->user);
             
 
+            // BLOCK DEACTIVATED USERS
+            $user = $userAuth->user;
+
+            if ($user->deactivated_at !== null) {
+                return response()->json([
+                    'error' => 'Account deactivated'
+                ], 403);
+            }
+
             // Pass request forward
             return $next($request);
 
