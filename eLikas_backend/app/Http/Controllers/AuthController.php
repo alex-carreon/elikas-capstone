@@ -114,9 +114,12 @@ class AuthController extends Controller
 
         // Verify the token with Firebase
         try {
-            $verifiedToken = $this->firebaseAuth->verifyIdToken($token);
+            $$verifiedToken = $this->firebaseAuth->verifyIdToken($token, true);
         } catch (\Exception $e) {
-            return response()->json(['error' => 'Invalid or expired token'], 401);
+            return response()->json([
+                'error' => 'Unauthorized',
+                'details' => $e->getMessage()
+            ], 401);
         }
 
         // Get the Firebase UID from the verified token
