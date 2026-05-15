@@ -22,14 +22,18 @@ Route::middleware('firebase.auth')->group(function () {
     Route::post('/auth/logout', [AuthController::class, 'logout']);
 
     Route::get('/profile', [ProfileController::class, 'profile']);
-    Route::put('/profile', [ProfileController::class, 'updateProfile']);
+
+    Route::patch('/profile/email-sync', [ProfileController::class, 'syncEmail']);
+
+    Route::patch('/profile/deactivate', [ProfileController::class, 'deactivateSelf']);
 
 });
 
 // ONLY ADMIN ROUTES
 Route::middleware(['firebase.auth', 'is.admin'])->prefix('admin')->group(function () {
-
     Route::post('/create-admin', [AdminController::class, 'createUser']);
+
+    Route::patch('/users/{id}/deactivate', [ProfileController::class, 'deactivateUser']);
 
 });
 
@@ -39,3 +43,9 @@ Route::middleware(['firebase.auth', 'role:1,2'])->group(function () {
     Route::get('/admin/users', [ProfileController::class, 'allUsers']);
 
 });
+
+// ALL ROLES EXCEPT GUEST
+Route::middleware(['firebase.auth', 'role:1,2,3'])->group(function () { 
+    Route::put('/profile', [ProfileController::class, 'updateProfile']);
+});
+
