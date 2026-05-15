@@ -5,12 +5,18 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\ProfileController;
 
+Route::get('/test', function () {
+    return response()->json([
+        'api_working' => true
+    ]);
+});
+
 // PUBLIC ROUTES
 Route::post('/auth/register', [AuthController::class, 'register']);
 Route::post('/auth/login', [AuthController::class, 'login']);
 
 
-// PROTECTED ROUTES
+// ONLY CITIZEN ROUTES
 Route::middleware('firebase.auth')->group(function () {
 
     Route::post('/auth/logout', [AuthController::class, 'logout']);
@@ -20,11 +26,16 @@ Route::middleware('firebase.auth')->group(function () {
 
 });
 
-// ADMIN ROUTES
+// ONLY ADMIN ROUTES
 Route::middleware(['firebase.auth', 'is.admin'])->prefix('admin')->group(function () {
 
-    Route::post('/users', [AdminController::class, 'createUser']);
+    Route::post('/create-admin', [AdminController::class, 'createUser']);
 
-    Route::get('/users', [ProfileController::class, 'allUsers']);
+});
+
+// BARANGAY OR ADMIN ROUTES
+Route::middleware(['firebase.auth', 'role:1,2'])->group(function () { 
+   
+    Route::get('/admin/users', [ProfileController::class, 'allUsers']);
 
 });
