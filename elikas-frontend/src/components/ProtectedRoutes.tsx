@@ -16,9 +16,9 @@ export default function ProtectedRoute({ userRole }: ProtectedRouteProps) {
   const navigate = useNavigate();
 
   useEffect(() => {
-    if (loading) {
-      navigate("/");
-    }
+    // if (loading) {
+    //   navigate("/");
+    // }
 
     if (!loading) {
       if (!user) {

@@ -12,17 +12,17 @@ import ConstNavbar from "./Navbar/ConstNavbar";
 import Map from "@/pages/Map";
 import Hotlines from "@/pages/Hotlines";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
-import Settings from "./pages/Settings";
+import Settings from "@/pages/Settings";
 import { AuthProvider } from "./context/AuthContext";
 import ProtectedRoute from "./components/ProtectedRoutes";
 import SMS from "./pages/SMS";
+import AlertModal from "./components/AlertModal";
 
 function App() {
   return (
     <BrowserRouter>
       <Routes>
         <Route path="/Login" element={<LogIn />} />
-
         <Route path="/Registration">
           <Route path="Splash" element={<SplashRegistration />} />
           <Route path="Form" element={<FormRegistration />} />
@@ -49,9 +49,11 @@ function App() {
           </Route>
         </Route>
 
+        {/* <Route element={<AlertModal />}> */}
         <Route element={<GuestNavbar />}>
           <Route path="/" element={<Map />} />
         </Route>
+        {/* </Route> */}
 
         <Route element={<ConstNavbar />}>
           <Route path="/Hotlines" element={<Hotlines />} />
