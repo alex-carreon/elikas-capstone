@@ -35,19 +35,24 @@ function GuestNavbar() {
           </Link>
         </div>
         {closeAlert ? null : (
-          <Alert className="w-full max-w-sm py-4 shadow-lg bg-[#FFF1DD] text-center flex flex-col items-center gap-3">
-            {/* <CheckCircle2Icon /> */}
-            <AlertTitle className="font-bold" style={{ color: colors.heading }}>
-              You are logged out!
-            </AlertTitle>
-            <AlertDescription style={{ color: colors.heading }}>
-              You are now in guest mode. You can still explore the map, but
-              you’ll need an account to join the conversation.
-            </AlertDescription>
-            <Button className="w-2/3" onClick={() => setCloseAlert(true)}>
-              Got it!
-            </Button>
-          </Alert>
+          <div className="mx-4">
+            <Alert className="w-full max-w-sm p-4 shadow-lg bg-[#FFF1DD] text-center flex flex-col items-center gap-3">
+              {/* <CheckCircle2Icon /> */}
+              <AlertTitle
+                className="font-bold"
+                style={{ color: colors.heading }}
+              >
+                You are logged out!
+              </AlertTitle>
+              <AlertDescription style={{ color: colors.heading }}>
+                You are now in guest mode. You can still explore the map, but
+                you’ll need an account to join the conversation.
+              </AlertDescription>
+              <Button className="w-2/3" onClick={() => setCloseAlert(true)}>
+                Got it!
+              </Button>
+            </Alert>
+          </div>
         )}
       </div>
       <Outlet />
