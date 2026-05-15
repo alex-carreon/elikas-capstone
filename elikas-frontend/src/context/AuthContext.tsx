@@ -41,13 +41,13 @@ export function AuthProvider({ children }: AuthProviderProps) {
         try {
           const token = await user?.getIdToken();
 
-          const response = await api.post("/auth/login", {
+          const LoginResponse = await api.post("/auth/login", {
             headers: {
               Authorization: `Bearer ${token}`,
             },
           });
 
-          const userData = await response;
+          const userData = await LoginResponse;
           console.log("response", userData);
           setRole(userData.data.role);
         } catch (err: any | null) {
