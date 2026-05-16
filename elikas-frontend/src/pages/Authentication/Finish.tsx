@@ -45,6 +45,8 @@ function Finish() {
                   variant="primary"
                   id="R-FinRegis"
                   onClick={test}
+                  widthSize="full"
+                  heightSize="10"
                 ></ButtonComp>
               </Link>
             </div>

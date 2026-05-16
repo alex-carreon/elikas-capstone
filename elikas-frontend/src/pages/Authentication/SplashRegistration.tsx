@@ -106,7 +106,13 @@ function SplashRegistration() {
         <div className="w-full flex flex-col justify-center items-center m-0 gap-2">
           {current === 2 ? (
             <Link to="/Registration/Form" className="w-full max-w-xs">
-              <ButtonComp text="Get Started" variant="primary" id="R-ToForm" />
+              <ButtonComp
+                text="Get Started"
+                variant="primary"
+                id="R-ToForm"
+                widthSize="full"
+                heightSize="10"
+              />
             </Link>
           ) : (
             <ButtonComp
@@ -118,6 +124,8 @@ function SplashRegistration() {
                   : () => api?.scrollNext()
               }
               id="R-SplashNext"
+              widthSize="full"
+              heightSize="10"
             />
           )}
 
@@ -126,6 +134,8 @@ function SplashRegistration() {
             variant="outline"
             onClick={() => api?.scrollPrev()}
             id="R-SplashPrevious"
+            widthSize="full"
+            heightSize="10"
           />
         </div>
       </div>

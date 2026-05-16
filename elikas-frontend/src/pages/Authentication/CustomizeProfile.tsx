@@ -98,6 +98,8 @@ function CustomizeProfile() {
               variant="primary"
               type="submit"
               id="R-SubmitUsername"
+              widthSize="full"
+              heightSize="10"
             ></ButtonComp>
             {/* </Link> */}
           </div>

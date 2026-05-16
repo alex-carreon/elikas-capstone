@@ -244,36 +244,59 @@ function EvacForm() {
             label="Facilities Available"
             items={["Accomodation", "Comfort Room"]}
           />
-          <div>
-            <CheckBox
-              text="I confirm that this location is safe for temporary 
+          {existingPin ? (
+            <>
+              <div className="mx-2 flex justify-evenly shrink gap-4">
+                <ButtonComp
+                  text="Update"
+                  id="EvacForm_ClosePinBtn"
+                  variant="primary"
+                  heightSize="10"
+                  widthSize="20"
+                ></ButtonComp>
+                <ButtonComp
+                  text="Close"
+                  id="EvacForm_ClosePinBtn"
+                  variant="important"
+                  widthSize="20"
+                  heightSize="10"
+                ></ButtonComp>
+              </div>
+            </>
+          ) : (
+            <>
+              <div>
+                <CheckBox
+                  text="I confirm that this location is safe for temporary 
 evacuation use."
-              id="EvacForm_SafetyCheck"
-              checked={safetyCheck}
-              onCheckedChange={(val) => {
-                setSafetyCheck(!!val);
-              }}
-            />
-          </div>
-          <div>
-            <CheckBox
-              text="I understand that false information may result in removal 
+                  id="EvacForm_SafetyCheck"
+                  checked={safetyCheck}
+                  onCheckedChange={(val) => {
+                    setSafetyCheck(!!val);
+                  }}
+                />
+              </div>
+              <div>
+                <CheckBox
+                  text="I understand that false information may result in removal 
 or account restriction."
-              id="EvacForm_InfoCheck"
-              checked={infoCheck}
-              onCheckedChange={(val) => {
-                setInfoCheck(!!val);
-              }}
-            />
-          </div>
-          <div className="w-full max-w-md flex justify-center">
-            <ButtonComp
-              text="Create Pin"
-              variant="primary"
-              id="EvacForm_SubmitBtn"
-              isDisabled={!safetyCheck || !infoCheck}
-            />
-          </div>
+                  id="EvacForm_InfoCheck"
+                  checked={infoCheck}
+                  onCheckedChange={(val) => {
+                    setInfoCheck(!!val);
+                  }}
+                />
+              </div>
+              <div className="w-full max-w-md flex justify-center">
+                <ButtonComp
+                  text="Create Pin"
+                  variant="primary"
+                  id="EvacForm_SubmitBtn"
+                  isDisabled={!safetyCheck || !infoCheck}
+                />
+              </div>
+            </>
+          )}
         </div>
       </form>
     </div>
