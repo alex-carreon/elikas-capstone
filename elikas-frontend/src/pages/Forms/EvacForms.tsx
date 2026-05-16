@@ -1,15 +1,12 @@
 import ButtonComp from "@/components/Button";
 import SelectDropdown from "@/components/SelectDropdown";
 import TextField from "@/components/TextField";
-import { Button } from "@/components/ui/button";
 import { Field, FieldDescription, FieldLabel } from "@/components/ui/field";
-import { Input } from "@/components/ui/input";
-import { InputGroupInput, InputGroup } from "@/components/ui/input-group";
 import { Textarea } from "@/components/ui/textarea";
 import colors from "@/constants/colors";
 import { MapClickHandler } from "@/lib/mapUtils";
 import { useState, useEffect, useRef } from "react";
-import { MapContainer, TileLayer, Marker, Popup } from "react-leaflet";
+import { MapContainer, TileLayer } from "react-leaflet";
 import { useLocation, useNavigate } from "react-router";
 import MultiSelect from "@/components/MultiSelect";
 import CheckBox from "@/components/CheckBox";

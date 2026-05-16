@@ -16,6 +16,7 @@ import Settings from "@/pages/Settings";
 import ProtectedRoute from "./components/ProtectedRoutes";
 import SMS from "./pages/SMS";
 import EvacForm from "./pages/Forms/EvacForms";
+import HazardForm from "./pages/Forms/HazardForm";
 import History from "@/History";
 
 function App() {
@@ -42,6 +43,7 @@ function App() {
           <Route element={<ConstNavbar />}>
             <Route path="/Settings" element={<Settings />} />
             <Route path="/EvacForm" element={<EvacForm />} />
+            <Route path="/HazardForm" element={<HazardForm />} />
           </Route>
         </Route>
 
