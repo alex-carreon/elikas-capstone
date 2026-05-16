@@ -26,6 +26,9 @@ function FormRegistration() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
+      if (pw != confirmPw) {
+        throw new Error("Passwords do not match");
+      }
       const userCredential = await createUserWithEmailAndPassword(
         auth,
         email,
@@ -37,10 +40,6 @@ function FormRegistration() {
       await sendEmailVerification(firebaseUser);
 
       localStorage.setItem("firebaseUser", firebaseUser.uid);
-
-      if (pw != confirmPw) {
-        throw new Error("Passwords do not match");
-      }
 
       localStorage.setItem("last_name", last_name);
       localStorage.setItem("first_name", first_name);
@@ -137,6 +136,7 @@ function FormRegistration() {
               id="R-CITYfield"
               onSubmit={(e) => setCity(e.target.value)}
               options={[{ label: "San Juan", value: "10" }]}
+              isRequired
             />
             <Select
               value={brgy}
@@ -149,6 +149,7 @@ function FormRegistration() {
                 { label: "Salapan", value: "11" },
                 { label: "Batis", value: "12" },
               ]}
+              isRequired
             />
             <TextField
               label="Password"
