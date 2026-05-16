@@ -15,6 +15,7 @@ import { type CarouselApi } from "@/components/ui/carousel";
 import ButtonComp from "../../components/Button";
 import { Circle } from "lucide-react";
 import CarouselCard from "../../components/CarouselCard";
+import { roleDefault } from "@/components/ProtectedRoutes";
 
 function SplashRegistration() {
   const [api, setApi] = useState<CarouselApi>();
@@ -110,8 +111,8 @@ function SplashRegistration() {
                 text="Get Started"
                 variant="primary"
                 id="R-ToForm"
-                widthSize="full"
-                heightSize="10"
+                heightSize="38px"
+                widthSize="100%"
               />
             </Link>
           ) : (
@@ -124,8 +125,8 @@ function SplashRegistration() {
                   : () => api?.scrollNext()
               }
               id="R-SplashNext"
-              widthSize="full"
-              heightSize="10"
+              heightSize="38px"
+              widthSize="100%"
             />
           )}
 
@@ -134,8 +135,8 @@ function SplashRegistration() {
             variant="outline"
             onClick={() => api?.scrollPrev()}
             id="R-SplashPrevious"
-            widthSize="full"
-            heightSize="10"
+            heightSize="38px"
+            widthSize="100%"
           />
         </div>
       </div>
