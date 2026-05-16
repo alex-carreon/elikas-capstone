@@ -23,6 +23,7 @@ import CSIcon from "@/assets/Map/CrowdsourceIcon.svg";
 import Photo from "@/assets/Map/SamplePhoto.png";
 import PostRow from "./PostRow";
 import colors from "@/constants/colors";
+import { Link } from "react-router";
 
 interface Pin {
   id: number;
@@ -80,11 +81,14 @@ function DrawerComp({
                 >
                   Mark this Location
                 </p>
-                <ButtonComp
-                  text="Mark as Evacuation Site"
-                  variant="primary"
-                  id="Drawer-MarkEvacBtn"
-                ></ButtonComp>
+                <Link to="/EvacForm" className="w-full flex justify-center">
+                  <ButtonComp
+                    text="Mark as Evacuation Site"
+                    variant="primary"
+                    id="Drawer-MarkEvacBtn"
+                  ></ButtonComp>
+                </Link>
+
                 <ButtonComp
                   text="Mark as Road Hazard"
                   variant="outline"
@@ -108,7 +112,6 @@ function DrawerComp({
             </div>
             <DrawerHeader>
               <DrawerTitle>
-                {" "}
                 <DrawerDescription />
               </DrawerTitle>
               <div className="flex flex-row gap-2">

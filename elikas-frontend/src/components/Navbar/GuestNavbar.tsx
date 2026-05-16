@@ -1,5 +1,5 @@
 import { Link, Outlet } from "react-router";
-import LogoComp from "../components/Logo";
+import LogoComp from "../Logo";
 import ButtonComp from "@/components/Button";
 import { Phone } from "lucide-react";
 import colors from "@/constants/colors";
