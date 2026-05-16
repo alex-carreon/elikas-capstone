@@ -263,12 +263,23 @@ export function MapClickHandler({ onPinClick, clickedLoc, setClickedLoc }) {
     iconAnchor: [25, 50],
   });
 
+  const getLocationDescription = async (lat: number, lng: number) => {
+    const res = await fetch(
+      `https://nominatim.openstreetmap.org/reverse?lat=${lat}&lon=${lng}&format=json`,
+    );
+    const data = await res.json();
+    localStorage.setItem("LocDescription", data.display_name);
+  };
+
   useEffect(() => {
     const handleClick = (e: any) => {
       const { lat, lng } = e.latlng;
-      // console.log("Clicked at:", lat, lng);
+      getLocationDescription(lat, lng);
       setClickedLoc([lat, lng]);
       onPinClick({ lat, long: lng });
+      // parse latlng to string for it to be stored in local storage
+      localStorage.setItem("clickedPin", JSON.stringify([lat, lng]));
+      // localStorage.setItem("LocDescription", description.);
     };
 
     map.on("click", handleClick);
@@ -276,6 +287,8 @@ export function MapClickHandler({ onPinClick, clickedLoc, setClickedLoc }) {
       map.off("click", handleClick);
     };
   }, [map]);
+
+  // localStorage.setItem("clickedPin", clickedLoc.JSON.stringify);
 
   return clickedLoc ? <Marker position={clickedLoc} icon={icon} /> : null;
 }

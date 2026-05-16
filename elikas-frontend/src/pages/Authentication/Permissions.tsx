@@ -65,7 +65,7 @@ function Permissions() {
         throw new Error(result.message || "Registration failed");
       }
       localStorage.clear();
-      navigate("/Finish");
+      navigate("/Registration/Finish");
     } catch (err: string | any) {
       setError(err.message || "An error occurred during registration");
     }
