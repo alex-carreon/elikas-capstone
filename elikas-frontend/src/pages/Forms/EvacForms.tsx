@@ -244,30 +244,36 @@ function EvacForm() {
             label="Facilities Available"
             items={["Accomodation", "Comfort Room"]}
           />
-          <CheckBox
-            text="I confirm that this location is safe for temporary 
+          <div>
+            <CheckBox
+              text="I confirm that this location is safe for temporary 
 evacuation use."
-            id="EvacForm_SafetyCheck"
-            checked={safetyCheck}
-            onCheckedChange={(val) => {
-              setSafetyCheck(!!val);
-            }}
-          />
-          <CheckBox
-            text="I understand that false information may result in removal 
+              id="EvacForm_SafetyCheck"
+              checked={safetyCheck}
+              onCheckedChange={(val) => {
+                setSafetyCheck(!!val);
+              }}
+            />
+          </div>
+          <div>
+            <CheckBox
+              text="I understand that false information may result in removal 
 or account restriction."
-            id="EvacForm_InfoCheck"
-            checked={infoCheck}
-            onCheckedChange={(val) => {
-              setInfoCheck(!!val);
-            }}
-          />
-          <ButtonComp
-            text="Create Pin"
-            variant="primary"
-            id="EvacForm_SubmitBtn"
-            isDisabled={!safetyCheck || !infoCheck}
-          />
+              id="EvacForm_InfoCheck"
+              checked={infoCheck}
+              onCheckedChange={(val) => {
+                setInfoCheck(!!val);
+              }}
+            />
+          </div>
+          <div className="w-full max-w-md flex justify-center">
+            <ButtonComp
+              text="Create Pin"
+              variant="primary"
+              id="EvacForm_SubmitBtn"
+              isDisabled={!safetyCheck || !infoCheck}
+            />
+          </div>
         </div>
       </form>
     </div>
