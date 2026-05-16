@@ -99,7 +99,6 @@ function Map() {
     setShowRoute(true);
     // setSelectedPin(null);
     setOpenFromRoute(true);
-    console.log("selectedPin after route:", selectedPin);
   };
 
   const handleNearestRoute = () => {
@@ -107,7 +106,6 @@ function Map() {
     setShowRoute(false);
     setSelectedPin(null);
     setOpenFromRoute(true);
-    console.log("selectedPin after route:", selectedPin);
   };
 
   const handleDrawerClose = (isOpen: boolean) => {
@@ -122,6 +120,7 @@ function Map() {
     }
   };
 
+  // Open drawer on pin click
   useEffect(() => {
     console.log("selectedPin changed:", selectedPin);
     console.log("openFromRoute:", openFromRoute);
@@ -199,8 +198,8 @@ function Map() {
             variant="important"
             id="Map-NearestRouteBtn"
             onClick={handleNearestRoute}
-            widthSize="3xs"
-            heightSize="10"
+            widthSize="90%"
+            heightSize="50px"
           />
         </div>
       </div>
