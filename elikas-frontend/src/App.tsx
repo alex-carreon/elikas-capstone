@@ -18,6 +18,7 @@ import SMS from "./pages/SMS";
 import EvacForm from "./pages/Forms/EvacForms";
 import HazardForm from "./pages/Forms/HazardForm";
 import History from "@/History";
+import ForgotPW from "./pages/Authentication/ForgotPW";
 
 function App() {
   return (
@@ -25,6 +26,7 @@ function App() {
       <Routes>
         <Route path="/History" element={<History />} />
         <Route path="/Login" element={<LogIn />} />
+        <Route path="/ResetPassword" element={<ForgotPW />} />
         <Route path="/Registration">
           <Route path="Splash" element={<SplashRegistration />} />
           <Route path="Form" element={<FormRegistration />} />

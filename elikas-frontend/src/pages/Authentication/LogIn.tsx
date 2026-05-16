@@ -140,7 +140,7 @@ function LogIn() {
               <div className="flex mt-2 flex-row justify-between">
                 <CheckBox text="Remember for 30 days" id="L-Remember" />
                 <Link
-                  to="/"
+                  to="/ResetPassword"
                   className={"text-xs underline"}
                   style={{ color: colors.label }}
                   id="L-ForgotPassword"
@@ -150,16 +150,14 @@ function LogIn() {
               </div>
             </div>
             <div className="w-full flex justify-center items-center m-0">
-              {/* <Link to="/" className="w-full max-w-xs"> */}
               <ButtonComp
                 text="Log In"
                 variant="primary"
                 type="submit"
                 id="L-Submit"
-                widthSize="full"
-                heightSize="10"
+                heightSize="38px"
+                widthSize="100%"
               ></ButtonComp>
-              {/* </Link> */}
             </div>
           </form>
           <div className="flex justify-start flex-col content-center mx-auto text-sm">

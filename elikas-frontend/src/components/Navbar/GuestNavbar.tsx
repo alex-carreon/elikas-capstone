@@ -20,8 +20,8 @@ function GuestNavbar() {
                 text="Sign-in"
                 variant="primary"
                 id="G01-SignIn"
-                heightSize="10"
-                widthSize="20"
+                heightSize="45px"
+                widthSize="100%"
               />
             </div>
           </Link>

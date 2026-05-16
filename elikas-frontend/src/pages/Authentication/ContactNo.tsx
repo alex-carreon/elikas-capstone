@@ -82,8 +82,8 @@ function ContactNo() {
                 variant="primary"
                 id="R-FormSubmit"
                 type="submit"
-                widthSize="full"
-                heightSize="10"
+                heightSize="38px"
+                widthSize="100%"
               ></ButtonComp>
               {/* </Link> */}
               <Link
@@ -94,8 +94,8 @@ function ContactNo() {
                   text="Skip"
                   variant="outline"
                   id="R-FormSubmit"
-                  widthSize="full"
-                  heightSize="10"
+                  heightSize="38px"
+                  widthSize="100%"
                 ></ButtonComp>
               </Link>
             </div>
