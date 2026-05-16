@@ -27,6 +27,10 @@ function ButtonComp({
       <Button
         onClick={onClick}
         className={`w-${widthSize} max-w-xs h-${heightSize} grow bg-gradient-to-r from-[#FFA011] to-[#F3C962]`}
+        style={{
+          width: widthSize,
+          height: heightSize,
+        }}
         id={id}
         type={type}
         disabled={isDisabled}
@@ -39,7 +43,11 @@ function ButtonComp({
       <Button
         onClick={onClick}
         className={`size-lg w-${widthSize} max-w-xs h-${heightSize} bg-transparent`}
-        style={{ borderColor: colors.heading }}
+        style={{
+          borderColor: colors.heading,
+          width: widthSize,
+          height: heightSize,
+        }}
         id={id}
         disabled={isDisabled}
       >
@@ -50,8 +58,13 @@ function ButtonComp({
     return (
       <Button
         onClick={onClick}
-        className={`size-lg w-${widthSize} max-w-xs h-${heightSize} bg-white grow`}
-        style={{ background: colors.heading, color: "white" }}
+        className={`size-lg max-w-xs bg-white grow`}
+        style={{
+          background: colors.heading,
+          color: "white",
+          width: widthSize,
+          height: heightSize,
+        }}
         id={id}
         disabled={isDisabled}
       >
