@@ -38,7 +38,7 @@ function ButtonComp({
     return (
       <Button
         onClick={onClick}
-        className="size-lg w-full max-w-xs h-10 bg-transparent"
+        className={`size-lg w-${widthSize} max-w-xs h-${heightSize} bg-transparent`}
         style={{ borderColor: colors.heading }}
         id={id}
         disabled={isDisabled}

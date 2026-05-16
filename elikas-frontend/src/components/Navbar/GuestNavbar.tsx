@@ -16,7 +16,13 @@ function GuestNavbar() {
         <div className="w-full max-w-md flex flex-row justify-between items-center p-3 shadow-lg bg-white">
           <Link to="/Login">
             <div>
-              <ButtonComp text="Sign-in" variant="primary" id="G01-SignIn" />
+              <ButtonComp
+                text="Sign-in"
+                variant="primary"
+                id="G01-SignIn"
+                heightSize="10"
+                widthSize="20"
+              />
             </div>
           </Link>
           <div>

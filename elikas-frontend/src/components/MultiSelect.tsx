@@ -32,10 +32,10 @@ function MultiSelect({ items, label }: MultiSelectProps) {
       </FieldLabel>
       <FieldDescription>Press and choose from the list</FieldDescription>
       <Combobox
+        className="w-full max-w-xs"
         multiple
         autoHighlight
         items={items}
-        className="w-full max-w-xs"
       >
         <ComboboxChips ref={anchor}>
           <ComboboxValue>
