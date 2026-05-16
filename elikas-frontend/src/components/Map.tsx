@@ -199,6 +199,8 @@ function Map() {
             variant="important"
             id="Map-NearestRouteBtn"
             onClick={handleNearestRoute}
+            widthSize="3xs"
+            heightSize="10"
           />
         </div>
       </div>

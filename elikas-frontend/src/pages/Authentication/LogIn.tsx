@@ -156,6 +156,8 @@ function LogIn() {
                 variant="primary"
                 type="submit"
                 id="L-Submit"
+                widthSize="full"
+                heightSize="10"
               ></ButtonComp>
               {/* </Link> */}
             </div>
