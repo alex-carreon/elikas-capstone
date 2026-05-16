@@ -7,7 +7,7 @@ import {
   InputGroupAddon,
   InputGroupInput,
 } from "@/components/ui/input-group";
-import { useState } from "react";
+import { useState, type Ref } from "react";
 import { EyeClosed } from "lucide-react";
 import { Eye } from "lucide-react";
 
@@ -23,6 +23,8 @@ interface TextFieldProps {
   isRequired?: boolean;
   onSubmit?: (e: React.ChangeEvent<HTMLInputElement>) => void;
   error?: string;
+  value?: string;
+  ref?: Ref<HTMLInputElement>;
 }
 
 function TextField({
@@ -36,6 +38,8 @@ function TextField({
   isRequired = false,
   onSubmit,
   error,
+  value,
+  ref,
 }: TextFieldProps) {
   const [showPassword, setShowPassword] = useState(false);
 
@@ -53,6 +57,8 @@ function TextField({
             type={showPassword ? "text" : inputType}
             id={id}
             onChange={onSubmit}
+            value={value}
+            ref={ref}
           ></InputGroupInput>
           <InputGroupAddon>
             {Icon && <Icon style={{ color: colors.activeIcon }}></Icon>}
