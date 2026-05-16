@@ -18,6 +18,7 @@ interface SelectDropdownProps {
   onSubmit?: (e: React.ChangeEvent<HTMLInputElement>) => void;
   error?: string;
   options: { label: string; value: string }[];
+  isRequired?: boolean;
 }
 
 function SelectDropdown({
@@ -29,13 +30,17 @@ function SelectDropdown({
   options,
   value,
   onSubmit,
+  isRequired,
 }: SelectDropdownProps) {
   return (
     <Field>
       <FieldLabel className={"text-sm w-s"} style={{ color: colors.label }}>
         {label}
       </FieldLabel>
-      <Select onValueChange={(val: string | null) => onValueChange(val ?? "")}>
+      <Select
+        onValueChange={(val: string | null) => onValueChange(val ?? "")}
+        required={isRequired}
+      >
         <SelectTrigger id={id}>
           {options.find((option) => option.value === value)?.label ||
             placeholder}
