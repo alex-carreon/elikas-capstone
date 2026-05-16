@@ -4,6 +4,7 @@ use App\Http\Controllers\AdminController;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\ProfileController;
+use App\Http\Controllers\Dashboards\UserController;
 
 Route::get('/test', function () {
     return response()->json([
@@ -29,18 +30,21 @@ Route::middleware('firebase.auth')->group(function () {
 
 });
 
+
 // ONLY ADMIN ROUTES
 Route::middleware(['firebase.auth', 'is.admin'])->prefix('admin')->group(function () {
+
     Route::post('/create-admin', [AdminController::class, 'createUser']);
 
-    Route::patch('/users/{id}/deactivate', [ProfileController::class, 'deactivateUser']);
+    Route::patch('/users/{id}/deactivate', [UserController::class, 'deactivateUser']);
 
 });
 
+// 1 = admin; 2 = GovOp; 3 = indiv
 // BARANGAY OR ADMIN ROUTES
 Route::middleware(['firebase.auth', 'role:1,2'])->group(function () { 
    
-    Route::get('/admin/users', [ProfileController::class, 'allUsers']);
+    Route::get('/admin/users', [UserController::class, 'allUsers']);
 
 });
 

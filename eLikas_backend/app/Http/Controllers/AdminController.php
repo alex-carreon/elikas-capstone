@@ -29,7 +29,7 @@ class AdminController extends Controller
             $firebaseUser = $this->firebaseAuth->createUser([
                 'email' => $request->email,
                 'emailVerified' => false,
-                'password' => 'Test12345!', // or generate random password
+                'password' => 'elikasteam',  // MODIFY THIS PW
             ]);
 
             // 3. Send email verification link
