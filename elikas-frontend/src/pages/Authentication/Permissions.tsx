@@ -134,8 +134,8 @@ function Permissions() {
                   id="R-NextPermissions"
                   isDisabled={!checked}
                   type="submit"
-                  widthSize="full"
-                  heightSize="10"
+                  heightSize="38px"
+                  widthSize="100%"
                 ></ButtonComp>
               ) : (
                 <ButtonComp
@@ -145,8 +145,8 @@ function Permissions() {
                   isDisabled={!checked}
                   onClick={() => handleSubmit}
                   type="submit"
-                  widthSize="full"
-                  heightSize="10"
+                  heightSize="38px"
+                  widthSize="100%"
                 ></ButtonComp>
               )}
             </form>
