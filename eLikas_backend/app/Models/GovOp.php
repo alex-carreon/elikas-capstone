@@ -52,7 +52,7 @@ class GovOp extends Model
 		return $this->belongsTo(User::class, 'user_id');
 	}
 
-	public function location_level()
+	public function locationLevel()
 	{
 		return $this->belongsTo(LocationLevel::class, 'level_id');
 	}
@@ -62,17 +62,17 @@ class GovOp extends Model
 		return $this->belongsTo(Location::class, 'location_id');
 	}
 
-	public function evac_areas()
+	public function evacAreas()
 	{
 		return $this->hasMany(EvacArea::class, 'verified_by');
 	}
 
-	public function s_m_s_broadcasts()
+	public function smsBroadcast()
 	{
 		return $this->hasMany(SMSBroadcast::class, 'sender_id');
 	}
 
-	public function s_m_s_templates()
+	public function smsTemplate()
 	{
 		return $this->hasMany(SMSTemplate::class, 'optr_id');
 	}

@@ -38,6 +38,8 @@ Route::middleware(['firebase.auth', 'is.admin'])->prefix('admin')->group(functio
 
     Route::patch('/users/{id}/deactivate', [UserController::class, 'deactivateUser']);
 
+    Route::post('/create-govop', [AdminController::class, 'createGovOp']);
+
 });
 
 // 1 = admin; 2 = GovOp; 3 = indiv
