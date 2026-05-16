@@ -86,16 +86,19 @@ function DrawerComp({
                     text="Mark as Evacuation Site"
                     variant="primary"
                     id="Drawer-MarkEvacBtn"
-                    heightSize="10"
+                    widthSize="90%"
+                    heightSize="44px"
                   ></ButtonComp>
                 </Link>
-
-                <ButtonComp
-                  text="Mark as Road Hazard"
-                  variant="outline"
-                  id="Drawer-MarkRoadBtn"
-                  heightSize="10"
-                ></ButtonComp>
+                <Link to="/HazardForm" className="w-full flex justify-center">
+                  <ButtonComp
+                    text="Mark as Road Hazard"
+                    variant="outline"
+                    id="Drawer-MarkRoadBtn"
+                    widthSize="90%"
+                    heightSize="40px"
+                  ></ButtonComp>
+                </Link>
               </div>
             </div>
           </>
