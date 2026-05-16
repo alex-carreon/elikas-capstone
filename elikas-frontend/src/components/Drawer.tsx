@@ -74,7 +74,7 @@ function DrawerComp({
               <DrawerClose className="w-full flex justify-end">
                 <CircleX size={28} fill="#CECECE" strokeWidth={1} />
               </DrawerClose>
-              <div className="flex items-center gap-2 flex-col">
+              <div className="flex items-center gap-3 flex-col">
                 <p
                   className="text-lg font-bold"
                   style={{ color: colors.heading }}
@@ -86,6 +86,7 @@ function DrawerComp({
                     text="Mark as Evacuation Site"
                     variant="primary"
                     id="Drawer-MarkEvacBtn"
+                    heightSize="10"
                   ></ButtonComp>
                 </Link>
 
@@ -93,18 +94,20 @@ function DrawerComp({
                   text="Mark as Road Hazard"
                   variant="outline"
                   id="Drawer-MarkRoadBtn"
+                  heightSize="10"
                 ></ButtonComp>
               </div>
             </div>
           </>
         ) : (
           <>
-            <div className="flex justify-center gap-2">
+            <div className="flex justify-between px-4">
               <ButtonComp
                 text={expanded ? "Press to Collapse" : "Press to Expand"}
                 id="Drawer-Handle"
                 variant="outline"
                 onClick={() => setExpanded(!expanded)}
+                widthSize="40"
               ></ButtonComp>
               <DrawerClose>
                 <CircleX size={28} fill="#CECECE" strokeWidth={1} />
@@ -138,7 +141,7 @@ function DrawerComp({
               </p>
               <Button
                 size="sm"
-                className="w-26 h-8 bg-gradient-to-r bg-[#F3C962] rounded-2xl"
+                className="w-30 h-8 bg-gradient-to-r bg-[#F3C962] rounded-2xl"
                 id="Drawer-RouteBtn"
                 onClick={() => {
                   (onFindRoute(true), setExpanded(false));
