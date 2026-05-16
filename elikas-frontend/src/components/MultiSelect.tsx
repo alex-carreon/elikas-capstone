@@ -31,8 +31,13 @@ function MultiSelect({ items, label }: MultiSelectProps) {
         {label}
       </FieldLabel>
       <FieldDescription>Press and choose from the list</FieldDescription>
-      <Combobox multiple autoHighlight items={items}>
-        <ComboboxChips ref={anchor} className="w-full max-w-xs">
+      <Combobox
+        multiple
+        autoHighlight
+        items={items}
+        className="w-full max-w-xs"
+      >
+        <ComboboxChips ref={anchor}>
           <ComboboxValue>
             {(values: any) => (
               <React.Fragment>
