@@ -25,6 +25,8 @@ function Settings() {
         variant="primary"
         id="LogoutBtn"
         onClick={handleLogout}
+        widthSize="full"
+        heightSize="10"
       ></ButtonComp>
     </div>
   );

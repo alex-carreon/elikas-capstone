@@ -210,6 +210,7 @@ export function PinMarking({ onPinClick }) {
   );
 }
 
+// When someone clicks, it zooms
 export function FlyToLocation({
   position,
   flyTrigger,
@@ -232,13 +233,22 @@ interface PolylineProps {
 }
 
 function getMidpoint(positions: [number, number][]): [number, number] {
-  const avgLat = positions.reduce((sum, p) => sum + p[0], 0) / positions.length;
-  const avgLng = positions.reduce((sum, p) => sum + p[1], 0) / positions.length;
-  return [avgLat, avgLng];
+  if (positions.length === 0) return [0, 0];
+  if (positions.length === 1) return positions[0];
+
+  // const avgLat = positions.reduce((sum, p) => sum + p[0], 0) / positions.length;
+  // const avgLng = positions.reduce((sum, p) => sum + p[1], 0) / positions.length;
+
+  const midIndex = Math.floor(positions.length / 2);
+  // return [avgLat, avgLng];
+  return positions[midIndex];
 }
 
 export function RoadMapping({ position }: PolylineProps) {
   const midpoint = getMidpoint(position);
+
+  localStorage.setItem("midpoint", JSON.stringify(getMidpoint(position)));
+  localStorage.setItem("position", JSON.stringify(position));
 
   const icon = divIcon({
     html: renderToString(<FloodIcon width={36} height={36} />),
@@ -291,4 +301,34 @@ export function MapClickHandler({ onPinClick, clickedLoc, setClickedLoc }) {
   // localStorage.setItem("clickedPin", clickedLoc.JSON.stringify);
 
   return clickedLoc ? <Marker position={clickedLoc} icon={icon} /> : null;
+}
+
+// Add properties based on the pin info from db
+export function FormMapClickHandler({ onPinClick, clickedLoc, setClickedLoc }) {
+  // const [clickedLoc, setClickedLoc] = useState<[number, number] | null>(null);
+  const map = useMap();
+  const icon = divIcon({
+    html: renderToString(<BlankPin width={50} height={50} />),
+    className: "",
+    iconAnchor: [25, 50],
+  });
+
+  useEffect(() => {
+    const handleClick = (e: any) => {
+      const { lat, lng } = e.latlng;
+      setClickedLoc((prev: [number, number]) => [...prev, [lat, lng]]);
+      if (onPinClick) onPinClick({ lat, long: lng });
+      // parse latlng to string for it to be stored in local storage
+      localStorage.setItem("clickedPinForm", JSON.stringify([lat, lng]));
+    };
+
+    map.on("click", handleClick);
+    return () => {
+      map.off("click", handleClick);
+    };
+  }, [map]);
+
+  // localStorage.setItem("clickedPin", clickedLoc.JSON.stringify);
+
+  return null;
 }

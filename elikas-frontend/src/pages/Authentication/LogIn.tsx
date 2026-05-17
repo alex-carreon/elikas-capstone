@@ -35,8 +35,13 @@ function LogIn() {
 
       if (!userCredential.user.emailVerified) {
         // Optionally sign them out so they can't access protected routes
+        console.log("not verified");
         await auth.signOut();
-        throw new Error("Please verify your email before logging in.");
+        setErrors({
+          email: "",
+          password: "",
+          general: "Please verify your email before logging in.",
+        });
       }
 
       // Step 2: Get the ID token — this is proof of identity sent to Laravel
@@ -56,7 +61,7 @@ function LogIn() {
       const userData = await response.json();
 
       if (!response.ok) {
-        throw new Error(userData.error || "Login failed");
+        setErrors(userData.error || "Login failed");
       }
 
       // // Step 4: Save user info so other pages can access it
@@ -111,10 +116,13 @@ function LogIn() {
           </div>
           <form
             onSubmit={handleSubmit}
-            className="h-1/3 flex justify-between flex-col"
+            className="h-1/3 flex justify-between flex-col gap-8"
           >
             <div className="w-full max-w-xs flex justify-start flex-col content-center mx-auto">
               <div className="flex justify-start flex-col content-center gap-5">
+                <p className="text-sm text-center text-red-500">
+                  {errors.general}
+                </p>
                 <TextField
                   label="Email"
                   placeholder="Enter your email"
@@ -140,7 +148,7 @@ function LogIn() {
               <div className="flex mt-2 flex-row justify-between">
                 <CheckBox text="Remember for 30 days" id="L-Remember" />
                 <Link
-                  to="/"
+                  to="/ResetPassword"
                   className={"text-xs underline"}
                   style={{ color: colors.label }}
                   id="L-ForgotPassword"
@@ -150,14 +158,14 @@ function LogIn() {
               </div>
             </div>
             <div className="w-full flex justify-center items-center m-0">
-              {/* <Link to="/" className="w-full max-w-xs"> */}
               <ButtonComp
                 text="Log In"
                 variant="primary"
                 type="submit"
                 id="L-Submit"
+                heightSize="38px"
+                widthSize="100%"
               ></ButtonComp>
-              {/* </Link> */}
             </div>
           </form>
           <div className="flex justify-start flex-col content-center mx-auto text-sm">

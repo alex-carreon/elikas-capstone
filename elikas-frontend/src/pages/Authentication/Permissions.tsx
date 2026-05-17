@@ -124,9 +124,9 @@ function Permissions() {
             </div>
             <form
               onSubmit={handleSubmit}
-              className="w-full flex justify-center items-center m-0"
+              className="w-full flex flex-col justify-center items-center m-0"
             >
-              <p>{error}</p>
+              <p className="text-xs text-red-500">{error}</p>
               {!checked ? (
                 <ButtonComp
                   text="Next"
@@ -134,6 +134,8 @@ function Permissions() {
                   id="R-NextPermissions"
                   isDisabled={!checked}
                   type="submit"
+                  heightSize="38px"
+                  widthSize="100%"
                 ></ButtonComp>
               ) : (
                 <ButtonComp
@@ -143,6 +145,8 @@ function Permissions() {
                   isDisabled={!checked}
                   onClick={() => handleSubmit}
                   type="submit"
+                  heightSize="38px"
+                  widthSize="100%"
                 ></ButtonComp>
               )}
             </form>
