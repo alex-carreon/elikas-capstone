@@ -74,6 +74,8 @@ Route::middleware(['firebase.auth', 'role:1,2'])->group(function () {
 
     Route::get('/admin/users', [UserController::class, 'allUsers']);
 
+    Route::get('/users/{id}', [UserController::class, 'getUser']);
+
 });
 
 // ALL ROLES EXCEPT GUEST
