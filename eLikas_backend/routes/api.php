@@ -5,7 +5,6 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\Dashboards\UserController;
-use App\Models\User;
 
 Route::get('/test', function () {
     return response()->json([
@@ -16,6 +15,7 @@ Route::get('/test', function () {
 // PUBLIC ROUTES
 Route::post('/auth/register', [AuthController::class, 'register']);
 Route::post('/auth/login', [AuthController::class, 'login']);
+
 
 // ONLY CITIZEN ROUTES
 Route::middleware('firebase.auth')->group(function () {
@@ -36,9 +36,10 @@ Route::middleware(['firebase.auth', 'is.admin'])->prefix('admin')->group(functio
 
     Route::post('/create-admin', [AdminController::class, 'createUser']);
 
-    Route::post('/create-govop', [AdminController::class, 'createGovOp']);
- 
     Route::patch('/users/{id}/deactivate', [UserController::class, 'deactivateUser']);
+
+    Route::post('/create-govop', [AdminController::class, 'createGovOp']);
+
 });
 
 // 1 = admin; 2 = GovOp; 3 = indiv
@@ -46,8 +47,6 @@ Route::middleware(['firebase.auth', 'is.admin'])->prefix('admin')->group(functio
 Route::middleware(['firebase.auth', 'role:1,2'])->group(function () { 
    
     Route::get('/admin/users', [UserController::class, 'allUsers']);
-
-    Route::get('/users/{id}', [UserController::class, 'getUser']);
 
 });
 
