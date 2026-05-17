@@ -7,7 +7,7 @@ interface ProtectedRouteProps {
   userRole?: string | string[];
 }
 
-const roleDefault: Record<string, string> = {
+export const roleDefault: Record<string, string> = {
   indiv: "/map",
 };
 

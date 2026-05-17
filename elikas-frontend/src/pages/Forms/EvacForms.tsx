@@ -1,15 +1,12 @@
 import ButtonComp from "@/components/Button";
 import SelectDropdown from "@/components/SelectDropdown";
 import TextField from "@/components/TextField";
-import { Button } from "@/components/ui/button";
 import { Field, FieldDescription, FieldLabel } from "@/components/ui/field";
-import { Input } from "@/components/ui/input";
-import { InputGroupInput, InputGroup } from "@/components/ui/input-group";
 import { Textarea } from "@/components/ui/textarea";
 import colors from "@/constants/colors";
 import { MapClickHandler } from "@/lib/mapUtils";
 import { useState, useEffect, useRef } from "react";
-import { MapContainer, TileLayer, Marker, Popup } from "react-leaflet";
+import { MapContainer, TileLayer } from "react-leaflet";
 import { useLocation, useNavigate } from "react-router";
 import MultiSelect from "@/components/MultiSelect";
 import CheckBox from "@/components/CheckBox";
@@ -244,30 +241,59 @@ function EvacForm() {
             label="Facilities Available"
             items={["Accomodation", "Comfort Room"]}
           />
-          <CheckBox
-            text="I confirm that this location is safe for temporary 
+          {existingPin ? (
+            <>
+              <div className="mx-2 flex justify-evenly shrink gap-4">
+                <ButtonComp
+                  text="Update"
+                  id="EvacForm_ClosePinBtn"
+                  variant="primary"
+                  heightSize="10"
+                  widthSize="20"
+                ></ButtonComp>
+                <ButtonComp
+                  text="Close"
+                  id="EvacForm_ClosePinBtn"
+                  variant="important"
+                  widthSize="20"
+                  heightSize="10"
+                ></ButtonComp>
+              </div>
+            </>
+          ) : (
+            <>
+              <div>
+                <CheckBox
+                  text="I confirm that this location is safe for temporary 
 evacuation use."
-            id="EvacForm_SafetyCheck"
-            checked={safetyCheck}
-            onCheckedChange={(val) => {
-              setSafetyCheck(!!val);
-            }}
-          />
-          <CheckBox
-            text="I understand that false information may result in removal 
+                  id="EvacForm_SafetyCheck"
+                  checked={safetyCheck}
+                  onCheckedChange={(val) => {
+                    setSafetyCheck(!!val);
+                  }}
+                />
+              </div>
+              <div>
+                <CheckBox
+                  text="I understand that false information may result in removal 
 or account restriction."
-            id="EvacForm_InfoCheck"
-            checked={infoCheck}
-            onCheckedChange={(val) => {
-              setInfoCheck(!!val);
-            }}
-          />
-          <ButtonComp
-            text="Create Pin"
-            variant="primary"
-            id="EvacForm_SubmitBtn"
-            isDisabled={!safetyCheck || !infoCheck}
-          />
+                  id="EvacForm_InfoCheck"
+                  checked={infoCheck}
+                  onCheckedChange={(val) => {
+                    setInfoCheck(!!val);
+                  }}
+                />
+              </div>
+              <div className="w-full max-w-md flex justify-center">
+                <ButtonComp
+                  text="Create Pin"
+                  variant="primary"
+                  id="EvacForm_SubmitBtn"
+                  isDisabled={!safetyCheck || !infoCheck}
+                />
+              </div>
+            </>
+          )}
         </div>
       </form>
     </div>

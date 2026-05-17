@@ -179,6 +179,8 @@ function FormRegistration() {
               variant="primary"
               id="R-FormSubmit"
               type="submit"
+              heightSize="38px"
+              widthSize="100%"
             ></ButtonComp>
             {/* </Link> */}
           </div>

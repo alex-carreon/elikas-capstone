@@ -1,14 +1,19 @@
-import { Link } from "react-router";
+import { Link, useNavigate } from "react-router";
 import { ArrowLeftIcon } from "lucide-react";
 import Logo from "@/components/Logo";
 import colors from "@/constants/colors";
 import ButtonComp from "@/components/Button";
-import { auth } from "@/firebase";
+import { useUserContext } from "@/context/AuthContext";
+import { roleDefault } from "@/components/ProtectedRoutes";
 
 function Finish() {
-  const test = () => {
-    const user = auth.currentUser;
-    console.log("Current User: ", user);
+  const navigate = useNavigate();
+  const { role } = useUserContext();
+
+  const handleRedirect = () => {
+    if (!role) return;
+    console.log(role);
+    navigate(roleDefault[role]);
   };
 
   return (
@@ -39,14 +44,14 @@ function Finish() {
               </p>
             </div>
             <div className="w-full flex justify-center items-center mt-6">
-              <Link to="/" className="w-full max-w-xs">
-                <ButtonComp
-                  text="Get Started!"
-                  variant="primary"
-                  id="R-FinRegis"
-                  onClick={test}
-                ></ButtonComp>
-              </Link>
+              <ButtonComp
+                text="Get Started!"
+                variant="primary"
+                id="R-FinRegis"
+                onClick={handleRedirect}
+                heightSize="38px"
+                widthSize="100%"
+              ></ButtonComp>
             </div>
           </div>
         </div>

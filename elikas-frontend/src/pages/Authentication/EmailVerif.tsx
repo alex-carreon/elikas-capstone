@@ -82,6 +82,8 @@ function EmailVerif() {
               variant="primary"
               id="R-VerifyEmail"
               onClick={checkVerification}
+              heightSize="38px"
+              widthSize="100%"
             />
 
             <ButtonComp
@@ -89,6 +91,8 @@ function EmailVerif() {
               variant="outline"
               id="R-ResendEmail"
               onClick={handleResend}
+              heightSize="38px"
+              widthSize="100%"
             />
           </div>
         </div>
