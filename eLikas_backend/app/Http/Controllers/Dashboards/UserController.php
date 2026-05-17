@@ -69,6 +69,7 @@ class UserController extends Controller
     public function deactivateUser($id)
     {
         try {
+            // an Eloquent method used to retrieve a single record by its primary key
             $user = User::findOrFail($id);
 
             $user->deactivated_at = now();
@@ -83,6 +84,58 @@ class UserController extends Controller
         } catch (\Exception $e) {
             return response()->json([
                 'error' => 'Failed to deactivate user',
+                'details' => $e->getMessage()
+            ], 500);
+        }
+    }
+
+    public function getUser($id)
+    {
+        try {
+            $user = User::with([
+                'role',
+                'name',
+                'phoneNumber',
+                'indivAcc.location',
+                'govOp.location',
+                'govOp.locationLevel'
+            ])->findOrFail($id);
+
+            return response()->json([
+                'id' => $user->id,
+                'username' => $user->username,
+                'email' => $user->email,
+
+                'role' => $user->role?->role_name,
+
+                'first_name' => $user->name?->first_name,
+                'last_name' => $user->name?->last_name,
+
+                'phone' => $user->phoneNumber?->phone_no,
+
+                // Individual account location
+                'indiv_location' => $user->indivAcc?->location?->name,
+
+                // GovOp details
+                'govop_location' => $user->govOp?->location?->name,
+                'govop_level' => $user->govOp?->locationLevel?->level_name,
+                'point_person' => $user->govOp?->point_person,
+                'point_position' => $user->govOp?->point_position,
+
+                'created_at' => $user->created_at,
+                'deactivated_at' => $user->deactivated_at
+            ]);
+
+        } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
+
+            return response()->json([
+                'error' => 'User not found'
+            ], 404);
+
+        } catch (\Exception $e) {
+
+            return response()->json([
+                'error' => 'Failed to get user details',
                 'details' => $e->getMessage()
             ], 500);
         }
