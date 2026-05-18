@@ -12,7 +12,13 @@ import {
 } from "@/lib/mapUtils";
 import DrawerComp from "./Drawer";
 import MarkerClusterGroup from "react-leaflet-cluster";
-import { divIcon, point, type LocationEvent, LatLng } from "leaflet";
+import {
+  divIcon,
+  point,
+  type LocationEvent,
+  LatLng,
+  type LatLngBoundsExpression,
+} from "leaflet";
 import CurrentLocation from "@/assets/Map/currentLocation.svg?react";
 
 function LocationMarker({ flyToLocation }: { flyToLocation: boolean }) {
@@ -82,6 +88,11 @@ function Map() {
   const [clickedLoc, setClickedLoc] = useState<[number, number] | null>(null);
   const [showLocation, setShowLocation] = useState(false);
 
+  const philippinesBounds: LatLngBoundsExpression = [
+    [4.5, 116.0], // southwest corner
+    [21.5, 127.0], // northeast corner
+  ];
+
   // Have pin's type to be needed information from db
   const handlePinClick = (pin) => {
     setSelectedPin(pin);
@@ -146,6 +157,9 @@ function Map() {
       <MapContainer
         id="Map_Container"
         style={{ height: "90vh", width: "100%" }}
+        maxBounds={philippinesBounds}
+        maxBoundsViscosity={1.0}
+        minZoom={6}
       >
         <MapClickHandler
           onPinClick={handlePinClick}
