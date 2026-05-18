@@ -75,6 +75,8 @@ function HazardForm() {
     console.log("landmark", landmark);
     console.log("floodLevel", floodLevel);
 
+    console.log(routePoints);
+
     const points = JSON.stringify(routePoints);
 
     // File not sure yet - localStorage.setItem("fileName", last_name);
@@ -105,6 +107,7 @@ function HazardForm() {
         )}
       </div>
       <form
+        id="HazardPin_Form"
         onSubmit={handleSubmit}
         className="w-full flex flex-col justify-center items-center m-0"
       >
@@ -113,7 +116,7 @@ function HazardForm() {
             <TextField
               label="Location Image*"
               inputType="file"
-              id="HazardForm_PhotoField"
+              id="HazardPin_PhotoField"
               onSubmit={fileOnChange}
               ref={inputRef}
             />
@@ -123,7 +126,7 @@ function HazardForm() {
                 <ButtonComp
                   text="Clear"
                   variant="outline"
-                  id="HazardForm_ImageClearBtn"
+                  id="HazardPin_ImageClearBtn"
                   onClick={handleClearImage}
                 ></ButtonComp>
               </>
@@ -134,7 +137,7 @@ function HazardForm() {
             onValueChange={setBrgy}
             label="Barangay*"
             placeholder="Select the location's barangay"
-            id="HazardForm_BrgyeField"
+            id="HazardPin_BrgyField"
             onSubmit={(e) => setBrgy(e.target.value)}
             options={[
               { label: "Salapan", value: "11" },
@@ -164,6 +167,7 @@ function HazardForm() {
               zoom={17}
               scrollWheelZoom={false}
               style={{ height: "30vh", width: "100%" }}
+              id="HazardPin_MapContainer"
             >
               <TileLayer
                 attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
@@ -182,14 +186,14 @@ function HazardForm() {
             <ButtonComp
               text="Clear"
               variant="outline"
-              id="HazardForm_ImageClearBtn"
+              id="HazardPin_PinClearBtn"
               onClick={handleClearRoutePoints}
             ></ButtonComp>
           </Field>
           <TextField
             label="Nearby Landmark (optional)"
             placeholder="Enter a landmark near the hazard"
-            id="HazardForm_LandmarkField"
+            id="HazardPin_LandmarkField"
             inputType="text"
             onSubmit={(e) => setLandmark(e.target.value)}
           ></TextField>
@@ -198,7 +202,7 @@ function HazardForm() {
             onValueChange={setFloodLevel}
             label="Flood Level*"
             placeholder="Select the Flood Level"
-            id="HazardForm_FloodLevelField"
+            id="HazardPin_FloodLevelField"
             onSubmit={(e) => setFloodLevel(e.target.value)}
             options={[
               { label: "Ankle Level", value: "1" },
@@ -211,14 +215,14 @@ function HazardForm() {
               <div className="mx-2 flex justify-evenly shrink gap-4">
                 <ButtonComp
                   text="Update"
-                  id="EvacForm_ClosePinBtn"
+                  id="HazardPin_ClosePinBtn"
                   variant="primary"
                   heightSize="10"
                   widthSize="20"
                 ></ButtonComp>
                 <ButtonComp
                   text="Close"
-                  id="EvacForm_ClosePinBtn"
+                  id="HazardPin_ClosePinBtn"
                   variant="important"
                   widthSize="20"
                   heightSize="10"
@@ -230,7 +234,7 @@ function HazardForm() {
               <div>
                 <CheckBox
                   text="I confirm I am near this location."
-                  id="HazardForm_ValidCheck"
+                  id="HazardPin_ValidCheck"
                   checked={validCheck}
                   onCheckedChange={(val) => {
                     setValidCheck(!!val);
@@ -240,7 +244,7 @@ function HazardForm() {
               <div>
                 <CheckBox
                   text="Information is accurate to the best of my knowledge."
-                  id="EvacForm_InfoCheck"
+                  id="HazardPin_InfoCheck"
                   checked={infoCheck}
                   onCheckedChange={(val) => {
                     setInfoCheck(!!val);
@@ -251,7 +255,7 @@ function HazardForm() {
                 <ButtonComp
                   text="Create Road Status"
                   variant="primary"
-                  id="EvacForm_SubmitBtn"
+                  id="HazardPin_SubmitBtn"
                   isDisabled={!validCheck || !infoCheck}
                   heightSize="46px"
                 />

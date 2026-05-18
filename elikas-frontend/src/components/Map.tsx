@@ -143,7 +143,10 @@ function Map() {
       className="w-full max-w-md pointer-events-auto"
       style={{ height: "90vh" }}
     >
-      <MapContainer style={{ height: "90vh", width: "100%" }}>
+      <MapContainer
+        id="Map_Container"
+        style={{ height: "90vh", width: "100%" }}
+      >
         <MapClickHandler
           onPinClick={handlePinClick}
           setClickedLoc={setClickedLoc}
@@ -196,7 +199,7 @@ function Map() {
           <ButtonComp
             text="Find Evac Center"
             variant="important"
-            id="Map-NearestRouteBtn"
+            id="Map_NearestRouteBtn"
             onClick={handleNearestRoute}
             widthSize="90%"
             heightSize="50px"

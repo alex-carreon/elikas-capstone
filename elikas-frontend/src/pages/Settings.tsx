@@ -23,7 +23,7 @@ function Settings() {
       <ButtonComp
         text="Logout"
         variant="primary"
-        id="LogoutBtn"
+        id="Settings_LogOutBtn"
         onClick={handleLogout}
         widthSize="full"
         heightSize="10"
