@@ -1,6 +1,12 @@
 import { Link, Outlet } from "react-router";
 import LogoComp from "../Logo";
-import { Phone, MapPin, CircleUser, MessageSquare } from "lucide-react";
+import {
+  Phone,
+  MapPin,
+  CircleUser,
+  MessageSquare,
+  Settings,
+} from "lucide-react";
 import colors from "@/constants/colors";
 import {
   DropdownMenu,
@@ -66,18 +72,32 @@ function AuthNavbar() {
                 </p>
               </div>
             </Link>
-            <div>
+            <Link to="/Settings">
+              <div
+                id="Navbar_Settings"
+                className="flex flex-col justify-center items-center"
+              >
+                <Settings style={{ color: colors.heading }} />
+                <p
+                  className="text-xs text-center p-1"
+                  style={{ color: colors.label }}
+                >
+                  Settings
+                </p>
+              </div>
+            </Link>
+            {/* <div>
               <DropdownMenu>
                 <DropdownMenuTrigger
                   id="Navbar_Profile"
                   className="flex flex-col justify-center items-center"
                 >
-                  <CircleUser style={{ color: colors.heading }} />
+                  <Settings style={{ color: colors.heading }} />
                   <p
                     className="text-xs text-center p-1"
                     style={{ color: colors.label }}
                   >
-                    Profile
+                    Settings
                   </p>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent>
@@ -96,7 +116,7 @@ function AuthNavbar() {
                   </DropdownMenuGroup>
                 </DropdownMenuContent>
               </DropdownMenu>
-            </div>
+            </div> */}
           </div>
         </div>
       </div>
