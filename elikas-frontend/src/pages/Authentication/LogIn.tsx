@@ -115,6 +115,7 @@ function LogIn() {
             </p>
           </div>
           <form
+            id="LogIn_Form"
             onSubmit={handleSubmit}
             className="h-1/3 flex justify-between flex-col gap-8"
           >
@@ -128,7 +129,7 @@ function LogIn() {
                   placeholder="Enter your email"
                   icon={Mail}
                   inputType="email"
-                  id="L-EmailField"
+                  id="LogIn_EmailField"
                   isRequired
                   onSubmit={(e) => setEmail(e.target.value)}
                   error={errors.email}
@@ -139,19 +140,22 @@ function LogIn() {
                   icon={Lock}
                   inputType="password"
                   isPassword
-                  id="L-PasswordField"
+                  id="LogIn_PasswordField"
                   isRequired
                   onSubmit={(e) => setPassword(e.target.value)}
                   error={errors.password}
                 ></TextField>
               </div>
               <div className="flex mt-2 flex-row justify-between">
-                <CheckBox text="Remember for 30 days" id="L-Remember" />
+                <CheckBox
+                  text="Remember for 30 days"
+                  id="LogIn_RememberChckbox"
+                />
                 <Link
                   to="/ResetPassword"
                   className={"text-xs underline"}
                   style={{ color: colors.label }}
-                  id="L-ForgotPassword"
+                  id="LogIn_ForgotPasswordBtn"
                 >
                   Forgot Password
                 </Link>
@@ -162,7 +166,7 @@ function LogIn() {
                 text="Log In"
                 variant="primary"
                 type="submit"
-                id="L-Submit"
+                id="LogIn_SubmitBtn"
                 heightSize="38px"
                 widthSize="100%"
               ></ButtonComp>
@@ -173,6 +177,7 @@ function LogIn() {
               Don't have an account yet? &nbsp;
               <Link to="/Registration/Splash" id="L-Register">
                 <span
+                  id="LogIn_RegisterBtn"
                   className={"flex justify-self-center underline truncate"}
                   style={{ color: colors.activeIcon }}
                 >

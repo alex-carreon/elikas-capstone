@@ -67,11 +67,15 @@ function DrawerComp({
           "transition-all duration-300 inset-x-0 mx-auto w-full max-w-md",
           expanded ? "h-[80vh]" : "h-[240px]",
         )}
+        id="Drawer_DrawerContent"
       >
         {newPin ? (
           <>
             <div className="px-4">
-              <DrawerClose className="w-full flex justify-end">
+              <DrawerClose
+                id="DrawerMark_CloseBtn"
+                className="w-full flex justify-end"
+              >
                 <CircleX size={28} fill="#CECECE" strokeWidth={1} />
               </DrawerClose>
               <div className="flex items-center gap-3 flex-col">
@@ -85,7 +89,7 @@ function DrawerComp({
                   <ButtonComp
                     text="Mark as Evacuation Site"
                     variant="primary"
-                    id="Drawer-MarkEvacBtn"
+                    id="Drawer_MarkEvacBtn"
                     widthSize="90%"
                     heightSize="44px"
                   ></ButtonComp>
@@ -94,7 +98,7 @@ function DrawerComp({
                   <ButtonComp
                     text="Mark as Road Hazard"
                     variant="outline"
-                    id="Drawer-MarkRoadBtn"
+                    id="Drawer_MarkRoadBtn"
                     widthSize="90%"
                     heightSize="40px"
                   ></ButtonComp>
@@ -107,12 +111,12 @@ function DrawerComp({
             <div className="flex justify-between px-4">
               <ButtonComp
                 text={expanded ? "Press to Collapse" : "Press to Expand"}
-                id="Drawer-Handle"
+                id="DrawerInfo_ExpandCollapse"
                 variant="outline"
                 onClick={() => setExpanded(!expanded)}
                 widthSize="40"
               ></ButtonComp>
-              <DrawerClose>
+              <DrawerClose id="DrawerInfo_Close">
                 <CircleX size={28} fill="#CECECE" strokeWidth={1} />
               </DrawerClose>
             </div>
@@ -145,7 +149,7 @@ function DrawerComp({
               <Button
                 size="sm"
                 className="w-30 h-8 bg-gradient-to-r bg-[#F3C962] rounded-2xl"
-                id="Drawer-RouteBtn"
+                id="Drawer_RouteBtn"
                 onClick={() => {
                   (onFindRoute(true), setExpanded(false));
                 }}
@@ -170,7 +174,10 @@ function DrawerComp({
               )}
             >
               <Collapsible className="rounded-md data-[state=open]:bg-muted">
-                <CollapsibleTrigger className="group w-full flex flex-col items-start">
+                <CollapsibleTrigger
+                  id="Drawer_FacilitiesTrigger"
+                  className="group w-full flex flex-col items-start"
+                >
                   <div className="flex flex-row items-center">
                     Facilities Available
                     <ChevronDownIcon className="ml-auto group-data-[state=open]:rotate-180" />
@@ -187,7 +194,10 @@ function DrawerComp({
                     </div>
                   </div>
                 </CollapsibleTrigger>
-                <CollapsibleContent className="flex flex-col items-start px-2.5 pt-0 text-sm">
+                <CollapsibleContent
+                  id="Drawer_FacilitiesContent"
+                  className="flex flex-col items-start px-2.5 pt-0 text-sm"
+                >
                   <div className="flex flex-row w-full justify-evenly gap-2 pr-2.5 pt-1">
                     <div className="flex flex-1 flex-row items-center gap-1">
                       <img src={AccoIcon} />
