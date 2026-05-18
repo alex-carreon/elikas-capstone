@@ -36,7 +36,10 @@ function Settings() {
         <div className="flex flex-col gap-4">
           <Link to="/map">
             <div className="flex flex-col gap-3">
-              <div className="flex flex-row gap-4 items-center">
+              <div
+                id="Settings_AccountBtn"
+                className="flex flex-row gap-4 items-center"
+              >
                 <UserCircle
                   strokeWidth={1.2}
                   size={32}
@@ -47,10 +50,12 @@ function Settings() {
               <Separator className="bg-gray-200" />
             </div>
           </Link>
-
           <Link to="">
             <div className="flex flex-col gap-3">
-              <div className="flex flex-row gap-4 items-center">
+              <div
+                id="Settings_FeedbackBtn"
+                className="flex flex-row gap-4 items-center"
+              >
                 <Star strokeWidth={1.2} size={32} color={colors.heading} />
                 <p className="font-bold">Give Feedback</p>
               </div>
@@ -60,7 +65,10 @@ function Settings() {
 
           <Link to="">
             <div className="flex flex-col gap-3">
-              <div className="flex flex-row gap-4 items-center">
+              <div
+                id="Settings_TermsBtn"
+                className="flex flex-row gap-4 items-center"
+              >
                 <Text strokeWidth={1.2} size={32} color={colors.heading} />
                 <p className="font-bold">Terms and Conditions</p>
               </div>
