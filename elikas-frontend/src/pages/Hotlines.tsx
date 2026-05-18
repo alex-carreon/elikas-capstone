@@ -24,19 +24,22 @@ function Hotlines() {
             {/* <Button
               size="sm"
               className="w-24 bg-gradient-to-r from-[#FFA011] to-[#F3C962]"
-              id="Hotline-Add"
+              id="Hotlines-Add"
             >
               Add Hotline
             </Button> */}
           </div>
           <div className="flex justify-end items-center gap-2">
             <InputGroup className="w-2/3">
-              <InputGroupInput className="text-sm h-8"></InputGroupInput>
+              <InputGroupInput
+                className="text-sm h-8"
+                id="Hotlines_Search"
+              ></InputGroupInput>
               <InputGroupAddon align="inline-end">
                 <Search />
               </InputGroupAddon>
             </InputGroup>
-            <Filter size={18} />
+            <Filter size={18} id="Hotlines_FilterBtn" />
           </div>
         </div>
 

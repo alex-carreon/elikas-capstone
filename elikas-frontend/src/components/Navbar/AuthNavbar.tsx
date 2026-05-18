@@ -24,7 +24,10 @@ function AuthNavbar() {
           <div className="flex flex-row gap-1">
             {role === "brgy_op" && (
               <Link to="">
-                <div className="flex flex-col justify-center items-center">
+                <div
+                  id="Navbar_SMS"
+                  className="flex flex-col justify-center items-center"
+                >
                   <MessageSquare style={{ color: colors.heading }} />
                   <p
                     className="text-xs text-center p-1"
@@ -36,7 +39,10 @@ function AuthNavbar() {
               </Link>
             )}
             <Link to="/Hotlines">
-              <div className="flex flex-col justify-center items-center">
+              <div
+                id="Navbar_Hotlines"
+                className="flex flex-col justify-center items-center"
+              >
                 <Phone style={{ color: colors.heading }} />
                 <p
                   className="text-xs text-center p-1"
@@ -47,7 +53,10 @@ function AuthNavbar() {
               </div>
             </Link>
             <Link to="">
-              <div className="flex flex-col justify-center items-center">
+              <div
+                id="Navbar_History"
+                className="flex flex-col justify-center items-center"
+              >
                 <MapPin style={{ color: colors.heading }} />
                 <p
                   className="text-xs text-center p-1"
@@ -59,7 +68,10 @@ function AuthNavbar() {
             </Link>
             <div>
               <DropdownMenu>
-                <DropdownMenuTrigger className="flex flex-col justify-center items-center">
+                <DropdownMenuTrigger
+                  id="Navbar_Profile"
+                  className="flex flex-col justify-center items-center"
+                >
                   <CircleUser style={{ color: colors.heading }} />
                   <p
                     className="text-xs text-center p-1"
@@ -70,10 +82,16 @@ function AuthNavbar() {
                 </DropdownMenuTrigger>
                 <DropdownMenuContent>
                   <DropdownMenuGroup className="flex items-center flex-col">
-                    <DropdownMenuItem>My Account</DropdownMenuItem>
-                    <DropdownMenuItem>Give Feedback</DropdownMenuItem>
+                    <DropdownMenuItem id="NavbarProfile_Account">
+                      My Account
+                    </DropdownMenuItem>
+                    <DropdownMenuItem id="NavbarProfile_Feedback">
+                      Give Feedback
+                    </DropdownMenuItem>
                     <Link to="/Settings">
-                      <DropdownMenuItem>Settings</DropdownMenuItem>
+                      <DropdownMenuItem id="NavbarProfile_Settings">
+                        Settings
+                      </DropdownMenuItem>
                     </Link>
                   </DropdownMenuGroup>
                 </DropdownMenuContent>
