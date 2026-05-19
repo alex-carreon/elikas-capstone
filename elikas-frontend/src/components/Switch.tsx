@@ -3,8 +3,8 @@ import { Switch } from "@/components/ui/switch";
 import colors from "@/constants/colors";
 
 interface SwitchProps {
-  label: string;
-  description: string;
+  label?: string;
+  description?: string;
   id: string;
 }
 
