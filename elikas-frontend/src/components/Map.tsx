@@ -12,11 +12,28 @@ import {
 } from "@/lib/mapUtils";
 import DrawerComp from "./Drawer";
 import MarkerClusterGroup from "react-leaflet-cluster";
-import { divIcon, point, type LocationEvent, LatLng } from "leaflet";
+import {
+  divIcon,
+  point,
+  type LocationEvent,
+  LatLng,
+  type LatLngBoundsExpression,
+} from "leaflet";
 import CurrentLocation from "@/assets/Map/currentLocation.svg?react";
+import AlertDialogue from "./AlertDialogue";
+import { createPortal } from "react-dom";
 
-function LocationMarker({ flyToLocation }: { flyToLocation: boolean }) {
+// let locationFound = false;
+
+function LocationMarker({
+  flyToLocation,
+  locationFound,
+}: {
+  flyToLocation: boolean;
+  locationFound: (found: boolean) => void;
+}) {
   const [position, setPosition] = useState<LatLng | null>(null);
+  const [showDialogue, setShowDialogue] = useState(true);
   // const [hasLocated, setHasLocated] = useState(false);
   const map = useMap();
 
@@ -27,7 +44,7 @@ function LocationMarker({ flyToLocation }: { flyToLocation: boolean }) {
     if (hasLocated.current === true) return;
 
     // Locate user, zooms into location, how much zoom
-    map.locate({ setView: true, maxZoom: 50 });
+    map.locate({ watch: true, setView: true, maxZoom: 50 });
 
     // For rendering the marker
     // e contains lat and long
@@ -36,6 +53,7 @@ function LocationMarker({ flyToLocation }: { flyToLocation: boolean }) {
       setPosition(e.latlng);
       map.flyTo(e.latlng, map.getZoom());
       hasLocated.current = true;
+      locationFound(true);
     };
 
     // listens when to trigger onLocationFound
@@ -56,6 +74,7 @@ function LocationMarker({ flyToLocation }: { flyToLocation: boolean }) {
     }
   }, [flyToLocation, position, map]);
 
+  //Replace null with alertDialogue to prompt user to open location
   return position === null ? null : (
     <CircleMarker
       center={position}
@@ -81,6 +100,12 @@ function Map() {
   const [newPin, setNewPin] = useState(false);
   const [clickedLoc, setClickedLoc] = useState<[number, number] | null>(null);
   const [showLocation, setShowLocation] = useState(false);
+  const [locationFound, setLocationFound] = useState(false);
+
+  const philippinesBounds: LatLngBoundsExpression = [
+    [4.5, 116.0], // southwest corner
+    [21.5, 127.0], // northeast corner
+  ];
 
   // Have pin's type to be needed information from db
   const handlePinClick = (pin) => {
@@ -96,16 +121,19 @@ function Map() {
   };
 
   const handlePressRoute = () => {
-    setShowRoute(true);
-    // setSelectedPin(null);
-    setOpenFromRoute(true);
+    if (locationFound) {
+      setShowRoute(true);
+      setOpenFromRoute(true);
+    } else console.log("Location not found");
   };
 
   const handleNearestRoute = () => {
-    setShowNearestRoute(true);
-    setShowRoute(false);
-    setSelectedPin(null);
-    setOpenFromRoute(true);
+    if (locationFound) {
+      setShowNearestRoute(true);
+      setShowRoute(false);
+      setSelectedPin(null);
+      setOpenFromRoute(true);
+    } else console.log("Location not found");
   };
 
   const handleDrawerClose = (isOpen: boolean) => {
@@ -139,71 +167,89 @@ function Map() {
   };
 
   return (
-    <div
-      className="w-full max-w-md pointer-events-auto"
-      style={{ height: "90vh" }}
-    >
-      <MapContainer style={{ height: "90vh", width: "100%" }}>
-        <MapClickHandler
-          onPinClick={handlePinClick}
-          setClickedLoc={setClickedLoc}
-          clickedLoc={clickedLoc}
-        />
-        <TileLayer
-          attribution='&copy; <a href="https://openstreetmap.org">OpenStreetMap</a> contributors'
-          url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-        />
-        {/* <Routing /> */}
-        <PinMarking onPinClick={handlePinClick} />
-        <LocationMarker flyToLocation={showLocation} />
-        <FlyToLocation position={selectedPin} flyTrigger={flyTrigger} />
-        <MarkerClusterGroup
-          iconCreateFunction={createClusterCustomIcon}
-          maxClusterRadius={50}
-          chunkedLoading
+    <>
+      {!locationFound &&
+        createPortal(
+          <AlertDialogue onClose={() => setLocationFound(true)} />,
+          document.body,
+        )}
+      <div
+        className="w-full max-w-md pointer-events-auto"
+        style={{ height: "90vh" }}
+      >
+        <MapContainer
+          id="Map_Container"
+          style={{ height: "90vh", width: "100%" }}
+          maxBounds={philippinesBounds}
+          maxBoundsViscosity={1.0}
+          minZoom={6}
         >
-          <RoadMapping
-            position={[
-              [14.563073993490859, 120.99483862617527],
-              [14.564512191308419, 120.99417612053263],
-            ]}
+          <MapClickHandler
+            onPinClick={handlePinClick}
+            setClickedLoc={setClickedLoc}
+            clickedLoc={clickedLoc}
           />
-          <RoadMapping
-            position={[
-              [14.565561313458806, 120.99694416069873],
-              [14.565961485258084, 120.9979076376789],
-            ]}
+          <TileLayer
+            attribution='&copy; <a href="https://openstreetmap.org">OpenStreetMap</a> contributors'
+            url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
           />
-        </MarkerClusterGroup>
-        {showNearestRoute && <NearestRouting onPinSelected={setSelectedPin} />}
-        {showRoute && !showNearestRoute && selectedPin && (
-          <Routing onPinSelected={setSelectedPin} selectedPin={selectedPin} />
-        )}{" "}
-      </MapContainer>
-      <DrawerComp
-        open={open}
-        onOpenChange={handleDrawerClose}
-        selectedPin={selectedPin}
-        onFindRoute={handlePressRoute}
-        newPin={newPin}
-      />
-      <div className="fixed bottom-0 left-0 w-full flex justify-center items-center">
-        <div className="flex flex-col w-full max-w-md items-center justify-center mb-8">
-          <CurrentLocation
-            className="w-14 h-14 self-end m-4 drop-shadow-xl"
-            onClick={() => setShowLocation((prev) => !prev)}
+          {/* <Routing /> */}
+          <PinMarking onPinClick={handlePinClick} />
+          <LocationMarker
+            flyToLocation={showLocation}
+            locationFound={setLocationFound}
           />
-          <ButtonComp
-            text="Find Evac Center"
-            variant="important"
-            id="Map-NearestRouteBtn"
-            onClick={handleNearestRoute}
-            widthSize="90%"
-            heightSize="50px"
-          />
+          <FlyToLocation position={selectedPin} flyTrigger={flyTrigger} />
+          <MarkerClusterGroup
+            iconCreateFunction={createClusterCustomIcon}
+            maxClusterRadius={50}
+            chunkedLoading
+          >
+            <RoadMapping
+              position={[
+                [14.563073993490859, 120.99483862617527],
+                [14.564512191308419, 120.99417612053263],
+              ]}
+            />
+            <RoadMapping
+              position={[
+                [14.565561313458806, 120.99694416069873],
+                [14.565961485258084, 120.9979076376789],
+              ]}
+            />
+          </MarkerClusterGroup>
+          {showNearestRoute && (
+            <NearestRouting onPinSelected={setSelectedPin} />
+          )}
+          {showRoute && !showNearestRoute && selectedPin && (
+            <Routing onPinSelected={setSelectedPin} selectedPin={selectedPin} />
+          )}{" "}
+        </MapContainer>
+        <DrawerComp
+          open={open}
+          onOpenChange={handleDrawerClose}
+          selectedPin={selectedPin}
+          onFindRoute={handlePressRoute}
+          newPin={newPin}
+        />
+        <div className="fixed bottom-0 left-0 w-full flex justify-center items-center">
+          <div className="flex flex-col w-full max-w-md items-center justify-center mb-8">
+            <CurrentLocation
+              className="w-14 h-14 self-end m-4 drop-shadow-xl"
+              onClick={() => setShowLocation((prev) => !prev)}
+            />
+            <ButtonComp
+              text="Find Evac Center"
+              variant="important"
+              id="Map_NearestRouteBtn"
+              onClick={handleNearestRoute}
+              widthSize="90%"
+              heightSize="50px"
+            />
+          </div>
         </div>
       </div>
-    </div>
+    </>
   );
 }
 

@@ -1,11 +1,10 @@
-import Logo from "@/components/Logo";
-import { ArrowLeftIcon } from "lucide-react";
-import { Link, useNavigate } from "react-router";
+import { useNavigate } from "react-router";
 import colors from "@/constants/colors";
 import ButtonComp from "@/components/Button";
 import { auth } from "@/firebase";
 import { sendEmailVerification } from "firebase/auth";
 import { useState } from "react";
+import RegisterHeader from "@/components/RegisterHeader";
 
 function EmailVerif() {
   const emailData = localStorage.getItem("email");
@@ -43,14 +42,7 @@ function EmailVerif() {
   return (
     <div className="min-h-screen flex justify-center p-6">
       <div className="w-full max-w-sm flex flex-col">
-        <div className="mb-6">
-          <Link to="/Registration/Form" id="R-BackSplash">
-            <ArrowLeftIcon />
-          </Link>
-        </div>
-        <div className="flex justify-center">
-          <Logo />
-        </div>
+        <RegisterHeader />
         <div className="h-1/2 flex justify-center flex-col">
           <div className="mb-8">
             <h1
@@ -80,7 +72,7 @@ function EmailVerif() {
             <ButtonComp
               text="Verify Email"
               variant="primary"
-              id="R-VerifyEmail"
+              id="VerifyEmail_ConfirmBtn"
               onClick={checkVerification}
               heightSize="38px"
               widthSize="100%"
@@ -89,7 +81,7 @@ function EmailVerif() {
             <ButtonComp
               text="Resend Email Verification"
               variant="outline"
-              id="R-ResendEmail"
+              id="VerifyEmail_ResendBtn"
               onClick={handleResend}
               heightSize="38px"
               widthSize="100%"
