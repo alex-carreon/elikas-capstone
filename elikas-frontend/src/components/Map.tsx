@@ -23,6 +23,7 @@ import {
 import CurrentLocation from "@/assets/Map/currentLocation.svg?react";
 import AlertDialogue from "./AlertDialogue";
 import { createPortal } from "react-dom";
+import { useUserContext } from "@/context/AuthContext";
 
 // let locationFound = false;
 
@@ -108,6 +109,13 @@ function Map() {
     [4.5, 116.0], // southwest corner
     [21.5, 127.0], // northeast corner
   ];
+
+  let authorized = false;
+  const { role } = useUserContext();
+
+  if (role) {
+    authorized = true;
+  }
 
   // Have pin's type to be needed information from db
   const handlePinClick = (pin) => {
@@ -209,11 +217,13 @@ function Map() {
           maxBoundsViscosity={1.0}
           minZoom={6}
         >
-          <MapClickHandler
-            onPinClick={handlePinClick}
-            setClickedLoc={setClickedLoc}
-            clickedLoc={clickedLoc}
-          />
+          {authorized ? (
+            <MapClickHandler
+              onPinClick={handlePinClick}
+              setClickedLoc={setClickedLoc}
+              clickedLoc={clickedLoc}
+            />
+          ) : null}
           <TileLayer
             attribution='&copy; <a href="https://openstreetmap.org">OpenStreetMap</a> contributors'
             url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
