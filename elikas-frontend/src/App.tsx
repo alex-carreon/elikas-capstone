@@ -25,8 +25,8 @@ function App() {
   return (
     <BrowserRouter>
       <Routes>
+        <Route path="/History" element={<History />} />
         <Route path="/Login" element={<LogIn />} />
-        <Route path="/ResetPassword" element={<ForgotPW />} />
         <Route path="/Registration">
           <Route path="Splash" element={<SplashRegistration />} />
           <Route path="Form" element={<FormRegistration />} />
