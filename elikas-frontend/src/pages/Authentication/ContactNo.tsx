@@ -43,6 +43,7 @@ function ContactNo() {
         </div>
         <div className="h-full flex justify-between flex-col">
           <form
+            id="ContactNumber_Form"
             onSubmit={handleSubmit}
             className="h-full flex justify-between flex-col mt-8"
           >
@@ -68,7 +69,7 @@ function ContactNo() {
                   label="Contact Number"
                   placeholder="639081057526"
                   inputType="tel"
-                  id="R-ContactNo"
+                  id="ContactNumber_Field"
                   onSubmit={(e) => setContact(e.target.value)}
                   isRequired
                   error={errors.contact}
@@ -80,10 +81,10 @@ function ContactNo() {
               <ButtonComp
                 text="Next"
                 variant="primary"
-                id="R-FormSubmit"
+                id="ContactNumber_FormSubmitBtn"
                 type="submit"
-                widthSize="full"
-                heightSize="10"
+                heightSize="38px"
+                widthSize="100%"
               ></ButtonComp>
               {/* </Link> */}
               <Link
@@ -93,9 +94,9 @@ function ContactNo() {
                 <ButtonComp
                   text="Skip"
                   variant="outline"
-                  id="R-FormSubmit"
-                  widthSize="full"
-                  heightSize="10"
+                  id="ContactNumber_Skip"
+                  heightSize="38px"
+                  widthSize="100%"
                 ></ButtonComp>
               </Link>
             </div>

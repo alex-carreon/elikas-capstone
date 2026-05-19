@@ -1,29 +1,26 @@
-import { Link } from "react-router";
-import { ArrowLeftIcon } from "lucide-react";
-import Logo from "@/components/Logo";
+import { useNavigate } from "react-router";
 import colors from "@/constants/colors";
 import ButtonComp from "@/components/Button";
-import { auth } from "@/firebase";
+import { useUserContext } from "@/context/AuthContext";
+import { roleDefault } from "@/components/ProtectedRoutes";
+import RegisterHeader from "@/components/RegisterHeader";
 
 function Finish() {
-  const test = () => {
-    const user = auth.currentUser;
-    console.log("Current User: ", user);
+  const navigate = useNavigate();
+  const { role } = useUserContext();
+
+  const handleRedirect = () => {
+    if (!role) return;
+    console.log(role);
+    navigate(roleDefault[role]);
   };
 
   return (
     <div className="min-h-screen flex justify-center p-6">
       <div className="w-full max-w-sm flex flex-col">
-        <div className="mb-6">
-          <Link to="/Registration/Permissions" id="R-BackSplash">
-            <ArrowLeftIcon />
-          </Link>
-        </div>
+        <RegisterHeader />
         <div className="h-3/4 flex justify-center flex-col">
           <div className="flex justify-evenly flex-col">
-            <div className="flex justify-center mb-6">
-              <Logo />
-            </div>
             <div className="flex justify-center flex-col">
               <h1
                 className="BeVietnamPro text-2xl text-center font-bold"
@@ -39,16 +36,14 @@ function Finish() {
               </p>
             </div>
             <div className="w-full flex justify-center items-center mt-6">
-              <Link to="/" className="w-full max-w-xs">
-                <ButtonComp
-                  text="Get Started!"
-                  variant="primary"
-                  id="R-FinRegis"
-                  onClick={test}
-                  widthSize="full"
-                  heightSize="10"
-                ></ButtonComp>
-              </Link>
+              <ButtonComp
+                text="Get Started!"
+                variant="primary"
+                id="Finish_FinishBtn"
+                onClick={handleRedirect}
+                heightSize="38px"
+                widthSize="100%"
+              ></ButtonComp>
             </div>
           </div>
         </div>

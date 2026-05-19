@@ -26,9 +26,9 @@ function HotlineRow() {
             <b>Medical and Health</b>
           </p>
           {copy ? (
-            <CopyCheck size={20} />
+            <CopyCheck id="Hotlines_CopyBtn" size={20} />
           ) : (
-            <Copy onClick={HandleCopy} size={20} />
+            <Copy id="Hotlines_CopyBtn" onClick={HandleCopy} size={20} />
           )}
           {/* <Edit /> */}
         </div>

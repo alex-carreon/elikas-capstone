@@ -1,8 +1,12 @@
 import api from "@/api";
 import ButtonComp from "@/components/Button";
+import colors from "@/constants/colors";
 import { auth } from "@/firebase";
 import { signOut } from "firebase/auth";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
+import SettingsIcon from "@/assets/Settings/SettingsIcon.svg";
+import { UserCircle, Star, Text } from "lucide-react";
+import { Separator } from "@/components/ui/separator";
 
 function Settings() {
   const navigate = useNavigate();

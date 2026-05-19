@@ -7,14 +7,13 @@ import {
   CarouselContent,
   CarouselItem,
 } from "@/components/ui/carousel";
-import Logo from "../../components/Logo";
-import { ArrowLeftIcon } from "lucide-react";
 import { Link } from "react-router-dom";
 import React, { useEffect, useState } from "react";
 import { type CarouselApi } from "@/components/ui/carousel";
 import ButtonComp from "../../components/Button";
 import { Circle } from "lucide-react";
 import CarouselCard from "../../components/CarouselCard";
+import RegisterHeader from "@/components/RegisterHeader";
 
 function SplashRegistration() {
   const [api, setApi] = useState<CarouselApi>();
@@ -39,21 +38,15 @@ function SplashRegistration() {
   return (
     <div className="min-h-screen flex justify-center">
       <div className="w-full max-w-sm flex justify-evenly flex-col p-6">
-        <div className="w-full">
-          <Link to="/Login" id="R-BackLogin">
-            <ArrowLeftIcon />
-          </Link>
-        </div>
-        <div className="flex justify-center">
-          <Logo />
-        </div>
+        <RegisterHeader />
         <div className="w-full flex flex-col items-center">
           <Carousel
             setApi={setApi}
             className="w-xs flex  justify-self-center overflow-hidden"
+            id="Splash_Carousel"
           >
-            <CarouselContent>
-              <CarouselItem key={1}>
+            <CarouselContent id="Splash_CarouselContent">
+              <CarouselItem key={1} id="Splash_CarouselItem1">
                 <Card style={{ border: "none", boxShadow: "none" }}>
                   <CarouselCard
                     img={carousel1}
@@ -63,7 +56,7 @@ function SplashRegistration() {
                   ></CarouselCard>
                 </Card>
               </CarouselItem>
-              <CarouselItem key={2}>
+              <CarouselItem key={2} id="Splash_CarouselItem2">
                 <CarouselCard
                   img={carousel2}
                   alt="Carousel Image 2"
@@ -71,7 +64,7 @@ function SplashRegistration() {
                   text="Keep yourself in the loop with real-time updates from your surroundings marked by your fellow neighbors."
                 ></CarouselCard>
               </CarouselItem>
-              <CarouselItem key={3}>
+              <CarouselItem key={3} id="Splash_CarouselItem3">
                 <CarouselCard
                   img={carousel3}
                   alt="Carousel Image 3"
@@ -81,20 +74,26 @@ function SplashRegistration() {
               </CarouselItem>
             </CarouselContent>
           </Carousel>
-          <div className="py-2 flex flex-row gap-2 self-center">
+          <div
+            id="Splash_CarouselIndicators"
+            className="py-2 flex flex-row gap-2 self-center"
+          >
             <Circle
+              id="Splash_CarouselIndicator1"
               className={
                 "h-3 w-3 stroke-none " +
                 (current === 0 ? "fill-gray-500" : "fill-gray-300")
               }
             />
             <Circle
+              id="Splash_CarouselIndicator2"
               className={
                 "h-3 w-3 stroke-none " +
                 (current === 1 ? "fill-gray-500" : "fill-gray-300")
               }
             />
             <Circle
+              id="Splash_CarouselIndicator3"
               className={
                 "h-3 w-3 stroke-none " +
                 (current === 2 ? "fill-gray-500" : "fill-gray-300")
@@ -109,23 +108,23 @@ function SplashRegistration() {
               <ButtonComp
                 text="Get Started"
                 variant="primary"
-                id="R-ToForm"
-                widthSize="full"
-                heightSize="10"
+                id="Splash_StartBtn"
+                heightSize="38px"
+                widthSize="100%"
               />
             </Link>
           ) : (
             <ButtonComp
               text="Next"
+              id="Splash_NextBtn"
               variant="primary"
               onClick={
                 current === 2
                   ? () => api?.scrollNext()
                   : () => api?.scrollNext()
               }
-              id="R-SplashNext"
-              widthSize="full"
-              heightSize="10"
+              heightSize="38px"
+              widthSize="100%"
             />
           )}
 
@@ -133,9 +132,9 @@ function SplashRegistration() {
             text="Previous"
             variant="outline"
             onClick={() => api?.scrollPrev()}
-            id="R-SplashPrevious"
-            widthSize="full"
-            heightSize="10"
+            id="Splash_PrevBtn"
+            heightSize="38px"
+            widthSize="100%"
           />
         </div>
       </div>
