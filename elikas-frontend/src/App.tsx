@@ -19,6 +19,7 @@ import EvacForm from "./pages/Forms/EvacForms";
 import HazardForm from "./pages/Forms/HazardForm";
 import History from "@/History";
 import ForgotPW from "./pages/Authentication/ForgotPW";
+import TermsConditions from "./pages/TermsConditions";
 
 function App() {
   return (
@@ -40,19 +41,19 @@ function App() {
           <Route element={<AuthNavbar />}>
             <Route path="/Map" element={<Map />} />
           </Route>
-
-          <Route element={<ConstNavbar />}>
-            <Route path="/Settings" element={<Settings />} />
-            <Route path="/EvacForm" element={<EvacForm />} />
-            <Route path="/HazardForm" element={<HazardForm />} />
-            <Route path="/Settings" element={<Settings />} />
-            <Route path="/History" element={<History />} />
-          </Route>
         </Route>
 
         <Route element={<ProtectedRoute userRole={"brgy_op"} />}>
           <Route element={<ConstNavbar />}>
             <Route path="/SMS" element={<SMS />} />
+          </Route>
+        </Route>
+
+        <Route element={<ProtectedRoute />}>
+          <Route element={<ConstNavbar />}>
+            <Route path="/Settings" element={<Settings />} />
+            <Route path="/EvacForm" element={<EvacForm />} />
+            <Route path="/HazardForm" element={<HazardForm />} />
           </Route>
         </Route>
 
@@ -64,6 +65,7 @@ function App() {
 
         <Route element={<ConstNavbar />}>
           <Route path="/Hotlines" element={<Hotlines />} />
+          <Route path="/TermsConditions" element={<TermsConditions />} />
         </Route>
       </Routes>
     </BrowserRouter>

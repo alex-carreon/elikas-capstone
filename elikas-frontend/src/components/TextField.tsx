@@ -25,6 +25,7 @@ interface TextFieldProps {
   error?: string;
   value?: string;
   ref?: Ref<HTMLInputElement>;
+  accept?: string;
 }
 
 function TextField({
@@ -40,6 +41,7 @@ function TextField({
   error,
   value,
   ref,
+  accept,
 }: TextFieldProps) {
   const [showPassword, setShowPassword] = useState(false);
 
@@ -59,6 +61,7 @@ function TextField({
             onChange={onSubmit}
             value={value}
             ref={ref}
+            accept={accept}
           ></InputGroupInput>
           <InputGroupAddon>
             {Icon && <Icon style={{ color: colors.activeIcon }}></Icon>}
