@@ -75,27 +75,50 @@ function Permissions() {
       <div className="w-full max-w-sm flex flex-col">
         <RegisterHeader />
         <div className="h-full flex justify-evenly flex-col">
-          <div className="h-1/2 flex justify-evenly flex-col">
+          <div className="h-1/2 flex gap-2 justify-center flex-col">
             <h1
-              className="BeVietnamPro text-2xl text-center font-bold"
+              className="BeVietnamPro text-2xl text-center font-bold m-0"
               style={{ color: colors.heading }}
             >
-              Lastly, we would like to ask for your permission...
+              A few reminders before getting started
             </h1>
+            <p
+              className="text-sm text-center p-1"
+              style={{ color: colors.heading }}
+            >
+              The actions below are <b>optional</b>, but are recommended to gain
+              the full experience
+            </p>
           </div>
 
           <div className="h-full flex justify-between flex-col">
             <div className="flex flex-col gap-8">
-              <Switch
-                label="Location"
-                description="Your location will be needed be able to guide you to your nearest evacuation center, as well as help you provide and gain information as accurately as possible."
-                id="Permissions_LocSwitch"
-              />
-              <Switch
-                label="Camera"
-                description="Posting a photo alongside marking a pin or commenting would greatly support the validity of your information. It is highly recommended to allow camera permissions to allow the full experience."
-                id="Permissions_CamSwitch"
-              />
+              <div>
+                <p
+                  className="text-xl font-bold"
+                  style={{ color: colors.activeIcon }}
+                >
+                  Location
+                </p>
+                <p className="text-sm" style={{ color: colors.heading }}>
+                  It is recommended to <b>turn on your device's location</b>!
+                  This is needed for the map's features such as routing and
+                  finding the nearest evacuation center to work.
+                </p>
+              </div>
+              <div>
+                <p
+                  className="text-xl font-bold"
+                  style={{ color: colors.activeIcon }}
+                >
+                  Files Access
+                </p>
+                <p className="text-sm" style={{ color: colors.heading }}>
+                  It is recommended to <b>allow access to your files</b> so that
+                  you may attach images to your comments on evacuation and flood
+                  pins. This will help your fellow neighbors gauge their safety!
+                </p>
+              </div>
             </div>
             <div>
               <CheckBox

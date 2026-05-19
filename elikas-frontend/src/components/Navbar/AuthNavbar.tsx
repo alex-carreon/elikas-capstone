@@ -16,7 +16,7 @@ function AuthNavbar() {
           </div>
           <div className="flex flex-row gap-1">
             {role === "brgy_op" && (
-              <Link to="">
+              <Link to="/SMS">
                 <div
                   id="Navbar_SMS"
                   className="flex flex-col justify-center items-center"
