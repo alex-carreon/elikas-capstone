@@ -1,18 +1,15 @@
-import { Link } from "react-router";
 import colors from "@/constants/colors";
-import { ArrowLeftIcon } from "lucide-react";
-import Logo from "@/components/Logo";
 import { useState } from "react";
 import TextField from "@/components/TextField";
 import ButtonComp from "@/components/Button";
 import { getAuth, sendPasswordResetEmail } from "firebase/auth";
-import { toast, Toaster, toast as sonnerToast } from "sonner";
+import { Toaster } from "sonner";
 import { EmailToast } from "@/components/Toast";
+import RegisterHeader from "@/components/RegisterHeader";
 
 function ForgotPW() {
   const [email, setEmail] = useState("");
   const [error, setError] = useState("");
-  const [showToast, setShowToast] = useState(false);
 
   const handleResetPW = () => {
     const auth = getAuth();
@@ -33,9 +30,7 @@ function ForgotPW() {
       {/* {showToast && <CustomToast />} */}
       <div className="min-h-screen flex justify-center p-6 mt-12">
         <div className="w-full max-w-sm flex flex-col gap-4">
-          <div className="flex justify-center">
-            <Logo />
-          </div>
+          <RegisterHeader />
           <div className="h-1/2 flex justify-center flex-col gap-4">
             <div className="mb-8">
               <h1
@@ -56,7 +51,7 @@ function ForgotPW() {
             <div className="flex flex-col gap-6">
               <TextField
                 label="Email"
-                id="ForgetPW_Email"
+                id="ForgetPW_EmailField"
                 inputType="text"
                 onSubmit={(e) => setEmail(e.target.value)}
               />
@@ -64,20 +59,11 @@ function ForgotPW() {
                 <ButtonComp
                   text="Send Email"
                   variant="primary"
-                  id="ForgetPW_SendEmailBtn"
+                  id="ForgetPW_ResendBtn"
                   onClick={handleResetPW}
                   heightSize="38px"
                   widthSize="100%"
                 />
-                <Link to="/Login" className="w-full max-w-xs">
-                  <ButtonComp
-                    text="Go Back"
-                    variant="outline"
-                    id="ForgetPW_GoBackBtn"
-                    heightSize="38px"
-                    widthSize="100%"
-                  />
-                </Link>
               </div>
             </div>
           </div>

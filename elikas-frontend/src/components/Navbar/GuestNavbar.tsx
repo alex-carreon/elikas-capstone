@@ -19,7 +19,7 @@ function GuestNavbar() {
               <ButtonComp
                 text="Sign-in"
                 variant="primary"
-                id="G01-SignIn"
+                id="Navbar_SignIn"
                 heightSize="45px"
                 widthSize="100%"
               />
@@ -29,7 +29,10 @@ function GuestNavbar() {
             <LogoComp />
           </div>
           <Link to="/Hotlines">
-            <div className="flex flex-col justify-center items-center">
+            <div
+              id="NavbarGuest_Hotlines"
+              className="flex flex-col justify-center items-center"
+            >
               <Phone style={{ color: colors.heading }} />
               <p
                 className="text-xs text-center p-1"
@@ -42,7 +45,10 @@ function GuestNavbar() {
         </div>
         {closeAlert ? null : (
           <div className="mx-4">
-            <Alert className="w-full max-w-sm p-4 shadow-lg bg-[#FFF1DD] text-center flex flex-col items-center gap-3">
+            <Alert
+              id="NavbarGuest_Alert"
+              className="w-full max-w-sm p-4 shadow-lg bg-[#FFF1DD] text-center flex flex-col items-center gap-3"
+            >
               {/* <CheckCircle2Icon /> */}
               <AlertTitle
                 className="font-bold"
@@ -54,7 +60,11 @@ function GuestNavbar() {
                 You are now in guest mode. You can still explore the map, but
                 you’ll need an account to join the conversation.
               </AlertDescription>
-              <Button className="w-2/3" onClick={() => setCloseAlert(true)}>
+              <Button
+                id="NavbarGuest_AlertBtn"
+                className="w-2/3"
+                onClick={() => setCloseAlert(true)}
+              >
                 Got it!
               </Button>
             </Alert>

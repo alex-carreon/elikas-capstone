@@ -40,9 +40,14 @@ function PostRow({
         onClick={() => setReport(!report)}
       >
         {report ? (
-          <Flag fill="#C43E3E" strokeWidth={1} size={16} />
+          <Flag
+            id="Drawer_PostFlagBtn"
+            fill="#C43E3E"
+            strokeWidth={1}
+            size={16}
+          />
         ) : (
-          <Flag strokeWidth={1} size={16} />
+          <Flag id="Drawer_PostFlagBtn" strokeWidth={1} size={16} />
         )}
         <p>Report</p>
       </div>
@@ -64,9 +69,14 @@ function PostRow({
             onClick={() => setVote(vote === "up" ? null : "up")}
           >
             {vote === "up" ? (
-              <ThumbsUp size={16} strokeWidth={1.5} fill="#FFA215" />
+              <ThumbsUp
+                id="Drawer_PostUpvoteBtn"
+                size={16}
+                strokeWidth={1.5}
+                fill="#FFA215"
+              />
             ) : (
-              <ThumbsUp size={16} strokeWidth={1.5} />
+              <ThumbsUp id="Drawer_PostUpvoteBtn" size={16} strokeWidth={1.5} />
             )}
             <p className="text-xs">Upvote (1)</p>
           </div>
@@ -75,18 +85,30 @@ function PostRow({
             onClick={() => setVote(vote === "down" ? null : "down")}
           >
             {vote === "down" ? (
-              <ThumbsDown size={16} strokeWidth={1.5} fill="#642424" />
+              <ThumbsDown
+                id="Drawer_PostDownvoteBtn"
+                size={16}
+                strokeWidth={1.5}
+                fill="#642424"
+              />
             ) : (
-              <ThumbsDown size={16} strokeWidth={1.5} />
+              <ThumbsDown
+                id="Drawer_PostDownvoteBtn"
+                size={16}
+                strokeWidth={1.5}
+              />
             )}
 
             <p className="text-xs">Downvote</p>
           </div>
-          <CollapsibleTrigger className="text-xs underline italic flex ml-auto">
+          <CollapsibleTrigger
+            id="Drawer_PostDetailsTrigger"
+            className="text-xs underline italic flex ml-auto"
+          >
             See More
           </CollapsibleTrigger>
         </div>
-        <CollapsibleContent>
+        <CollapsibleContent id="Drawer_PostDetailsContent">
           <div className="border-2 border-solid rounded-lg p-4 m-2 flex flex-col gap-1">
             <p className="flex flex-row text-xs">
               <b>Location Verified</b>:{" "}
