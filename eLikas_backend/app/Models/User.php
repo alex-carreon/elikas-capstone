@@ -81,7 +81,7 @@ class User extends Model
 
 	public function govOp()
 	{
-		return $this->hasMany(GovOp::class, 'user_id');
+		return $this->hasOne(GovOp::class, 'user_id');
 	}
 
 	public function indivAcc()
