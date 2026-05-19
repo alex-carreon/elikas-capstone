@@ -23,8 +23,11 @@ function AuthNavbar() {
           </div>
           <div className="flex flex-row gap-1">
             {role === "brgy_op" && (
-              <Link to="">
-                <div className="flex flex-col justify-center items-center">
+              <Link to="/SMS">
+                <div
+                  id="Navbar_SMS"
+                  className="flex flex-col justify-center items-center"
+                >
                   <MessageSquare style={{ color: colors.heading }} />
                   <p
                     className="text-xs text-center p-1"

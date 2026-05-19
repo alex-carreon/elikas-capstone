@@ -24,7 +24,6 @@ function App() {
   return (
     <BrowserRouter>
       <Routes>
-        <Route path="/History" element={<History />} />
         <Route path="/Login" element={<LogIn />} />
         <Route path="/ResetPassword" element={<ForgotPW />} />
         <Route path="/Registration">
@@ -46,6 +45,8 @@ function App() {
             <Route path="/Settings" element={<Settings />} />
             <Route path="/EvacForm" element={<EvacForm />} />
             <Route path="/HazardForm" element={<HazardForm />} />
+            <Route path="/Settings" element={<Settings />} />
+            <Route path="/History" element={<History />} />
           </Route>
         </Route>
 
