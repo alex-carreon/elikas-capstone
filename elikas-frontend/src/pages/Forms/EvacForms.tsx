@@ -11,7 +11,7 @@ import { useLocation, useNavigate } from "react-router";
 import MultiSelect from "@/components/MultiSelect";
 import CheckBox from "@/components/CheckBox";
 
-function EvacForm() {
+function EvacPin() {
   const [existingPin, setExistingPin] = useState(false);
   const [fileName, setFileName] = useState("");
   const [imagePreview, setImagePreview] = useState<undefined | string>();
@@ -120,6 +120,7 @@ function EvacForm() {
         )}
       </div>
       <form
+        id="EvacPin_Form"
         onSubmit={handleSubmit}
         className="w-full flex flex-col justify-center items-center m-0"
       >
@@ -139,7 +140,7 @@ function EvacForm() {
                 <ButtonComp
                   text="Clear"
                   variant="outline"
-                  id="EvacForm_ImageClearBtn"
+                  id="EvacPin_ImageClearBtn"
                   onClick={handleClearImage}
                 ></ButtonComp>
               </>
@@ -150,7 +151,7 @@ function EvacForm() {
             onValueChange={setLocationType}
             label="Location Type*"
             placeholder="Select the location type"
-            id="EvacForm_LocTypeField"
+            id="EvacPin_LocTypeField"
             onSubmit={(e) => setLocationType(e.target.value)}
             options={[{ label: "Private Residence (My Home)", value: "1" }]}
             isRequired
@@ -158,7 +159,7 @@ function EvacForm() {
           <TextField
             label="Pin Name*"
             inputType="text"
-            id="EvacForm_PinNameField"
+            id="EvacPin_PinNameField"
             placeholder={existingPin ? "Gamoras" : "Enter your last name"}
             onSubmit={(e) => setPinName(e.target.value)}
             isRequired
@@ -177,14 +178,14 @@ function EvacForm() {
             <TextField
               label="Block and Lot"
               placeholder="Blk # Lot #"
-              id="EvacForm_BlkLotField"
+              id="EvacPin_BlkLotField"
               inputType="text"
               onSubmit={(e) => setBlkLot(e.target.value)}
             ></TextField>
             <TextField
               label="House Number"
               placeholder="i.e. 111"
-              id="EvacForm_HouseNumberField"
+              id="EvacPin_HouseNumberField"
               inputType="text"
               onSubmit={(e) => setHouseNo(e.target.value)}
             ></TextField>
@@ -197,7 +198,7 @@ function EvacForm() {
             <Textarea
               readOnly
               placeholder={description}
-              id="EvacForm_StreetField"
+              id="EvacPin_StreetField"
             ></Textarea>
             <FieldLabel
               className={"text-sm w-s"}
@@ -210,6 +211,7 @@ function EvacForm() {
               zoom={17}
               scrollWheelZoom={false}
               style={{ height: "30vh", width: "100%" }}
+              id="EvacPin_MapContainer"
             >
               <TileLayer
                 attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
@@ -225,7 +227,7 @@ function EvacForm() {
           <TextField
             label="Contact Person*"
             placeholder="Enter the person to contact for this pin"
-            id="EvacForm_ContactPersonField"
+            id="EvacPin_ContactPersonField"
             inputType="text"
             onSubmit={(e) => setContactPerson(e.target.value)}
             isRequired
@@ -233,7 +235,7 @@ function EvacForm() {
           <TextField
             label="Contact Number*"
             placeholder="Enter the contact number for this pin"
-            id="EvacForm_ContactNumberField"
+            id="EvacPin_ContactNumberField"
             inputType="text"
             onSubmit={(e) => setContactNumber(e.target.value)}
             isRequired
@@ -241,20 +243,22 @@ function EvacForm() {
           <MultiSelect
             label="Facilities Available"
             items={["Accomodation", "Comfort Room"]}
+            idField="EvacPin_FacilitiesMultiselect"
+            idInput="EvacPin_FacilitiesInput"
           />
           {existingPin ? (
             <>
               <div className="mx-2 flex justify-evenly shrink gap-4">
                 <ButtonComp
                   text="Update"
-                  id="EvacForm_ClosePinBtn"
+                  id="EvacPin_UpdatePinBtn"
                   variant="primary"
                   heightSize="10"
                   widthSize="20"
                 ></ButtonComp>
                 <ButtonComp
                   text="Close"
-                  id="EvacForm_ClosePinBtn"
+                  id="EvacPin_ClosePinBtn"
                   variant="important"
                   widthSize="20"
                   heightSize="10"
@@ -267,7 +271,7 @@ function EvacForm() {
                 <CheckBox
                   text="I confirm that this location is safe for temporary 
 evacuation use."
-                  id="EvacForm_SafetyCheck"
+                  id="EvacPin_SafetyCheck"
                   checked={safetyCheck}
                   onCheckedChange={(val) => {
                     setSafetyCheck(!!val);
@@ -278,7 +282,7 @@ evacuation use."
                 <CheckBox
                   text="I understand that false information may result in removal 
 or account restriction."
-                  id="EvacForm_InfoCheck"
+                  id="EvacPin_InfoCheck"
                   checked={infoCheck}
                   onCheckedChange={(val) => {
                     setInfoCheck(!!val);
@@ -289,7 +293,7 @@ or account restriction."
                 <ButtonComp
                   text="Create Pin"
                   variant="primary"
-                  id="EvacForm_SubmitBtn"
+                  id="EvacPin_SubmitBtn"
                   isDisabled={!safetyCheck || !infoCheck}
                 />
               </div>
@@ -301,4 +305,4 @@ or account restriction."
   );
 }
 
-export default EvacForm;
+export default EvacPin;

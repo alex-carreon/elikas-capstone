@@ -35,8 +35,13 @@ function LogIn() {
 
       if (!userCredential.user.emailVerified) {
         // Optionally sign them out so they can't access protected routes
+        console.log("not verified");
         await auth.signOut();
-        throw new Error("Please verify your email before logging in.");
+        setErrors({
+          email: "",
+          password: "",
+          general: "Please verify your email before logging in.",
+        });
       }
 
       // Step 2: Get the ID token — this is proof of identity sent to Laravel
@@ -56,7 +61,7 @@ function LogIn() {
       const userData = await response.json();
 
       if (!response.ok) {
-        throw new Error(userData.error || "Login failed");
+        setErrors(userData.error || "Login failed");
       }
 
       // // Step 4: Save user info so other pages can access it
@@ -110,17 +115,21 @@ function LogIn() {
             </p>
           </div>
           <form
+            id="LogIn_Form"
             onSubmit={handleSubmit}
-            className="h-1/3 flex justify-between flex-col"
+            className="h-1/3 flex justify-between flex-col gap-8"
           >
             <div className="w-full max-w-xs flex justify-start flex-col content-center mx-auto">
               <div className="flex justify-start flex-col content-center gap-5">
+                <p className="text-sm text-center text-red-500">
+                  {errors.general}
+                </p>
                 <TextField
                   label="Email"
                   placeholder="Enter your email"
                   icon={Mail}
                   inputType="email"
-                  id="L-EmailField"
+                  id="LogIn_EmailField"
                   isRequired
                   onSubmit={(e) => setEmail(e.target.value)}
                   error={errors.email}
@@ -131,35 +140,36 @@ function LogIn() {
                   icon={Lock}
                   inputType="password"
                   isPassword
-                  id="L-PasswordField"
+                  id="LogIn_PasswordField"
                   isRequired
                   onSubmit={(e) => setPassword(e.target.value)}
                   error={errors.password}
                 ></TextField>
               </div>
               <div className="flex mt-2 flex-row justify-between">
-                <CheckBox text="Remember for 30 days" id="L-Remember" />
+                <CheckBox
+                  text="Remember for 30 days"
+                  id="LogIn_RememberChckbox"
+                />
                 <Link
-                  to="/"
+                  to="/ResetPassword"
                   className={"text-xs underline"}
                   style={{ color: colors.label }}
-                  id="L-ForgotPassword"
+                  id="LogIn_ForgotPasswordBtn"
                 >
                   Forgot Password
                 </Link>
               </div>
             </div>
             <div className="w-full flex justify-center items-center m-0">
-              {/* <Link to="/" className="w-full max-w-xs"> */}
               <ButtonComp
                 text="Log In"
                 variant="primary"
                 type="submit"
-                id="L-Submit"
-                widthSize="full"
-                heightSize="10"
+                id="LogIn_SubmitBtn"
+                heightSize="38px"
+                widthSize="100%"
               ></ButtonComp>
-              {/* </Link> */}
             </div>
           </form>
           <div className="flex justify-start flex-col content-center mx-auto text-sm">
@@ -167,6 +177,7 @@ function LogIn() {
               Don't have an account yet? &nbsp;
               <Link to="/Registration/Splash" id="L-Register">
                 <span
+                  id="LogIn_RegisterBtn"
                   className={"flex justify-self-center underline truncate"}
                   style={{ color: colors.activeIcon }}
                 >
