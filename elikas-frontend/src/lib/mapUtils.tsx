@@ -5,6 +5,7 @@ import { LatLng, divIcon } from "leaflet";
 import "leaflet-routing-machine";
 import colors from "@/constants/colors";
 import PinIcon from "@/assets/Map/Pins.svg?react";
+import SensorIcon from "@/components/SensorIcon";
 import { renderToString } from "react-dom/server";
 import MarkerClusterGroup from "react-leaflet-cluster";
 import FloodIcon from "@/assets/Map/FloodIcon.svg?react";
@@ -22,6 +23,15 @@ export const pins = [
     name: "Taft Campus",
     lat: 14.563803477668346,
     long: 120.99479571081709,
+  },
+];
+
+export const sensorPins = [
+  {
+    id: 1,
+    name: "Test Sensor",
+    lat: 14.564622906838178,
+    long: 120.99761278890365,
   },
 ];
 
@@ -207,6 +217,56 @@ export function PinMarking({ onPinClick }) {
         />
       ))}
     </MarkerClusterGroup>
+  );
+}
+
+// Add sensor logic here
+export function SensorMarking({ onPinClick }) {
+  const [height, setHeight] = useState(0);
+  const [color, setColor] = useState("");
+
+  const colorSensor = {
+    yellow: "#F3C217",
+    orange: "#E6793B",
+    red: "#B22B42",
+    purple: "#6E4998",
+  };
+
+  useEffect(() => {
+    setHeight(40);
+  });
+
+  useEffect(() => {
+    if (height >= 40) {
+      setColor(colorSensor.purple);
+    } else if (height >= 30) {
+      setColor(colorSensor.red);
+    } else if (height >= 20) {
+      setColor(colorSensor.orange);
+    } else if (height >= 10) {
+      setColor(colorSensor.yellow);
+    }
+  }, [height]);
+
+  const sensorIcon = divIcon({
+    html: renderToString(<SensorIcon color={color} width={30} height={30} />),
+    className: "",
+    iconAnchor: [12, 12],
+    iconSize: [50, 50],
+  });
+
+  return (
+    <>
+      {sensorPins.map((pin) => (
+        <Marker
+          key={pin.id}
+          position={[pin.lat, pin.long]}
+          icon={sensorIcon}
+          eventHandlers={{ click: () => onPinClick(pin) }}
+        />
+      ))}
+      ;
+    </>
   );
 }
 
