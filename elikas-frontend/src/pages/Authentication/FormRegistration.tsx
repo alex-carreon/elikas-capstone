@@ -1,6 +1,4 @@
-import { Link, useNavigate } from "react-router-dom";
-import Logo from "@/components/Logo";
-import { ArrowLeftIcon } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 import colors from "@/constants/colors";
 import TextField from "@/components/TextField";
 import ButtonComp from "@/components/Button";
@@ -11,6 +9,7 @@ import {
   sendEmailVerification,
 } from "@firebase/auth";
 import { auth } from "@/firebase";
+import RegisterHeader from "@/components/RegisterHeader";
 
 function FormRegistration() {
   const [last_name, setLn] = useState("");
@@ -79,14 +78,7 @@ function FormRegistration() {
   return (
     <div className="min-h-screen flex justify-center p-6">
       <div className="w-full max-w-sm flex justify-evenly flex-col">
-        <div className="mb-6">
-          <Link to="/Registration/Splash" id="R-BackSplash">
-            <ArrowLeftIcon />
-          </Link>
-        </div>
-        <div className="flex justify-center mb-6">
-          <Logo />
-        </div>
+        <RegisterHeader />
         <div className="flex justify-center flex-col">
           <h1
             className="BeVietnamPro text-2xl text-center font-bold"
@@ -101,13 +93,17 @@ function FormRegistration() {
             Fill all the needed information
           </p>
         </div>
-        <form onSubmit={handleSubmit} className="flex justify-center flex-col">
+        <form
+          id="RegisForm_Form"
+          onSubmit={handleSubmit}
+          className="flex justify-center flex-col"
+        >
           <div className="w-full max-w-xs flex justify-start flex-col self-center gap-5 mt-10 mb-10">
             <TextField
               label="Last Name"
               placeholder="Enter your last name"
               inputType="text"
-              id="R-LNfield"
+              id="RegisForm_LNfield"
               isRequired
               onSubmit={(e) => setLn(e.target.value)}
             />
@@ -115,7 +111,7 @@ function FormRegistration() {
               label="First Name"
               placeholder="Enter your first name"
               inputType="text"
-              id="R-FNfield"
+              id="RegisForm_FNfield"
               isRequired
               onSubmit={(e) => setFn(e.target.value)}
             />
@@ -123,7 +119,7 @@ function FormRegistration() {
               label="Email Address"
               placeholder="Enter your email address"
               inputType="text"
-              id="R-EMAILfield"
+              id="RegisForm_EMAILfield"
               isRequired
               onSubmit={(e) => setEmail(e.target.value)}
               error={errors.email}
@@ -133,7 +129,7 @@ function FormRegistration() {
               onValueChange={setCity}
               label="City"
               placeholder="Select your city"
-              id="R-CITYfield"
+              id="RegisForm_CITYfield"
               onSubmit={(e) => setCity(e.target.value)}
               options={[{ label: "San Juan", value: "10" }]}
               isRequired
@@ -143,7 +139,7 @@ function FormRegistration() {
               onValueChange={setBrgy}
               label="Barangay"
               placeholder="Select your barangay"
-              id="R-BRGYfield"
+              id="RegisForm_BRGYfield"
               onSubmit={(e) => setBrgy(e.target.value)}
               options={[
                 { label: "Salapan", value: "11" },
@@ -156,7 +152,7 @@ function FormRegistration() {
               placeholder="Enter your password of choice"
               inputType="password"
               isPassword
-              id="R-PWfield"
+              id="RegisForm_PWfield"
               isRequired
               onSubmit={(e) => setPw(e.target.value)}
               error={errors.pw}
@@ -166,23 +162,21 @@ function FormRegistration() {
               placeholder="Re-enter your password"
               inputType="password"
               isPassword
-              id="R-PWfield"
+              id="RegisForm_CONFIRMPWfield"
               isRequired
               onSubmit={(e) => setConfirmPw(e.target.value)}
               error={errors.confirmPw}
             />
           </div>
           <div className="w-full flex justify-center items-center m-0">
-            {/* <Link to="/Registration/Verify" className="w-full max-w-xs"> */}
             <ButtonComp
               text="Next"
               variant="primary"
-              id="R-FormSubmit"
+              id="RegisForm_FormSubmit"
               type="submit"
-              widthSize="full"
-              heightSize="10"
+              heightSize="38px"
+              widthSize="100%"
             ></ButtonComp>
-            {/* </Link> */}
           </div>
         </form>
       </div>

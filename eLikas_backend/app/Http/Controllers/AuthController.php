@@ -50,7 +50,7 @@ class AuthController extends Controller
                 'username'   => $request->username,
                 'email'      => $request->email,
                 'role_id'    => 3,
-                'created_at' => now(),
+                'created_at' => now(), //can remove this
             ]);
 
 
@@ -136,8 +136,8 @@ class AuthController extends Controller
             $userAuth->user->deactivated_at
         ) {
             return response()->json([
-                'error' => 'User not found'
-            ], 404);
+                'error' => 'Account disabled'
+            ], 403);
         }
 
         $user = $userAuth->user;

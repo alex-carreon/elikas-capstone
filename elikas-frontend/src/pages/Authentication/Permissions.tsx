@@ -1,6 +1,4 @@
-import { ArrowLeftIcon } from "lucide-react";
-import { Link, useNavigate } from "react-router";
-import Logo from "@/components/Logo";
+import { useNavigate } from "react-router";
 import colors from "@/constants/colors";
 import Switch from "@/components/Switch";
 import ButtonComp from "@/components/Button";
@@ -76,41 +74,57 @@ function Permissions() {
   return (
     <div className="min-h-screen flex justify-center p-6">
       <div className="w-full max-w-sm flex flex-col">
-        <div className="mb-6">
-          <Link to="/Registration/CustomProfile" id="R-BackSplash">
-            <ArrowLeftIcon />
-          </Link>
-        </div>
-        <div className="flex justify-center">
-          <Logo />
-        </div>
+        <RegisterHeader />
         <div className="h-full flex justify-evenly flex-col">
-          <div className="h-1/2 flex justify-evenly flex-col">
+          <div className="h-1/2 flex gap-2 justify-center flex-col">
             <h1
-              className="BeVietnamPro text-2xl text-center font-bold"
+              className="BeVietnamPro text-2xl text-center font-bold m-0"
               style={{ color: colors.heading }}
             >
-              Lastly, we would like to ask for your permission...
+              A few reminders before getting started
             </h1>
+            <p
+              className="text-sm text-center p-1"
+              style={{ color: colors.heading }}
+            >
+              The actions below are <b>optional</b>, but are recommended to gain
+              the full experience
+            </p>
           </div>
 
           <div className="h-full flex justify-between flex-col">
             <div className="flex flex-col gap-8">
-              <Switch
-                label="Location"
-                description="Your location will be needed be able to guide you to your nearest evacuation center, as well as help you provide and gain information as accurately as possible."
-                id="R-LocSwitch"
-              />
-              <Switch
-                label="Camera"
-                description="Posting a photo alongside marking a pin or commenting would greatly support the validity of your information. It is highly recommended to allow camera permissions to allow the full experience."
-                id="R-CamSwitch"
-              />
+              <div>
+                <p
+                  className="text-xl font-bold"
+                  style={{ color: colors.activeIcon }}
+                >
+                  Location
+                </p>
+                <p className="text-sm" style={{ color: colors.heading }}>
+                  It is recommended to <b>turn on your device's location</b>!
+                  This is needed for the map's features such as routing and
+                  finding the nearest evacuation center to work.
+                </p>
+              </div>
+              <div>
+                <p
+                  className="text-xl font-bold"
+                  style={{ color: colors.activeIcon }}
+                >
+                  Files Access
+                </p>
+                <p className="text-sm" style={{ color: colors.heading }}>
+                  It is recommended to <b>allow access to your files</b> so that
+                  you may attach images to your comments on evacuation and flood
+                  pins. This will help your fellow neighbors gauge their safety!
+                </p>
+              </div>
             </div>
             <div>
               <CheckBox
                 text="I agree to the Terms and Conditions of eLikas. This field is required."
-                id="R-CheckboxTerms"
+                id="Permissions_TermsChckbox"
                 checked={checked}
                 onCheckedChange={(val) => {
                   setChecked(!!val);
@@ -130,6 +144,7 @@ function Permissions() {
               </div>
             </div>
             <form
+              id="Permissions_Form"
               onSubmit={handleSubmit}
               className="w-full flex flex-col justify-center items-center m-0"
             >
@@ -138,22 +153,22 @@ function Permissions() {
                 <ButtonComp
                   text="Next"
                   variant="primary"
-                  id="R-NextPermissions"
+                  id="Permissions_SubmitBtn"
                   isDisabled={!checked}
                   type="submit"
-                  widthSize="full"
-                  heightSize="10"
+                  heightSize="38px"
+                  widthSize="100%"
                 ></ButtonComp>
               ) : (
                 <ButtonComp
                   text="Next"
                   variant="primary"
-                  id="R-NextPermissions"
+                  id="Permissions_SubmitBtn"
                   isDisabled={!checked}
                   onClick={() => handleSubmit}
                   type="submit"
-                  widthSize="full"
-                  heightSize="10"
+                  heightSize="38px"
+                  widthSize="100%"
                 ></ButtonComp>
               )}
             </form>

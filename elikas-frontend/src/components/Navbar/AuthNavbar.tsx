@@ -1,14 +1,7 @@
 import { Link, Outlet } from "react-router";
 import LogoComp from "../Logo";
-import { Phone, MapPin, CircleUser, MessageSquare } from "lucide-react";
+import { Phone, MapPin, MessageSquare, Settings } from "lucide-react";
 import colors from "@/constants/colors";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuGroup,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
 import { useUserContext } from "@/context/AuthContext";
 
 function AuthNavbar() {
@@ -23,8 +16,11 @@ function AuthNavbar() {
           </div>
           <div className="flex flex-row gap-1">
             {role === "brgy_op" && (
-              <Link to="">
-                <div className="flex flex-col justify-center items-center">
+              <Link to="/SMS">
+                <div
+                  id="Navbar_SMS"
+                  className="flex flex-col justify-center items-center"
+                >
                   <MessageSquare style={{ color: colors.heading }} />
                   <p
                     className="text-xs text-center p-1"
@@ -36,7 +32,10 @@ function AuthNavbar() {
               </Link>
             )}
             <Link to="/Hotlines">
-              <div className="flex flex-col justify-center items-center">
+              <div
+                id="Navbar_Hotlines"
+                className="flex flex-col justify-center items-center"
+              >
                 <Phone style={{ color: colors.heading }} />
                 <p
                   className="text-xs text-center p-1"
@@ -47,7 +46,10 @@ function AuthNavbar() {
               </div>
             </Link>
             <Link to="">
-              <div className="flex flex-col justify-center items-center">
+              <div
+                id="Navbar_History"
+                className="flex flex-col justify-center items-center"
+              >
                 <MapPin style={{ color: colors.heading }} />
                 <p
                   className="text-xs text-center p-1"
@@ -57,28 +59,20 @@ function AuthNavbar() {
                 </p>
               </div>
             </Link>
-            <div>
-              <DropdownMenu>
-                <DropdownMenuTrigger className="flex flex-col justify-center items-center">
-                  <CircleUser style={{ color: colors.heading }} />
-                  <p
-                    className="text-xs text-center p-1"
-                    style={{ color: colors.label }}
-                  >
-                    Profile
-                  </p>
-                </DropdownMenuTrigger>
-                <DropdownMenuContent>
-                  <DropdownMenuGroup className="flex items-center flex-col">
-                    <DropdownMenuItem>My Account</DropdownMenuItem>
-                    <DropdownMenuItem>Give Feedback</DropdownMenuItem>
-                    <Link to="/Settings">
-                      <DropdownMenuItem>Settings</DropdownMenuItem>
-                    </Link>
-                  </DropdownMenuGroup>
-                </DropdownMenuContent>
-              </DropdownMenu>
-            </div>
+            <Link to="/Settings">
+              <div
+                id="Navbar_Settings"
+                className="flex flex-col justify-center items-center"
+              >
+                <Settings style={{ color: colors.heading }} />
+                <p
+                  className="text-xs text-center p-1"
+                  style={{ color: colors.label }}
+                >
+                  Settings
+                </p>
+              </div>
+            </Link>
           </div>
         </div>
       </div>
