@@ -7,6 +7,8 @@ import ButtonComp from "@/components/Button";
 import CheckBox from "@/components/CheckBox";
 import { useState } from "react";
 import { auth } from "../../firebase";
+import RegisterHeader from "@/components/RegisterHeader";
+import { Link } from "react-router";
 
 function Permissions() {
   const [checked, setChecked] = useState(false);
@@ -114,13 +116,18 @@ function Permissions() {
                   setChecked(!!val);
                 }}
               />
-              <p className="text-xs pt-4" style={{ color: colors.label }}>
-                Read the{" "}
-                <a href="" className="underline">
-                  Terms and Conditions
-                </a>{" "}
-                here.
-              </p>
+              <div
+                className="flex flex-row text-xs pt-4 gap-1"
+                style={{ color: colors.label }}
+              >
+                <p>Read the</p>
+                <Link to="/TermsConditions">
+                  <p className="underline" id="Permissions_TermsOpen">
+                    Terms and Conditions
+                  </p>
+                </Link>
+                <p>here.</p>
+              </div>
             </div>
             <form
               onSubmit={handleSubmit}
