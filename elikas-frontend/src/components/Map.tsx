@@ -9,6 +9,7 @@ import {
   RoadMapping,
   NearestRouting,
   MapClickHandler,
+  SensorMarking,
 } from "@/lib/mapUtils";
 import DrawerComp from "./Drawer";
 import MarkerClusterGroup from "react-leaflet-cluster";
@@ -101,6 +102,7 @@ function Map() {
   const [clickedLoc, setClickedLoc] = useState<[number, number] | null>(null);
   const [showLocation, setShowLocation] = useState(false);
   const [locationFound, setLocationFound] = useState(false);
+  const [isSensor, setIsSensor] = useState(false);
 
   const philippinesBounds: LatLngBoundsExpression = [
     [4.5, 116.0], // southwest corner
@@ -118,6 +120,29 @@ function Map() {
 
     const isExisting = !!pin.id;
     setNewPin(!isExisting);
+
+    if (isExisting) {
+      setClickedLoc(null);
+    }
+    setIsSensor(false);
+  };
+
+  const handleSensorClick = (pin) => {
+    setSelectedPin(pin);
+    setOpen(true);
+    setFlyTrigger((prev) => prev + 1);
+    setShowNearestRoute(false);
+    setShowRoute(false);
+    setOpenFromRoute(false);
+    setClickedLoc(null);
+
+    const sensor = !!pin.id;
+    setIsSensor(sensor);
+
+    if (sensor) {
+      setClickedLoc(null);
+    }
+    setNewPin(false);
   };
 
   const handlePressRoute = () => {
@@ -195,6 +220,7 @@ function Map() {
           />
           {/* <Routing /> */}
           <PinMarking onPinClick={handlePinClick} />
+          <SensorMarking onPinClick={handleSensorClick} />
           <LocationMarker
             flyToLocation={showLocation}
             locationFound={setLocationFound}
@@ -231,6 +257,7 @@ function Map() {
           selectedPin={selectedPin}
           onFindRoute={handlePressRoute}
           newPin={newPin}
+          isSensor={isSensor}
         />
         <div className="fixed bottom-0 left-0 w-full flex justify-center items-center">
           <div className="flex flex-col w-full max-w-md items-center justify-center mb-8">
