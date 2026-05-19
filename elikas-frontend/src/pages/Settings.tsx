@@ -63,7 +63,7 @@ function Settings() {
             </div>
           </Link>
 
-          <Link to="">
+          <Link to="/TermsConditions">
             <div className="flex flex-col gap-3">
               <div
                 id="Settings_TermsBtn"

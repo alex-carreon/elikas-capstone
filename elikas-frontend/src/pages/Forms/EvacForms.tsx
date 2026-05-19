@@ -132,6 +132,7 @@ function EvacPin() {
               id="EvacPin_PhotoField"
               onSubmit={fileOnChange}
               ref={inputRef}
+              accept="image/png, image/jpeg, image/heic"
             />
             {fileName && (
               <>
