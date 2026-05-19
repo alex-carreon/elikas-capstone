@@ -1,10 +1,9 @@
-import { Link, useNavigate } from "react-router";
-import { ArrowLeftIcon } from "lucide-react";
-import Logo from "@/components/Logo";
+import { useNavigate } from "react-router";
 import colors from "@/constants/colors";
 import ButtonComp from "@/components/Button";
 import { useUserContext } from "@/context/AuthContext";
 import { roleDefault } from "@/components/ProtectedRoutes";
+import RegisterHeader from "@/components/RegisterHeader";
 
 function Finish() {
   const navigate = useNavigate();
@@ -19,16 +18,9 @@ function Finish() {
   return (
     <div className="min-h-screen flex justify-center p-6">
       <div className="w-full max-w-sm flex flex-col">
-        <div className="mb-6">
-          <Link to="/Registration/Permissions" id="R-BackSplash">
-            <ArrowLeftIcon />
-          </Link>
-        </div>
+        <RegisterHeader />
         <div className="h-3/4 flex justify-center flex-col">
           <div className="flex justify-evenly flex-col">
-            <div className="flex justify-center mb-6">
-              <Logo />
-            </div>
             <div className="flex justify-center flex-col">
               <h1
                 className="BeVietnamPro text-2xl text-center font-bold"
@@ -47,7 +39,7 @@ function Finish() {
               <ButtonComp
                 text="Get Started!"
                 variant="primary"
-                id="R-FinRegis"
+                id="Finish_FinishBtn"
                 onClick={handleRedirect}
                 heightSize="38px"
                 widthSize="100%"
