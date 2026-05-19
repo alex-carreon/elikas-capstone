@@ -35,14 +35,17 @@ function Filter() {
       className="fixed w-full max-w-md z-1"
     >
       <div className="flex items-center justify-end m-4">
-        <CollapsibleTrigger>
+        <CollapsibleTrigger id="Map_FilterTrigger">
           <Button size="icon" className="size-8 bg-white">
             <ListFilterIcon strokeWidth={3} />
           </Button>
         </CollapsibleTrigger>
       </div>
       <div className="flex justify-end">
-        <CollapsibleContent className="size-fit flex flex-col gap-2 bg-white mr-4 p-3 rounded-md">
+        <CollapsibleContent
+          className="size-fit flex flex-col gap-2 bg-white mr-4 p-3 rounded-md"
+          id="Map_FilterContent"
+        >
           <div className="text-xs">
             <p className="font-bold">Show Evacuation Sites</p>
           </div>
