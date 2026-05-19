@@ -1,12 +1,11 @@
-import { Link, useNavigate } from "react-router";
-import { ArrowLeftIcon } from "lucide-react";
-import Logo from "@/components/Logo";
+import { useNavigate } from "react-router";
 import colors from "@/constants/colors";
 import TextField from "@/components/TextField";
 import { useState } from "react";
 import ButtonComp from "@/components/Button";
 import { createAvatar } from "@dicebear/core";
 import { bigSmile } from "@dicebear/collection";
+import RegisterHeader from "@/components/RegisterHeader";
 
 function randomSeed(): string {
   return Math.random().toString(36).slice(2, 10);
@@ -41,14 +40,7 @@ function CustomizeProfile() {
   return (
     <div className="min-h-screen flex justify-center p-6">
       <div className="w-full max-w-sm flex flex-col">
-        <div className="mb-6">
-          <Link to="/Registration/Contact" id="R-BackSplash">
-            <ArrowLeftIcon />
-          </Link>
-        </div>
-        <div className="flex justify-center">
-          <Logo />
-        </div>
+        <RegisterHeader />
         <div className="h-1/2 flex justify-evenly flex-col">
           <div>
             <h1
@@ -67,6 +59,7 @@ function CustomizeProfile() {
           </div>
         </div>
         <form
+          id="Profile_Form"
           onSubmit={handleSubmit}
           className="h-full flex justify-between flex-col"
         >
@@ -75,7 +68,7 @@ function CustomizeProfile() {
               <img src={dataUri} className="w-24" />
               <ButtonComp
                 text="Generate New Avatar"
-                id="R-Avatar"
+                id="Profile_RandommAvatarBtn"
                 variant="outline"
                 onClick={() => setSeed(randomSeed())}
               />
@@ -85,23 +78,21 @@ function CustomizeProfile() {
                 label="Username"
                 placeholder="Enter your preferred user name"
                 inputType="text"
-                id="R-Username"
+                id="Profile_UsernameField"
                 isRequired
                 onSubmit={(e) => setUsername(e.target.value)}
               ></TextField>
             </div>
           </div>
           <div className="w-full flex justify-center items-center m-0">
-            {/* <Link to="/" className="w-full max-w-xs"> */}
             <ButtonComp
               text="Next"
               variant="primary"
               type="submit"
-              id="R-SubmitUsername"
+              id="Profile_FormSubmitBtn"
               heightSize="38px"
               widthSize="100%"
             ></ButtonComp>
-            {/* </Link> */}
           </div>
         </form>
       </div>
