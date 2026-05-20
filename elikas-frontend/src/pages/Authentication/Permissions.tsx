@@ -7,6 +7,7 @@ import { useState } from "react";
 import { auth } from "../../firebase";
 import RegisterHeader from "@/components/RegisterHeader";
 import { Link } from "react-router";
+import { toast } from "sonner";
 
 function Permissions() {
   const [checked, setChecked] = useState(false);
@@ -37,35 +38,53 @@ function Permissions() {
     console.log("FORM DATA:", formData);
 
     try {
-      const response = await fetch("http://127.0.0.1:8000/api/auth/register", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Accept: "application/json",
-        },
-        body: JSON.stringify({
-          username: formData.username,
-          email: formData.email,
-          first_name: formData.fn,
-          last_name: formData.ln,
-          phone: formData.phone,
-          location_id: Number(formData.loc),
-          firebase_uid: localStorage.getItem("firebaseUser"),
-        }),
-      });
-      const result = await response.json();
+      const registerPromise = new Promise(async (resolve, reject) => {
+        const response = await fetch(
+          "http://127.0.0.1:8000/api/auth/register",
+          {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+              Accept: "application/json",
+            },
+            body: JSON.stringify({
+              username: formData.username,
+              email: formData.email,
+              first_name: formData.fn,
+              last_name: formData.ln,
+              phone: formData.phone,
+              location_id: Number(formData.loc),
+              firebase_uid: localStorage.getItem("firebaseUser"),
+            }),
+          },
+        );
+        const result = await response.json();
 
-      console.log("REGISTER RESULT:", result);
+        console.log("REGISTER RESULT:", result);
 
-      if (!response.ok) {
-        const firebaseUser = auth.currentUser;
-        if (firebaseUser) {
-          await firebaseUser.delete();
+        if (!response.ok) {
+          const firebaseUser = auth.currentUser;
+          if (firebaseUser) {
+            await firebaseUser.delete();
+          }
+          reject(setError(result.message));
+          navigate("/Login");
+          throw new Error(result.message || "Registration failed");
+        } else {
+          resolve(result);
         }
-        throw new Error(result.message || "Registration failed");
-      }
-      localStorage.clear();
-      navigate("/Registration/Finish");
+        localStorage.clear();
+      });
+
+      toast.promise(registerPromise, {
+        loading: "Processing...",
+        success: "You are registered!",
+        position: "top-center",
+      });
+
+      registerPromise.then(() => {
+        navigate("/Registration/Finish");
+      });
     } catch (err: string | any) {
       setError(err.message || "An error occurred during registration");
     }

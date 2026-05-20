@@ -20,13 +20,16 @@ import HazardForm from "./pages/Forms/HazardForm";
 import History from "@/History";
 import ForgotPW from "./pages/Authentication/ForgotPW";
 import TermsConditions from "./pages/TermsConditions";
+import Loading from "./pages/Loading";
 
 function App() {
   return (
     <BrowserRouter>
       <Routes>
+        <Route path="/Loading" element={<Loading />} />
         <Route path="/History" element={<History />} />
         <Route path="/Login" element={<LogIn />} />
+        <Route path="/ResetPassword" element={<ForgotPW />} />
         <Route path="/Registration">
           <Route path="Splash" element={<SplashRegistration />} />
           <Route path="Form" element={<FormRegistration />} />
