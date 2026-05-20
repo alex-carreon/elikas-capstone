@@ -17,7 +17,7 @@ import ProtectedRoute from "./components/ProtectedRoutes";
 import SMS from "./pages/SMS";
 import EvacForm from "./pages/Forms/EvacForms";
 import HazardForm from "./pages/Forms/HazardForm";
-import History from "@/History";
+import History from "@/pages/Indiv/History";
 import ForgotPW from "./pages/Authentication/ForgotPW";
 import TermsConditions from "./pages/TermsConditions";
 import Loading from "./pages/Loading";
@@ -27,7 +27,6 @@ function App() {
     <BrowserRouter>
       <Routes>
         <Route path="/Loading" element={<Loading />} />
-        <Route path="/History" element={<History />} />
         <Route path="/Login" element={<LogIn />} />
         <Route path="/ResetPassword" element={<ForgotPW />} />
         <Route path="/Registration">
@@ -44,6 +43,10 @@ function App() {
           <Route element={<AuthNavbar />}>
             <Route path="/Map" element={<Map />} />
           </Route>
+        </Route>
+
+        <Route element={<ConstNavbar />}>
+          <Route path="/History" element={<History />} />
         </Route>
 
         <Route element={<ProtectedRoute userRole={"brgy_op"} />}>
