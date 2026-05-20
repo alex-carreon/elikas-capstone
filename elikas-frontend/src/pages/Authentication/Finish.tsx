@@ -2,17 +2,15 @@ import { useNavigate } from "react-router";
 import colors from "@/constants/colors";
 import ButtonComp from "@/components/Button";
 import { useUserContext } from "@/context/AuthContext";
-import { roleDefault } from "@/components/ProtectedRoutes";
 import RegisterHeader from "@/components/RegisterHeader";
 
 function Finish() {
   const navigate = useNavigate();
   const { role } = useUserContext();
+  console.log("role at render", role);
 
   const handleRedirect = () => {
-    if (!role) return;
-    console.log(role);
-    navigate(roleDefault[role]);
+    navigate("/Login");
   };
 
   return (
