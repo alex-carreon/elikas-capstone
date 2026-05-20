@@ -32,26 +32,26 @@ export function AuthProvider({ children }: AuthProviderProps) {
 
   // Find user in firebase while loading, when user is found loading stops
   useEffect(() => {
-    console.log("Auth starting");
     const unsubscribe = onAuthStateChanged(auth, async (user) => {
-      console.log("Auth state changed. User is:", user);
       setUser(user);
 
       if (user) {
         try {
           const token = await user?.getIdToken();
 
-          const LoginResponse = await api.post("/auth/login", {
-            headers: {
-              Authorization: `Bearer ${token}`,
+          const LoginResponse = await api.post(
+            "/auth/login",
+            {},
+            {
+              headers: {
+                Authorization: `Bearer ${token}`,
+              },
             },
-          });
+          );
 
           const userData = await LoginResponse;
-          console.log("response", userData);
           setRole(userData.data.role);
         } catch (err: any | null) {
-          console.log("error in role: ", err);
           setRole(null);
         }
       } else {
