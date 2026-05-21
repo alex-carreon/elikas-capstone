@@ -19,7 +19,10 @@ Route::get('/test', function () {
 // ---------------------------------------------------------------
 Route::post('/auth/register', [AuthController::class, 'register']);
 Route::post('/auth/login',    [AuthController::class, 'login']);
-Route::get('/sensors',        [SensorController::class, 'index']);
+
+Route::get('/sensors/list', [SensorController::class, 'list']);
+Route::apiResource('sensors', SensorController::class)->except(['destroy']);
+Route::patch('/sensors/{id}/deactivate', [SensorController::class, 'deactivate']);
 
 // ---------------------------------------------------------------
 // PIN LOOKUP ROUTES — must be ABOVE /pins/{id}
