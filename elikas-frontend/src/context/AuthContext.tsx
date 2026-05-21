@@ -13,12 +13,14 @@ interface AuthContextProps {
   user: User | null;
   loading: boolean;
   role: string | null;
+  token: string | null;
 }
 
 const AuthContext = createContext<AuthContextProps>({
   user: null,
   loading: true,
   role: null,
+  token: null,
 });
 
 interface AuthProviderProps {
@@ -29,6 +31,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
   const [user, setUser] = useState<User | null>(null);
   const [loading, setLoading] = useState(true);
   const [role, setRole] = useState<string | null>(null);
+  const [token, setToken] = useState<string | null>(null);
 
   // Find user in firebase while loading, when user is found loading stops
   useEffect(() => {
@@ -37,14 +40,15 @@ export function AuthProvider({ children }: AuthProviderProps) {
 
       if (user) {
         try {
-          const token = await user?.getIdToken();
+          const t = await user?.getIdToken();
+          setToken(t);
 
           const LoginResponse = await api.post(
             "/auth/login",
             {},
             {
               headers: {
-                Authorization: `Bearer ${token}`,
+                Authorization: `Bearer ${t}`,
               },
             },
           );
@@ -64,7 +68,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
   }, []);
 
   return (
-    <AuthContext.Provider value={{ user, loading, role }}>
+    <AuthContext.Provider value={{ user, loading, role, token }}>
       {children}
     </AuthContext.Provider>
   );
