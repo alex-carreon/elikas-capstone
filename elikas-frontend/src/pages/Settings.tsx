@@ -57,7 +57,7 @@ function Settings() {
           <img src={SettingsIcon} className="w-60" />
         </div>
         <div className="flex flex-col gap-4">
-          <Link to="/map">
+          <Link to="/Profile">
             <div className="flex flex-col gap-3">
               <div
                 id="Settings_AccountBtn"
