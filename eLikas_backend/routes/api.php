@@ -6,6 +6,7 @@ use App\Http\Controllers\AuthController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\Dashboards\UserController;
 use App\Http\Controllers\PinController;
+use App\Http\Controllers\SensorController;
 
 Route::get('/test', function () {
     return response()->json([
@@ -18,6 +19,7 @@ Route::get('/test', function () {
 // ---------------------------------------------------------------
 Route::post('/auth/register', [AuthController::class, 'register']);
 Route::post('/auth/login',    [AuthController::class, 'login']);
+Route::get('/sensors',        [SensorController::class, 'index']);
 
 // ---------------------------------------------------------------
 // PIN LOOKUP ROUTES — must be ABOVE /pins/{id}
@@ -30,6 +32,7 @@ Route::get('/pins/evac-types',       [PinController::class, 'getEvacTypes']);
 Route::post('/pins/evac-types',      [PinController::class, 'storeEvacType']);
 Route::get('/pins/capacity-levels',  [PinController::class, 'getCapacityLevels']);
 Route::post('/pins/capacity-levels', [PinController::class, 'storeCapacityLevel']);
+
 
 // ---------------------------------------------------------------
 // PIN ROUTES — {id} route must come AFTER the named routes above
@@ -82,3 +85,5 @@ Route::middleware(['firebase.auth', 'role:1,2'])->group(function () {
 Route::middleware(['firebase.auth', 'role:1,2,3'])->group(function () {
     Route::put('/profile', [ProfileController::class, 'updateProfile']);
 });
+
+//Route::apiResource('sensors', SensorController::class)->except(['destroy]']);
