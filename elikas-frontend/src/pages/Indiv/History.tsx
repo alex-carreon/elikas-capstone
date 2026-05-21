@@ -28,10 +28,18 @@ function History() {
             className="w-full max-w-md flex items-center"
           >
             <TabsList className="w-full flex justify-between">
-              <TabsTrigger value="Evacuation" onClick={() => setEvacPins(true)}>
+              <TabsTrigger
+                value="Evacuation"
+                onClick={() => setEvacPins(true)}
+                id="History_EvacTrigger"
+              >
                 Evacuation Pins
               </TabsTrigger>
-              <TabsTrigger value="Hazard" onClick={() => setEvacPins(false)}>
+              <TabsTrigger
+                value="Hazard"
+                onClick={() => setEvacPins(false)}
+                id="History_HazardTrigger"
+              >
                 Hazard Pins
               </TabsTrigger>
             </TabsList>
@@ -41,30 +49,42 @@ function History() {
             className="w-full max-w-md flex items-center"
           >
             {evacPins ? (
-              <TabsList variant="line" className="w-full flex justify-between">
+              <TabsList
+                variant="line"
+                className="w-full flex justify-between"
+                id="History_EvacTabs"
+              >
                 <TabsTrigger
                   value="ActiveEvac"
+                  id="History_ActiveEvacTrigger"
                   onClick={() => setActiveEvac(true)}
                 >
                   Active Pins
                 </TabsTrigger>
                 <TabsTrigger
                   value="ClosedEvac"
+                  id="History_ClosedEvacTrigger"
                   onClick={() => setActiveEvac(false)}
                 >
                   Closed Pins
                 </TabsTrigger>
               </TabsList>
             ) : (
-              <TabsList variant="line" className="w-full flex justify-between">
+              <TabsList
+                variant="line"
+                className="w-full flex justify-between"
+                id="History_HazardTabs"
+              >
                 <TabsTrigger
                   value="ActiveHaz"
+                  id="History_ActiveHazardTrigger"
                   onClick={() => setActiveHaz(true)}
                 >
                   Active Pins
                 </TabsTrigger>
                 <TabsTrigger
                   value="ExpiredHaz"
+                  id="History_ExpiredHazardTrigger"
                   onClick={() => setActiveHaz(false)}
                 >
                   Expired Pins
@@ -77,13 +97,13 @@ function History() {
           <InputGroup className="w-2/3">
             <InputGroupInput
               className="text-sm h-8"
-              id="Pins_Search"
+              id="History_SearchField"
             ></InputGroupInput>
             <InputGroupAddon align="inline-end">
               <Search />
             </InputGroupAddon>
           </InputGroup>
-          <Filter size={18} id="Pins_FilterBtn" />
+          <Filter size={18} id="History_FilterBtn" />
         </div>
         <div className="flex flex-col gap-2 overflow-y-auto max-h-screen">
           {evacPins ? (
@@ -95,6 +115,7 @@ function History() {
                 datePosted="March 13, 2005"
                 availability
                 isAvailable
+                link="/EvacForm"
               />
             ) : (
               <Row
@@ -103,6 +124,7 @@ function History() {
                 address="Blk 123 Lot 2 Avenue street"
                 datePosted="March 13, 2005"
                 availability
+                link="/EvacForm"
               />
             )
           ) : activeHaz ? (
@@ -111,6 +133,7 @@ function History() {
               title="Home"
               address="Blk 123 Lot 2 Avenue street"
               datePosted="March 13, 2005"
+              link="/HazardForm"
             />
           ) : (
             <Row
@@ -119,6 +142,7 @@ function History() {
               address="Blk 123 Lot 2 Avenue street"
               datePosted="March 13, 2005"
               isExpired
+              link="/HazardForm"
             />
           )}
         </div>
