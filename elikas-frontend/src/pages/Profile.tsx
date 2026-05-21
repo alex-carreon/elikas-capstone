@@ -97,28 +97,33 @@ function Profile() {
 
   const deleteProfile = async () => {
     try {
-      const response = await api.patch(
-        "/profile",
-        {
-          id: userId,
-        },
-        {
+      const deacPromise = new Promise(async (resolve, reject) => {
+        const response = await api.patch("/profile/deactivate", {
           headers: {
             "Content-Type": "application/json",
             Authorization: `Bearer ${token}`,
           },
-        },
-      );
+        });
 
-      console.log(response);
+        console.log(response);
 
-      const userDataDelete = await response.data;
+        const userDataDelete = await response.data;
 
-      if (!response) {
-        setErrors(userDataDelete.error || "Deactivation failed");
-      } else {
+        if (!response) {
+          reject(setErrors(userDataDelete.error || "Deactivation failed"));
+        } else resolve(userDataDelete);
+      });
+
+      toast.promise(deacPromise, {
+        loading: "Deactivating your account...",
+        success:
+          "Account Deactivated! Please contact eLikas to reactivate your account",
+        position: "top-center",
+      });
+
+      deacPromise.then(() => {
         navigate("/");
-      }
+      });
     } catch (error) {
       console.error("Error during logout:", error);
     }

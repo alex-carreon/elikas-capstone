@@ -70,6 +70,7 @@ function LogIn() {
       toast.promise(loginPromise, {
         loading: "Logging you in...",
         success: "You're logged in!",
+        error: "User not found",
         position: "top-center",
       });
 
@@ -180,7 +181,7 @@ function LogIn() {
               ></ButtonComp>
             </div>
           </form>
-          <div className="flex justify-start flex-col content-center mx-auto text-sm">
+          <div className="flex justify-start flex-col content-center mx-auto text-sm gap-3">
             <p className={"flex justify-self-center truncate"}>
               Don't have an account yet? &nbsp;
               <Link to="/Registration/Splash" id="L-Register">
@@ -193,6 +194,15 @@ function LogIn() {
                 </span>
               </Link>
               !
+            </p>
+            <p className="text-center">
+              Contact us at{" "}
+              <span
+                className="font-medium"
+                style={{ color: colors.activeIcon }}
+              >
+                elikasteam@gmail.com
+              </span>
             </p>
           </div>
         </div>
