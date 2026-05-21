@@ -13,7 +13,7 @@ interface CheckBoxProps {
 
 function CheckBox({ text, id, checked, onCheckedChange }: CheckBoxProps) {
   return (
-    <div className="flex flex-col self-center ">
+    <div className="flex flex-col">
       <Field orientation="horizontal">
         <Checkbox id={id} checked={checked} onCheckedChange={onCheckedChange} />
         <Label className={"text-xs w-auto"} style={{ color: colors.label }}>
