@@ -22,6 +22,7 @@ import ForgotPW from "./pages/Authentication/ForgotPW";
 import TermsConditions from "./pages/TermsConditions";
 import Loading from "./pages/Loading";
 import Profile from "./pages/Profile";
+import Feedback from "./pages/Indiv/Feedback";
 
 function App() {
   return (
@@ -47,13 +48,14 @@ function App() {
 
           <Route element={<ConstNavbar />}>
             <Route path="/History" element={<History />} />
+            <Route path="/Feedback" element={<Feedback />} />
           </Route>
         </Route>
 
-        <Route element={<ProtectedRoute userRole={"brgy_op"} />}></Route>
-
-        <Route element={<ConstNavbar />}>
-          <Route path="/SMS" element={<SMS />} />
+        <Route element={<ProtectedRoute userRole={"brgy_op"} />}>
+          <Route element={<ConstNavbar />}>
+            <Route path="/SMS" element={<SMS />} />
+          </Route>
         </Route>
 
         <Route element={<ProtectedRoute />}>
