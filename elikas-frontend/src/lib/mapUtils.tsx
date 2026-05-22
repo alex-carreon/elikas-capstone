@@ -234,7 +234,7 @@ export function SensorMarking({ onPinClick }) {
   };
 
   useEffect(() => {
-    setHeight(40);
+    setHeight(30);
   });
 
   useEffect(() => {
