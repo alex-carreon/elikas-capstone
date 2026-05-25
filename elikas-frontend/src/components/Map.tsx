@@ -24,18 +24,22 @@ import CurrentLocation from "@/assets/Map/currentLocation.svg?react";
 import AlertDialogue from "./AlertDialogue";
 import { createPortal } from "react-dom";
 import { useUserContext } from "@/context/AuthContext";
+import { toast } from "sonner";
+import { Map as LeafletMap } from "leaflet";
 
 // let locationFound = false;
 
 function LocationMarker({
   flyToLocation,
   locationFound,
+  onPositionFound,
 }: {
   flyToLocation: boolean;
   locationFound: (found: boolean) => void;
+  onPositionFound: (latlng: LatLng) => void;
 }) {
   const [position, setPosition] = useState<LatLng | null>(null);
-  const [showDialogue, setShowDialogue] = useState(true);
+  // const [showDialogue, setShowDialogue] = useState(true);
   // const [hasLocated, setHasLocated] = useState(false);
   const map = useMap();
 
@@ -56,6 +60,7 @@ function LocationMarker({
       map.flyTo(e.latlng, map.getZoom());
       hasLocated.current = true;
       locationFound(true);
+      onPositionFound(e.latlng);
     };
 
     // listens when to trigger onLocationFound
@@ -104,6 +109,9 @@ function Map() {
   const [showLocation, setShowLocation] = useState(false);
   const [locationFound, setLocationFound] = useState(false);
   const [isSensor, setIsSensor] = useState(false);
+  const [userPosition, setUserPosition] = useState<LatLng | null>(null);
+
+  const mapRef = useRef<LeafletMap | null>(null);
 
   const philippinesBounds: LatLngBoundsExpression = [
     [4.5, 116.0], // southwest corner
@@ -157,6 +165,7 @@ function Map() {
     if (locationFound) {
       setShowRoute(true);
       setOpenFromRoute(true);
+      toast("Routing...");
     } else console.log("Location not found");
   };
 
@@ -190,6 +199,14 @@ function Map() {
       setOpenFromRoute(false);
     }
   }, [selectedPin, openFromRoute]);
+
+  useEffect(() => {
+    if (showRoute || showNearestRoute) {
+      setTimeout(() => {
+        window.dispatchEvent(new Event("resize"));
+      }, 100);
+    }
+  }, [showRoute, showNearestRoute]);
 
   const createClusterCustomIcon = (cluster: any) => {
     return divIcon({
@@ -227,6 +244,7 @@ function Map() {
           maxBounds={philippinesBounds}
           maxBoundsViscosity={1.0}
           minZoom={6}
+          ref={mapRef}
         >
           {authorized ? (
             <MapClickHandler
@@ -245,6 +263,7 @@ function Map() {
           <LocationMarker
             flyToLocation={showLocation}
             locationFound={setLocationFound}
+            onPositionFound={setUserPosition}
           />
           <FlyToLocation position={selectedPin} flyTrigger={flyTrigger} />
           <MarkerClusterGroup
@@ -266,11 +285,18 @@ function Map() {
             />
           </MarkerClusterGroup>
           {showNearestRoute && (
-            <NearestRouting onPinSelected={setSelectedPin} />
+            <NearestRouting
+              onPinSelected={setSelectedPin}
+              userPosition={userPosition}
+            />
           )}
           {showRoute && !showNearestRoute && selectedPin && (
-            <Routing onPinSelected={setSelectedPin} selectedPin={selectedPin} />
-          )}{" "}
+            <Routing
+              onPinSelected={setSelectedPin}
+              selectedPin={selectedPin}
+              userPosition={userPosition}
+            />
+          )}
         </MapContainer>
         <DrawerComp
           open={open}

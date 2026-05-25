@@ -11,6 +11,7 @@ import CheckBox from "@/components/CheckBox";
 import { renderToString } from "react-dom/server";
 import BlankPin from "@/assets/Map/BlankPin.svg?react";
 import { divIcon } from "leaflet";
+import { InputGroupTextarea } from "@/components/ui/input-group";
 
 function HazardForm() {
   const location = useLocation();
@@ -19,7 +20,7 @@ function HazardForm() {
   const [existingHazard, setExistingHazard] = useState(false);
   const [fileName, setFileName] = useState("");
   const [imagePreview, setImagePreview] = useState<undefined | string>();
-  const [brgy, setBrgy] = useState("");
+  const [desc, setDesc] = useState("");
   const [hazard, setHazard] = useState("");
   const [landmark, setLandmark] = useState("");
   const [floodLevel, setFloodLevel] = useState("");
@@ -70,17 +71,14 @@ function HazardForm() {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
 
-    console.log("Barangay", brgy);
     console.log("routePoints", routePoints);
+    console.log("Description", desc);
     console.log("landmark", landmark);
     console.log("floodLevel", floodLevel);
-
-    console.log(routePoints);
-
     const points = JSON.stringify(routePoints);
 
     // File not sure yet - localStorage.setItem("fileName", last_name);
-    localStorage.setItem("Barangay", brgy);
+    // localStorage.setItem("Barangay", brgy);
     localStorage.setItem("routePoints", points);
     localStorage.setItem("landmark", landmark);
     localStorage.setItem("floodLevel", floodLevel);
@@ -132,19 +130,6 @@ function HazardForm() {
               </>
             )}
           </div>
-          <SelectDropdown
-            value={brgy}
-            onValueChange={setBrgy}
-            label="Barangay*"
-            placeholder="Select the location's barangay"
-            id="HazardPin_BrgyField"
-            onSubmit={(e) => setBrgy(e.target.value)}
-            options={[
-              { label: "Salapan", value: "11" },
-              { label: "Batis", value: "12" },
-            ]}
-            isRequired
-          />
           <Field>
             <FieldLabel
               className={"text-sm w-s"}
@@ -189,6 +174,19 @@ function HazardForm() {
               id="HazardPin_PinClearBtn"
               onClick={handleClearRoutePoints}
             ></ButtonComp>
+          </Field>
+          <Field>
+            <FieldLabel
+              className={"text-sm w-s"}
+              style={{ color: colors.label }}
+            >
+              Description (Optional)
+            </FieldLabel>
+            <InputGroupTextarea
+              className="h-10 border rounded-lg text-xs"
+              id="HazardPin_DescField"
+              onChange={(e) => setDesc(e.target.value)}
+            />
           </Field>
           <TextField
             label="Nearby Landmark (optional)"

@@ -39,7 +39,7 @@ function Hotlines() {
                 <Search />
               </InputGroupAddon>
             </InputGroup>
-            <Filter size={18} id="Hotlines_FilterBtn" />
+            <Filter size={18} id="Hotlines_FilterBtn" />{" "}
           </div>
         </div>
 

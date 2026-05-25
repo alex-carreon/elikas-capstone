@@ -1,13 +1,11 @@
 import {
   AlertDialog,
   AlertDialogAction,
-  AlertDialogCancel,
   AlertDialogContent,
   AlertDialogDescription,
   AlertDialogFooter,
   AlertDialogHeader,
   AlertDialogTitle,
-  AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 
 import { CircleX } from "lucide-react";
@@ -62,6 +60,7 @@ function AlertDialogue({
             <AlertDialogTitle>{title}</AlertDialogTitle>
             <AlertDialogDescription>{description}</AlertDialogDescription>
           </AlertDialogHeader>
+          {children}
           <AlertDialogFooter>
             <AlertDialogAction
               className="h-10 w-full"

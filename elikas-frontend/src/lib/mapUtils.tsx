@@ -5,11 +5,12 @@ import { LatLng, divIcon } from "leaflet";
 import "leaflet-routing-machine";
 import colors from "@/constants/colors";
 import PinIcon from "@/assets/Map/Pins.svg?react";
-import SensorIcon from "@/components/SensorIcon";
+import SensorIcon from "@/components/sensorIcon";
 import { renderToString } from "react-dom/server";
 import MarkerClusterGroup from "react-leaflet-cluster";
 import FloodIcon from "@/assets/Map/FloodIcon.svg?react";
 import BlankPin from "@/assets/Map/BlankPin.svg?react";
+import "leaflet-routing-machine/dist/leaflet-routing-machine.css";
 
 export const pins = [
   {
@@ -56,30 +57,36 @@ function getNearestWaypoint(
 }
 
 // Add properties based on the pin info from db
-export function NearestRouting({ onPinSelected }) {
-  const [position, setPosition] = useState<LatLng | null>(null);
+export function NearestRouting({
+  onPinSelected,
+  userPosition,
+}: {
+  onPinSelected: any;
+  userPosition: LatLng | null; // add this
+}) {
+  // const [position, setPosition] = useState<LatLng | null>(null);
   const map = useMap();
   const routeControlRef = useRef<any>(null);
 
   // For getting location
+  // useEffect(() => {
+  //   map.locate({ setView: true, maxZoom: 50 });
+
+  //   const onLocationFound = (e: LocationEvent) => {
+  //     setPosition(e.latlng);
+  //   };
+
+  //   map.on("locationfound", onLocationFound);
+
+  //   return () => {
+  //     map.off("locationfound", onLocationFound);
+  //   };
+  // }, [map]);
+
   useEffect(() => {
-    map.locate({ setView: true, maxZoom: 50 });
+    if (!userPosition) return;
 
-    const onLocationFound = (e: LocationEvent) => {
-      setPosition(e.latlng);
-    };
-
-    map.on("locationfound", onLocationFound);
-
-    return () => {
-      map.off("locationfound", onLocationFound);
-    };
-  }, [map]);
-
-  useEffect(() => {
-    if (!position) return;
-
-    const nearest = getNearestWaypoint(position, pins);
+    const nearest = getNearestWaypoint(userPosition, pins);
     if (!nearest) return;
 
     onPinSelected?.(nearest);
@@ -88,7 +95,10 @@ export function NearestRouting({ onPinSelected }) {
     }
 
     routeControlRef.current = leaflet.Routing.control({
-      waypoints: [position, leaflet.latLng(nearest.lat, nearest.long)],
+      waypoints: [
+        leaflet.latLng(userPosition.lat, userPosition.lng),
+        leaflet.latLng(nearest.lat, nearest.long),
+      ],
       router: new leaflet.Routing.OSRMv1({
         serviceUrl: "https://router.project-osrm.org/route/v1",
       }),
@@ -116,35 +126,28 @@ export function NearestRouting({ onPinSelected }) {
     return () => {
       routeControlRef.current.remove();
     };
-  }, [position, map]);
+  }, [userPosition, map]);
 
   return null;
 }
 
 // Add properties based on the pin info from db
-export function Routing({ onPinSelected, selectedPin }) {
-  const [position, setPosition] = useState<LatLng | null>(null);
+export function Routing({
+  onPinSelected,
+  selectedPin,
+  userPosition,
+}: {
+  onPinSelected: any;
+  selectedPin: any;
+  userPosition: LatLng | null; // add this
+}) {
+  // const [position, setPosition] = useState<LatLng | null>(null);
   const map = useMap();
   const routeControlRef = useRef<any>(null);
 
-  // For getting location
-  useEffect(() => {
-    map.locate({ setView: true, maxZoom: 50 });
-
-    const onLocationFound = (e: LocationEvent) => {
-      setPosition(e.latlng);
-    };
-
-    map.on("locationfound", onLocationFound);
-
-    return () => {
-      map.off("locationfound", onLocationFound);
-    };
-  }, [map]);
-
   //   For Routing
   useEffect(() => {
-    if (!position || !selectedPin) return;
+    if (!userPosition || !selectedPin) return;
 
     const destination = leaflet.latLng(selectedPin.lat, selectedPin.long);
 
@@ -160,7 +163,10 @@ export function Routing({ onPinSelected, selectedPin }) {
     }
 
     routeControlRef.current = leaflet.Routing.control({
-      waypoints: [leaflet.latLng(position.lat, position.lng), destination],
+      waypoints: [
+        leaflet.latLng(userPosition.lat, userPosition.lng),
+        destination,
+      ],
       collapsible: true,
       addWaypoints: false,
       draggableWaypoints: false,
@@ -180,7 +186,7 @@ export function Routing({ onPinSelected, selectedPin }) {
         routeControlRef.current = null;
       }
     };
-  }, [map, position, selectedPin]);
+  }, [map, userPosition, selectedPin]);
 
   return null;
 }
@@ -234,7 +240,7 @@ export function SensorMarking({ onPinClick }) {
   };
 
   useEffect(() => {
-    setHeight(40);
+    setHeight(30);
   });
 
   useEffect(() => {
