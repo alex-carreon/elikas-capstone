@@ -57,11 +57,18 @@ function PostRow({
 
   const handleSubmit = () => {
     console.log("reason", reason);
+
+    setOpenDialog(false);
+  };
+
+  const handleRemove = () => {
+    console.log("Report Removed");
   };
 
   return (
     <>
-      {openDialog &&
+      {report &&
+        openDialog &&
         createPortal(
           <AlertDialogue
             open={openDialog}
@@ -104,6 +111,7 @@ function PostRow({
               fill="#C43E3E"
               strokeWidth={1}
               size={16}
+              onClick={handleRemove}
             />
           ) : (
             <Flag id="Drawer_PostFlagBtn" strokeWidth={1} size={16} />
