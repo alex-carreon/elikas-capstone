@@ -6,6 +6,9 @@ use App\Http\Controllers\AuthController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\Dashboards\UserController;
 use App\Http\Controllers\PinController;
+use App\Http\Controllers\Hazards\FloodPathController;
+use App\Http\Controllers\Hazards\FloodLevelController;
+
 
 Route::get('/test', function () {
     return response()->json([
@@ -13,31 +16,24 @@ Route::get('/test', function () {
     ]);
 });
 
+//SAMPLE CHANGE
 // ---------------------------------------------------------------
 // PUBLIC ROUTES — no token required
 // ---------------------------------------------------------------
 Route::post('/auth/register', [AuthController::class, 'register']);
 Route::post('/auth/login',    [AuthController::class, 'login']);
 
-// ---------------------------------------------------------------
-// PIN LOOKUP ROUTES — must be ABOVE /pins/{id}
-// otherwise Laravel will treat "locations", "evac-types", etc.
-// as the {id} parameter and run show() instead
-// ---------------------------------------------------------------
-Route::get('/pins/locations',        [PinController::class, 'getLocations']);
-Route::post('/pins/locations',       [PinController::class, 'storeLocation']);
-Route::get('/pins/evac-types',       [PinController::class, 'getEvacTypes']);
-Route::post('/pins/evac-types',      [PinController::class, 'storeEvacType']);
-Route::get('/pins/capacity-levels',  [PinController::class, 'getCapacityLevels']);
-Route::post('/pins/capacity-levels', [PinController::class, 'storeCapacityLevel']);
+Route::get('flood-paths', [FloodPathController::class, 'index']);
 
 // ---------------------------------------------------------------
-// PIN ROUTES — {id} route must come AFTER the named routes above
+// PIN PUBLIC ROUTES — no auth required
 // ---------------------------------------------------------------
-Route::get('/pins',      [PinController::class, 'index']);
-Route::get('/pins/{id}', [PinController::class, 'show']);
-Route::post('/pins',     [PinController::class, 'store']);
-
+// FIX Bug 1: was 'getActiveMapMarkers' (non-existent) → correct method is getFacilities
+Route::get('/pins',         [PinController::class, 'getFacilities']);
+// FIX Bug 1: was 'getEvacAreaDetails' (non-existent) → added method to PinController
+Route::get('/pins/nearby',  [PinController::class, 'getNearbyEvacuationAreas']);
+Route::get('/pins/routes',  [PinController::class, 'getEvacuationRoutes']);
+Route::get('/pins/{id}',    [PinController::class, 'getEvacAreaDetails']);
 
 // ---------------------------------------------------------------
 // ONLY CITIZEN ROUTES
@@ -51,6 +47,16 @@ Route::middleware('firebase.auth')->group(function () {
     Route::patch('/profile/email-sync', [ProfileController::class, 'syncEmail']);
 
     Route::patch('/profile/deactivate', [ProfileController::class, 'deactivateSelf']);
+
+    // ---------------------------------------------------------------
+    // PIN MUTATION ROUTES — require firebase.auth
+    // FIX Bug 2: POST /pins was outside auth middleware → firebase_user was null
+    // FIX Bug 3: PUT, DELETE, PATCH /verify had no routes at all
+    // ---------------------------------------------------------------
+    Route::post('/pins',              [PinController::class, 'storeEvacuationArea']);
+    Route::put('/pins/{id}',          [PinController::class, 'updateEvacuationArea']);
+    Route::delete('/pins/{id}',       [PinController::class, 'deleteEvacuationArea']);
+    Route::patch('/pins/{id}/verify', [PinController::class, 'verifyEvacuationArea']);
 
 });
 
@@ -69,6 +75,7 @@ Route::middleware(['firebase.auth', 'is.admin'])->prefix('admin')->group(functio
 });
 
 // 1 = admin; 2 = GovOp; 3 = indiv
+
 // BARANGAY OR ADMIN ROUTES
 Route::middleware(['firebase.auth', 'role:1,2'])->group(function () {
 
@@ -76,9 +83,17 @@ Route::middleware(['firebase.auth', 'role:1,2'])->group(function () {
 
     Route::get('/users/{id}', [UserController::class, 'getUser']);
 
+    Route::apiResource('flood-levels', FloodLevelController::class)->only(['index', 'store', 'update', 'show']);
+
+    Route::get('flood-paths/{id}', [FloodPathController::class, 'show']);
+
 });
 
 // ALL ROLES EXCEPT GUEST
 Route::middleware(['firebase.auth', 'role:1,2,3'])->group(function () {
+    
     Route::put('/profile', [ProfileController::class, 'updateProfile']);
+
+    Route::post('flood-paths', [FloodPathController::class, 'store']);
+
 });

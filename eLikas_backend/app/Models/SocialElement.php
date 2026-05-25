@@ -60,32 +60,32 @@ class SocialElement extends Model
 		return $this->belongsTo(User::class, 'user_id');
 	}
 
-	public function target_table()
+	public function targetTable()
 	{
 		return $this->belongsTo(TargetTable::class, 'type_id');
 	}
 
-	public function comments()
+	public function comment()
 	{
 		return $this->hasMany(Comment::class, 'parent_id');
 	}
 
-	public function emergency_contacts()
+	public function emergencyContact()
 	{
 		return $this->hasMany(EmergencyContact::class, 'element_id');
 	}
 
-	public function evac_areas()
+	public function evacArea()
 	{
 		return $this->hasMany(EvacArea::class, 'element_id');
 	}
 
-	public function flags()
+	public function flag()
 	{
 		return $this->hasMany(Flag::class, 'element_id');
 	}
 
-	public function flood_paths()
+	public function floodPath()
 	{
 		return $this->hasMany(FloodPath::class, 'element_id');
 	}
@@ -95,17 +95,17 @@ class SocialElement extends Model
 		return $this->hasMany(Medium::class, 'parent_id');
 	}
 
-	public function moderation_logs()
+	public function moderationLog()
 	{
 		return $this->hasMany(ModerationLog::class, 'element_id');
 	}
 
-	public function sensors()
+	public function sensor()
 	{
 		return $this->hasMany(Sensor::class, 'element_id');
 	}
 
-	public function votes()
+	public function vote()
 	{
 		return $this->hasMany(Vote::class, 'element_id');
 	}
