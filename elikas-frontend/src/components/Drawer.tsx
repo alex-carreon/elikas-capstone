@@ -340,6 +340,64 @@ function DrawerComp({
               />
               {/* Post Row */}
             </div>
+            {expanded ? (
+              <div className="fixed bottom-0 z-100 bg-white w-full h-content">
+                <div className="h-full flex flex-row items-center p-2 gap-2">
+                  <img src={dataUri} className="w-11" />
+                  <InputGroup>
+                    <InputGroupInput
+                      placeholder="Add a Comment"
+                      id="Drawer_CommentField"
+                    ></InputGroupInput>
+                    <InputGroupAddon
+                      align="inline-end"
+                      onClick={handleFileClick}
+                      id="Drawer_FileBtn"
+                      style={{ cursor: "pointer" }}
+                    >
+                      <File />
+                    </InputGroupAddon>
+                    <InputGroupAddon
+                      align="inline-end"
+                      id="Drawer_CameraBtn"
+                      onClick={handleCameraClick}
+                      style={{ cursor: "pointer" }}
+                    >
+                      <Camera />
+                    </InputGroupAddon>
+                    <input
+                      style={{ display: "none" }}
+                      type="file"
+                      onChange={fileOnChange}
+                      ref={fileInputRef}
+                      accept="image/png, image/jpeg, image/heic"
+                      id="Drawer_FileInput"
+                    />
+                    {/* To test when PWA is done  */}
+                    <input
+                      style={{ display: "none" }}
+                      type="file"
+                      onChange={fileOnChange}
+                      ref={cameraInputRef}
+                      capture
+                      accept="image/png, image/jpeg, image/heic"
+                      id="Drawer_CameraTrigger"
+                    />
+                  </InputGroup>
+                </div>
+                {image && (
+                  <div className="p-4 flex flex-col gap-3">
+                    <img src={imagePreview} />
+                    <ButtonComp
+                      text="Clear"
+                      variant="outline"
+                      id="Drawer_ImageClearBtn"
+                      onClick={handleClearImage}
+                    ></ButtonComp>
+                  </div>
+                )}
+              </div>
+            ) : null}
           </div>
         </div>
       </>
@@ -347,18 +405,37 @@ function DrawerComp({
   }
 
   return (
-    <Drawer
-      open={open}
-      onOpenChange={onOpenChange}
-      modal={false}
-      shouldScaleBackground={false}
-    >
-      <DrawerContent
-        className={cn(
-          "transition-all duration-300 inset-x-0 mx-auto w-full max-w-md",
-          expanded ? "h-[80vh]" : "h-[240px]",
+    <>
+      {/* {openDialog &&
+        createPortal(
+          <div
+            className="fixed inset-0 z-[498]"
+            onClick={() => setOpenDialog(false)}
+          />,
+          document.body,
         )}
-        id="Drawer_DrawerContent"
+      {openDialog &&
+        createPortal(
+          <AlertDialogue
+            open={openDialog}
+            title="Flag a Comment"
+            description="Why do you think this is an inappropriate comment? Check all that applies."
+            buttonText="Report"
+            onClose={() => {
+              setOpenDialog(false);
+            }}
+            contentId="Drawer_ReportDialogContent"
+            closeId="Drawer_ReportDialogClose"
+            actionId="Drawer_ReportDialogSubmit"
+          />,
+          document.body,
+        )} */}
+
+      <Drawer
+        open={open}
+        onOpenChange={onOpenChange}
+        modal={false}
+        shouldScaleBackground={false}
       >
         {content}
       </DrawerContent>

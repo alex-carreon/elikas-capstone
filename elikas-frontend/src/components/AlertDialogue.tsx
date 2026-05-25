@@ -10,21 +10,65 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 
-function AlertDialogue({ onClose }: { onClose: () => void }) {
+import { CircleX } from "lucide-react";
+
+interface AlertDialogueProps {
+  title: string;
+  description: string;
+  onClick?: () => void;
+  onClose?: () => void;
+  children?: React.ReactNode;
+  buttonText: string;
+  open: boolean;
+  contentId: string;
+  closeId: string;
+  actionId: string;
+}
+
+function AlertDialogue({
+  onClick,
+  onClose,
+  title,
+  description,
+  children,
+  buttonText,
+  open,
+  contentId,
+  closeId,
+  actionId,
+}: AlertDialogueProps) {
   return (
     <>
-      <AlertDialog defaultOpen={true} onOpenChange={onClose}>
-        <AlertDialogContent className="p-6 w-70">
+      <AlertDialog
+        open={open}
+        onOpenChange={(isOpen) => {
+          if (!isOpen) onClose?.();
+        }}
+      >
+        <AlertDialogContent
+          className="p-4 w-70 z-[500] pointer-events-auto"
+          onClick={(e) => e.stopPropagation()}
+          id={contentId}
+        >
           <AlertDialogHeader>
-            <AlertDialogTitle>Turn on your Location/GPS</AlertDialogTitle>
-            <AlertDialogDescription>
-              Your location/GPS must be turned on to view routes. Plese turn
-              this on in your phone settings.
-            </AlertDialogDescription>
+            <CircleX
+              size={28}
+              fill="#CECECE"
+              strokeWidth={1}
+              className="justify-self-end"
+              onClick={onClose}
+              id={closeId}
+            />
+            <AlertDialogTitle>{title}</AlertDialogTitle>
+            <AlertDialogDescription>{description}</AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogAction className="h-10" onClick={onClose}>
-              Got it!
+            <AlertDialogAction
+              className="h-10 w-full"
+              onClick={onClick}
+              id={actionId}
+            >
+              {buttonText}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

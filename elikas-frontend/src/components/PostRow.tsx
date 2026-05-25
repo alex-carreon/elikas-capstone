@@ -34,20 +34,55 @@ function PostRow({
   const [vote, setVote] = useState<"up" | "down" | null>(null);
 
   return (
-    <div className="mt-1 flex gap-1 flex-col">
-      <div
-        className="flex flex-row items-center text-xs gap-0.5 justify-end mx-2"
-        onClick={() => setReport(!report)}
-      >
-        {report ? (
-          <Flag
-            id="Drawer_PostFlagBtn"
-            fill="#C43E3E"
-            strokeWidth={1}
-            size={16}
-          />
-        ) : (
-          <Flag id="Drawer_PostFlagBtn" strokeWidth={1} size={16} />
+    <>
+      {report &&
+        openDialog &&
+        createPortal(
+          <AlertDialogue
+            open={openDialog}
+            title="Flag a Comment"
+            description="Why do you think this is an inappropriate comment? Check all that applies."
+            buttonText="Report"
+            onClose={() => {
+              setOpenDialog(false);
+              setReport(false);
+              console.log("onClose called");
+            }}
+            onClick={handleSubmit}
+            contentId="Drawer_ReportDialogContent"
+            closeId="Drawer_ReportDialogClose"
+            actionId="Drawer_ReportDialogSubmit"
+          >
+            <Radio
+              isRequired
+              onValueChange={setReason}
+              onSubmit={(e) => setReason(e.target.value)}
+              options={[
+                {
+                  label: "False Information",
+                  value: "1",
+                  id: "Drawer_ReportReason1",
+                },
+                {
+                  label: "Spam / Irrelevant",
+                  value: "2",
+                  id: "Drawer_ReportReason2",
+                },
+                {
+                  label: "Offensive Language",
+                  value: "3",
+                  id: "Drawer_ReportReason3",
+                },
+                {
+                  label: "Dangerous or Misleading",
+                  value: "4",
+                  id: "Drawer_ReportReason4",
+                },
+              ]}
+            />
+          </AlertDialogue>,
+          // </div>,
+          document.body,
         )}
         <p>Report</p>
       </div>
