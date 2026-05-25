@@ -18,6 +18,9 @@ interface AlertDialogueProps {
   children?: React.ReactNode;
   buttonText: string;
   open: boolean;
+  contentId: string;
+  closeId: string;
+  actionId: string;
 }
 
 function AlertDialogue({
@@ -28,6 +31,9 @@ function AlertDialogue({
   children,
   buttonText,
   open,
+  contentId,
+  closeId,
+  actionId,
 }: AlertDialogueProps) {
   return (
     <>
@@ -40,6 +46,7 @@ function AlertDialogue({
         <AlertDialogContent
           className="p-4 w-70 z-[500] pointer-events-auto"
           onClick={(e) => e.stopPropagation()}
+          id={contentId}
         >
           <AlertDialogHeader>
             <CircleX
@@ -48,13 +55,18 @@ function AlertDialogue({
               strokeWidth={1}
               className="justify-self-end"
               onClick={onClose}
+              id={closeId}
             />
             <AlertDialogTitle>{title}</AlertDialogTitle>
             <AlertDialogDescription>{description}</AlertDialogDescription>
           </AlertDialogHeader>
           {children}
           <AlertDialogFooter>
-            <AlertDialogAction className="h-10 w-full" onClick={onClick}>
+            <AlertDialogAction
+              className="h-10 w-full"
+              onClick={onClick}
+              id={actionId}
+            >
               {buttonText}
             </AlertDialogAction>
           </AlertDialogFooter>
