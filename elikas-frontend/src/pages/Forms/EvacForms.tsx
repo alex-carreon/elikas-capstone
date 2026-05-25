@@ -14,6 +14,7 @@ import {
   InputGroupInput,
   InputGroupTextarea,
 } from "@/components/ui/input-group";
+import { Camera } from "lucide-react";
 
 function EvacPin() {
   const [existingPin, setExistingPin] = useState(false);
@@ -189,6 +190,7 @@ function EvacPin() {
             </div>
           </Field>
           <div className="flex flex-col gap-3">
+            {/* To test when PWA is done */}
             <TextField
               label="Location Image*"
               inputType="file"
@@ -196,6 +198,7 @@ function EvacPin() {
               onSubmit={fileOnChange}
               ref={inputRef}
               accept="image/png, image/jpeg, image/heic"
+              endIcon={Camera}
             />
             {fileName && (
               <>
