@@ -207,6 +207,7 @@ export function PinMarking({ onPinClick }) {
       iconCreateFunction={createClusterCustomIcon}
       maxClusterRadius={50}
       chunkedLoading
+      id="Map_MarkerBubble"
     >
       {pins.map((pin) => (
         <Marker
@@ -233,7 +234,7 @@ export function SensorMarking({ onPinClick }) {
   };
 
   useEffect(() => {
-    setHeight(40);
+    setHeight(30);
   });
 
   useEffect(() => {

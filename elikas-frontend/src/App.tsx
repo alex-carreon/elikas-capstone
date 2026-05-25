@@ -14,16 +14,21 @@ import Hotlines from "@/pages/Hotlines";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import Settings from "@/pages/Settings";
 import ProtectedRoute from "./components/ProtectedRoutes";
-import SMS from "./pages/SMS";
+import SMS from "./pages/brgy_ops/SMS";
 import EvacForm from "./pages/Forms/EvacForms";
 import HazardForm from "./pages/Forms/HazardForm";
-import History from "@/History";
+import History from "@/pages/Indiv/History";
 import ForgotPW from "./pages/Authentication/ForgotPW";
+import TermsConditions from "./pages/TermsConditions";
+import Loading from "./pages/Loading";
+import Profile from "./pages/Profile";
+import Feedback from "./pages/Indiv/Feedback";
 
 function App() {
   return (
     <BrowserRouter>
       <Routes>
+        <Route path="/Loading" element={<Loading />} />
         <Route path="/Login" element={<LogIn />} />
         <Route path="/ResetPassword" element={<ForgotPW />} />
         <Route path="/Registration">
@@ -38,11 +43,8 @@ function App() {
 
         <Route element={<ProtectedRoute userRole={"indiv"} />}>
           <Route element={<ConstNavbar />}>
-            <Route path="/Settings" element={<Settings />} />
-            <Route path="/EvacForm" element={<EvacForm />} />
-            <Route path="/HazardForm" element={<HazardForm />} />
-            <Route path="/Settings" element={<Settings />} />
             <Route path="/History" element={<History />} />
+            <Route path="/Feedback" element={<Feedback />} />
           </Route>
         </Route>
 
@@ -73,6 +75,7 @@ function App() {
 
         <Route element={<ConstNavbar />}>
           <Route path="/Hotlines" element={<Hotlines />} />
+          <Route path="/TermsConditions" element={<TermsConditions />} />
         </Route>
       </Routes>
     </BrowserRouter>

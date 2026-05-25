@@ -45,7 +45,7 @@ function AuthNavbar() {
                 </p>
               </div>
             </Link>
-            <Link to="">
+            <Link to="/History">
               <div
                 id="Navbar_History"
                 className="flex flex-col justify-center items-center"
