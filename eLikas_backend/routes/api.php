@@ -6,6 +6,9 @@ use App\Http\Controllers\AuthController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\Dashboards\UserController;
 use App\Http\Controllers\PinController;
+use App\Http\Controllers\Hazards\FloodPathController;
+use App\Http\Controllers\Hazards\FloodLevelController;
+
 
 Route::get('/test', function () {
     return response()->json([
@@ -18,6 +21,8 @@ Route::get('/test', function () {
 // ---------------------------------------------------------------
 Route::post('/auth/register', [AuthController::class, 'register']);
 Route::post('/auth/login',    [AuthController::class, 'login']);
+
+Route::get('flood-paths', [FloodPathController::class, 'index']);
 
 // ---------------------------------------------------------------
 // PIN PUBLIC ROUTES — no auth required
@@ -69,6 +74,7 @@ Route::middleware(['firebase.auth', 'is.admin'])->prefix('admin')->group(functio
 });
 
 // 1 = admin; 2 = GovOp; 3 = indiv
+
 // BARANGAY OR ADMIN ROUTES
 Route::middleware(['firebase.auth', 'role:1,2'])->group(function () {
 
@@ -76,9 +82,17 @@ Route::middleware(['firebase.auth', 'role:1,2'])->group(function () {
 
     Route::get('/users/{id}', [UserController::class, 'getUser']);
 
+    Route::apiResource('flood-levels', FloodLevelController::class)->only(['index', 'store', 'update', 'show']);
+
+    Route::get('flood-paths/{id}', [FloodPathController::class, 'show']);
+
 });
 
 // ALL ROLES EXCEPT GUEST
 Route::middleware(['firebase.auth', 'role:1,2,3'])->group(function () {
+    
     Route::put('/profile', [ProfileController::class, 'updateProfile']);
+
+    Route::post('flood-paths', [FloodPathController::class, 'store']);
+
 });
