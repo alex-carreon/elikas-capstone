@@ -34,6 +34,8 @@ import SensorIconDetailed from "./SensorIconDetailed";
 import { bigSmile } from "@dicebear/collection";
 import { createAvatar } from "@dicebear/core";
 import { InputGroup, InputGroupAddon, InputGroupInput } from "./ui/input-group";
+import AlertDialogue from "./AlertDialogue";
+import { createPortal } from "react-dom";
 
 interface Pin {
   id: number;
@@ -70,6 +72,8 @@ function DrawerComp({
   const [comment, setComment] = useState("");
   const [image, setImage] = useState("");
   const [imagePreview, setImagePreview] = useState("");
+  const [openDialog, setOpenDialog] = useState(false);
+  const [report, setReport] = useState(false);
 
   const fileInputRef = useRef<HTMLInputElement>(null);
   const cameraInputRef = useRef<HTMLInputElement>(null);
@@ -461,6 +465,28 @@ function DrawerComp({
 
   return (
     <>
+      {/* {openDialog &&
+        createPortal(
+          <div
+            className="fixed inset-0 z-[498]"
+            onClick={() => setOpenDialog(false)}
+          />,
+          document.body,
+        )}
+      {openDialog &&
+        createPortal(
+          <AlertDialogue
+            open={openDialog}
+            title="Flag a Comment"
+            description="Why do you think this is an inappropriate comment? Check all that applies."
+            buttonText="Report"
+            onClose={() => {
+              setOpenDialog(false);
+            }}
+          />,
+          document.body,
+        )} */}
+
       <Drawer
         open={open}
         onOpenChange={onOpenChange}
