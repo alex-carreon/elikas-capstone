@@ -81,16 +81,35 @@ function PostRow({
               console.log("onClose called");
             }}
             onClick={handleSubmit}
+            contentId="Drawer_ReportDialogContent"
+            closeId="Drawer_ReportDialogClose"
+            actionId="Drawer_ReportDialogSubmit"
           >
             <Radio
               isRequired
               onValueChange={setReason}
               onSubmit={(e) => setReason(e.target.value)}
               options={[
-                { label: "False Information", value: "1" },
-                { label: "Spam / Irrelevant", value: "2" },
-                { label: "Offensive Language", value: "3" },
-                { label: "Dangerous or Misleading", value: "4" },
+                {
+                  label: "False Information",
+                  value: "1",
+                  id: "Drawer_ReportReason1",
+                },
+                {
+                  label: "Spam / Irrelevant",
+                  value: "2",
+                  id: "Drawer_ReportReason2",
+                },
+                {
+                  label: "Offensive Language",
+                  value: "3",
+                  id: "Drawer_ReportReason3",
+                },
+                {
+                  label: "Dangerous or Misleading",
+                  value: "4",
+                  id: "Drawer_ReportReason4",
+                },
               ]}
             />
           </AlertDialogue>,

@@ -228,6 +228,9 @@ function Map() {
             buttonText="Got it!"
             onClick={() => setLocationFound(true)}
             onClose={() => setLocationFound(true)}
+            contentId="Map_DialogContent"
+            closeId="Map_DialogClose"
+            actionId="Map_DialogAction"
           />,
           document.body,
         )}

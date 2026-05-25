@@ -445,6 +445,7 @@ function DrawerComp({
                       onChange={fileOnChange}
                       ref={fileInputRef}
                       accept="image/png, image/jpeg, image/heic"
+                      id="Drawer_FileInput"
                     />
                     {/* To test when PWA is done  */}
                     <input
@@ -454,6 +455,7 @@ function DrawerComp({
                       ref={cameraInputRef}
                       capture
                       accept="image/png, image/jpeg, image/heic"
+                      id="Drawer_CameraTrigger"
                     />
                   </InputGroup>
                 </div>
@@ -463,7 +465,7 @@ function DrawerComp({
                     <ButtonComp
                       text="Clear"
                       variant="outline"
-                      id="EvacPin_ImageClearBtn"
+                      id="Drawer_ImageClearBtn"
                       onClick={handleClearImage}
                     ></ButtonComp>
                   </div>
@@ -478,7 +480,7 @@ function DrawerComp({
 
   return (
     <>
-      {openDialog &&
+      {/* {openDialog &&
         createPortal(
           <div
             className="fixed inset-0 z-[498]"
@@ -496,9 +498,12 @@ function DrawerComp({
             onClose={() => {
               setOpenDialog(false);
             }}
+            contentId="Drawer_ReportDialogContent"
+            closeId="Drawer_ReportDialogClose"
+            actionId="Drawer_ReportDialogSubmit"
           />,
           document.body,
-        )}
+        )} */}
 
       <Drawer
         open={open}
