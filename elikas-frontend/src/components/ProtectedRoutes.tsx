@@ -1,6 +1,10 @@
 import { useUserContext } from "@/context/AuthContext";
 import { useEffect } from "react";
-import { useNavigate, Outlet } from "react-router";
+import { useNavigate, Outlet, Navigate } from "react-router";
+import logo from "@/assets/logo.svg";
+import colors from "@/constants/colors";
+import { Spinner } from "./ui/spinner";
+
 // import { type ReactNode } from "react";
 
 interface ProtectedRouteProps {
@@ -20,6 +24,8 @@ export default function ProtectedRoute({ userRole }: ProtectedRouteProps) {
     //   navigate("/");
     // }
 
+    if (loading) return;
+
     if (!loading) {
       if (!user) {
         navigate("/");
@@ -28,19 +34,37 @@ export default function ProtectedRoute({ userRole }: ProtectedRouteProps) {
     if (userRole && role) {
       if (userRole && role !== userRole) {
         const fallback = roleDefault[role] ?? "/map";
-
         navigate(fallback);
       }
     }
-    // if (loading) {
-    //   navigate("/Login");
-    // }
-    // if (!user) {
-    //   navigate("/");
-    // }
-    // if (!loading && user) {
-    // }
-  });
+  }, [loading, role, user]);
+
+  if (loading) {
+    return (
+      <div className="min-h-screen w-full flex justify-center">
+        <div className="w-full max-w-md flex justify-center items-center flex-col gap-8">
+          <div className="flex flex-col gap-2">
+            <img src={logo} className="mr-4" />
+            <p
+              className="self-center BeVietnamPro font-bold text-3xl"
+              style={{ color: colors.heading }}
+            >
+              eLikas
+            </p>
+          </div>
+          <Spinner className="size-8 text-gray-400" />
+        </div>
+      </div>
+    ); // or a spinner component
+  }
+
+  if (!user) {
+    return;
+  }
+
+  if (userRole && role !== userRole) {
+    return;
+  }
 
   return <Outlet />;
 }

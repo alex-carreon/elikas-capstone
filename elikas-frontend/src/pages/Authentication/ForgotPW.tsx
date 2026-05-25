@@ -4,7 +4,7 @@ import TextField from "@/components/TextField";
 import ButtonComp from "@/components/Button";
 import { getAuth, sendPasswordResetEmail } from "firebase/auth";
 import { Toaster } from "sonner";
-import { EmailToast } from "@/components/Toast";
+import { EmailToast } from "@/components/ToastSuccess";
 import RegisterHeader from "@/components/RegisterHeader";
 
 function ForgotPW() {
@@ -26,7 +26,7 @@ function ForgotPW() {
 
   return (
     <>
-      <Toaster position="top-center" />
+      {/* <Toaster position="top-center" /> */}
       {/* {showToast && <CustomToast />} */}
       <div className="min-h-screen flex justify-center p-6 mt-12">
         <div className="w-full max-w-sm flex flex-col gap-4">
