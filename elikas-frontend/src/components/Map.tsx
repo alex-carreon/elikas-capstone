@@ -203,7 +203,18 @@ function Map() {
     <>
       {!locationFound &&
         createPortal(
-          <AlertDialogue onClose={() => setLocationFound(true)} />,
+          <AlertDialogue
+            open={true}
+            title="Turn on your Location/GPS"
+            description="Your location/GPS must be turned on to view routes. Plese turn
+              this on in your phone settings."
+            buttonText="Got it!"
+            onClick={() => setLocationFound(true)}
+            onClose={() => setLocationFound(true)}
+            contentId="Map_DialogContent"
+            closeId="Map_DialogClose"
+            actionId="Map_DialogAction"
+          />,
           document.body,
         )}
       <div
