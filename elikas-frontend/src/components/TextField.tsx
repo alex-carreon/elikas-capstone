@@ -29,6 +29,7 @@ interface TextFieldProps {
   accept?: string;
   readonly?: boolean;
   defaultValue?: string;
+  capture?: boolean;
 }
 
 function TextField({
@@ -48,6 +49,7 @@ function TextField({
   readonly,
   defaultValue,
   description,
+  capture,
 }: TextFieldProps) {
   const [showPassword, setShowPassword] = useState(false);
 
@@ -71,6 +73,7 @@ function TextField({
             accept={accept}
             readOnly={readonly}
             defaultValue={defaultValue}
+            capture={capture}
           ></InputGroupInput>
           <InputGroupAddon>
             {Icon && <Icon style={{ color: colors.activeIcon }}></Icon>}
