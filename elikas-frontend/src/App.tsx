@@ -37,10 +37,6 @@ function App() {
         </Route>
 
         <Route element={<ProtectedRoute userRole={"indiv"} />}>
-          <Route element={<AuthNavbar />}>
-            <Route path="/Map" element={<Map />} />
-          </Route>
-
           <Route element={<ConstNavbar />}>
             <Route path="/Settings" element={<Settings />} />
             <Route path="/EvacForm" element={<EvacForm />} />
@@ -53,6 +49,19 @@ function App() {
         <Route element={<ProtectedRoute userRole={"brgy_op"} />}>
           <Route element={<ConstNavbar />}>
             <Route path="/SMS" element={<SMS />} />
+          </Route>
+        </Route>
+
+        <Route element={<ProtectedRoute />}>
+          <Route element={<AuthNavbar />}>
+            <Route path="/Map" element={<Map />} />
+          </Route>
+
+          <Route element={<ConstNavbar />}>
+            <Route path="/Settings" element={<Settings />} />
+            <Route path="/EvacForm" element={<EvacForm />} />
+            <Route path="/HazardForm" element={<HazardForm />} />
+            <Route path="/Profile" element={<Profile />} />
           </Route>
         </Route>
 
