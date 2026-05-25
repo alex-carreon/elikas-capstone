@@ -375,8 +375,22 @@ function DrawerComp({
                 <b>Crowdsourced Updates</b>
               </p>
             </div>
+            {/* <div className="h-64 flex items-center justify-center flex-col gap-2">
+              <div className="text-center text-md">
+                <p>Join the conversation.</p>
+                <p>Sign in an account to view the comments.</p>
+              </div>
+              <Link to="/Login">
+                <ButtonComp
+                  text="Sign in"
+                  variant="primary"
+                  id="Drawer_SignIn"
+                  heightSize="38px"
+                  widthSize="30"
+                />
+              </Link>
+            </div> */}
             <div className="flex flex-col gap-2 mb-4 mt-4 pb-16 px-4">
-              {/* Post Row */}
               <PostRow
                 username="Kurt Hacinas"
                 timePosted="3:30pm"
@@ -399,7 +413,6 @@ function DrawerComp({
                 expiryDays={30}
                 image={Photo}
               />
-              {/* Post Row */}
             </div>
             {expanded ? (
               <div className="fixed bottom-0 z-100 bg-white w-full h-content">
@@ -433,7 +446,7 @@ function DrawerComp({
                       ref={fileInputRef}
                       accept="image/png, image/jpeg, image/heic"
                     />
-                    {/* To test when PWA is done */}
+                    {/* To test when PWA is done  */}
                     <input
                       style={{ display: "none" }}
                       type="file"
@@ -465,7 +478,7 @@ function DrawerComp({
 
   return (
     <>
-      {/* {openDialog &&
+      {openDialog &&
         createPortal(
           <div
             className="fixed inset-0 z-[498]"
@@ -485,7 +498,7 @@ function DrawerComp({
             }}
           />,
           document.body,
-        )} */}
+        )}
 
       <Drawer
         open={open}
