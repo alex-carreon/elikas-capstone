@@ -41,21 +41,21 @@ class SensorController extends Controller
     // ---------------------------------------------------------------
     // DEACTIVATE — sets deactivated_at on the parent social element
     // ---------------------------------------------------------------
-    // public function deactivate(Request $request, $id)
-    // {
-    //     try {
-    //         $sensor = Sensor::with('social_element')->findOrFail($id);
+    public function deactivate(Request $request, int $id)
+    {
+        try {
+            $sensor = Sensor::with('social_element')->findOrFail($id);
 
-    //         $sensor->social_element->update([
-    //             'deactivated_at' => now()
-    //         ]);
+            $sensor->social_element->update([
+                'deactivated_at' => now()
+            ]);
 
-    //         return response()->json(['message' => 'Sensor deactivated successfully']);
-    //     } catch (\Exception $e) {
-    //         return response()->json([
-    //             'error'   => 'Failed to deactivate sensor',
-    //             'details' => $e->getMessage()
-    //         ], 500);
-    //     }
-    // }
+            return response()->json(['message' => 'Sensor deactivated successfully']);
+        } catch (\Exception $e) {
+            return response()->json([
+                'error'   => 'Failed to deactivate sensor',
+                'details' => $e->getMessage()
+            ], 500);
+        }
+    }
 }

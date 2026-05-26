@@ -21,7 +21,7 @@ use MatanYadaev\EloquentSpatial\Traits\HasSpatial;
  * @property float $depth
  * @property string $name
  * @property point $location
- * @property string $address
+ * @property string $addressa
  * @property Carbon|null $last_online
  *
  * @property SocialElement $social_element
