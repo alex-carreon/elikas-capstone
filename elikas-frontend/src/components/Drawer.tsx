@@ -34,8 +34,7 @@ import SensorIconDetailed from "./SensorIconDetailed";
 import { bigSmile } from "@dicebear/collection";
 import { createAvatar } from "@dicebear/core";
 import { InputGroup, InputGroupAddon, InputGroupInput } from "./ui/input-group";
-import AlertDialogue from "./AlertDialogue";
-import { createPortal } from "react-dom";
+import sample from "@/assets/Map/SamplePhoto.png";
 
 interface Pin {
   id: number;
@@ -52,6 +51,7 @@ interface DrawerProps {
   onFindRoute: (findRoute: boolean) => void;
   newPin: boolean;
   isSensor: boolean;
+  isHazard: boolean;
 }
 
 function DrawerComp({
@@ -61,6 +61,7 @@ function DrawerComp({
   onFindRoute,
   newPin,
   isSensor,
+  isHazard,
 }: DrawerProps) {
   const [expanded, setExpanded] = useState(false);
   const [verified, setVerified] = useState(false);
@@ -248,6 +249,57 @@ function DrawerComp({
               <p>{desc}</p>
             </ul>
           </div>
+        </div>
+      </>
+    );
+  } else if (isHazard) {
+    content = (
+      <>
+        <div className="px-4 pb-4 flex flex-col">
+          <div className="w-full flex flex-row justify-between">
+            <div className="flex flex-row gap-2">
+              <div className="flex flex-row items-center gap-2 px-4">
+                <img src={CSIcon} className="w-12" />
+                <p className="text-base">
+                  <b>Crowdsourced Updates</b>
+                </p>
+              </div>
+            </div>
+            <DrawerClose id="DrawerMark_CloseBtn" className="self-start">
+              <CircleX size={28} fill="#CECECE" strokeWidth={1} />
+            </DrawerClose>
+          </div>
+          {/* <div className="bg-[#B6D6FF] p-3 rounded-lg flex flex-col gap-2">
+            <div className="w-full flex flex-row gap-2">
+              <div>
+                <img src={dataUri} className="w-12" />
+              </div>
+              <div className="w-full">
+                <div className="flex flex-row justify-between">
+                  <p className="font-semibold">Address or Location</p>
+                  <p>3:00pm</p>
+                </div>
+                <p>Flood Level: So deep</p>
+              </div>
+            </div>
+            <div className="flex justify-center">
+              <img src={sample} />
+            </div>
+          </div> */}
+          <PostRow
+            username="Kurt Hacinas"
+            timePosted="3:30pm"
+            description="Flood Level: Ankle-deep"
+            locationVerified
+            upVotesCount={20}
+            downVotesCount={12}
+            flagCount={1}
+            expiryDays={30}
+            location="This street"
+            isSimple
+          >
+            <img src={sample} />
+          </PostRow>
         </div>
       </>
     );
@@ -514,7 +566,7 @@ function DrawerComp({
         <DrawerContent
           className={cn(
             "transition-all duration-300 inset-x-0 mx-auto w-full max-w-md",
-            expanded ? "h-[80vh]" : "h-[240px]",
+            expanded ? "h-[80vh]" : isHazard ? "h-content" : "h-[240px]",
           )}
           id="Drawer_DrawerContent"
         >
