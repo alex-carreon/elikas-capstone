@@ -37,14 +37,6 @@ class SensorResource extends JsonResource
                 return $this->social_element->user?->govOp?->location?->name ?? null;
             }),
 
-            // any brgy info here
-
-            // !!! will be removed in final version, just for testing
-            // whenLoaded disappears completely if 'social_element' isn't loaded
-            'owner' => $this->whenLoaded('social_element', function() {
-                return $this->social_element->user?->email ?? null;
-            }),
-
             // include sensor logs when loaded in show method here
         ];
     }

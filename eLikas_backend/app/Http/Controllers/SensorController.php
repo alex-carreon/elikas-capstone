@@ -12,17 +12,8 @@ class SensorController extends Controller
     public function index(Request $request)
     {
         try {
-            // $filter = new SensorQuery();
-            // $queryItems = $filter->transform($request); // [['column', 'operator', 'value']]
-
-            // if (count($queryItems) == 0) {
-            //     // No filters, return all sensors with pagination
-            //     $sensors = Sensor::paginate(10);
-            // } else {
-            //     // Apply filters to the query
-            //     $sensors = Sensor::where($queryItems)->paginate(10);
-            // }
-            $sensors = Sensor::paginate();
+            $filter = new SensorQuery();
+            $sensors = $filter->transform(Sensor::query(), $request)->paginate();
             $sensors->loadMissing('social_element');
             return SensorResource::collection($sensors);
         } catch (\Exception $e) {
