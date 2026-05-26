@@ -2150,16 +2150,16 @@
         },
         {
             "name": "kreait/laravel-firebase",
-            "version": "7.1.0",
+            "version": "7.2.1",
             "source": {
                 "type": "git",
                 "url": "https://github.com/beste/laravel-firebase.git",
-                "reference": "8dadce35b23301c21df4e5c05a3ec1dd8359adaa"
+                "reference": "a9f63c54089c9a5aa7bce5cabd9a57b2dcbeed64"
             },
             "dist": {
                 "type": "zip",
-                "url": "https://api.github.com/repos/beste/laravel-firebase/zipball/8dadce35b23301c21df4e5c05a3ec1dd8359adaa",
-                "reference": "8dadce35b23301c21df4e5c05a3ec1dd8359adaa",
+                "url": "https://api.github.com/repos/beste/laravel-firebase/zipball/a9f63c54089c9a5aa7bce5cabd9a57b2dcbeed64",
+                "reference": "a9f63c54089c9a5aa7bce5cabd9a57b2dcbeed64",
                 "shasum": ""
             },
             "require": {
@@ -2167,13 +2167,13 @@
                 "illuminate/notifications": "^11.0 || ^12.0 || ^13.0",
                 "illuminate/support": "^11.0 || ^12.0 || ^13.0",
                 "kreait/firebase-php": "^8.0",
-                "php": "~8.2.0 || ~8.3.0 || ~8.4.0 || ~8.5.0",
-                "symfony/cache": "^6.1.2 || ^7.0.3"
+                "php": "~8.3.0 || ~8.4.0 || ~8.5.0",
+                "symfony/cache": "^6.1.2 || ^7.0.3 || ^8.0.8"
             },
             "require-dev": {
                 "laravel/pint": "^1.22.1",
                 "orchestra/testbench": "^9.0 || ^10.4 || ^11.0",
-                "phpunit/phpunit": "^11.5.23"
+                "phpunit/phpunit": "^12.5.17 || ^13.1.1"
             },
             "type": "library",
             "extra": {
@@ -2213,7 +2213,7 @@
             ],
             "support": {
                 "issues": "https://github.com/beste/laravel-firebase/issues",
-                "source": "https://github.com/beste/laravel-firebase/tree/7.1.0"
+                "source": "https://github.com/beste/laravel-firebase/tree/7.2.1"
             },
             "funding": [
                 {
@@ -2221,7 +2221,7 @@
                     "type": "github"
                 }
             ],
-            "time": "2026-03-19T23:57:10+00:00"
+            "time": "2026-05-07T13:39:14+00:00"
         },
         {
             "name": "laravel/framework",

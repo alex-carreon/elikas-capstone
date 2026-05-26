@@ -6,6 +6,8 @@ use App\Http\Controllers\AuthController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\Dashboards\UserController;
 use App\Http\Controllers\PinController;
+use App\Http\Controllers\SensorController;
+use App\Http\Controllers\PublicSensorController;
 use App\Http\Controllers\Hazards\FloodPathController;
 use App\Http\Controllers\Hazards\FloodLevelController;
 
@@ -22,8 +24,10 @@ Route::get('/test', function () {
 // ---------------------------------------------------------------
 Route::post('/auth/register', [AuthController::class, 'register']);
 Route::post('/auth/login',    [AuthController::class, 'login']);
+Route::get('/public/sensors', [PublicSensorController::class, 'index']);
 
 Route::get('flood-paths', [FloodPathController::class, 'index']);
+
 
 // ---------------------------------------------------------------
 // PIN PUBLIC ROUTES — no auth required
@@ -71,17 +75,27 @@ Route::middleware(['firebase.auth', 'is.admin'])->prefix('admin')->group(functio
     Route::patch('/users/{id}/deactivate', [UserController::class, 'deactivateUser']);
 
     Route::post('/create-govop', [AdminController::class, 'createGovOp']);
-
 });
+
+
+
+// ---------------------------------------------------------------
+// ONLY GOVERNMENT OPERATOR ROUTES
+// ---------------------------------------------------------------
+Route::middleware(['firebase.auth', 'role:2'])->group(function () {
+    Route::apiResource('sensors', SensorController::class)->except(['destroy']);
+    Route::patch('/sensors/{sensor}/deactivate', [SensorController::class, 'deactivate']);
+});
+
 
 // 1 = admin; 2 = GovOp; 3 = indiv
 
 // BARANGAY OR ADMIN ROUTES
 Route::middleware(['firebase.auth', 'role:1,2'])->group(function () {
-
     Route::get('/admin/users', [UserController::class, 'allUsers']);
-
     Route::get('/users/{id}', [UserController::class, 'getUser']);
+    Route::get('/sensors', [SensorController::class, 'index']);
+    Route::get('/sensors/{sensor}', [SensorController::class, 'show']);
 
     Route::apiResource('flood-levels', FloodLevelController::class)->only(['index', 'store', 'update', 'show']);
 
