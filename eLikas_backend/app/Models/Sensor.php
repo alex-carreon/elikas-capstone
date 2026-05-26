@@ -46,7 +46,6 @@ class Sensor extends Model
 	];
 
 	protected $fillable = [
-		'sensor_code',
 		'mount_height',
 		'name',
 		'location',
