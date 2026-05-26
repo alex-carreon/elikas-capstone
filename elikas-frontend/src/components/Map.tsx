@@ -316,6 +316,7 @@ function Map() {
           onFindRoute={handlePressRoute}
           newPin={newPin}
           isSensor={isSensor}
+          isHazard={isHazard}
         />
         <div className="fixed bottom-0 left-0 w-full flex justify-center items-center">
           <div className="flex flex-col w-full max-w-md items-center justify-center mb-8">
