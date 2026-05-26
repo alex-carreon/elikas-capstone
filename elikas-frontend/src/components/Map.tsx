@@ -109,6 +109,7 @@ function Map() {
   const [showLocation, setShowLocation] = useState(false);
   const [locationFound, setLocationFound] = useState(false);
   const [isSensor, setIsSensor] = useState(false);
+  const [isHazard, setIsHazard] = useState(false);
   const [userPosition, setUserPosition] = useState<LatLng | null>(null);
 
   const mapRef = useRef<LeafletMap | null>(null);
@@ -141,6 +142,7 @@ function Map() {
       setClickedLoc(null);
     }
     setIsSensor(false);
+    setIsHazard(false);
   };
 
   const handleSensorClick = (pin) => {
@@ -159,6 +161,26 @@ function Map() {
       setClickedLoc(null);
     }
     setNewPin(false);
+    setIsHazard(false);
+  };
+
+  const handleHazardClick = (pin, midpoint) => {
+    setSelectedPin({ ...pin, midpoint });
+    setOpen(true);
+    setFlyTrigger((prev) => prev + 1);
+    setShowNearestRoute(false);
+    setShowRoute(false);
+    setOpenFromRoute(false);
+    setClickedLoc(null);
+
+    const hazard = !!pin.id;
+    setIsHazard(hazard);
+
+    if (hazard) {
+      setClickedLoc(null);
+    }
+    setNewPin(false);
+    setIsSensor(false);
   };
 
   const handlePressRoute = () => {
@@ -260,6 +282,8 @@ function Map() {
           {/* <Routing /> */}
           <PinMarking onPinClick={handlePinClick} />
           <SensorMarking onPinClick={handleSensorClick} />
+          <RoadMapping onPinClick={handleHazardClick} />
+
           <LocationMarker
             flyToLocation={showLocation}
             locationFound={setLocationFound}
@@ -270,20 +294,7 @@ function Map() {
             iconCreateFunction={createClusterCustomIcon}
             maxClusterRadius={50}
             chunkedLoading
-          >
-            <RoadMapping
-              position={[
-                [14.563073993490859, 120.99483862617527],
-                [14.564512191308419, 120.99417612053263],
-              ]}
-            />
-            <RoadMapping
-              position={[
-                [14.565561313458806, 120.99694416069873],
-                [14.565961485258084, 120.9979076376789],
-              ]}
-            />
-          </MarkerClusterGroup>
+          ></MarkerClusterGroup>
           {showNearestRoute && (
             <NearestRouting
               onPinSelected={setSelectedPin}

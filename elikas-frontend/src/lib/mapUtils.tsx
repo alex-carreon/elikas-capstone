@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from "react";
+import { Fragment, useEffect, useRef, useState } from "react";
 import { useMap, Marker, Polyline } from "react-leaflet";
 import leaflet, { point, type LocationEvent } from "leaflet";
 import { LatLng, divIcon } from "leaflet";
@@ -36,6 +36,25 @@ export const sensorPins = [
   },
 ];
 
+export const roadPins = [
+  {
+    id: 1,
+    type: "Flood",
+    routePoints: [
+      [14.563073993490859, 120.99483862617527],
+      [14.564512191308419, 120.99417612053263],
+    ] as [number, number][],
+  },
+  {
+    id: 2,
+    type: "Flood",
+    routePoints: [
+      [14.565964762707946, 120.99792427464776],
+      [14.565580554465614, 120.99691576407419],
+    ] as [number, number][],
+  },
+];
+
 type PinType = (typeof pins)[0];
 
 function getNearestWaypoint(
@@ -67,21 +86,6 @@ export function NearestRouting({
   // const [position, setPosition] = useState<LatLng | null>(null);
   const map = useMap();
   const routeControlRef = useRef<any>(null);
-
-  // For getting location
-  // useEffect(() => {
-  //   map.locate({ setView: true, maxZoom: 50 });
-
-  //   const onLocationFound = (e: LocationEvent) => {
-  //     setPosition(e.latlng);
-  //   };
-
-  //   map.on("locationfound", onLocationFound);
-
-  //   return () => {
-  //     map.off("locationfound", onLocationFound);
-  //   };
-  // }, [map]);
 
   useEffect(() => {
     if (!userPosition) return;
@@ -192,7 +196,7 @@ export function Routing({
 }
 
 // Add properties based on the pin info from db
-export function PinMarking({ onPinClick }) {
+export function PinMarking({ onPinClick }: { onPinClick: (pin: any) => void }) {
   const createClusterCustomIcon = (cluster: any) => {
     return divIcon({
       html: `<div style="background-color: #FFA011; color: ${colors.heading}; border-radius: 50%; width: 40px; height: 40px; display: flex; align-items: center; justify-content: center; font-size: 14px;">${cluster.getChildCount()}</div>`,
@@ -228,7 +232,11 @@ export function PinMarking({ onPinClick }) {
 }
 
 // Add sensor logic here
-export function SensorMarking({ onPinClick }) {
+export function SensorMarking({
+  onPinClick,
+}: {
+  onPinClick: (pin: any) => void;
+}) {
   const [height, setHeight] = useState(0);
   const [color, setColor] = useState("");
 
@@ -289,43 +297,64 @@ export function FlyToLocation({
 
   useEffect(() => {
     if (position) {
-      map.flyTo([position.lat, position.long], 18);
+      let coords: [number, number];
+
+      if (position.routePoints?.length > 0) {
+        coords = getMidpoint(position.routePoints as [number, number][]);
+      } else {
+        coords = [position.lat, position.long];
+      }
+
+      console.log("position", position);
+      console.log("coords", coords);
+
+      if (coords[0] === undefined || coords[1] === undefined) return;
+
+      map.flyTo(coords, 18);
     }
   }, [flyTrigger]);
   return null;
-}
-
-interface PolylineProps {
-  position: [number, number][];
 }
 
 function getMidpoint(positions: [number, number][]): [number, number] {
   if (positions.length === 0) return [0, 0];
   if (positions.length === 1) return positions[0];
 
-  // const avgLat = positions.reduce((sum, p) => sum + p[0], 0) / positions.length;
-  // const avgLng = positions.reduce((sum, p) => sum + p[1], 0) / positions.length;
+  const avgLat = positions.reduce((sum, p) => sum + p[0], 0) / positions.length;
+  const avgLng = positions.reduce((sum, p) => sum + p[1], 0) / positions.length;
 
-  const midIndex = Math.floor(positions.length / 2);
-  // return [avgLat, avgLng];
-  return positions[midIndex];
+  // const midIndex = Math.floor(positions.length / 2);
+  return [avgLat, avgLng];
+  // return positions[midIndex];
 }
 
-export function RoadMapping({ position }: PolylineProps) {
-  const midpoint = getMidpoint(position);
-
-  localStorage.setItem("midpoint", JSON.stringify(getMidpoint(position)));
-  localStorage.setItem("position", JSON.stringify(position));
-
+export function RoadMapping({
+  onPinClick,
+}: {
+  onPinClick: (pin: any, midpoint: [number, number]) => void;
+}) {
   const icon = divIcon({
     html: renderToString(<FloodIcon width={36} height={36} />),
     className: "",
     iconAnchor: [18, 20],
   });
+
   return (
     <>
-      <Polyline positions={position} weight={6} color="#5F80AA" />
-      <Marker position={midpoint} icon={icon} />
+      {roadPins.map((pin) => {
+        const midpoint = getMidpoint(pin.routePoints);
+        return (
+          <Fragment key={pin.id}>
+            <Marker
+              key={pin.id}
+              position={midpoint}
+              icon={icon}
+              eventHandlers={{ click: () => onPinClick(pin, midpoint) }}
+            />
+            <Polyline positions={pin.routePoints} weight={6} color="#5F80AA" />
+          </Fragment>
+        );
+      })}
     </>
   );
 }

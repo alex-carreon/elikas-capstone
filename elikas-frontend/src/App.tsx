@@ -45,12 +45,14 @@ function App() {
           <Route element={<ConstNavbar />}>
             <Route path="/History" element={<History />} />
             <Route path="/Feedback" element={<Feedback />} />
+            <Route path="/Settings" element={<Settings />} />
           </Route>
         </Route>
 
         <Route element={<ProtectedRoute userRole={"brgy_op"} />}>
           <Route element={<ConstNavbar />}>
             <Route path="/SMS" element={<SMS />} />
+            <Route path="/Settings" element={<Settings />} />
           </Route>
         </Route>
 
@@ -60,7 +62,6 @@ function App() {
           </Route>
 
           <Route element={<ConstNavbar />}>
-            <Route path="/Settings" element={<Settings />} />
             <Route path="/EvacForm" element={<EvacForm />} />
             <Route path="/HazardForm" element={<HazardForm />} />
             <Route path="/Profile" element={<Profile />} />
