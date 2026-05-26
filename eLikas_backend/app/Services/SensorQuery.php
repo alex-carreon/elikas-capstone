@@ -41,10 +41,7 @@ class SensorQuery {
             $query->where('address', 'LIKE', '%' . $this->escapeLike($request->address) . '%');
         }
 
-        // Last online comparisons — useful for finding "ghost active" sensors
-        // e.g. ?last_online_before=2025-01-01
-        //      ?last_online_after=2025-06-01
-        //      ?last_online_minutes_ago=30  (sensors silent for X+ minutes)
+        // Last online comparisons
         if ($request->filled('last_online_before') && strtotime($request->input('last_online_before'))) {
             $query->where('last_online', '<=', $request->date('last_online_before'));
         }
@@ -54,8 +51,6 @@ class SensorQuery {
         }
 
         // Active/deactivated filter — joins through social_element
-        // ?is_active=1  → deactivated_at IS NULL
-        // ?is_active=0  → deactivated_at IS NOT NULL
         if ($request->has('is_active') && in_array($request->input('is_active'), ['0', '1'], true)) {
             $query->whereHas('social_element', function (Builder $q) use ($request) {
                 $request->input('is_active') === '1'
@@ -64,22 +59,40 @@ class SensorQuery {
             });
         }
 
-        // Sorting
-        $sortable = [
-            'name',
-            'sensor_code',
-            'current_status',
-            'last_online',
-            'barangay',
-        ];
+        // --- SORTING ENGINE SYSTEM ---
+        $sortBy    = $request->input('sort_by', 'name');
+        $sortOrder = in_array($request->input('sort_order'), ['asc', 'desc']) ? $request->input('sort_order') : 'asc';
 
-        $sortBy    = $request->input('sort_by', 'name');       // default sort column
-        $sortOrder = in_array($request->input('sort_order'), ['asc', 'desc'])
-            ? $request->input('sort_order')
-            : 'asc';
+        switch ($sortBy) {
+            case 'posted_at':
+                // 1. Sort by a column inside the related table using a clean Eloquent subquery
+                $query->orderBy(
+                    \App\Models\SocialElement::select('posted_at')
+                        ->whereColumn('SocialElements.id', 'Sensors.element_id')
+                        ->limit(1),
+                    $sortOrder
+                );
+                break;
 
-        if (in_array($sortBy, $sortable)) {
-            $query->orderBy($sortBy, $sortOrder === 'desc' ? 'desc' : 'asc');
+            case 'last_online_null':
+                // 2. Push never-awake/setup sensors (where last_online IS NULL) to a designated boundary.
+                // In MariaDB/MySQL, "last_online IS NULL" evaluates to 1 if null, 0 if not null.
+                if ($sortOrder === 'desc') {
+                    // Show never-awake/setup sensors first, then active ones decreasing by date
+                    $query->orderByRaw('last_online IS NULL DESC')->orderBy('last_online', 'desc');
+                } else {
+                    // Show active ones oldest-first, pushing never-awake/setup sensors to the absolute bottom
+                    $query->orderByRaw('last_online IS NULL ASC')->orderBy('last_online', 'asc');
+                }
+                break;
+
+            default:
+                // Standard internal column sort validation fallback
+                $sortable = ['name', 'sensor_code', 'current_status', 'last_online', 'barangay'];
+                if (in_array($sortBy, $sortable)) {
+                    $query->orderBy($sortBy, $sortOrder);
+                }
+                break;
         }
 
         return $query;
@@ -87,20 +100,15 @@ class SensorQuery {
 
     private function escapeLike(string $value): string
     {
-        // Escapes \, %, and _ so they are treated as literal characters in a LIKE query
         return str_replace(['\\', '%', '_'], ['\\\\', '\\%', '\\_'], $value);
     }
 
     private function resolveLocationIds(int $locationId): array
     {
-        // get the target ID and all its descendants
         $result = \Illuminate\Support\Facades\DB::select("
             WITH RECURSIVE descendants AS (
-                -- anchor member: start with the specified location ID
                 SELECT id FROM Locations WHERE id = :root_id
                 UNION ALL
-
-                -- recursive member: find children of the current set
                 SELECT l.id FROM Locations l
                 INNER JOIN descendants d ON l.parent_id = d.id
             )
@@ -108,7 +116,6 @@ class SensorQuery {
         ", ['root_id' => $locationId]);
 
         $ids = array_column($result, 'id');
-
         return empty($ids) ? [null] : $ids;
     }
 }
