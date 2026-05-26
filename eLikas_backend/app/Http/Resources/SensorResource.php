@@ -29,9 +29,9 @@ class SensorResource extends JsonResource
             'redLevel'     => $this->red_level,
             'currentStatus' => $this->current_status,
 
-            'deactivated'    => $this->relationLoaded('social_element')
-                ? ($this->social_element?->deactivated_at ? true : false)
-                : false, // returns false if deactivated_at is null
+            'deactivated_at' => $this->relationLoaded('social_element')
+                ? $this->social_element?->deactivated_at?->toIso8601String()
+                : null,
 
             'barangay' => $this->whenLoaded('social_element', function() {
                 return $this->social_element->user?->govOp?->location?->name ?? null;
