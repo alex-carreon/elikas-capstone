@@ -46,16 +46,13 @@ class Sensor extends Model
 	];
 
 	protected $fillable = [
-		'element_id',
 		'sensor_code',
 		'mount_height',
 		'name',
 		'location',
 		'address',
-		'last_online',
         'yellow_level',
         'red_level',
-        'current_status'
 	];
 
 	public function social_element()
