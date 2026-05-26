@@ -3,15 +3,17 @@ import SelectDropdown from "@/components/SelectDropdown";
 import TextField from "@/components/TextField";
 import { Field, FieldDescription, FieldLabel } from "@/components/ui/field";
 import colors from "@/constants/colors";
-import { FormMapClickHandler, RoadMapping } from "@/lib/mapUtils";
+import { FormMapClickHandler } from "@/lib/mapUtils";
+import { snapAllPointsToRoads } from "@/lib/mapUtils";
 import { useState, useEffect, useRef } from "react";
-import { MapContainer, TileLayer, Marker } from "react-leaflet";
+import { MapContainer, TileLayer, Marker, Polyline } from "react-leaflet";
 import { useLocation } from "react-router";
 import CheckBox from "@/components/CheckBox";
 import { renderToString } from "react-dom/server";
 import BlankPin from "@/assets/Map/BlankPin.svg?react";
-import { divIcon } from "leaflet";
+import { divIcon, latLng } from "leaflet";
 import { InputGroupTextarea } from "@/components/ui/input-group";
+import { toast } from "sonner";
 
 function HazardForm() {
   const location = useLocation();
@@ -27,6 +29,7 @@ function HazardForm() {
   const [validCheck, setValidCheck] = useState(false);
   const [infoCheck, setInfoCheck] = useState(false);
   const [routePoints, setRoutePoints] = useState<[number, number][]>([]);
+  const [snapped, setSnapped] = useState<[number, number][]>([]);
 
   const rawLoc = localStorage.getItem("clickedPin");
   const clickedLoc: [number, number] | null = rawLoc
@@ -66,22 +69,36 @@ function HazardForm() {
 
   const handleClearRoutePoints = () => {
     setRoutePoints([]);
+    setSnapped([]);
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    console.log("routePoints", routePoints);
-    console.log("Description", desc);
-    console.log("landmark", landmark);
-    console.log("floodLevel", floodLevel);
-    const points = JSON.stringify(routePoints);
+    const fullPath: [number, number][] = [center, ...routePoints];
+    const snapped = await snapAllPointsToRoads(fullPath);
 
-    // File not sure yet - localStorage.setItem("fileName", last_name);
-    // localStorage.setItem("Barangay", brgy);
-    localStorage.setItem("routePoints", points);
-    localStorage.setItem("landmark", landmark);
-    localStorage.setItem("floodLevel", floodLevel);
+    if (!snapped) {
+      toast("You went off-road. Please re-draw");
+      return;
+    } else if (snapped.length < 2) {
+      toast("Please indicate the hazard on the map");
+      return;
+    } else {
+      setSnapped(snapped);
+
+      console.log("routePoints", snapped);
+      console.log("Description", desc);
+      console.log("landmark", landmark);
+      console.log("floodLevel", floodLevel);
+      const points = JSON.stringify(snapped);
+
+      // File not sure yet - localStorage.setItem("fileName", last_name);
+      // localStorage.setItem("Barangay", brgy);
+      localStorage.setItem("routePoints", points);
+      localStorage.setItem("landmark", landmark);
+      localStorage.setItem("floodLevel", floodLevel);
+    }
   };
 
   return (
@@ -138,8 +155,8 @@ function HazardForm() {
               Chosen Location
             </FieldLabel>
             <FieldDescription>
-              Press where the flood ends. This will only make a line. Add
-              another if it goes a corner.
+              Press on a road to make a line. Press again to make a line
+              connecting to the one before. Please refrain from going off-road.
             </FieldDescription>
             <FieldLabel
               className={"text-sm w-s"}
@@ -163,9 +180,18 @@ function HazardForm() {
                 onPinClick={null}
                 setClickedLoc={setRoutePoints}
                 clickedLoc={routePoints}
+                center={center}
               />
-              {routePoints && (
-                <RoadMapping position={[center, ...routePoints]} />
+              {snapped.length > 0 ? (
+                <Polyline positions={snapped} weight={6} color="#5F80AA" />
+              ) : (
+                routePoints.length > 0 && (
+                  <Polyline
+                    positions={[center, ...routePoints]}
+                    weight={6}
+                    color="#5F80AA"
+                  />
+                )
               )}
             </MapContainer>
             <ButtonComp

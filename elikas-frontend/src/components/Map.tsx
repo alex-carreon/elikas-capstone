@@ -24,18 +24,22 @@ import CurrentLocation from "@/assets/Map/currentLocation.svg?react";
 import AlertDialogue from "./AlertDialogue";
 import { createPortal } from "react-dom";
 import { useUserContext } from "@/context/AuthContext";
+import { toast } from "sonner";
+import { Map as LeafletMap } from "leaflet";
 
 // let locationFound = false;
 
 function LocationMarker({
   flyToLocation,
   locationFound,
+  onPositionFound,
 }: {
   flyToLocation: boolean;
   locationFound: (found: boolean) => void;
+  onPositionFound: (latlng: LatLng) => void;
 }) {
   const [position, setPosition] = useState<LatLng | null>(null);
-  const [showDialogue, setShowDialogue] = useState(true);
+  // const [showDialogue, setShowDialogue] = useState(true);
   // const [hasLocated, setHasLocated] = useState(false);
   const map = useMap();
 
@@ -56,6 +60,7 @@ function LocationMarker({
       map.flyTo(e.latlng, map.getZoom());
       hasLocated.current = true;
       locationFound(true);
+      onPositionFound(e.latlng);
     };
 
     // listens when to trigger onLocationFound
@@ -104,6 +109,10 @@ function Map() {
   const [showLocation, setShowLocation] = useState(false);
   const [locationFound, setLocationFound] = useState(false);
   const [isSensor, setIsSensor] = useState(false);
+  const [isHazard, setIsHazard] = useState(false);
+  const [userPosition, setUserPosition] = useState<LatLng | null>(null);
+
+  const mapRef = useRef<LeafletMap | null>(null);
 
   const philippinesBounds: LatLngBoundsExpression = [
     [4.5, 116.0], // southwest corner
@@ -133,6 +142,7 @@ function Map() {
       setClickedLoc(null);
     }
     setIsSensor(false);
+    setIsHazard(false);
   };
 
   const handleSensorClick = (pin) => {
@@ -151,12 +161,33 @@ function Map() {
       setClickedLoc(null);
     }
     setNewPin(false);
+    setIsHazard(false);
+  };
+
+  const handleHazardClick = (pin, midpoint) => {
+    setSelectedPin({ ...pin, midpoint });
+    setOpen(true);
+    setFlyTrigger((prev) => prev + 1);
+    setShowNearestRoute(false);
+    setShowRoute(false);
+    setOpenFromRoute(false);
+    setClickedLoc(null);
+
+    const hazard = !!pin.id;
+    setIsHazard(hazard);
+
+    if (hazard) {
+      setClickedLoc(null);
+    }
+    setNewPin(false);
+    setIsSensor(false);
   };
 
   const handlePressRoute = () => {
     if (locationFound) {
       setShowRoute(true);
       setOpenFromRoute(true);
+      toast("Routing...");
     } else console.log("Location not found");
   };
 
@@ -191,6 +222,14 @@ function Map() {
     }
   }, [selectedPin, openFromRoute]);
 
+  useEffect(() => {
+    if (showRoute || showNearestRoute) {
+      setTimeout(() => {
+        window.dispatchEvent(new Event("resize"));
+      }, 100);
+    }
+  }, [showRoute, showNearestRoute]);
+
   const createClusterCustomIcon = (cluster: any) => {
     return divIcon({
       html: `<div style="background-color: #5F80AA; color: white; border-radius: 50%; width: 40px; height: 40px; display: flex; align-items: center; justify-content: center; font-size: 14px;">${cluster.getChildCount()}</div>`,
@@ -203,7 +242,18 @@ function Map() {
     <>
       {!locationFound &&
         createPortal(
-          <AlertDialogue onClose={() => setLocationFound(true)} />,
+          <AlertDialogue
+            open={true}
+            title="Turn on your Location/GPS"
+            description="Your location/GPS must be turned on to view routes. Plese turn
+              this on in your phone settings."
+            buttonText="Got it!"
+            onClick={() => setLocationFound(true)}
+            onClose={() => setLocationFound(true)}
+            contentId="Map_DialogContent"
+            closeId="Map_DialogClose"
+            actionId="Map_DialogAction"
+          />,
           document.body,
         )}
       <div
@@ -216,6 +266,7 @@ function Map() {
           maxBounds={philippinesBounds}
           maxBoundsViscosity={1.0}
           minZoom={6}
+          ref={mapRef}
         >
           {authorized ? (
             <MapClickHandler
@@ -231,35 +282,32 @@ function Map() {
           {/* <Routing /> */}
           <PinMarking onPinClick={handlePinClick} />
           <SensorMarking onPinClick={handleSensorClick} />
+          <RoadMapping onPinClick={handleHazardClick} />
+
           <LocationMarker
             flyToLocation={showLocation}
             locationFound={setLocationFound}
+            onPositionFound={setUserPosition}
           />
           <FlyToLocation position={selectedPin} flyTrigger={flyTrigger} />
           <MarkerClusterGroup
             iconCreateFunction={createClusterCustomIcon}
             maxClusterRadius={50}
             chunkedLoading
-          >
-            <RoadMapping
-              position={[
-                [14.563073993490859, 120.99483862617527],
-                [14.564512191308419, 120.99417612053263],
-              ]}
-            />
-            <RoadMapping
-              position={[
-                [14.565561313458806, 120.99694416069873],
-                [14.565961485258084, 120.9979076376789],
-              ]}
-            />
-          </MarkerClusterGroup>
+          ></MarkerClusterGroup>
           {showNearestRoute && (
-            <NearestRouting onPinSelected={setSelectedPin} />
+            <NearestRouting
+              onPinSelected={setSelectedPin}
+              userPosition={userPosition}
+            />
           )}
           {showRoute && !showNearestRoute && selectedPin && (
-            <Routing onPinSelected={setSelectedPin} selectedPin={selectedPin} />
-          )}{" "}
+            <Routing
+              onPinSelected={setSelectedPin}
+              selectedPin={selectedPin}
+              userPosition={userPosition}
+            />
+          )}
         </MapContainer>
         <DrawerComp
           open={open}
@@ -268,6 +316,7 @@ function Map() {
           onFindRoute={handlePressRoute}
           newPin={newPin}
           isSensor={isSensor}
+          isHazard={isHazard}
         />
         <div className="fixed bottom-0 left-0 w-full flex justify-center items-center">
           <div className="flex flex-col w-full max-w-md items-center justify-center mb-8">

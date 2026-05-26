@@ -12,7 +12,7 @@ import colors from "@/constants/colors";
 interface SelectDropdownProps {
   value: string;
   onValueChange: (val: string) => void;
-  label: string;
+  label?: string;
   id: string;
   placeholder: string;
   onSubmit?: (e: React.ChangeEvent<HTMLInputElement>) => void;
