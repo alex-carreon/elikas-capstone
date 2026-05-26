@@ -16,18 +16,18 @@ class SensorResource extends JsonResource
     {
         return [
             'id'             => $this->id,
-            'sensor_code'    => $this->sensor_code,
+            'sensorCode'    => $this->sensor_code,
             'name'           => $this->name,
-            'water_level'    => null, // Should display last reading
-            'last_online'    => $this->last_online,
-            'mount_height'  => $this->mount_height,
+            'waterLevel'    => null, // Should display last reading
+            'lastOnline'    => $this->last_online,
+            'mountHeight'  => $this->mount_height,
             'location'       => $this->location
                 ? [$this->location->latitude, $this->location->longitude]
                 : null,
             'address'        => $this->address,
-            'yellow_level'  => $this->yellow_level,
-            'red_level'     => $this->red_level,
-            'current_status' => $this->current_status,
+            'yellowLevel'  => $this->yellow_level,
+            'redLevel'     => $this->red_level,
+            'currentStatus' => $this->current_status,
 
             'deactivated'    => $this->relationLoaded('social_element')
                 ? ($this->social_element?->deactivated_at ? true : false)
