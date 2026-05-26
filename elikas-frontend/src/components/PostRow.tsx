@@ -5,7 +5,7 @@ import {
   CollapsibleTrigger,
 } from "@/components/ui/collapsible";
 import colors from "@/constants/colors";
-import { useState } from "react";
+import React, { useState, type ReactHTMLElement } from "react";
 import { bigSmile } from "@dicebear/collection";
 import { createAvatar } from "@dicebear/core";
 import AlertDialogue from "./AlertDialogue";
@@ -22,6 +22,9 @@ interface PostRowProps {
   flagCount: number;
   expiryDays: number;
   image?: string;
+  location?: string;
+  isSimple?: boolean;
+  children?: React.ReactNode;
 }
 
 function PostRow({
@@ -34,6 +37,9 @@ function PostRow({
   flagCount,
   expiryDays,
   image,
+  location,
+  isSimple,
+  children,
 }: PostRowProps) {
   const [report, setReport] = useState(false);
   const [vote, setVote] = useState<"up" | "down" | null>(null);
@@ -116,7 +122,7 @@ function PostRow({
           // </div>,
           document.body,
         )}
-      <div className="mt-1 flex gap-1 flex-col">
+      <div className="mt-1 flex gap-2 flex-col">
         <div
           className="flex flex-row items-center text-xs gap-0.5 justify-end mx-2"
           onClick={() => {
@@ -137,22 +143,27 @@ function PostRow({
           )}
           <p>Report</p>
         </div>
-        <div className="bg-[#B6D6FF] p-3 rounded-lg flex flex-row">
-          <div className="w-full flex flex-row gap-2">
-            <img src={dataUri} className="w-10" />
-            <div className="w-full flex flex-col">
-              <div className="flex flex-row justify-between">
-                <p>
-                  <b>{username}</b>
-                </p>
-                <p className="text-xs" style={{ color: colors.label }}>
-                  {timePosted}
-                </p>
+        <div className="bg-[#B6D6FF] p-3 rounded-lg flex flex-col gap-2">
+          <div className="flex flex-row">
+            <div className="w-full flex flex-row gap-2">
+              <img src={dataUri} className="w-10" />
+              <div className="w-full flex flex-col">
+                <div className="flex flex-row justify-between">
+                  <p>
+                    <b>{username}</b>
+                  </p>
+                  <p className="text-xs" style={{ color: colors.label }}>
+                    {timePosted}
+                  </p>
+                </div>
+                <p className="text-xs">{description}</p>
+                <p className="text-xs">{location}</p>
               </div>
-              <p className="text-xs">{description}</p>
             </div>
           </div>
+          {children}
         </div>
+
         <Collapsible className="">
           <div className="px-2 flex flex-row gap-4">
             <div
@@ -196,12 +207,14 @@ function PostRow({
 
               <p className="text-xs">Downvote</p>
             </div>
-            <CollapsibleTrigger
-              id="Drawer_PostDetailsTrigger"
-              className="text-xs underline italic flex ml-auto"
-            >
-              See More
-            </CollapsibleTrigger>
+            {isSimple ? null : (
+              <CollapsibleTrigger
+                id="Drawer_PostDetailsTrigger"
+                className="text-xs underline italic flex ml-auto"
+              >
+                See More
+              </CollapsibleTrigger>
+            )}
           </div>
           <CollapsibleContent id="Drawer_PostDetailsContent">
             <div className="border-2 border-solid rounded-lg p-4 m-2 flex flex-col gap-1">
