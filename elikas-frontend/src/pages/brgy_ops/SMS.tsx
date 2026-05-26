@@ -130,6 +130,21 @@ function SMS() {
               Send verified announcements to registered contacts instantly.{" "}
             </p>
           </div>
+          {/* No Transaction */}
+          {/* <div className="h-90 w-full max-w-sm flex flex-col justify-center gap-2">
+            <p className="text-center">
+              This feature requires a purchase transaction. Please contact
+              eLikas support to avail this feature.
+            </p>
+            <a
+              href="mailto:elikasteam@gmail.com"
+              className="text-center underline"
+              style={{ color: colors.activeIcon }}
+            >
+              elikasteam@gmail.com
+            </a>
+          </div> */}
+          {/* With Transaction */}
           <div className="w-full max-w-sm flex flex-col gap-4">
             <SelectDropdown
               value={templateId}
