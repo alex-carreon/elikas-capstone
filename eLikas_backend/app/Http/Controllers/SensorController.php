@@ -6,6 +6,9 @@ use Illuminate\Http\Request;
 use App\Models\Sensor;
 use App\Http\Resources\SensorResource;
 use App\Services\SensorQuery;
+use App\Http\Requests\StoreSensorRequest;
+use App\Services\SensorService;
+use App\Http\Requests\UpdateSensorRequest;
 
 class SensorController extends Controller
 {
@@ -48,6 +51,36 @@ class SensorController extends Controller
             return response()->json([
                 'error'   => 'Failed to fetch sensor details',
                 'details' => $e->getMessage()
+            ], 500);
+        }
+    }
+
+    public function store(StoreSensorRequest $request, SensorService $service)
+    {
+        try {
+            $user = $request->attributes->get('firebase_user');
+            $sensor = $service->create($request->validated(), $user);
+            return new SensorResource($sensor);
+        } catch (\Exception $e) {
+            return response()->json([
+                'error' => $e->getMessage(),
+                'file'  => $e->getFile(),
+                'line'  => $e->getLine(),
+            ], 500);
+        }
+    }
+
+    // use PATCH for partial updates since all fields are optional in UpdateSensorRequest
+    public function update(UpdateSensorRequest $request, Sensor $sensor)
+    {
+        try {
+            $sensor->update($request->validated());
+            dd($request->validated(), $sensor);
+            return new SensorResource($sensor);
+        } catch (\Exception $e) {
+            return response()->json([
+                'error'   => $e->getMessage(),
+                'details' => $e->getFile() . ':' . $e->getLine(),
             ], 500);
         }
     }
