@@ -7,6 +7,7 @@ use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\Dashboards\UserController;
 use App\Http\Controllers\PinController;
 use App\Http\Controllers\SensorController;
+use App\Http\Controllers\PublicSensorController;
 
 Route::get('/test', function () {
     return response()->json([
@@ -19,10 +20,7 @@ Route::get('/test', function () {
 // ---------------------------------------------------------------
 Route::post('/auth/register', [AuthController::class, 'register']);
 Route::post('/auth/login',    [AuthController::class, 'login']);
-
-Route::get('/sensors/list', [SensorController::class, 'list']);
-Route::apiResource('sensors', SensorController::class)->except(['destroy']);
-Route::patch('/sensors/{id}/deactivate', [SensorController::class, 'deactivate']);
+Route::get('/public/sensors', [PublicSensorController::class, 'index']);
 
 // ---------------------------------------------------------------
 // PIN LOOKUP ROUTES — must be ABOVE /pins/{id}
@@ -77,16 +75,13 @@ Route::middleware(['firebase.auth', 'is.admin'])->prefix('admin')->group(functio
 // 1 = admin; 2 = GovOp; 3 = indiv
 // BARANGAY OR ADMIN ROUTES
 Route::middleware(['firebase.auth', 'role:1,2'])->group(function () {
-
     Route::get('/admin/users', [UserController::class, 'allUsers']);
-
     Route::get('/users/{id}', [UserController::class, 'getUser']);
-
+    Route::apiResource('sensors', SensorController::class)->except(['destroy']);
+    Route::patch('/sensors/{id}/deactivate', [SensorController::class, 'deactivate']);
 });
 
 // ALL ROLES EXCEPT GUEST
 Route::middleware(['firebase.auth', 'role:1,2,3'])->group(function () {
     Route::put('/profile', [ProfileController::class, 'updateProfile']);
 });
-
-//Route::apiResource('sensors', SensorController::class)->except(['destroy]']);

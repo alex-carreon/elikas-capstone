@@ -38,19 +38,24 @@ class Sensor extends Model
 
 	protected $casts = [
 		'element_id' => 'int',
-		'depth' => 'float',
+		'mount_height' => 'float',
 		'location' => Point::class,
-		'last_online' => 'datetime'
+		'last_online' => 'datetime',
+        'yellow_level' => 'float',
+        'red_level' => 'float'
 	];
 
 	protected $fillable = [
 		'element_id',
 		'sensor_code',
-		'depth',
+		'mount_height',
 		'name',
 		'location',
 		'address',
-		'last_online'
+		'last_online',
+        'yellow_level',
+        'red_level',
+        'current_status'
 	];
 
 	public function social_element()
