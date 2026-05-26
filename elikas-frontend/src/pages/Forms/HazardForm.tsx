@@ -5,12 +5,12 @@ import { Field, FieldDescription, FieldLabel } from "@/components/ui/field";
 import colors from "@/constants/colors";
 import { FormMapClickHandler, RoadMapping } from "@/lib/mapUtils";
 import { useState, useEffect, useRef } from "react";
-import { MapContainer, TileLayer, Marker } from "react-leaflet";
+import { MapContainer, TileLayer, Marker, Polyline } from "react-leaflet";
 import { useLocation } from "react-router";
 import CheckBox from "@/components/CheckBox";
 import { renderToString } from "react-dom/server";
 import BlankPin from "@/assets/Map/BlankPin.svg?react";
-import { divIcon } from "leaflet";
+import { divIcon, latLng } from "leaflet";
 import { InputGroupTextarea } from "@/components/ui/input-group";
 
 function HazardForm() {
@@ -164,8 +164,12 @@ function HazardForm() {
                 setClickedLoc={setRoutePoints}
                 clickedLoc={routePoints}
               />
-              {routePoints && (
-                <RoadMapping position={[center, ...routePoints]} />
+              {routePoints.length > 0 && (
+                <Polyline
+                  positions={[center, ...routePoints]}
+                  weight={6}
+                  color="#5F80AA"
+                />
               )}
             </MapContainer>
             <ButtonComp
