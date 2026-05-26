@@ -4,7 +4,7 @@ import CheckBox from "@/components/CheckBox";
 import TextField from "@/components/TextField";
 import { Textarea } from "@/components/ui/textarea";
 import colors from "@/constants/colors";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Field, FieldLabel } from "@/components/ui/field";
 import SelectDropdown from "@/components/SelectDropdown";
 
@@ -12,7 +12,8 @@ function SMS() {
   const [addTemplate, setAddTemplate] = useState(false);
   const [templateId, setTemplateId] = useState("");
   const [templateTitle, setTemplateTitle] = useState("");
-  const [message, setMessage] = useState("");
+  const [message, setMessage] = useState<string | undefined>("");
+  const [schedSend, setSchedSend] = useState("");
   const [error, setError] = useState({ title: "", message: "" });
 
   const tempalates = [
@@ -49,7 +50,16 @@ function SMS() {
     console.log(message);
   };
 
+  useEffect(() => {
+    if (templateId) {
+      setMessage(templateMessage?.message);
+    }
+  }, [templateId]);
+
   const handleSend = () => {
+    if (!message) {
+      setError({ title: "", message: "This field is required" });
+    }
     console.log(message);
   };
 
@@ -149,6 +159,7 @@ function SMS() {
                 onChange={(e) => setMessage(e.target.value)}
                 value={templateId && templateMessage?.message}
               />
+              <p className="text-xs text-red-500">{error.message}</p>
             </div>
           </div>
           <div className="w-full">
@@ -172,6 +183,18 @@ function SMS() {
               />
             </div>
           </div>
+          <SelectDropdown
+            value={schedSend}
+            onValueChange={setSchedSend}
+            label="Schedule Send"
+            placeholder="Choose when to send this message"
+            id="SMS_SelectSchedField"
+            onSubmit={(e) => setSchedSend(e.target.value)}
+            options={[
+              { label: "Send Now", value: "1" },
+              { label: "in 10 Minutes", value: "2" },
+            ]}
+          />
           <ButtonComp
             id="SMS_SendBtn"
             text="Send Text"
