@@ -6,14 +6,20 @@ import {
   DrawerHeader,
   DrawerTitle,
 } from "@/components/ui/drawer";
-import { ChevronDownIcon, ShieldCheck, CircleX } from "lucide-react";
+import {
+  ChevronDownIcon,
+  ShieldCheck,
+  CircleX,
+  File,
+  Camera,
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   Collapsible,
   CollapsibleContent,
   CollapsibleTrigger,
 } from "@/components/ui/collapsible";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { cn } from "@/lib/utils";
 import ButtonComp from "./Button";
 import DrawerIcon from "@/assets/Map/Drawer.svg";
@@ -25,6 +31,10 @@ import PostRow from "./PostRow";
 import colors from "@/constants/colors";
 import { Link } from "react-router";
 import SensorIconDetailed from "./SensorIconDetailed";
+import { bigSmile } from "@dicebear/collection";
+import { createAvatar } from "@dicebear/core";
+import { InputGroup, InputGroupAddon, InputGroupInput } from "./ui/input-group";
+import sample from "@/assets/Map/SamplePhoto.png";
 
 interface Pin {
   id: number;
@@ -41,6 +51,7 @@ interface DrawerProps {
   onFindRoute: (findRoute: boolean) => void;
   newPin: boolean;
   isSensor: boolean;
+  isHazard: boolean;
 }
 
 function DrawerComp({
@@ -50,6 +61,7 @@ function DrawerComp({
   onFindRoute,
   newPin,
   isSensor,
+  isHazard,
 }: DrawerProps) {
   const [expanded, setExpanded] = useState(false);
   const [verified, setVerified] = useState(false);
@@ -57,14 +69,52 @@ function DrawerComp({
   const [height, setHeight] = useState(0);
   const [risk, setRisk] = useState("");
   const [desc, setDesc] = useState("");
+  const [seed, setSeed] = useState("Felix");
+  const [comment, setComment] = useState("");
+  const [image, setImage] = useState("");
+  const [imagePreview, setImagePreview] = useState("");
+  const [openDialog, setOpenDialog] = useState(false);
+  const [report, setReport] = useState(false);
 
-  console.log("isSensor", isSensor);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const cameraInputRef = useRef<HTMLInputElement>(null);
+
+  const handleSubmit = () => {
+    console.log(comment);
+    console.log(image);
+  };
 
   const colorSensor = {
     yellow: "#F3C217",
     orange: "#E6793B",
     red: "#B22B42",
     purple: "#6E4998",
+  };
+
+  const handleCameraClick = () => {
+    cameraInputRef.current?.click();
+  };
+
+  const handleFileClick = () => {
+    fileInputRef.current?.click();
+  };
+
+  const fileOnChange = (e: any) => {
+    const file = e.target.files?.[0];
+
+    if (!file) return;
+
+    setImage(file);
+    setImagePreview(URL.createObjectURL(file));
+  };
+
+  const handleClearImage = () => {
+    setImage("");
+
+    if (fileInputRef.current) {
+      console.log(fileInputRef.current);
+      fileInputRef.current.value = "";
+    }
   };
 
   useEffect(() => {
@@ -106,6 +156,18 @@ function DrawerComp({
   useEffect(() => {
     if (!open) setExpanded(false);
   }, [open]);
+
+  const avatar = createAvatar(bigSmile, {
+    seed: seed,
+    backgroundColor: ["b6e3f4", "c0aede", "d1d4f9"],
+    radius: 50,
+    scale: 90,
+    accessoriesProbability: 50,
+    eyes: ["cheery", "normal", "starstruck", "winking"],
+    mouth: ["braces", "gapSmile", "kawaii", "openedSmile", "teethSmile"],
+  });
+
+  const dataUri = avatar.toDataUri();
 
   let content;
 
@@ -190,6 +252,57 @@ function DrawerComp({
         </div>
       </>
     );
+  } else if (isHazard) {
+    content = (
+      <>
+        <div className="px-4 pb-4 flex flex-col">
+          <div className="w-full flex flex-row justify-between">
+            <div className="flex flex-row gap-2">
+              <div className="flex flex-row items-center gap-2 px-4">
+                <img src={CSIcon} className="w-12" />
+                <p className="text-base">
+                  <b>Crowdsourced Updates</b>
+                </p>
+              </div>
+            </div>
+            <DrawerClose id="DrawerMark_CloseBtn" className="self-start">
+              <CircleX size={28} fill="#CECECE" strokeWidth={1} />
+            </DrawerClose>
+          </div>
+          {/* <div className="bg-[#B6D6FF] p-3 rounded-lg flex flex-col gap-2">
+            <div className="w-full flex flex-row gap-2">
+              <div>
+                <img src={dataUri} className="w-12" />
+              </div>
+              <div className="w-full">
+                <div className="flex flex-row justify-between">
+                  <p className="font-semibold">Address or Location</p>
+                  <p>3:00pm</p>
+                </div>
+                <p>Flood Level: So deep</p>
+              </div>
+            </div>
+            <div className="flex justify-center">
+              <img src={sample} />
+            </div>
+          </div> */}
+          <PostRow
+            username="Kurt Hacinas"
+            timePosted="3:30pm"
+            description="Flood Level: Ankle-deep"
+            locationVerified
+            upVotesCount={20}
+            downVotesCount={12}
+            flagCount={1}
+            expiryDays={30}
+            location="This street"
+            isSimple
+          >
+            <img src={sample} />
+          </PostRow>
+        </div>
+      </>
+    );
   } else {
     content = (
       <>
@@ -254,11 +367,11 @@ function DrawerComp({
         </DrawerHeader>
         <div
           className={cn(
-            "px-4 overflow-auto transition-opacity duration-300",
+            "overflow-auto transition-opacity duration-300",
             expanded ? "opacity-100" : "opacity-0 pointer-events-none",
           )}
         >
-          <Collapsible className="rounded-md data-[state=open]:bg-muted">
+          <Collapsible className="rounded-md data-[state=open]:bg-muted px-4 ">
             <CollapsibleTrigger
               id="Drawer_FacilitiesTrigger"
               className="group w-full flex flex-col items-start"
@@ -307,15 +420,29 @@ function DrawerComp({
             </CollapsibleContent>
           </Collapsible>
           <hr className="border-gray-400 m-4"></hr>
-          <div className="px-2.5">
-            <div className="flex flex-row items-center gap-2">
+          <div className="">
+            <div className="flex flex-row items-center gap-2 px-4">
               <img src={CSIcon} className="w-12" />
               <p className="text-base">
                 <b>Crowdsourced Updates</b>
               </p>
             </div>
-            <div className="flex flex-col gap-2 mb-4">
-              {/* Post Row */}
+            {/* <div className="h-64 flex items-center justify-center flex-col gap-2">
+              <div className="text-center text-md">
+                <p>Join the conversation.</p>
+                <p>Sign in an account to view the comments.</p>
+              </div>
+              <Link to="/Login">
+                <ButtonComp
+                  text="Sign in"
+                  variant="primary"
+                  id="Drawer_SignIn"
+                  heightSize="38px"
+                  widthSize="30"
+                />
+              </Link>
+            </div> */}
+            <div className="flex flex-col gap-2 mb-4 mt-4 pb-16 px-4">
               <PostRow
                 username="Kurt Hacinas"
                 timePosted="3:30pm"
@@ -338,8 +465,65 @@ function DrawerComp({
                 expiryDays={30}
                 image={Photo}
               />
-              {/* Post Row */}
             </div>
+            {expanded ? (
+              <div className="fixed bottom-0 z-100 bg-white w-full h-content">
+                <div className="h-full flex flex-row items-center p-2 gap-2">
+                  <img src={dataUri} className="w-11" />
+                  <InputGroup>
+                    <InputGroupInput
+                      placeholder="Add a Comment"
+                      id="Drawer_CommentField"
+                    ></InputGroupInput>
+                    <InputGroupAddon
+                      align="inline-end"
+                      onClick={handleFileClick}
+                      id="Drawer_FileBtn"
+                      style={{ cursor: "pointer" }}
+                    >
+                      <File />
+                    </InputGroupAddon>
+                    <InputGroupAddon
+                      align="inline-end"
+                      id="Drawer_CameraBtn"
+                      onClick={handleCameraClick}
+                      style={{ cursor: "pointer" }}
+                    >
+                      <Camera />
+                    </InputGroupAddon>
+                    <input
+                      style={{ display: "none" }}
+                      type="file"
+                      onChange={fileOnChange}
+                      ref={fileInputRef}
+                      accept="image/png, image/jpeg, image/heic"
+                      id="Drawer_FileInput"
+                    />
+                    {/* To test when PWA is done  */}
+                    <input
+                      style={{ display: "none" }}
+                      type="file"
+                      onChange={fileOnChange}
+                      ref={cameraInputRef}
+                      capture
+                      accept="image/png, image/jpeg, image/heic"
+                      id="Drawer_CameraTrigger"
+                    />
+                  </InputGroup>
+                </div>
+                {image && (
+                  <div className="p-4 flex flex-col gap-3">
+                    <img src={imagePreview} />
+                    <ButtonComp
+                      text="Clear"
+                      variant="outline"
+                      id="Drawer_ImageClearBtn"
+                      onClick={handleClearImage}
+                    ></ButtonComp>
+                  </div>
+                )}
+              </div>
+            ) : null}
           </div>
         </div>
       </>
@@ -347,22 +531,49 @@ function DrawerComp({
   }
 
   return (
-    <Drawer
-      open={open}
-      onOpenChange={onOpenChange}
-      modal={false}
-      shouldScaleBackground={false}
-    >
-      <DrawerContent
-        className={cn(
-          "transition-all duration-300 inset-x-0 mx-auto w-full max-w-md",
-          expanded ? "h-[80vh]" : "h-[240px]",
+    <>
+      {/* {openDialog &&
+        createPortal(
+          <div
+            className="fixed inset-0 z-[498]"
+            onClick={() => setOpenDialog(false)}
+          />,
+          document.body,
         )}
-        id="Drawer_DrawerContent"
+      {openDialog &&
+        createPortal(
+          <AlertDialogue
+            open={openDialog}
+            title="Flag a Comment"
+            description="Why do you think this is an inappropriate comment? Check all that applies."
+            buttonText="Report"
+            onClose={() => {
+              setOpenDialog(false);
+            }}
+            contentId="Drawer_ReportDialogContent"
+            closeId="Drawer_ReportDialogClose"
+            actionId="Drawer_ReportDialogSubmit"
+          />,
+          document.body,
+        )} */}
+
+      <Drawer
+        open={open}
+        onOpenChange={onOpenChange}
+        modal={false}
+        shouldScaleBackground={false}
       >
-        {content}
-      </DrawerContent>
-    </Drawer>
+        <DrawerContent
+          className={cn(
+            "transition-all duration-300 inset-x-0 mx-auto w-full max-w-md",
+            expanded ? "h-[80vh]" : isHazard ? "h-content" : "h-[240px]",
+          )}
+          id="Drawer_DrawerContent"
+        >
+          {content}
+        </DrawerContent>
+      </Drawer>
+    </>
   );
 }
 

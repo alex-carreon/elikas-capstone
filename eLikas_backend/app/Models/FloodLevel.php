@@ -30,7 +30,7 @@ class FloodLevel extends Model
 		'description'
 	];
 
-	public function flood_paths()
+	public function floodPath()
 	{
 		return $this->hasMany(FloodPath::class, 'level_id');
 	}

@@ -22,6 +22,7 @@ import ForgotPW from "./pages/Authentication/ForgotPW";
 import TermsConditions from "./pages/TermsConditions";
 import Loading from "./pages/Loading";
 import Profile from "./pages/Profile";
+import Feedback from "./pages/Indiv/Feedback";
 
 function App() {
   return (
@@ -41,24 +42,26 @@ function App() {
         </Route>
 
         <Route element={<ProtectedRoute userRole={"indiv"} />}>
+          <Route element={<ConstNavbar />}>
+            <Route path="/History" element={<History />} />
+            <Route path="/Feedback" element={<Feedback />} />
+            <Route path="/Settings" element={<Settings />} />
+          </Route>
+        </Route>
+
+        <Route element={<ProtectedRoute userRole={"brgy_op"} />}>
+          <Route element={<ConstNavbar />}>
+            <Route path="/SMS" element={<SMS />} />
+            <Route path="/Settings" element={<Settings />} />
+          </Route>
+        </Route>
+
+        <Route element={<ProtectedRoute />}>
           <Route element={<AuthNavbar />}>
             <Route path="/Map" element={<Map />} />
           </Route>
 
           <Route element={<ConstNavbar />}>
-            <Route path="/History" element={<History />} />
-          </Route>
-        </Route>
-
-        <Route element={<ProtectedRoute userRole={"brgy_op"} />}></Route>
-
-        <Route element={<ConstNavbar />}>
-          <Route path="/SMS" element={<SMS />} />
-        </Route>
-
-        <Route element={<ProtectedRoute />}>
-          <Route element={<ConstNavbar />}>
-            <Route path="/Settings" element={<Settings />} />
             <Route path="/EvacForm" element={<EvacForm />} />
             <Route path="/HazardForm" element={<HazardForm />} />
             <Route path="/Profile" element={<Profile />} />
