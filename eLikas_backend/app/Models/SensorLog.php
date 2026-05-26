@@ -11,14 +11,14 @@ use Illuminate\Database\Eloquent\Model;
 
 /**
  * Class SensorLog
- * 
+ *
  * @property int $id
  * @property int $sensor_id
  * @property Carbon $sensor_timestamp
  * @property Carbon $log_time
  * @property float $distance
  * @property float $calculated_depth
- * 
+ *
  * @property Sensor $sensor
  *
  * @package App\Models
@@ -32,16 +32,15 @@ class SensorLog extends Model
 		'sensor_id' => 'int',
 		'sensor_timestamp' => 'datetime',
 		'log_time' => 'datetime',
-		'distance' => 'float',
-		'calculated_depth' => 'float'
+		'water_level' => 'float',
 	];
 
 	protected $fillable = [
 		'sensor_id',
 		'sensor_timestamp',
 		'log_time',
-		'distance',
-		'calculated_depth'
+		'water_level',
+		'status_level'
 	];
 
 	public function sensor()

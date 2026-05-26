@@ -69,16 +69,26 @@ Route::middleware(['firebase.auth', 'is.admin'])->prefix('admin')->group(functio
     Route::patch('/users/{id}/deactivate', [UserController::class, 'deactivateUser']);
 
     Route::post('/create-govop', [AdminController::class, 'createGovOp']);
-
 });
+
+
+
+// ---------------------------------------------------------------
+// ONLY GOVERNMENT OPERATOR ROUTES
+// ---------------------------------------------------------------
+Route::middleware(['firebase.auth', 'role:2'])->group(function () {
+    Route::apiResource('sensors', SensorController::class)->except(['destroy']);
+    Route::patch('/sensors/{sensor}/deactivate', [SensorController::class, 'deactivate']);
+});
+
 
 // 1 = admin; 2 = GovOp; 3 = indiv
 // BARANGAY OR ADMIN ROUTES
 Route::middleware(['firebase.auth', 'role:1,2'])->group(function () {
     Route::get('/admin/users', [UserController::class, 'allUsers']);
     Route::get('/users/{id}', [UserController::class, 'getUser']);
-    Route::apiResource('sensors', SensorController::class)->except(['destroy']);
-    Route::patch('/sensors/{id}/deactivate', [SensorController::class, 'deactivate']);
+    Route::get('/sensors', [SensorController::class, 'index']);
+    Route::get('/sensors/{sensor}', [SensorController::class, 'show']);
 });
 
 // ALL ROLES EXCEPT GUEST
