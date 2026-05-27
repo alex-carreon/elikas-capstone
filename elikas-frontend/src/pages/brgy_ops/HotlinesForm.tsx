@@ -59,40 +59,6 @@ function HotlinesForm() {
               isRequired
             />
             <Field>
-              {/* <FieldLabel
-                className={"text-sm w-s"}
-                style={{ color: colors.label }}
-              >
-                Chosen Location
-              </FieldLabel>
-              <FieldDescription>
-                If you change your mind, please go back to the map and try
-                again.
-              </FieldDescription>
-              {/* {localStorage.getItem("LocDescription")} */}
-              {/* <FieldLabel
-                className={"text-sm w-s"}
-                style={{ color: colors.label }}
-              >
-                Map Location
-              </FieldLabel>
-              <MapContainer
-                center={center}
-                zoom={17}
-                scrollWheelZoom={false}
-                style={{ height: "30vh", width: "100%" }}
-                id="EvacPin_MapContainer"
-              >
-                <TileLayer
-                  attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-                  url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-                />
-                <MapClickHandler
-                  onPinClick={null}
-                  setClickedLoc={center}
-                  clickedLoc={center}
-                />
-              </MapContainer> */}
               <TextField
                 label="Address*"
                 description="Enter the hotline's address if applicable."
@@ -124,7 +90,7 @@ function HotlinesForm() {
               label="Landmark (optional)"
               description="This can help citizens find this hotline's office."
               placeholder="Enter the landmark for this hotline"
-              id="Hotlines_LandmarkField"
+              id="Hotline_LandmarkField"
               inputType="text"
               onSubmit={(e) => setLandmark(e.target.value)}
             ></TextField>
@@ -132,7 +98,7 @@ function HotlinesForm() {
               <CheckBox
                 text="I confirm that this location is safe for temporary 
 evacuation use."
-                id="EvacPin_SafetyCheck"
+                id="Hotline_InfoChckbox"
                 checked={infoCheck}
                 onCheckedChange={(val) => {
                   setInfoCheck(!!val);
@@ -143,7 +109,7 @@ evacuation use."
               <ButtonComp
                 text="Create Pin"
                 variant="primary"
-                id="EvacPin_SubmitBtn"
+                id="Hotline_SubmitBtn"
                 isDisabled={!infoCheck}
                 heightSize="38px"
                 widthSize="100%"
