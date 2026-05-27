@@ -13,6 +13,8 @@ interface ProtectedRouteProps {
 
 export const roleDefault: Record<string, string> = {
   indiv: "/map",
+  brgy_op: "/map",
+  admin: "/admin-map",
 };
 
 export default function ProtectedRoute({ userRole }: ProtectedRouteProps) {
