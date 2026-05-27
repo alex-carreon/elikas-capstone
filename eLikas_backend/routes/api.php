@@ -62,7 +62,7 @@ Route::middleware('firebase.auth')->group(function () {
 // ---------------------------------------------------------------
 // ONLY ADMIN ROUTES
 // ---------------------------------------------------------------
-Route::middleware(['firebase.auth', 'role:1'])->group(function () {
+Route::prefix('admin')->middleware(['firebase.auth', 'role:1'])->group(function () {
     Route::post('/create-admin', [AdminController::class, 'createUser']);
 
     Route::patch('/users/{id}/deactivate', [UserController::class, 'deactivateUser']);
