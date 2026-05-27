@@ -1,10 +1,8 @@
 import colors from "@/constants/colors";
-import { Field, FieldLabel, FieldDescription } from "@/components/ui/field";
+import { Field } from "@/components/ui/field";
 import CheckBox from "@/components/CheckBox";
 import TextField from "@/components/TextField";
 import { useState } from "react";
-import { MapContainer, TileLayer } from "react-leaflet";
-import { MapClickHandler } from "@/lib/mapUtils";
 import ButtonComp from "@/components/Button";
 
 function HotlinesForm() {

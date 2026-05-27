@@ -24,7 +24,7 @@ import Loading from "./pages/Loading";
 import Profile from "./pages/Profile";
 import Feedback from "./pages/Indiv/Feedback";
 import HotlinesForm from "./pages/brgy_ops/HotlinesForm";
-import Layout from "./pages/Admin/Layout";
+import Layout from "@/pages/Admin/layout";
 
 function App() {
   return (
@@ -45,7 +45,7 @@ function App() {
 
         <Route element={<ProtectedRoute userRole={"indiv"} />}>
           <Route element={<ConstNavbar />}>
-            {/* <Route path="/History" element={<History />} /> */}
+            <Route path="/History" element={<History />} />
             <Route path="/Feedback" element={<Feedback />} />
           </Route>
 
