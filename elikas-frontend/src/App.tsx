@@ -24,6 +24,7 @@ import Loading from "./pages/Loading";
 import Profile from "./pages/Profile";
 import Feedback from "./pages/Indiv/Feedback";
 import HotlinesForm from "./pages/brgy_ops/HotlinesForm";
+import Layout from "./pages/Admin/Layout";
 
 function App() {
   return (
@@ -44,37 +45,44 @@ function App() {
 
         <Route element={<ProtectedRoute userRole={"indiv"} />}>
           <Route element={<ConstNavbar />}>
-            <Route path="/History" element={<History />} />
+            {/* <Route path="/History" element={<History />} /> */}
             <Route path="/Feedback" element={<Feedback />} />
-            <Route path="/Settings" element={<Settings />} />
+          </Route>
+
+          <Route element={<AuthNavbar />}>
+            <Route path="/Map" element={<Map />} />
           </Route>
         </Route>
 
         <Route element={<ProtectedRoute userRole={"brgy_op"} />}>
-          <Route element={<ConstNavbar />}>
-            <Route path="/SMS" element={<SMS />} />
-            <Route path="/HotlinesForm" element={<HotlinesForm />} />
-            <Route path="/Settings" element={<Settings />} />
-          </Route>
-        </Route>
-
-        <Route element={<ProtectedRoute />}>
           <Route element={<AuthNavbar />}>
             <Route path="/Map" element={<Map />} />
           </Route>
 
           <Route element={<ConstNavbar />}>
+            <Route path="/SMS" element={<SMS />} />
+            <Route path="/HotlinesForm" element={<HotlinesForm />} />
+          </Route>
+        </Route>
+
+        <Route element={<ProtectedRoute userRole={"admin"} />}>
+          <Route element={<Layout />}>
+            <Route path="/admin-map" element={<Map />} />
+          </Route>
+        </Route>
+
+        <Route element={<ProtectedRoute />}>
+          <Route element={<ConstNavbar />}>
+            <Route path="/Settings" element={<Settings />} />
             <Route path="/EvacForm" element={<EvacForm />} />
             <Route path="/HazardForm" element={<HazardForm />} />
             <Route path="/Profile" element={<Profile />} />
           </Route>
         </Route>
 
-        {/* <Route element={<AlertModal />}> */}
         <Route element={<GuestNavbar />}>
           <Route path="/" element={<Map />} />
         </Route>
-        {/* </Route> */}
 
         <Route element={<ConstNavbar />}>
           <Route path="/Hotlines" element={<Hotlines />} />
