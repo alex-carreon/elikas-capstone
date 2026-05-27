@@ -1,5 +1,4 @@
 import Logo from "../assets/logoWhite.svg";
-import colors from "../constants/colors";
 
 function WhiteLogo() {
   return (
