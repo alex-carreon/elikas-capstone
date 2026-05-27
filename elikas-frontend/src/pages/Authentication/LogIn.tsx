@@ -77,7 +77,7 @@ function LogIn() {
       // Step 5: Redirect based on role
       loginPromise.then((userData: any) => {
         if (userData.role === "admin") {
-          window.location.href = "/admin-dashboard";
+          window.location.href = "/admin-map";
         } else {
           navigate("/Map");
         }

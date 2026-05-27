@@ -120,10 +120,15 @@ function Map() {
   ];
 
   let authorized = false;
+  let admin = false;
   const { role } = useUserContext();
 
   if (role) {
     authorized = true;
+  }
+
+  if (role === "admin") {
+    admin = true;
   }
 
   // Have pin's type to be needed information from db
@@ -258,50 +263,60 @@ function Map() {
         )}
       <div
         className="w-full max-w-md pointer-events-auto"
-        style={{ height: "90vh" }}
+        style={{ height: "94vh" }}
       >
         <MapContainer
           id="Map_Container"
-          style={{ height: "90vh", width: "100%" }}
+          style={{ height: "94vh", width: "100%" }}
           maxBounds={philippinesBounds}
           maxBoundsViscosity={1.0}
           minZoom={6}
           ref={mapRef}
         >
-          {authorized ? (
+          {/* Adding a pin */}
+          {authorized && !admin ? (
             <MapClickHandler
               onPinClick={handlePinClick}
               setClickedLoc={setClickedLoc}
               clickedLoc={clickedLoc}
             />
           ) : null}
+
           <TileLayer
             attribution='&copy; <a href="https://openstreetmap.org">OpenStreetMap</a> contributors'
             url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
           />
-          {/* <Routing /> */}
+
+          {/* View and Click Pins */}
           <PinMarking onPinClick={handlePinClick} />
           <SensorMarking onPinClick={handleSensorClick} />
           <RoadMapping onPinClick={handleHazardClick} />
 
-          <LocationMarker
-            flyToLocation={showLocation}
-            locationFound={setLocationFound}
-            onPositionFound={setUserPosition}
-          />
-          <FlyToLocation position={selectedPin} flyTrigger={flyTrigger} />
+          {/* Bubble map function */}
           <MarkerClusterGroup
             iconCreateFunction={createClusterCustomIcon}
             maxClusterRadius={50}
             chunkedLoading
           ></MarkerClusterGroup>
-          {showNearestRoute && (
+
+          {/* See User's Location */}
+          <LocationMarker
+            flyToLocation={showLocation}
+            locationFound={setLocationFound}
+            onPositionFound={setUserPosition}
+          />
+
+          {/* Fly to that location */}
+          <FlyToLocation position={selectedPin} flyTrigger={flyTrigger} />
+
+          {/* <Routing /> */}
+          {showNearestRoute && !admin && (
             <NearestRouting
               onPinSelected={setSelectedPin}
               userPosition={userPosition}
             />
           )}
-          {showRoute && !showNearestRoute && selectedPin && (
+          {showRoute && !showNearestRoute && selectedPin && !admin && (
             <Routing
               onPinSelected={setSelectedPin}
               selectedPin={selectedPin}
@@ -309,6 +324,8 @@ function Map() {
             />
           )}
         </MapContainer>
+
+        {/* Drawer for pins */}
         <DrawerComp
           open={open}
           onOpenChange={handleDrawerClose}
@@ -324,14 +341,16 @@ function Map() {
               className="w-14 h-14 self-end m-4 drop-shadow-xl"
               onClick={() => setShowLocation((prev) => !prev)}
             />
-            <ButtonComp
-              text="Find Evac Center"
-              variant="important"
-              id="Map_NearestRouteBtn"
-              onClick={handleNearestRoute}
-              widthSize="90%"
-              heightSize="50px"
-            />
+            {!admin && (
+              <ButtonComp
+                text="Find Evac Center"
+                variant="important"
+                id="Map_NearestRouteBtn"
+                onClick={handleNearestRoute}
+                widthSize="90%"
+                heightSize="50px"
+              />
+            )}
           </div>
         </div>
       </div>
