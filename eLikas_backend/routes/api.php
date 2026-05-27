@@ -88,7 +88,7 @@ Route::middleware(['firebase.auth', 'role:2'])->group(function () {
 // BARANGAY OR ADMIN ROUTES
 Route::middleware(['firebase.auth', 'role:1,2'])->group(function () {
     Route::get('/admin/users', [UserController::class, 'allUsers']);
-    Route::get('/users/{id}', [UserController::class, 'getUser']);
+    Route::get('admin/users/{id}', [UserController::class, 'getUser']);
     Route::get('/sensors', [SensorController::class, 'index']);
     Route::get('/sensors/{sensor}', [SensorController::class, 'show']);
 

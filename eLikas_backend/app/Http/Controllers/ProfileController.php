@@ -26,8 +26,8 @@ class ProfileController extends Controller
                 'phone' => $user->phoneNumber?->phone_no,
                 'location' => $user->indivAcc?->location?->name,
 
-                'created_at' => $user->created_at,
-                'deactivated_at' => $user->deactivated_at
+                'created_at' => $user->created_at->timezone('Asia/Manila')->toDateTimeString(),
+                'deactivated_at' => $user->deactivated_at?->timezone('Asia/Manila')->toDateTimeString()
             ]);
 
         } catch (\Exception $e) {

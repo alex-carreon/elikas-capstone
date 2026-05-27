@@ -120,8 +120,8 @@ class UserController extends Controller
                     'is_deactivated' =>
                         $user->deactivated_at !== null,
 
-                    'created_at' => $user->created_at,
-                    'deactivated_at' => $user->deactivated_at,
+                    'created_at' => $user->created_at->timezone('Asia/Manila')->toDateTimeString(),
+                    'deactivated_at' => $user->deactivated_at?->timezone('Asia/Manila')->toDateTimeString(),
                 ];
             });
 
@@ -147,7 +147,7 @@ class UserController extends Controller
             return response()->json([
                 'message' => 'User deactivated successfully',
                 'user_id' => $user->id,
-                'deactivated_at' => $user->deactivated_at
+                'deactivated_at' => $user->deactivated_at->timezone('Asia/Manila')->toDateTimeString()
             ]);
 
         } catch (\Exception $e) {
@@ -191,8 +191,8 @@ class UserController extends Controller
                 'point_person' => $user->govOp?->point_person,
                 'point_position' => $user->govOp?->point_position,
 
-                'created_at' => $user->created_at,
-                'deactivated_at' => $user->deactivated_at
+                'created_at' => $user->created_at->timezone('Asia/Manila')->toDateTimeString(),
+                'deactivated_at' => $user->deactivated_at?->timezone('Asia/Manila')->toDateTimeString(),
             ]);
 
         } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
