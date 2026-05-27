@@ -23,6 +23,7 @@ import TermsConditions from "./pages/TermsConditions";
 import Loading from "./pages/Loading";
 import Profile from "./pages/Profile";
 import Feedback from "./pages/Indiv/Feedback";
+import HotlinesForm from "./pages/brgy_ops/HotlinesForm";
 
 function App() {
   return (
@@ -52,6 +53,7 @@ function App() {
         <Route element={<ProtectedRoute userRole={"brgy_op"} />}>
           <Route element={<ConstNavbar />}>
             <Route path="/SMS" element={<SMS />} />
+            <Route path="/HotlinesForm" element={<HotlinesForm />} />
             <Route path="/Settings" element={<Settings />} />
           </Route>
         </Route>

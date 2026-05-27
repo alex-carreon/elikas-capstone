@@ -5,9 +5,13 @@ import {
   InputGroupInput,
 } from "@/components/ui/input-group";
 import HotlineRow from "../components/HotlineRow";
-// import { Button } from "@/components/ui/button";
+import { useUserContext } from "@/context/AuthContext";
+import { Button } from "@/components/ui/button";
+import { Link } from "react-router";
 
 function Hotlines() {
+  const { role } = useUserContext();
+
   return (
     <>
       <div className="w-full h-screen flex flex-col items-center p-6 mt-8 gap-4">
@@ -20,16 +24,20 @@ function Hotlines() {
         </div>
         {/* Search and Filter and Add button */}
         <div className="w-full max-w-md flex flex-row justify-between">
-          <div>
-            {/* <Button
-              size="sm"
-              className="w-24 bg-gradient-to-r from-[#FFA011] to-[#F3C962]"
-              id="Hotlines-Add"
-            >
-              Add Hotline
-            </Button> */}
-          </div>
-          <div className="flex justify-end items-center gap-2">
+          {role === "brgy_op" && (
+            <div>
+              <Link to="/HotlinesForm">
+                <Button
+                  size="sm"
+                  className="w-24 bg-gradient-to-r from-[#FFA011] to-[#F3C962]"
+                  id="Hotlines-Add"
+                >
+                  Add Hotline
+                </Button>
+              </Link>
+            </div>
+          )}
+          <div className="w-full flex justify-end items-center gap-2">
             <InputGroup className="w-2/3">
               <InputGroupInput
                 className="text-sm h-8"
