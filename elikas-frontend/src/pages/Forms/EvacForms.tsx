@@ -467,6 +467,8 @@ or account restriction."
                   variant="primary"
                   id="EvacPin_SubmitBtn"
                   isDisabled={!safetyCheck || !infoCheck}
+                  heightSize="38px"
+                  widthSize="100%"
                 />
               </div>
             </>

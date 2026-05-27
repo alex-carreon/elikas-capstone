@@ -7,6 +7,7 @@ import {
   CopyCheck,
 } from "lucide-react";
 import { useState } from "react";
+import { toast } from "sonner";
 
 function HotlineRow() {
   const [copy, setCopy] = useState(false);
@@ -14,6 +15,7 @@ function HotlineRow() {
   const HandleCopy = () => {
     navigator.clipboard.writeText("(02) 8854-2211");
     setCopy(true);
+    toast("Copied to clipboard");
     setTimeout(() => setCopy(false), 2000);
   };
 
