@@ -35,7 +35,7 @@ use Illuminate\Database\Eloquent\Model;
  * @package App\Models
  */
 class SocialElement extends Model
-{
+{	
 	protected $table = 'SocialElements';
 	public $timestamps = false;
 
