@@ -110,4 +110,13 @@ Route::middleware(['firebase.auth', 'role:1,2,3'])->group(function () {
 
     Route::post('flood-paths', [FloodPathController::class, 'store']);
 
+    Route::get('/flood-paths/my',     [FloodPathController::class, 'my']); 
+
+    Route::get('/flood-paths/{id}',   [FloodPathController::class, 'show'])
+        ->whereNumber('id');
+
+    Route::patch('/flood-paths/{id}', [FloodPathController::class, 'update']);
+
+    Route::patch('/flood-paths/{id}/deactivate', [FloodPathController::class, 'destroy']); // soft delete
+
 });

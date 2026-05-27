@@ -10,6 +10,7 @@ use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Model;
 use MatanYadaev\EloquentSpatial\Objects\LineString;
 use MatanYadaev\EloquentSpatial\Traits\HasSpatial;
+use Illuminate\Database\Eloquent\Builder;
 
 /**
  * Class FloodPath
@@ -31,7 +32,7 @@ use MatanYadaev\EloquentSpatial\Traits\HasSpatial;
  */
 class FloodPath extends Model
 {
-    use HasSpatial;
+	use HasSpatial;
 
     protected $table = 'FloodPaths';
     public $timestamps = false;
@@ -66,4 +67,26 @@ class FloodPath extends Model
     {
         return $this->belongsTo(FloodLevel::class, 'level_id');
     }
+
+	//NOT EXPIRED
+	public function scopeNotExpired(Builder $query): Builder
+	{
+		return $query->where('expiry', '>', now());
+	}
+
+	//NOT DEACTIVATED
+	public function scopeNotDeactivated(Builder $query): Builder
+	{
+		return $query->whereHas('socialElement', fn ($q) =>
+			$q->whereNull('deactivated_at')
+		);
+	}
+
+	//OWNED BY USER
+	public function scopeOwnedBy(Builder $query, int $userId): Builder
+	{
+		return $query->whereHas('socialElement', fn ($q) =>
+			$q->where('user_id', $userId)
+		);
+	}
 }
