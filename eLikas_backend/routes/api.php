@@ -5,11 +5,18 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\Dashboards\UserController;
-use App\Http\Controllers\PinController;
 use App\Http\Controllers\SensorController;
 use App\Http\Controllers\PublicSensorController;
 use App\Http\Controllers\Hazards\FloodPathController;
 use App\Http\Controllers\Hazards\FloodLevelController;
+use App\Http\Controllers\PinControllers\GetEvacAreasController;
+use App\Http\Controllers\PinControllers\GetEvacAreaDetailsController;
+use App\Http\Controllers\PinControllers\GetNearbyEvacuationAreasController;
+use App\Http\Controllers\PinControllers\GetEvacuationRoutesController;
+use App\Http\Controllers\PinControllers\StoreEvacuationAreaController;
+use App\Http\Controllers\PinControllers\UpdateEvacuationAreaController;
+use App\Http\Controllers\PinControllers\DeleteEvacuationAreaController;
+use App\Http\Controllers\PinControllers\VerifyEvacuationAreaController;
 
 
 Route::get('/test', function () {
@@ -32,13 +39,13 @@ Route::get('flood-paths', [FloodPathController::class, 'index']);
 // ---------------------------------------------------------------
 // PIN PUBLIC ROUTES — no auth required
 // ---------------------------------------------------------------
-// FIX Bug 1: was 'getActiveMapMarkers' (non-existent) → correct method is getFacilities
-Route::get('/pins',         [PinController::class, 'getFacilities']);
-// FIX Bug 1: was 'getEvacAreaDetails' (non-existent) → added method to PinController
-Route::get('/pins/nearby',  [PinController::class, 'getNearbyEvacuationAreas']);
-Route::get('/pins/routes',  [PinController::class, 'getEvacuationRoutes']);
-Route::get('/pins/{id}',    [PinController::class, 'getEvacAreaDetails']);
 
+
+Route::get('/pins', [GetEvacAreasController::class, 'getEvacAreas']);
+Route::get('/pins/history', [GetEvacAreasController::class, 'getMyEvacAreas'])->middleware('firebase.auth');
+Route::get('/pins/nearby', [GetNearbyEvacuationAreasController::class, 'getNearbyEvacuationAreas']);
+Route::get('/pins/routes', [GetEvacuationRoutesController::class, 'getEvacuationRoutes']);
+Route::get('/pins/{id}', [GetEvacAreaDetailsController::class, 'getEvacAreaDetails']);
 // ---------------------------------------------------------------
 // ONLY CITIZEN ROUTES
 // ---------------------------------------------------------------
@@ -50,17 +57,15 @@ Route::middleware('firebase.auth')->group(function () {
 
     Route::patch('/profile/email-sync', [ProfileController::class, 'syncEmail']);
 
+    //ping related shtuff
     Route::patch('/profile/deactivate', [ProfileController::class, 'deactivateSelf']);
+    Route::post('/pins', [StoreEvacuationAreaController::class, 'storeEvacuationArea']);
+    Route::put('/pins/{id}', [UpdateEvacuationAreaController::class, 'updateEvacuationArea']);
+    Route::delete('/pins/{id}', [DeleteEvacuationAreaController::class, 'deleteEvacuationArea']);
+    Route::patch('/pins/{id}/deactivate', [DeleteEvacuationAreaController::class, 'deleteEvacuationArea']);
+    Route::put('/pins/{id}/deactivate', [DeleteEvacuationAreaController::class, 'deleteEvacuationArea']);
+    Route::patch('/pins/{id}/verify', [VerifyEvacuationAreaController::class, 'verifyEvacuationArea']);
 
-    // ---------------------------------------------------------------
-    // PIN MUTATION ROUTES — require firebase.auth
-    // FIX Bug 2: POST /pins was outside auth middleware → firebase_user was null
-    // FIX Bug 3: PUT, DELETE, PATCH /verify had no routes at all
-    // ---------------------------------------------------------------
-    Route::post('/pins',              [PinController::class, 'storeEvacuationArea']);
-    Route::put('/pins/{id}',          [PinController::class, 'updateEvacuationArea']);
-    Route::delete('/pins/{id}',       [PinController::class, 'deleteEvacuationArea']);
-    Route::patch('/pins/{id}/verify', [PinController::class, 'verifyEvacuationArea']);
 
 });
 
@@ -75,6 +80,9 @@ Route::middleware(['firebase.auth', 'is.admin'])->prefix('admin')->group(functio
     Route::patch('/users/{id}/deactivate', [UserController::class, 'deactivateUser']);
 
     Route::post('/create-govop', [AdminController::class, 'createGovOp']);
+
+    Route::get('/pins', [GetEvacAreasController::class, 'getAdminEvacAreas']);
+
 });
 
 
@@ -105,12 +113,12 @@ Route::middleware(['firebase.auth', 'role:1,2'])->group(function () {
 
 // ALL ROLES EXCEPT GUEST
 Route::middleware(['firebase.auth', 'role:1,2,3'])->group(function () {
-    
+
     Route::put('/profile', [ProfileController::class, 'updateProfile']);
 
     Route::post('flood-paths', [FloodPathController::class, 'store']);
 
-    Route::get('/flood-paths/my',     [FloodPathController::class, 'my']); 
+    Route::get('/flood-paths/my',     [FloodPathController::class, 'my']);
 
     Route::get('/flood-paths/{id}',   [FloodPathController::class, 'show'])
         ->whereNumber('id');
