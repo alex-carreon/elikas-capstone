@@ -16,13 +16,13 @@ interface PostRowProps {
   username: string;
   timePosted: string;
   description: string;
-  locationVerified: boolean;
+  level: string;
+  locationVerified?: boolean;
   upVotesCount: number;
   downVotesCount: number;
-  flagCount: number;
+  flagCount?: number;
   expiryDays: number;
   image?: string;
-  location?: string;
   isSimple?: boolean;
   children?: React.ReactNode;
 }
@@ -31,13 +31,13 @@ function PostRow({
   username,
   timePosted,
   description,
+  level,
   locationVerified,
   upVotesCount,
   downVotesCount,
   flagCount,
   expiryDays,
   image,
-  location,
   isSimple,
   children,
 }: PostRowProps) {
@@ -156,8 +156,8 @@ function PostRow({
                     {timePosted}
                   </p>
                 </div>
+                <p className="text-xs">Flood Level: {level}</p>
                 <p className="text-xs">{description}</p>
-                <p className="text-xs">{location}</p>
               </div>
             </div>
           </div>
@@ -184,7 +184,7 @@ function PostRow({
                   strokeWidth={1.5}
                 />
               )}
-              <p className="text-xs">Upvote (1)</p>
+              <p className="text-xs">Upvote ({upVotesCount})</p>
             </div>
             <div
               className="flex flex-row items-center gap-1"
@@ -205,7 +205,7 @@ function PostRow({
                 />
               )}
 
-              <p className="text-xs">Downvote</p>
+              <p className="text-xs">Downvote ({downVotesCount})</p>
             </div>
             {isSimple ? null : (
               <CollapsibleTrigger

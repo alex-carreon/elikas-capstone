@@ -35,19 +35,56 @@ import { bigSmile } from "@dicebear/collection";
 import { createAvatar } from "@dicebear/core";
 import { InputGroup, InputGroupAddon, InputGroupInput } from "./ui/input-group";
 import sample from "@/assets/Map/SamplePhoto.png";
+import api from "@/api";
+import { differenceInDays } from "date-fns";
+import { Skeleton } from "@/components/ui/skeleton";
 
-interface Pin {
+type PostedBy = {
   id: number;
-  name: string;
+  username: string;
+};
+
+type FloodLevel = {
+  id: number;
+  level_name: string;
+};
+
+type FloodDetails = {
+  id: number;
+  element_id: number;
+  is_expired: boolean;
+  is_deactivated: boolean;
+  level: FloodLevel;
+  path: [number, number][];
+  posted_by: PostedBy;
   description: string;
-  lat: number;
-  long: number;
-}
+  upvotes: number;
+  downvotes: number;
+  last_confirmed: string;
+  expiry: string;
+  posted_at: string;
+};
+
+type FloodPath = {
+  id: number;
+  is_expired: boolean;
+  is_deactivated: boolean;
+  level: FloodLevel;
+  path: [number, number][];
+};
+
+// interface Pin {
+//   id: number;
+//   name: string;
+//   description: string;
+//   lat: number;
+//   long: number;
+// }
 
 interface DrawerProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  selectedPin: Pin | null;
+  selectedPin: FloodPath;
   onFindRoute: (findRoute: boolean) => void;
   newPin: boolean;
   isSensor: boolean;
@@ -75,9 +112,36 @@ function DrawerComp({
   const [imagePreview, setImagePreview] = useState("");
   const [openDialog, setOpenDialog] = useState(false);
   const [report, setReport] = useState(false);
+  const [floodDetails, setFloodDetails] = useState<FloodDetails | undefined>();
+  const [daysLeft, setDaysleft] = useState(0);
+  const [loading, setLoading] = useState(true);
 
   const fileInputRef = useRef<HTMLInputElement>(null);
   const cameraInputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    if (!selectedPin) return;
+
+    const getFloodDetails = async () => {
+      try {
+        setLoading(true);
+        const response = await api.get(`/flood-paths/${selectedPin.id}`);
+        console.log("response", response);
+        const floodDetails = await response.data.flood_path;
+        console.log("Details", floodDetails);
+        setFloodDetails(floodDetails);
+
+        const today = new Date();
+        const expDate = new Date(floodDetails.expiry);
+
+        setDaysleft(differenceInDays(expDate, today));
+      } catch (err: string | any) {
+        console.log(err.message || "An error occurred");
+      }
+      setLoading(false);
+    };
+    getFloodDetails();
+  }, [selectedPin?.id]);
 
   const handleSubmit = () => {
     console.log(comment);
@@ -89,6 +153,7 @@ function DrawerComp({
     orange: "#E6793B",
     red: "#B22B42",
     purple: "#6E4998",
+    green: "#318631",
   };
 
   const handleCameraClick = () => {
@@ -117,45 +182,54 @@ function DrawerComp({
     }
   };
 
-  useEffect(() => {
-    setHeight(40);
-  });
+  // useEffect(() => {
+  //   setHeight(40);
+  // }, []);
 
-  useEffect(() => {
-    if (height >= 40) {
+  const calcRiskInfo = (height: number) => {
+    if (height >= 40)
       // Overflow
-      setColor(colorSensor.purple);
-      setRisk("Overflow");
-      setDesc(
-        "Water has exceeded safe levels and is overflowing. Avoid flood-prone areas and follow emergency instructions.",
-      );
-    } else if (height >= 30) {
+      return {
+        color: colorSensor.purple,
+        risk: "Overflow",
+        desc: "Water has exceeded safe levels and is overflowing. Avoid flood-prone areas and follow emergency instructions.",
+      };
+    else if (height >= 30) {
       // Critical
-      setColor(colorSensor.red);
-      setRisk("Critical");
-      setDesc(
-        "Flooding is imminent or ongoing. Evacuate immediately to higher ground.",
-      );
+      return {
+        color: colorSensor.red,
+        risk: "Critical",
+        desc: "Flooding is imminent or ongoing. Evacuate immediately to higher ground.",
+      };
     } else if (height >= 20) {
       // Alarm
-      setColor(colorSensor.orange);
-      setRisk("Alarm");
-      setDesc(
-        "Water levels are significantly elevated. Prepare for possible evacuation and secure belongings.",
-      );
+      return {
+        color: colorSensor.orange,
+        risk: "Alarm",
+        desc: "Water levels are significantly elevated. Prepare for possible evacuation and secure belongings.",
+      };
     } else if (height >= 10) {
       // Alert
-      setColor(colorSensor.yellow);
-      setRisk("Alert");
-      setDesc(
-        "Water levels are rising. Monitor the situation closely and stay informed of updates.",
-      );
-    }
-  }, [height]);
+      return {
+        color: colorSensor.yellow,
+        risk: "Alert",
+        desc: "Water levels are rising. Monitor the situation closely and stay informed of updates.",
+      };
+    } else
+      return {
+        color: colorSensor.green,
+        risk: "Normal",
+        desc: "Water levels are normal.",
+      };
+  };
+
+  const riskInfo = calcRiskInfo(height);
 
   useEffect(() => {
     if (!open) setExpanded(false);
   }, [open]);
+
+  if (!selectedPin) return null;
 
   const avatar = createAvatar(bigSmile, {
     seed: seed,
@@ -170,7 +244,6 @@ function DrawerComp({
   const dataUri = avatar.toDataUri();
 
   let content;
-
   if (newPin) {
     content = (
       <>
@@ -208,26 +281,60 @@ function DrawerComp({
       </>
     );
   } else if (isSensor) {
-    content = (
+    // content = (
+    //   <>
+    //     <div className="px-4">
+    //       <div className="w-full flex flex-row justify-between">
+    //         <div className="flex flex-row gap-2">
+    // <SensorIconDetailed width={50} height={50} color={riskInfo.color} />;
+    //           <div>
+    //             <div className="flex flex-row">
+    //               <p className="text-lg font-semibold">{selectedPin?.name}</p>
+    //               {verified ? (
+    //                 <ShieldCheck
+    //                   fill="#20BF55"
+    //                   strokeWidth={1}
+    //                   color="white"
+    //                   size={18}
+    //                 />
+    //               ) : null}
+    //             </div>
+    //             <p className="text-xs text-left font-semibold italic">
+    //               Timestamp: Mar 25, 2026 – 9:42 PM
+    //             </p>
+    //           </div>
+    //         </div>
+    //         <DrawerClose id="DrawerMark_CloseBtn" className="self-start">
+    //           <CircleX size={28} fill="#CECECE" strokeWidth={1} />
+    //         </DrawerClose>
+    //       </div>
+    //       <div className="mt-2">
+    //         <ul className="list-disc pl-8 text-left text-sm flex flex-col gap-1">
+    //           <li>
+    //             <b>Sensor ID</b>: SJ-RIVER-01
+    //           </li>
+    //           <li>
+    //             <b>Water Height in Meters</b>: {height}
+    //           </li>
+    //           <li>
+    //             <b>Risk Level</b>: {risk}
+    //           </li>
+    //           <p>{desc}</p>
+    //         </ul>
+    //       </div>
+    //     </div>
+    //   </>
+    // );
+  } else if (isHazard) {
+    content = loading ? (
       <>
-        <div className="px-4">
+        <div className="w-full px-4 pb-4 flex flex-col gap-4">
           <div className="w-full flex flex-row justify-between">
             <div className="flex flex-row gap-2">
-              <SensorIconDetailed width={50} height={50} color={color} />
-              <div>
-                <div className="flex flex-row">
-                  <p className="text-lg font-semibold">{selectedPin?.name}</p>
-                  {verified ? (
-                    <ShieldCheck
-                      fill="#20BF55"
-                      strokeWidth={1}
-                      color="white"
-                      size={18}
-                    />
-                  ) : null}
-                </div>
-                <p className="text-xs text-left font-semibold italic">
-                  Timestamp: Mar 25, 2026 – 9:42 PM
+              <div className="flex flex-row items-center gap-2 px-4">
+                <img src={CSIcon} className="w-12" />
+                <p className="text-base">
+                  <b>Crowdsourced Updates</b>
                 </p>
               </div>
             </div>
@@ -235,25 +342,19 @@ function DrawerComp({
               <CircleX size={28} fill="#CECECE" strokeWidth={1} />
             </DrawerClose>
           </div>
-          <div className="mt-2">
-            <ul className="list-disc pl-8 text-left text-sm flex flex-col gap-1">
-              <li>
-                <b>Sensor ID</b>: SJ-RIVER-01
-              </li>
-              <li>
-                <b>Water Height in Meters</b>: {height}
-              </li>
-              <li>
-                <b>Risk Level</b>: {risk}
-              </li>
-              <p>{desc}</p>
-            </ul>
+          <div className="w-full flex flex-col self-start gap-2">
+            <div className="h-full w-full flex items-center gap-4">
+              <Skeleton className="h-12 w-12 rounded-full bg-[#59260B]/30" />
+              <div className="w-full space-y-2 items-start justify-center">
+                <Skeleton className="h-4 w-full bg-[#59260B]/30" />
+                <Skeleton className="h-4 w-[200px] bg-[#59260B]/30" />
+              </div>
+            </div>
+            <Skeleton className="h-56 w-full bg-[#59260B]/30" />
           </div>
         </div>
       </>
-    );
-  } else if (isHazard) {
-    content = (
+    ) : (
       <>
         <div className="px-4 pb-4 flex flex-col">
           <div className="w-full flex flex-row justify-between">
@@ -269,37 +370,20 @@ function DrawerComp({
               <CircleX size={28} fill="#CECECE" strokeWidth={1} />
             </DrawerClose>
           </div>
-          {/* <div className="bg-[#B6D6FF] p-3 rounded-lg flex flex-col gap-2">
-            <div className="w-full flex flex-row gap-2">
-              <div>
-                <img src={dataUri} className="w-12" />
-              </div>
-              <div className="w-full">
-                <div className="flex flex-row justify-between">
-                  <p className="font-semibold">Address or Location</p>
-                  <p>3:00pm</p>
-                </div>
-                <p>Flood Level: So deep</p>
-              </div>
-            </div>
-            <div className="flex justify-center">
+          {floodDetails ? (
+            <PostRow
+              username={floodDetails.posted_by.username}
+              timePosted={floodDetails.posted_at}
+              description={floodDetails.description}
+              upVotesCount={floodDetails.upvotes}
+              downVotesCount={floodDetails.downvotes}
+              level={floodDetails.level.level_name}
+              expiryDays={daysLeft}
+              isSimple
+            >
               <img src={sample} />
-            </div>
-          </div> */}
-          <PostRow
-            username="Kurt Hacinas"
-            timePosted="3:30pm"
-            description="Flood Level: Ankle-deep"
-            locationVerified
-            upVotesCount={20}
-            downVotesCount={12}
-            flagCount={1}
-            expiryDays={30}
-            location="This street"
-            isSimple
-          >
-            <img src={sample} />
-          </PostRow>
+            </PostRow>
+          ) : null}
         </div>
       </>
     );
@@ -326,7 +410,7 @@ function DrawerComp({
             <img src={DrawerIcon} className="w-10" />
             <div>
               <div className="flex flex-row">
-                <p className="text-lg font-semibold">{selectedPin?.name}</p>
+                {/* <p className="text-lg font-semibold">{selectedPin?.name}</p> */}
                 {verified ? (
                   <ShieldCheck
                     fill="#20BF55"
@@ -443,7 +527,7 @@ function DrawerComp({
               </Link>
             </div> */}
             <div className="flex flex-col gap-2 mb-4 mt-4 pb-16 px-4">
-              <PostRow
+              {/* <PostRow
                 username="Kurt Hacinas"
                 timePosted="3:30pm"
                 description="Bring your own water"
@@ -464,7 +548,7 @@ function DrawerComp({
                 flagCount={1}
                 expiryDays={30}
                 image={Photo}
-              />
+              /> */}
             </div>
             {expanded ? (
               <div className="fixed bottom-0 z-100 bg-white w-full h-content">
