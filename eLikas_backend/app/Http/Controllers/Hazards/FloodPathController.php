@@ -18,41 +18,25 @@ class FloodPathController extends Controller
     /**
      * GET /flood-paths
      */
-    public function index(Request $request)
+    public function index()
     {
-        $user = $request->attributes->get('firebase_user');
-
-        $query = FloodPath::with([
+        $floodPaths = FloodPath::with([
             'floodLevel:id,level_name',
             'socialElement:id,user_id,posted_at,deactivated_at',
-        ]);
-
-        
-        // guests OR normal users = restricted view
-        if (!$user || $user->role_id == 3) {
-
-            $query->notExpired()
-                ->notDeactivated();
-        }
-
-        $floodPaths = $query
-            ->orderByDesc('last_confirmed')
-            ->get();
+            ])
+        ->notExpired()
+        ->notDeactivated()
+        ->orderByDesc('last_confirmed')
+        ->get();
 
         return response()->json([
             'count' => $floodPaths->count(),
-            'flood_paths' => $floodPaths->map(fn($fp) => [
-                'id' => $fp->id,
-
-                'level' => $fp->floodLevel,
-
-                'path' => $this->formatPath($fp->path),
-
-                'is_expired' => $fp->expiry < now(),
-
-                'is_deactivated' => !is_null(
-                    $fp->socialElement->deactivated_at
-                ),
+            'flood_paths' => $floodPaths->map(fn ($fp) => [
+            'id'   => $fp->id,
+            'level'=> $fp->floodLevel,
+            'path' => $this->formatPath($fp->path),
+            'is_expired' => $fp->expiry < now(), 'is_deactivated' => 
+            !is_null( $fp->socialElement->deactivated_at ),
             ]),
         ]);
     }

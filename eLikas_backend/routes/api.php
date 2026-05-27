@@ -9,6 +9,7 @@ use App\Http\Controllers\SensorController;
 use App\Http\Controllers\PublicSensorController;
 use App\Http\Controllers\Hazards\FloodPathController;
 use App\Http\Controllers\Hazards\FloodLevelController;
+use App\Http\Controllers\Dashboards\FloodPathAdminController;
 use App\Http\Controllers\PinControllers\GetEvacAreasController;
 use App\Http\Controllers\PinControllers\GetEvacAreaDetailsController;
 use App\Http\Controllers\PinControllers\GetNearbyEvacuationAreasController;
@@ -25,7 +26,6 @@ Route::get('/test', function () {
     ]);
 });
 
-//SAMPLE CHANGE
 // ---------------------------------------------------------------
 // PUBLIC ROUTES — no token required
 // ---------------------------------------------------------------
@@ -37,44 +37,32 @@ Route::get('flood-paths', [FloodPathController::class, 'index']);
 
 
 // ---------------------------------------------------------------
-// PIN PUBLIC ROUTES — no auth required
+// PIN PUBLIC ROUTES — no token required
 // ---------------------------------------------------------------
-
-
 Route::get('/pins', [GetEvacAreasController::class, 'getEvacAreas']);
 Route::get('/pins/history', [GetEvacAreasController::class, 'getMyEvacAreas'])->middleware('firebase.auth');
 Route::get('/pins/nearby', [GetNearbyEvacuationAreasController::class, 'getNearbyEvacuationAreas']);
 Route::get('/pins/routes', [GetEvacuationRoutesController::class, 'getEvacuationRoutes']);
 Route::get('/pins/{id}', [GetEvacAreaDetailsController::class, 'getEvacAreaDetails']);
+
 // ---------------------------------------------------------------
 // ONLY CITIZEN ROUTES
 // ---------------------------------------------------------------
 Route::middleware('firebase.auth')->group(function () {
-
-    Route::post('/auth/logout', [AuthController::class, 'logout']);
-
-    Route::get('/profile', [ProfileController::class, 'profile']);
-
-    Route::patch('/profile/email-sync', [ProfileController::class, 'syncEmail']);
-
-    //ping related shtuff
-    Route::patch('/profile/deactivate', [ProfileController::class, 'deactivateSelf']);
+    //Pins related shtuff
     Route::post('/pins', [StoreEvacuationAreaController::class, 'storeEvacuationArea']);
     Route::put('/pins/{id}', [UpdateEvacuationAreaController::class, 'updateEvacuationArea']);
     Route::delete('/pins/{id}', [DeleteEvacuationAreaController::class, 'deleteEvacuationArea']);
     Route::patch('/pins/{id}/deactivate', [DeleteEvacuationAreaController::class, 'deleteEvacuationArea']);
     Route::put('/pins/{id}/deactivate', [DeleteEvacuationAreaController::class, 'deleteEvacuationArea']);
     Route::patch('/pins/{id}/verify', [VerifyEvacuationAreaController::class, 'verifyEvacuationArea']);
-
-
 });
 
 
 // ---------------------------------------------------------------
 // ONLY ADMIN ROUTES
 // ---------------------------------------------------------------
-Route::middleware(['firebase.auth', 'is.admin'])->prefix('admin')->group(function () {
-
+Route::prefix('admin')->middleware(['firebase.auth', 'role:1'])->group(function () {
     Route::post('/create-admin', [AdminController::class, 'createUser']);
 
     Route::patch('/users/{id}/deactivate', [UserController::class, 'deactivateUser']);
@@ -83,9 +71,8 @@ Route::middleware(['firebase.auth', 'is.admin'])->prefix('admin')->group(functio
 
     Route::get('/pins', [GetEvacAreasController::class, 'getAdminEvacAreas']);
 
+    Route::get('flood-paths', [FloodPathAdminController::class, 'index']);
 });
-
-
 
 // ---------------------------------------------------------------
 // ONLY GOVERNMENT OPERATOR ROUTES
@@ -105,7 +92,7 @@ Route::middleware(['firebase.auth', 'role:1,2'])->group(function () {
     Route::get('/sensors', [SensorController::class, 'index']);
     Route::get('/sensors/{sensor}', [SensorController::class, 'show']);
 
-    Route::apiResource('flood-levels', FloodLevelController::class)->only(['index', 'store', 'update', 'show']);
+    Route::apiResource('flood-levels', FloodLevelController::class)->except(['index']);
 
     Route::get('flood-paths/{id}', [FloodPathController::class, 'show']);
 
@@ -114,17 +101,24 @@ Route::middleware(['firebase.auth', 'role:1,2'])->group(function () {
 // ALL ROLES EXCEPT GUEST
 Route::middleware(['firebase.auth', 'role:1,2,3'])->group(function () {
 
+    Route::post('/auth/logout', [AuthController::class, 'logout']);
+
+    Route::patch('/profile/email-sync', [ProfileController::class, 'syncEmail']);
+    //PROFILE
+    Route::get('/profile', [ProfileController::class, 'profile']);
     Route::put('/profile', [ProfileController::class, 'updateProfile']);
+    Route::patch('/profile/deactivate', [ProfileController::class, 'deactivateSelf']);
+    Route::patch('/profile/email-sync', [ProfileController::class, 'syncEmail']); // wala pa talaga
 
+    //FLOOD LEVELS
+    Route::get('flood-levels', [FloodLevelController::class, 'index']);
+    
+    //FLOODS
     Route::post('flood-paths', [FloodPathController::class, 'store']);
-
     Route::get('/flood-paths/my',     [FloodPathController::class, 'my']);
-
     Route::get('/flood-paths/{id}',   [FloodPathController::class, 'show'])
         ->whereNumber('id');
-
     Route::patch('/flood-paths/{id}', [FloodPathController::class, 'update']);
-
     Route::patch('/flood-paths/{id}/deactivate', [FloodPathController::class, 'destroy']); // soft delete
 
 });
