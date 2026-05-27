@@ -18,6 +18,12 @@ import { formatInTimeZone } from "date-fns-tz";
 import { addDays } from "date-fns";
 import api from "@/api";
 import { useUserContext } from "@/context/AuthContext";
+import { Skeleton } from "@/components/ui/skeleton";
+
+type FloodLevel = {
+  id: number;
+  level_name: string;
+};
 
 function HazardForm() {
   const location = useLocation();
@@ -36,6 +42,8 @@ function HazardForm() {
   const [infoCheck, setInfoCheck] = useState(false);
   const [routePoints, setRoutePoints] = useState<[number, number][]>([]);
   const [snapped, setSnapped] = useState<[number, number][]>([]);
+  const [levels, setLevels] = useState<FloodLevel[]>();
+  const [loading, setLoading] = useState(true);
 
   const rawLoc = localStorage.getItem("clickedPin");
   const clickedLoc: [number, number] | null = rawLoc
@@ -78,26 +86,25 @@ function HazardForm() {
     setSnapped([]);
   };
 
-  // const getFloodLevels = async () => {
-  //   try {
-  //     const response = await api.get("/flood-levels", {
-  //       headers: {
-  //         "Content-Type": "application/json",
-  //         Authorization: `Bearer ${token}`,
-  //       },
-  //     });
+  useEffect(() => {
+    const getFloodLevels = async () => {
+      try {
+        const response = await api.get("/flood-levels", {
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+        });
 
-  //     const levelData = await response.data;
-
-  //     console.log(levelData);
-  //   } catch (err: string | any) {
-  //     Error(err.message || "An error occurred");
-  //   }
-  // };
-
-  // useEffect(() => {
-  //   getFloodLevels();
-  // }, []);
+        const levelData = await response.data.flood_levels;
+        setLevels(levelData);
+      } catch (err: string | any) {
+        Error(err.message || "An error occurred");
+      }
+      setLoading(false);
+    };
+    getFloodLevels();
+  }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -147,7 +154,39 @@ function HazardForm() {
     }
   };
 
-  return (
+  return loading ? (
+    <>
+      <div className="w-full h-full flex flex-col items-center p-12 mt-8 mb-2 gap-4">
+        <div className="flex w-full max-w-xs flex-col gap-7">
+          <div className="flex flex-col gap-3">
+            <Skeleton className="h-4 w-20 bg-[#59260B]/30" />
+            <Skeleton className="h-8 w-full bg-[#59260B]/30" />
+          </div>
+          <div className="flex flex-col gap-3">
+            <Skeleton className="h-4 w-24 bg-[#59260B]/30" />
+            <Skeleton className="h-8 w-full bg-[#59260B]/30" />
+          </div>
+          <div className="flex flex-col gap-3">
+            <Skeleton className="h-4 w-24 bg-[#59260B]/30" />
+            <Skeleton className="h-8 w-full bg-[#59260B]/30" />
+          </div>
+          <div className="flex flex-col gap-3">
+            <Skeleton className="h-4 w-24 bg-[#59260B]/30" />
+            <Skeleton className="h-8 w-full bg-[#59260B]/30" />
+          </div>
+          <div className="flex flex-col gap-3">
+            <Skeleton className="h-4 w-24 bg-[#59260B]/30" />
+            <Skeleton className="h-8 w-full bg-[#59260B]/30" />
+          </div>
+          <div className="flex flex-col gap-3">
+            <Skeleton className="h-4 w-24 bg-[#59260B]/30" />
+            <Skeleton className="h-8 w-full bg-[#59260B]/30" />
+          </div>
+          <Skeleton className="h-8 w-24 bg-[#59260B]/30" />
+        </div>
+      </div>
+    </>
+  ) : (
     <div className="w-full h-full flex flex-col items-center p-12 mt-8 mb-2 gap-4">
       <div>
         <p
@@ -267,19 +306,21 @@ function HazardForm() {
             inputType="text"
             onSubmit={(e) => setLandmark(e.target.value)}
           ></TextField>
-          <SelectDropdown
-            value={floodLevel}
-            onValueChange={setFloodLevel}
-            label="Flood Level*"
-            placeholder="Select the Flood Level"
-            id="HazardPin_FloodLevelField"
-            onSubmit={(e) => setFloodLevel(e.target.value)}
-            options={[
-              { label: "Gutter", value: "1" },
-              { label: "Half Knee", value: "2" },
-            ]}
-            isRequired
-          />
+          {levels ? (
+            <SelectDropdown
+              value={floodLevel}
+              onValueChange={setFloodLevel}
+              label="Flood Level*"
+              placeholder="Select the Flood Level"
+              id="HazardPin_FloodLevelField"
+              onSubmit={(e) => setFloodLevel(e.target.value)}
+              options={levels?.map((level) => ({
+                label: level.level_name,
+                value: String(level.id),
+              }))}
+              isRequired
+            />
+          ) : null}
           {existingHazard ? (
             <>
               <div className="mx-2 flex justify-evenly shrink gap-4">
