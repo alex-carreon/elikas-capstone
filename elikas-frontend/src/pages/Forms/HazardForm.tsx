@@ -7,17 +7,23 @@ import { FormMapClickHandler } from "@/lib/mapUtils";
 import { snapAllPointsToRoads } from "@/lib/mapUtils";
 import { useState, useEffect, useRef } from "react";
 import { MapContainer, TileLayer, Marker, Polyline } from "react-leaflet";
-import { useLocation } from "react-router";
+import { useLocation, useNavigate } from "react-router";
 import CheckBox from "@/components/CheckBox";
 import { renderToString } from "react-dom/server";
 import BlankPin from "@/assets/Map/BlankPin.svg?react";
 import { divIcon, latLng } from "leaflet";
 import { InputGroupTextarea } from "@/components/ui/input-group";
 import { toast } from "sonner";
+import { formatInTimeZone } from "date-fns-tz";
+import { addDays } from "date-fns";
+import api from "@/api";
+import { useUserContext } from "@/context/AuthContext";
 
 function HazardForm() {
   const location = useLocation();
   const inputRef = useRef<HTMLInputElement | null>(null);
+  const navigate = useNavigate();
+  const { token } = useUserContext();
 
   const [existingHazard, setExistingHazard] = useState(false);
   const [fileName, setFileName] = useState("");
@@ -72,32 +78,72 @@ function HazardForm() {
     setSnapped([]);
   };
 
+  // const getFloodLevels = async () => {
+  //   try {
+  //     const response = await api.get("/flood-levels", {
+  //       headers: {
+  //         "Content-Type": "application/json",
+  //         Authorization: `Bearer ${token}`,
+  //       },
+  //     });
+
+  //     const levelData = await response.data;
+
+  //     console.log(levelData);
+  //   } catch (err: string | any) {
+  //     Error(err.message || "An error occurred");
+  //   }
+  // };
+
+  // useEffect(() => {
+  //   getFloodLevels();
+  // }, []);
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    try {
+      const fullPath: [number, number][] = [center, ...routePoints];
+      const snapped = await snapAllPointsToRoads(fullPath);
 
-    const fullPath: [number, number][] = [center, ...routePoints];
-    const snapped = await snapAllPointsToRoads(fullPath);
+      if (!snapped) {
+        toast("You went off-road. Please re-draw");
+        return;
+      } else if (snapped.length < 2) {
+        toast("Please indicate the hazard on the map");
+        return;
+      } else setSnapped(snapped);
 
-    if (!snapped) {
-      toast("You went off-road. Please re-draw");
-      return;
-    } else if (snapped.length < 2) {
-      toast("Please indicate the hazard on the map");
-      return;
-    } else {
-      setSnapped(snapped);
+      const dateTime = formatInTimeZone(
+        new Date(),
+        "Asia/Manila",
+        "MMMM dd, yyyy, h:mm a",
+      );
 
-      console.log("routePoints", snapped);
-      console.log("Description", desc);
-      console.log("landmark", landmark);
-      console.log("floodLevel", floodLevel);
-      const points = JSON.stringify(snapped);
+      const expDate = addDays(dateTime, 7);
 
-      // File not sure yet - localStorage.setItem("fileName", last_name);
-      // localStorage.setItem("Barangay", brgy);
-      localStorage.setItem("routePoints", points);
-      localStorage.setItem("landmark", landmark);
-      localStorage.setItem("floodLevel", floodLevel);
+      const response = await api.post(
+        "/flood-paths",
+        {
+          level_id: floodLevel,
+          description: desc,
+          expiry: expDate,
+          path: snapped,
+        },
+        {
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+        },
+      );
+
+      if (!response) {
+        console.log("Creating Path Failed");
+      }
+
+      navigate("/map");
+    } catch (err: string | any) {
+      Error(err.message || "An error occurred during registration");
     }
   };
 
@@ -229,8 +275,8 @@ function HazardForm() {
             id="HazardPin_FloodLevelField"
             onSubmit={(e) => setFloodLevel(e.target.value)}
             options={[
-              { label: "Ankle Level", value: "1" },
-              { label: "Knee level", value: "2" },
+              { label: "Gutter", value: "1" },
+              { label: "Half Knee", value: "2" },
             ]}
             isRequired
           />
