@@ -7,17 +7,29 @@ import { FormMapClickHandler } from "@/lib/mapUtils";
 import { snapAllPointsToRoads } from "@/lib/mapUtils";
 import { useState, useEffect, useRef } from "react";
 import { MapContainer, TileLayer, Marker, Polyline } from "react-leaflet";
-import { useLocation } from "react-router";
+import { useLocation, useNavigate } from "react-router";
 import CheckBox from "@/components/CheckBox";
 import { renderToString } from "react-dom/server";
 import BlankPin from "@/assets/Map/BlankPin.svg?react";
 import { divIcon, latLng } from "leaflet";
 import { InputGroupTextarea } from "@/components/ui/input-group";
 import { toast } from "sonner";
+import { formatInTimeZone } from "date-fns-tz";
+import { addDays } from "date-fns";
+import api from "@/api";
+import { useUserContext } from "@/context/AuthContext";
+import { Skeleton } from "@/components/ui/skeleton";
+
+type FloodLevel = {
+  id: number;
+  level_name: string;
+};
 
 function HazardForm() {
   const location = useLocation();
   const inputRef = useRef<HTMLInputElement | null>(null);
+  const navigate = useNavigate();
+  const { token } = useUserContext();
 
   const [existingHazard, setExistingHazard] = useState(false);
   const [fileName, setFileName] = useState("");
@@ -30,6 +42,8 @@ function HazardForm() {
   const [infoCheck, setInfoCheck] = useState(false);
   const [routePoints, setRoutePoints] = useState<[number, number][]>([]);
   const [snapped, setSnapped] = useState<[number, number][]>([]);
+  const [levels, setLevels] = useState<FloodLevel[]>();
+  const [loading, setLoading] = useState(true);
 
   const rawLoc = localStorage.getItem("clickedPin");
   const clickedLoc: [number, number] | null = rawLoc
@@ -72,36 +86,107 @@ function HazardForm() {
     setSnapped([]);
   };
 
+  useEffect(() => {
+    const getFloodLevels = async () => {
+      try {
+        const response = await api.get("/flood-levels", {
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+        });
+
+        const levelData = await response.data.flood_levels;
+        setLevels(levelData);
+      } catch (err: string | any) {
+        Error(err.message || "An error occurred");
+      }
+      setLoading(false);
+    };
+    getFloodLevels();
+  }, []);
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    try {
+      const fullPath: [number, number][] = [center, ...routePoints];
+      const snapped = await snapAllPointsToRoads(fullPath);
 
-    const fullPath: [number, number][] = [center, ...routePoints];
-    const snapped = await snapAllPointsToRoads(fullPath);
+      if (!snapped) {
+        toast("You went off-road. Please re-draw");
+        return;
+      } else if (snapped.length < 2) {
+        toast("Please indicate the hazard on the map");
+        return;
+      } else setSnapped(snapped);
 
-    if (!snapped) {
-      toast("You went off-road. Please re-draw");
-      return;
-    } else if (snapped.length < 2) {
-      toast("Please indicate the hazard on the map");
-      return;
-    } else {
-      setSnapped(snapped);
+      const dateTime = formatInTimeZone(
+        new Date(),
+        "Asia/Manila",
+        "MMMM dd, yyyy, h:mm a",
+      );
 
-      console.log("routePoints", snapped);
-      console.log("Description", desc);
-      console.log("landmark", landmark);
-      console.log("floodLevel", floodLevel);
-      const points = JSON.stringify(snapped);
+      const expDate = addDays(dateTime, 7);
 
-      // File not sure yet - localStorage.setItem("fileName", last_name);
-      // localStorage.setItem("Barangay", brgy);
-      localStorage.setItem("routePoints", points);
-      localStorage.setItem("landmark", landmark);
-      localStorage.setItem("floodLevel", floodLevel);
+      const response = await api.post(
+        "/flood-paths",
+        {
+          level_id: floodLevel,
+          description: desc,
+          expiry: expDate,
+          path: snapped,
+        },
+        {
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+        },
+      );
+
+      if (!response) {
+        console.log("Creating Path Failed");
+      }
+
+      navigate("/map");
+    } catch (err: string | any) {
+      Error(err.message || "An error occurred during registration");
     }
   };
 
-  return (
+  return loading ? (
+    <>
+      <div className="w-full h-full flex flex-col items-center p-12 mt-8 mb-2 gap-4">
+        <div className="flex w-full max-w-xs flex-col gap-7">
+          <div className="flex flex-col gap-3">
+            <Skeleton className="h-4 w-20 bg-[#59260B]/30" />
+            <Skeleton className="h-8 w-full bg-[#59260B]/30" />
+          </div>
+          <div className="flex flex-col gap-3">
+            <Skeleton className="h-4 w-24 bg-[#59260B]/30" />
+            <Skeleton className="h-8 w-full bg-[#59260B]/30" />
+          </div>
+          <div className="flex flex-col gap-3">
+            <Skeleton className="h-4 w-24 bg-[#59260B]/30" />
+            <Skeleton className="h-8 w-full bg-[#59260B]/30" />
+          </div>
+          <div className="flex flex-col gap-3">
+            <Skeleton className="h-4 w-24 bg-[#59260B]/30" />
+            <Skeleton className="h-8 w-full bg-[#59260B]/30" />
+          </div>
+          <div className="flex flex-col gap-3">
+            <Skeleton className="h-4 w-24 bg-[#59260B]/30" />
+            <Skeleton className="h-8 w-full bg-[#59260B]/30" />
+          </div>
+          <div className="flex flex-col gap-3">
+            <Skeleton className="h-4 w-24 bg-[#59260B]/30" />
+            <Skeleton className="h-8 w-full bg-[#59260B]/30" />
+          </div>
+          <Skeleton className="h-8 w-24 bg-[#59260B]/30" />
+        </div>
+      </div>
+    </>
+  ) : (
     <div className="w-full h-full flex flex-col items-center p-12 mt-8 mb-2 gap-4">
       <div>
         <p
@@ -221,19 +306,21 @@ function HazardForm() {
             inputType="text"
             onSubmit={(e) => setLandmark(e.target.value)}
           ></TextField>
-          <SelectDropdown
-            value={floodLevel}
-            onValueChange={setFloodLevel}
-            label="Flood Level*"
-            placeholder="Select the Flood Level"
-            id="HazardPin_FloodLevelField"
-            onSubmit={(e) => setFloodLevel(e.target.value)}
-            options={[
-              { label: "Ankle Level", value: "1" },
-              { label: "Knee level", value: "2" },
-            ]}
-            isRequired
-          />
+          {levels ? (
+            <SelectDropdown
+              value={floodLevel}
+              onValueChange={setFloodLevel}
+              label="Flood Level*"
+              placeholder="Select the Flood Level"
+              id="HazardPin_FloodLevelField"
+              onSubmit={(e) => setFloodLevel(e.target.value)}
+              options={levels?.map((level) => ({
+                label: level.level_name,
+                value: String(level.id),
+              }))}
+              isRequired
+            />
+          ) : null}
           {existingHazard ? (
             <>
               <div className="mx-2 flex justify-evenly shrink gap-4">

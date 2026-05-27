@@ -14,6 +14,8 @@ import BlankPin from "@/assets/Map/BlankPin.svg?react";
 import "leaflet-routing-machine/dist/leaflet-routing-machine.css";
 import "leaflet-routing-machine";
 import { toast } from "sonner";
+import { Trophy } from "lucide-react";
+import api from "@/api";
 
 export const pins = [
   {
@@ -39,24 +41,24 @@ export const sensorPins = [
   },
 ];
 
-export const roadPins = [
-  {
-    id: 1,
-    type: "Flood",
-    routePoints: [
-      [14.563073993490859, 120.99483862617527],
-      [14.564512191308419, 120.99417612053263],
-    ] as [number, number][],
-  },
-  {
-    id: 2,
-    type: "Flood",
-    routePoints: [
-      [14.565964762707946, 120.99792427464776],
-      [14.565580554465614, 120.99691576407419],
-    ] as [number, number][],
-  },
-];
+// export const roadPins = [
+//   {
+//     id: 1,
+//     type: "Flood",
+//     routePoints: [
+//       [14.563073993490859, 120.99483862617527],
+//       [14.564512191308419, 120.99417612053263],
+//     ] as [number, number][],
+//   },
+//   {
+//     id: 2,
+//     type: "Flood",
+//     routePoints: [
+//       [14.565964762707946, 120.99792427464776],
+//       [14.565580554465614, 120.99691576407419],
+//     ] as [number, number][],
+//   },
+// ];
 
 type PinType = (typeof pins)[0];
 
@@ -331,21 +333,52 @@ function getMidpoint(positions: [number, number][]): [number, number] {
   // return positions[midIndex];
 }
 
+type FloodLevel = {
+  id: number;
+  level_name: string;
+};
+
+type FloodPath = {
+  id: number;
+  is_expired: boolean;
+  is_deactivated: boolean;
+  level: FloodLevel;
+  path: [number, number][];
+};
+
 export function RoadMapping({
   onPinClick,
 }: {
   onPinClick: (pin: any, midpoint: [number, number]) => void;
 }) {
+  const [floodPaths, setFloodPaths] = useState<FloodPath[]>([]);
+
   const icon = divIcon({
     html: renderToString(<FloodIcon width={36} height={36} />),
     className: "",
     iconAnchor: [18, 20],
   });
 
+  let floodData;
+
+  const getFloodPaths = async () => {
+    try {
+      const response = await api.get("/flood-paths");
+      floodData = await response.data.flood_paths;
+      setFloodPaths(floodData);
+    } catch (err: string | any) {
+      Error(err.message || "An error occurred");
+    }
+  };
+
+  useEffect(() => {
+    getFloodPaths();
+  }, []);
+
   return (
     <>
-      {roadPins.map((pin) => {
-        const midpoint = getMidpoint(pin.routePoints);
+      {floodPaths.map((pin) => {
+        const midpoint = getMidpoint(pin.path);
         return (
           <Fragment key={pin.id}>
             <Marker
@@ -354,7 +387,7 @@ export function RoadMapping({
               icon={icon}
               eventHandlers={{ click: () => onPinClick(pin, midpoint) }}
             />
-            <Polyline positions={pin.routePoints} weight={6} color="#5F80AA" />
+            <Polyline positions={pin.path} weight={6} color="#5F80AA" />
           </Fragment>
         );
       })}

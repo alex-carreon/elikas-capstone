@@ -1,6 +1,5 @@
 import AlertDialogue from "@/components/AlertDialogue";
 import ButtonComp from "@/components/Button";
-import CheckBox from "@/components/CheckBox";
 import TextField from "@/components/TextField";
 import { Textarea } from "@/components/ui/textarea";
 import colors from "@/constants/colors";
