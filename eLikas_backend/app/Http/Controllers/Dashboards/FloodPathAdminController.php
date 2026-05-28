@@ -25,18 +25,22 @@ class FloodPathAdminController extends Controller
             'count' => $floodPaths->count(),
             'flood_paths' => $floodPaths->map(fn ($fp) => [
                 'id'   => $fp->id,
-                'level'=> $fp->floodLevel,
-                'path' => $this->formatPath($fp->path),
-                'is_expired' => $fp->expiry < now(), 'is_deactivated' => 
-                !is_null( $fp->socialElement->deactivated_at ),
+                'description'    => $fp->description,
+                // 'level'=> $fp->floodLevel->level_name,
+                'posted_at' => $fp->socialElement->posted_at
+                    ? $fp->socialElement->posted_at->timezone('Asia/Manila')->toDateTimeString()
+                    : null,
+                // 'path' => $this->formatPath($fp->path),
+                // 'is_expired' => $fp->expiry < now(), 
+                // 'is_deactivated' => !is_null( $fp->socialElement->deactivated_at ),
             ]),
         ]);
     }
 
-    private function formatPath(LineString $path): array
-    {
-        return $path->getGeometries()
-            ->map(fn(Point $point) => [$point->latitude, $point->longitude])
-            ->toArray();
-    }
+    // private function formatPath(LineString $path): array
+    // {
+    //     return $path->getGeometries()
+    //         ->map(fn(Point $point) => [$point->latitude, $point->longitude])
+    //         ->toArray();
+    // }
 }

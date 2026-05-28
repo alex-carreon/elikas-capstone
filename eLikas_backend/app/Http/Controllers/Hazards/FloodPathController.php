@@ -319,11 +319,8 @@ class FloodPathController extends Controller
         return [
             'id'             => $floodPath->id,
             // 'element_id'     => $floodPath->element_id,
-            'level'          => $floodPath->floodLevel,
-            'posted_by' => [
-                // 'id' => $floodPath->socialElement->user?->id,
-                'username' => $floodPath->socialElement->user?->username,
-            ],
+            'level'          => $floodPath->floodLevel->level_name,
+            'posted_by'      => $floodPath->socialElement->user?->username,
             // 'path'           => $this->formatPath($floodPath->path),
             'description'    => $floodPath->description,
             'upvotes'        => $floodPath->upvotes,
