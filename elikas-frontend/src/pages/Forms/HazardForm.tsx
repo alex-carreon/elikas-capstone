@@ -5,7 +5,7 @@ import { Field, FieldDescription, FieldLabel } from "@/components/ui/field";
 import colors from "@/constants/colors";
 import { FormMapClickHandler, getMidpoint } from "@/lib/mapUtils";
 import { snapAllPointsToRoads } from "@/lib/mapUtils";
-import { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { MapContainer, TileLayer, Marker, Polyline } from "react-leaflet";
 import { isSession, useLocation, useNavigate, useParams } from "react-router";
 import CheckBox from "@/components/CheckBox";
@@ -26,6 +26,7 @@ import { useUserContext } from "@/context/AuthContext";
 import { Skeleton } from "@/components/ui/skeleton";
 import { differenceInDays } from "date-fns";
 import FloodIcon from "@/assets/Map/FloodIcon.svg?react";
+import AlertDialogue from "@/components/AlertDialogue";
 
 type FloodLevel = {
   id: number;
@@ -77,6 +78,7 @@ function HazardForm() {
   const [midpoint, setMidpoint] = useState<[number, number]>();
   const [isEditable, setIsEditable] = useState(false);
   const [hasUpdated, setHasUpdated] = useState(false);
+  const [willDeactivate, setWillDeactivate] = useState(false);
 
   const { id } = useParams();
 
@@ -201,6 +203,12 @@ function HazardForm() {
   }, [isEditable]);
 
   useEffect(() => {
+    if (floodDetails) {
+      setDesc(floodDetails.description);
+    }
+  }, [floodDetails]);
+
+  useEffect(() => {
     if (isEditable && floodDetails) {
       setRoutePoints(floodDetails.path);
       setFloodLevel(String(floodDetails.level.id));
@@ -219,7 +227,9 @@ function HazardForm() {
       } else if (snapped.length < 2) {
         toast("Please indicate the hazard on the map");
         return;
-      } else setSnapped(snapped);
+      }
+      setSnapped(snapped);
+      setMidpoint(getMidpoint(snapped));
 
       const dateTime = formatInTimeZone(
         new Date(),
@@ -229,27 +239,37 @@ function HazardForm() {
 
       const expDate = addDays(dateTime, 7);
 
-      const response = await api.post(
-        "/flood-paths",
-        {
-          level_id: floodLevel,
-          description: desc,
-          expiry: expDate,
-          path: snapped,
-        },
-        {
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
+      const addPromise = new Promise(async (resolve, reject) => {
+        const response = await api.post(
+          "/flood-paths",
+          {
+            level_id: floodLevel,
+            description: desc,
+            expiry: expDate,
+            path: snapped,
           },
-        },
-      );
+          {
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${token}`,
+            },
+          },
+        );
 
-      if (!response) {
-        console.log("Creating Path Failed");
-      }
+        if (!response) {
+          reject(console.log("Creating Path Failed"));
+        } else resolve(response);
+      });
 
-      navigate("/map");
+      toast.promise(addPromise, {
+        loading: "Adding your pin to the map...",
+        success: "Pin successfully added!",
+        position: "top-center",
+      });
+
+      addPromise.then(() => {
+        navigate("/map");
+      });
     } catch (err: string | any) {
       Error(err.message || "An error occurred during registration");
     }
@@ -284,41 +304,77 @@ function HazardForm() {
 
       const expDate = addDays(dateTime, 7);
 
-      console.log(floodLevel);
-      console.log(desc);
-      console.log(expDate);
-      console.log(snapped);
-
-      const response = await api.patch(
-        `/flood-paths/${id}`,
-        {
-          level_id: floodLevel,
-          description: desc,
-          expiry: expDate,
-          path: snapped,
-        },
-        {
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
+      const updPromise = new Promise(async (resolve, reject) => {
+        const response = await api.patch(
+          `/flood-paths/${id}`,
+          {
+            level_id: floodLevel,
+            description: desc,
+            expiry: expDate,
+            path: snapped,
           },
-        },
-      );
+          {
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${token}`,
+            },
+          },
+        );
 
-      console.log(response);
+        console.log(response);
 
-      if (!response) {
-        console.log("Creating Path Failed");
-        return;
-      }
-      setIsEditable(false);
-      setHasUpdated(true);
+        if (!response) {
+          reject(console.log("Creating Path Failed"));
+          return;
+        } else resolve(response);
+      });
+
+      toast.promise(updPromise, {
+        loading: "Saving your updates...",
+        success: "Pin successfully updated!",
+        position: "top-center",
+      });
+
+      updPromise.then(() => {
+        setIsEditable(false);
+        setHasUpdated(true);
+      });
     } catch (err: string | any) {
       console.log(err.message || "An error occurred");
     }
   };
 
-  if (!id) return null;
+  const handleDelete = async () => {
+    try {
+      const deacPromise = new Promise(async (resolve, reject) => {
+        const response = await api.patch(`/flood-paths/${id}/deactivate`, {
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+        });
+
+        console.log(response);
+
+        if (!response) {
+          reject(console.log("Creating Path Failed"));
+          return;
+        } else resolve(response);
+      });
+
+      toast.promise(deacPromise, {
+        loading: "Deleting pin...",
+        success: "Pin Deleted!",
+        position: "top-center",
+      });
+
+      deacPromise.then(() => {
+        navigate("/History");
+      });
+    } catch (err) {
+      console.error("Error Deactivating");
+    }
+  };
 
   return loading ? (
     <>
@@ -353,308 +409,310 @@ function HazardForm() {
       </div>
     </>
   ) : (
-    <div className="w-full h-full flex flex-col items-center p-12 mt-8 mb-2 gap-4">
-      <div>
-        <p
-          className="font-bold text-lg text-center"
-          style={{ color: colors.heading }}
-        >
-          {id
-            ? "Hazard Pin Details"
-            : isEditable
-              ? "Hazard Pin Update"
-              : "Report Evacuation Road Status"}
-        </p>
-        {id ? null : (
+    <>
+      {willDeactivate && (
+        <AlertDialogue
+          contentId="HazardForm_DeacContent"
+          closeId="HazardFprm_DeacClose"
+          actionId="HazardForm_DeacBtn"
+          open={willDeactivate}
+          title="You are about to delete this pin"
+          description="Deleting this pin will remove it from the map and your history permanently."
+          buttonText="Delete"
+          onClose={() => {
+            setWillDeactivate(false);
+          }}
+          onClick={handleDelete}
+        />
+      )}
+      <div className="w-full h-full flex flex-col items-center p-12 mt-8 mb-2 gap-4">
+        <div>
           <p
-            className="text-align italic text-sm"
-            style={{ color: colors.label }}
+            className="font-bold text-lg text-center"
+            style={{ color: colors.heading }}
           >
-            Help others avoid blocked or unsafe routes.
+            {id
+              ? "Hazard Pin Details"
+              : isEditable
+                ? "Hazard Pin Update"
+                : "Report Evacuation Road Status"}
           </p>
-        )}
-      </div>
-      <form
-        id="HazardPin_Form"
-        onSubmit={id ? (isEditable ? handleUpdate : undefined) : handleSubmit}
-        className="w-full flex flex-col justify-center items-center m-0"
-      >
-        <div className="w-full max-w-md flex flex-col gap-5">
-          <div className="flex flex-col gap-3">
-            <TextField
-              label="Location Image*"
-              inputType="file"
-              id="HazardPin_PhotoField"
-              onSubmit={fileOnChange}
-              ref={inputRef}
-            />
-            {fileName && (
-              <>
-                <img src={imagePreview} />
-                <ButtonComp
-                  text="Clear"
-                  variant="outline"
-                  id="HazardPin_ImageClearBtn"
-                  onClick={handleClearImage}
-                ></ButtonComp>
-              </>
-            )}
-          </div>
-          <Field>
-            <FieldLabel
-              className={"text-sm w-s"}
+          {id ? null : (
+            <p
+              className="text-align italic text-sm"
               style={{ color: colors.label }}
             >
-              Chosen Location
-            </FieldLabel>
-            <FieldDescription>
-              Press on a road to make a line. Press again to make a line
-              connecting to the one before. Please refrain from going off-road.
-            </FieldDescription>
-            <FieldLabel
-              className={"text-sm w-s"}
-              style={{ color: colors.label }}
-            >
-              Map Location
-            </FieldLabel>
-            <MapContainer
-              center={id ? midpoint : center}
-              zoom={17}
-              scrollWheelZoom={false}
-              style={{ height: "30vh", width: "100%" }}
-              id="HazardPin_MapContainer"
-            >
-              <TileLayer
-                attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-                url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+              Help others avoid blocked or unsafe routes.
+            </p>
+          )}
+        </div>
+        <form
+          id="HazardPin_Form"
+          onSubmit={id ? (isEditable ? handleUpdate : undefined) : handleSubmit}
+          className="w-full flex flex-col justify-center items-center m-0"
+        >
+          <div className="w-full max-w-md flex flex-col gap-5">
+            <div className="flex flex-col gap-3">
+              <TextField
+                label="Location Image*"
+                inputType="file"
+                id="HazardPin_PhotoField"
+                onSubmit={fileOnChange}
+                ref={inputRef}
               />
-              {id ? (
+              {fileName && (
                 <>
-                  {floodDetails ? (
-                    isEditable ? (
-                      <>
-                        <FormMapClickHandler
-                          onPinClick={null}
-                          setClickedLoc={setRoutePoints}
-                          clickedLoc={routePoints}
-                          center={floodDetails.path.at(-1)}
-                        />
-                        {snapped.length > 0 ? (
-                          <Polyline
-                            positions={snapped}
-                            weight={6}
-                            color="#5F80AA"
+                  <img src={imagePreview} />
+                  <ButtonComp
+                    text="Clear"
+                    variant="outline"
+                    id="HazardPin_ImageClearBtn"
+                    onClick={handleClearImage}
+                  ></ButtonComp>
+                </>
+              )}
+            </div>
+            <Field>
+              <FieldLabel
+                className={"text-sm w-s"}
+                style={{ color: colors.label }}
+              >
+                Chosen Location
+              </FieldLabel>
+              <FieldDescription>
+                Press on a road to make a line. Press again to make a line
+                connecting to the one before. Please refrain from going
+                off-road.
+              </FieldDescription>
+              <FieldLabel
+                className={"text-sm w-s"}
+                style={{ color: colors.label }}
+              >
+                Map Location
+              </FieldLabel>
+              <MapContainer
+                center={id ? midpoint : center}
+                zoom={17}
+                scrollWheelZoom={false}
+                style={{ height: "30vh", width: "100%" }}
+                id="HazardPin_MapContainer"
+              >
+                <TileLayer
+                  attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+                  url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+                />
+                {id ? (
+                  <>
+                    {floodDetails ? (
+                      isEditable ? (
+                        <>
+                          <FormMapClickHandler
+                            onPinClick={null}
+                            setClickedLoc={setRoutePoints}
+                            clickedLoc={routePoints}
+                            center={floodDetails.path.at(-1)}
                           />
-                        ) : (
-                          routePoints.length > 0 && (
+                          {snapped.length > 0 ? (
                             <Polyline
-                              positions={routePoints}
+                              positions={snapped}
                               weight={6}
                               color="#5F80AA"
                             />
-                          )
-                        )}
-                      </>
+                          ) : (
+                            routePoints.length > 0 && (
+                              <Polyline
+                                positions={routePoints}
+                                weight={6}
+                                color="#5F80AA"
+                              />
+                            )
+                          )}
+                        </>
+                      ) : (
+                        <>
+                          <Marker
+                            position={midpoint as LatLngExpression}
+                            icon={floodIcon}
+                          />
+                          <Polyline
+                            positions={floodDetails.path as LatLngTuple[]}
+                            weight={6}
+                            color="#5F80AA"
+                          />
+                        </>
+                      )
                     ) : (
-                      <>
-                        <Marker
-                          position={midpoint as LatLngExpression}
-                          icon={floodIcon}
-                        />
-                        <Polyline
-                          positions={floodDetails.path as LatLngTuple[]}
-                          weight={6}
-                          color="#5F80AA"
-                        />
-                      </>
-                    )
-                  ) : (
-                    console.log("Can't find path")
-                  )}
-                </>
-              ) : (
-                <>
-                  <Marker position={center} icon={icon} />
-                  <FormMapClickHandler
-                    onPinClick={null}
-                    setClickedLoc={setRoutePoints}
-                    clickedLoc={routePoints}
-                    center={center}
-                  />
-                  {snapped.length > 0 ? (
-                    <Polyline positions={snapped} weight={6} color="#5F80AA" />
-                  ) : (
-                    routePoints.length > 0 && (
-                      <Polyline
-                        positions={[center, ...routePoints]}
-                        weight={6}
-                        color="#5F80AA"
-                      />
-                    )
-                  )}
-                </>
-              )}
-            </MapContainer>
-            {(!id || isEditable) && (
-              <ButtonComp
-                text="Clear"
-                variant="outline"
-                id="HazardPin_PinClearBtn"
-                onClick={handleClearRoutePoints}
-              ></ButtonComp>
-            )}
-          </Field>
-          <Field>
-            <FieldLabel
-              className={"text-sm w-s"}
-              style={{ color: colors.label }}
-            >
-              Description
-            </FieldLabel>
-            {(!id || isEditable) && (
-              <FieldDescription>
-                A description will help users distinguish your pin. This could
-                be a nearby landmark or an address.
-              </FieldDescription>
-            )}
-            <InputGroupTextarea
-              className="h-10 border rounded-lg text-xs"
-              id="HazardPin_DescField"
-              onChange={(e) => setDesc(e.target.value)}
-              value={id ? floodDetails?.description : ""}
-              readOnly={!id || isEditable ? false : true}
-            />
-          </Field>
-          {(!id || isEditable) && levels ? (
-            <SelectDropdown
-              value={floodLevel}
-              onValueChange={setFloodLevel}
-              label="Flood Level*"
-              placeholder="Select the Flood Level"
-              id="HazardPin_FloodLevelField"
-              onSubmit={(e) => setFloodLevel(e.target.value)}
-              options={levels?.map((level) => ({
-                label: level.level_name,
-                value: String(level.id),
-              }))}
-              isRequired={!id ? true : false}
-            />
-          ) : (
-            <TextField
-              label="Flood Level"
-              inputType="text"
-              id="HazardPin_FloodlevelExisting"
-              value={id ? floodDetails?.level.level_name : ""}
-              readonly
-            />
-          )}
-          {/* {levels ? (
-            <SelectDropdown
-              value={floodLevel}
-              onValueChange={setFloodLevel}
-              label="Flood Level*"
-              placeholder="Select the Flood Level"
-              id="HazardPin_FloodLevelField"
-              onSubmit={(e) => setFloodLevel(e.target.value)}
-              options={levels?.map((level) => ({
-                label: level.level_name,
-                value: String(level.id),
-              }))}
-              isRequired
-            />
-          ) : (
-            <TextField
-              label="Flood Level"
-              inputType="text"
-              id="HazardPin_FloodlevelExisting"
-              value={id ? floodDetails?.level.level_name : ""}
-              readonly
-            />
-          )} */}
-          {id ? (
-            <>
-              <p className="italic" style={{ color: colors.label }}>
-                Expires in {daysLeft} days
-              </p>
-              <div className="mx-2 flex justify-evenly shrink gap-4">
-                {!isEditable ? (
-                  <>
-                    <ButtonComp
-                      text="Update"
-                      id="HazardPin_UpdatePinBtn"
-                      variant="primary"
-                      heightSize="40px"
-                      widthSize="20"
-                      type="button"
-                      onClick={() => setIsEditable(true)}
-                    ></ButtonComp>
-                    <ButtonComp
-                      text="Close"
-                      id="HazardPin_ClosePinBtn"
-                      variant="important"
-                      heightSize="40px"
-                      widthSize="20"
-                      type="button"
-                    ></ButtonComp>
+                      console.log("Can't find path")
+                    )}
                   </>
                 ) : (
                   <>
-                    <ButtonComp
-                      text="Submit"
-                      id="HazardPin_SubmitUpdPinBtn"
-                      variant="primary"
-                      heightSize="40px"
-                      widthSize="20"
-                      type="submit"
-                    ></ButtonComp>
-                    <ButtonComp
-                      text="Cancel"
-                      id="HazardPin_ClosePinBtn"
-                      variant="outline"
-                      heightSize="40px"
-                      widthSize="20"
-                      type="button"
-                    ></ButtonComp>
+                    <Marker position={center} icon={icon} />
+                    <FormMapClickHandler
+                      onPinClick={null}
+                      setClickedLoc={setRoutePoints}
+                      clickedLoc={routePoints}
+                      center={center}
+                    />
+                    {snapped.length > 0 ? (
+                      <Polyline
+                        positions={snapped}
+                        weight={6}
+                        color="#5F80AA"
+                      />
+                    ) : (
+                      routePoints.length > 0 && (
+                        <Polyline
+                          positions={[center, ...routePoints]}
+                          weight={6}
+                          color="#5F80AA"
+                        />
+                      )
+                    )}
                   </>
                 )}
-              </div>
-            </>
-          ) : (
-            <>
-              <div>
-                <CheckBox
-                  text="I confirm I am near this location."
-                  id="HazardPin_ValidCheck"
-                  checked={validCheck}
-                  onCheckedChange={(val) => {
-                    setValidCheck(!!val);
-                  }}
-                />
-              </div>
-              <div>
-                <CheckBox
-                  text="Information is accurate to the best of my knowledge."
-                  id="HazardPin_InfoCheck"
-                  checked={infoCheck}
-                  onCheckedChange={(val) => {
-                    setInfoCheck(!!val);
-                  }}
-                />
-              </div>
-              <div className="w-full max-w-md flex justify-center">
+              </MapContainer>
+              {(!id || isEditable) && (
                 <ButtonComp
-                  text="Create Road Status"
-                  variant="primary"
-                  id="HazardPin_SubmitBtn"
-                  isDisabled={!validCheck || !infoCheck}
-                  heightSize="46px"
-                />
-              </div>
-            </>
-          )}
-        </div>
-      </form>
-    </div>
+                  text="Clear"
+                  variant="outline"
+                  id="HazardPin_PinClearBtn"
+                  onClick={handleClearRoutePoints}
+                ></ButtonComp>
+              )}
+            </Field>
+            <Field>
+              <FieldLabel
+                className={"text-sm w-s"}
+                style={{ color: colors.label }}
+              >
+                Description
+              </FieldLabel>
+              {(!id || isEditable) && (
+                <FieldDescription>
+                  A description will help users distinguish your pin. This could
+                  be a nearby landmark or an address.
+                </FieldDescription>
+              )}
+              <InputGroupTextarea
+                className="h-10 border rounded-lg text-xs"
+                id="HazardPin_DescField"
+                onChange={(e) => setDesc(e.target.value)}
+                value={desc}
+                readOnly={!id || isEditable ? false : true}
+              />
+            </Field>
+            {(!id || isEditable) && levels ? (
+              <SelectDropdown
+                value={floodLevel}
+                onValueChange={setFloodLevel}
+                label="Flood Level*"
+                placeholder="Select the Flood Level"
+                id="HazardPin_FloodLevelField"
+                onSubmit={(e) => setFloodLevel(e.target.value)}
+                options={levels?.map((level) => ({
+                  label: level.level_name,
+                  value: String(level.id),
+                }))}
+                isRequired={!id ? true : false}
+              />
+            ) : (
+              <TextField
+                label="Flood Level"
+                inputType="text"
+                id="HazardPin_FloodlevelExisting"
+                value={id ? floodDetails?.level.level_name : ""}
+                readonly
+              />
+            )}
+            {id ? (
+              <>
+                <p className="italic" style={{ color: colors.label }}>
+                  Expires in {daysLeft} days
+                </p>
+                <div className="mx-2 flex justify-evenly shrink gap-4">
+                  {!isEditable ? (
+                    <>
+                      <ButtonComp
+                        text="Update"
+                        id="HazardPin_UpdatePinBtn"
+                        variant="primary"
+                        heightSize="40px"
+                        widthSize="20"
+                        type="button"
+                        onClick={() => setIsEditable(true)}
+                      ></ButtonComp>
+                      <ButtonComp
+                        text="Delete"
+                        id="HazardPin_ClosePinBtn"
+                        variant="important"
+                        heightSize="40px"
+                        widthSize="20"
+                        type="button"
+                        onClick={() => {
+                          setWillDeactivate(true);
+                        }}
+                      ></ButtonComp>
+                    </>
+                  ) : (
+                    <>
+                      <ButtonComp
+                        text="Submit"
+                        id="HazardPin_SubmitUpdPinBtn"
+                        variant="primary"
+                        heightSize="40px"
+                        widthSize="20"
+                        type="submit"
+                      ></ButtonComp>
+                      <ButtonComp
+                        text="Cancel"
+                        id="HazardPin_ClosePinBtn"
+                        variant="outline"
+                        heightSize="40px"
+                        widthSize="20"
+                        type="button"
+                      ></ButtonComp>
+                    </>
+                  )}
+                </div>
+              </>
+            ) : (
+              <>
+                <div>
+                  <CheckBox
+                    text="I confirm I am near this location."
+                    id="HazardPin_ValidCheck"
+                    checked={validCheck}
+                    onCheckedChange={(val) => {
+                      setValidCheck(!!val);
+                    }}
+                  />
+                </div>
+                <div>
+                  <CheckBox
+                    text="Information is accurate to the best of my knowledge."
+                    id="HazardPin_InfoCheck"
+                    checked={infoCheck}
+                    onCheckedChange={(val) => {
+                      setInfoCheck(!!val);
+                    }}
+                  />
+                </div>
+                <div className="w-full max-w-md flex justify-center">
+                  <ButtonComp
+                    text="Create Road Status"
+                    variant="primary"
+                    id="HazardPin_SubmitBtn"
+                    isDisabled={!validCheck || !infoCheck}
+                    heightSize="46px"
+                  />
+                </div>
+              </>
+            )}
+          </div>
+        </form>
+      </div>
+    </>
   );
 }
 
