@@ -306,12 +306,12 @@ export function getMidpoint(positions: [number, number][]): [number, number] {
   if (positions.length === 0) return [0, 0];
   if (positions.length === 1) return positions[0];
 
-  const avgLat = positions.reduce((sum, p) => sum + p[0], 0) / positions.length;
-  const avgLng = positions.reduce((sum, p) => sum + p[1], 0) / positions.length;
+  // const avgLat = positions.reduce((sum, p) => sum + p[0], 0) / positions.length;
+  // const avgLng = positions.reduce((sum, p) => sum + p[1], 0) / positions.length;
 
-  // const midIndex = Math.floor(positions.length / 2);
-  return [avgLat, avgLng];
-  // return positions[midIndex];
+  const midIndex = Math.floor(positions.length / 2);
+  // return [avgLat, avgLng];
+  return positions[midIndex];
 }
 
 type FloodLevel = {
