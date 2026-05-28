@@ -420,6 +420,21 @@ export function MapClickHandler({ onPinClick, clickedLoc, setClickedLoc }) {
   return clickedLoc ? <Marker position={clickedLoc} icon={icon} /> : null;
 }
 
+const haversineDistance = (
+  [lat1, lng1]: [number, number],
+  [lat2, lng2]: [number, number],
+): number => {
+  const R = 6371000;
+  const dLat = ((lat2 - lat1) * Math.PI) / 180;
+  const dLng = ((lng2 - lng1) * Math.PI) / 180;
+  const a =
+    Math.sin(dLat / 2) ** 2 +
+    Math.cos((lat1 * Math.PI) / 180) *
+      Math.cos((lat2 * Math.PI) / 180) *
+      Math.sin(dLng / 2) ** 2;
+  return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+};
+
 export const snapAllPointsToRoads = async (
   points: [number, number][],
 ): Promise<[number, number][] | null> => {
@@ -430,16 +445,38 @@ export const snapAllPointsToRoads = async (
 
   try {
     const res = await fetch(
-      `https://router.project-osrm.org/match/v1/driving/${coords}` +
+      `https://router.project-osrm.org/match/v1/walking/${coords}` +
         `?radiuses=${radiuses}&overview=full&geometries=geojson&steps=false`,
     );
     const data = await res.json();
 
-    console.log("OSRM response:", data); // ← check what OSRM returns
+    console.log("OSRM response:", data);
     console.log("OSRM code:", data.code);
 
     if (data.code !== "Ok" || !data.matchings?.length) {
       return null;
+    }
+
+    if (data.code === "NoMatch") {
+      console.log("Went off-road");
+      return null;
+    }
+
+    const offRoadPoints = data.tracepoints.filter((tp: any, i: number) => {
+      if (tp === null) return true;
+      const snappedLat = tp.location[1];
+      const snappedLng = tp.location[0];
+      const [origLat, origLng] = points[i];
+      const dist = haversineDistance(
+        [origLat, origLng],
+        [snappedLat, snappedLng],
+      );
+
+      return dist > 3;
+    });
+
+    if (offRoadPoints.length > 0) {
+      return points;
     }
 
     return points;

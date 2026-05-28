@@ -14,7 +14,6 @@ function Filter() {
   const [isOpen, setIsOpen] = useState(false);
   const [barangayFilter, setBarangayFilter] = useState(true);
   const [userFilter, setUserFilter] = useState(true);
-  const [hazardFilter, setHazardFilter] = useState(true);
 
   const { showPaths, setShowPaths } = useMapFilterContext();
 
