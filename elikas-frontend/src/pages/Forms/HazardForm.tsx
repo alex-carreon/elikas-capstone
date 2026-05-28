@@ -4,7 +4,7 @@ import TextField from "@/components/TextField";
 import { Field, FieldDescription, FieldLabel } from "@/components/ui/field";
 import colors from "@/constants/colors";
 import { FormMapClickHandler, getMidpoint } from "@/lib/mapUtils";
-import { snapAllPointsToRoads } from "@/lib/mapUtils";
+import { snapAllPointsToRoads, RoadMapping } from "@/lib/mapUtils";
 import React, { useState, useEffect, useRef } from "react";
 import { MapContainer, TileLayer, Marker, Polyline } from "react-leaflet";
 import { isSession, useLocation, useNavigate, useParams } from "react-router";
@@ -27,6 +27,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { differenceInDays } from "date-fns";
 import FloodIcon from "@/assets/Map/FloodIcon.svg?react";
 import AlertDialogue from "@/components/AlertDialogue";
+import { useMapFilterContext } from "@/context/MapFilterContext";
 
 type FloodLevel = {
   id: number;
@@ -80,6 +81,8 @@ function HazardForm() {
   const [hasUpdated, setHasUpdated] = useState(false);
   const [willDeactivate, setWillDeactivate] = useState(false);
   const [error, setError] = useState("");
+
+  const { showPaths } = useMapFilterContext();
 
   const { id } = useParams();
 
@@ -509,6 +512,7 @@ function HazardForm() {
                   attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
                   url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
                 />
+                <RoadMapping onPinClick={() => {}} />
                 {id ? (
                   <>
                     {floodDetails ? (
