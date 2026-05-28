@@ -451,7 +451,7 @@ export const snapAllPointsToRoads = async (
 
   try {
     const res = await fetch(
-      `https://router.project-osrm.org/match/v1/walking/${coords}` +
+      `https://router.project-osrm.org/match/v1/driving/${coords}` +
         `?radiuses=${radiuses}&overview=full&geometries=geojson&steps=false`,
     );
     const data = await res.json();
