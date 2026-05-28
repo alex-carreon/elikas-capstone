@@ -10,6 +10,7 @@ import {
 } from "@/components/ui/input-group";
 import api from "@/api";
 import { useUserContext } from "@/context/AuthContext";
+import { Skeleton } from "@/components/ui/skeleton";
 
 type FloodLevel = {
   id: number;
@@ -35,10 +36,12 @@ function History() {
   const [activeEvac, setActiveEvac] = useState(true);
   const [activeHaz, setActiveHaz] = useState(true);
   const [floodPaths, setFloodPaths] = useState<myFloodPaths[]>([]);
+  const [loading, setLoading] = useState(false);
 
   useEffect(() => {
     const getMyHazards = async () => {
       try {
+        setLoading(true);
         const response = await api.get("/flood-paths/my", {
           headers: {
             "Content-Type": "application/json",
@@ -54,11 +57,13 @@ function History() {
         setFloodPaths(myHazards);
       } catch (err: string | any) {
         Error(err.message || "An error occurred");
+      } finally {
+        setLoading(false);
       }
     };
 
     getMyHazards();
-  }, [evacPins, activeEvac, activeHaz]);
+  }, []);
 
   return (
     <div className=" overflow-hidden h-screen flex justify-center pt-20 p-5">
@@ -66,141 +71,170 @@ function History() {
         <p className="font-bold text-2xl" style={{ color: colors.heading }}>
           Pin History
         </p>
-        <div className="flex flex-col justify-center items-center gap-2">
-          <Tabs
-            defaultValue="overview"
-            className="w-full max-w-md flex items-center"
-          >
-            <TabsList className="w-full flex justify-between">
-              <TabsTrigger
-                value="Evacuation"
-                onClick={() => setEvacPins(true)}
-                id="History_EvacTrigger"
+        {loading ? (
+          <>
+            <div className="flex w-full max-w-sm flex-col gap-7 pt-4">
+              <div className="flex flex-row gap-3 justify-between mx-8">
+                <Skeleton className="h-4 w-20 bg-[#59260B]/30" />
+                <Skeleton className="h-4 w-20 bg-[#59260B]/30" />
+              </div>
+              <div className="flex flex-row gap-3 justify-between mx-8">
+                <Skeleton className="h-4 w-20 bg-[#59260B]/30" />
+                <Skeleton className="h-4 w-20 bg-[#59260B]/30" />
+              </div>
+              <div className="flex flex-col gap-3 items-end">
+                <Skeleton className="h-4 w-24 bg-[#59260B]/30" />
+              </div>
+              <div className="flex flex-col gap-3">
+                <Skeleton className="h-24 w-full bg-[#59260B]/30" />
+              </div>
+              <div className="flex flex-col gap-3">
+                <Skeleton className="h-24 w-full bg-[#59260B]/30" />
+              </div>
+              <div className="flex flex-col gap-3">
+                <Skeleton className="h-24 w-full bg-[#59260B]/30" />
+              </div>
+            </div>
+          </>
+        ) : (
+          <>
+            <div className="flex flex-col justify-center items-center gap-2">
+              <Tabs
+                defaultValue="overview"
+                className="w-full max-w-md flex items-center"
               >
-                Evacuation Pins
-              </TabsTrigger>
-              <TabsTrigger
-                value="Hazard"
-                onClick={() => setEvacPins(false)}
-                id="History_HazardTrigger"
+                <TabsList className="w-full flex justify-between">
+                  <TabsTrigger
+                    value="Evacuation"
+                    onClick={() => setEvacPins(true)}
+                    id="History_EvacTrigger"
+                  >
+                    Evacuation Pins
+                  </TabsTrigger>
+                  <TabsTrigger
+                    value="Hazard"
+                    onClick={() => setEvacPins(false)}
+                    id="History_HazardTrigger"
+                  >
+                    Hazard Pins
+                  </TabsTrigger>
+                </TabsList>
+              </Tabs>
+              <Tabs
+                defaultValue="overview"
+                className="w-full max-w-md flex items-center"
               >
-                Hazard Pins
-              </TabsTrigger>
-            </TabsList>
-          </Tabs>
-          <Tabs
-            defaultValue="overview"
-            className="w-full max-w-md flex items-center"
-          >
-            {evacPins ? (
-              <TabsList
-                variant="line"
-                className="w-full flex justify-between"
-                id="History_EvacTabs"
-              >
-                <TabsTrigger
-                  value="ActiveEvac"
-                  id="History_ActiveEvacTrigger"
-                  onClick={() => setActiveEvac(true)}
-                >
-                  Active Pins
-                </TabsTrigger>
-                <TabsTrigger
-                  value="ClosedEvac"
-                  id="History_ClosedEvacTrigger"
-                  onClick={() => setActiveEvac(false)}
-                >
-                  Closed Pins
-                </TabsTrigger>
-              </TabsList>
-            ) : (
-              <TabsList
-                variant="line"
-                className="w-full flex justify-between"
-                id="History_HazardTabs"
-              >
-                <TabsTrigger
-                  value="ActiveHaz"
-                  id="History_ActiveHazardTrigger"
-                  onClick={() => setActiveHaz(true)}
-                >
-                  Active Pins
-                </TabsTrigger>
-                <TabsTrigger
-                  value="ExpiredHaz"
-                  id="History_ExpiredHazardTrigger"
-                  onClick={() => setActiveHaz(false)}
-                >
-                  Expired Pins
-                </TabsTrigger>
-              </TabsList>
-            )}
-          </Tabs>
-        </div>
-        <div className="flex justify-end items-center gap-2">
-          <InputGroup className="w-2/3">
-            <InputGroupInput
-              className="text-sm h-8"
-              id="History_SearchField"
-            ></InputGroupInput>
-            <InputGroupAddon align="inline-end">
-              <Search />
-            </InputGroupAddon>
-          </InputGroup>
-          <Filter size={18} id="History_FilterBtn" />
-        </div>
-        <div className="flex flex-col gap-2 overflow-y-auto max-h-screen">
-          {evacPins ? (
-            activeEvac ? (
-              <Row
-                postId="123"
-                title="Home"
-                address="Blk 123 Lot 2 Avenue street"
-                datePosted="March 13, 2005"
-                availability
-                isAvailable
-                link="/EvacForm"
-              />
-            ) : (
-              <Row
-                postId="123"
-                title="Home"
-                address="Blk 123 Lot 2 Avenue street"
-                datePosted="March 13, 2005"
-                availability
-                link="/EvacForm"
-              />
-            )
-          ) : activeHaz ? (
-            floodPaths.map((path) => {
-              if (!path.is_expired)
-                return (
+                {evacPins ? (
+                  <TabsList
+                    variant="line"
+                    className="w-full flex justify-between"
+                    id="History_EvacTabs"
+                  >
+                    <TabsTrigger
+                      value="ActiveEvac"
+                      id="History_ActiveEvacTrigger"
+                      onClick={() => setActiveEvac(true)}
+                    >
+                      Active Pins
+                    </TabsTrigger>
+                    <TabsTrigger
+                      value="ClosedEvac"
+                      id="History_ClosedEvacTrigger"
+                      onClick={() => setActiveEvac(false)}
+                    >
+                      Closed Pins
+                    </TabsTrigger>
+                  </TabsList>
+                ) : (
+                  <TabsList
+                    variant="line"
+                    className="w-full flex justify-between"
+                    id="History_HazardTabs"
+                  >
+                    <TabsTrigger
+                      value="ActiveHaz"
+                      id="History_ActiveHazardTrigger"
+                      onClick={() => setActiveHaz(true)}
+                    >
+                      Active Pins
+                    </TabsTrigger>
+                    <TabsTrigger
+                      value="ExpiredHaz"
+                      id="History_ExpiredHazardTrigger"
+                      onClick={() => setActiveHaz(false)}
+                    >
+                      Expired Pins
+                    </TabsTrigger>
+                  </TabsList>
+                )}
+              </Tabs>
+            </div>
+            <div className="flex justify-end items-center gap-2">
+              <InputGroup className="w-2/3">
+                <InputGroupInput
+                  className="text-sm h-8"
+                  id="History_SearchField"
+                ></InputGroupInput>
+                <InputGroupAddon align="inline-end">
+                  <Search />
+                </InputGroupAddon>
+              </InputGroup>
+              <Filter size={18} id="History_FilterBtn" />
+            </div>
+            <div className="flex flex-col gap-2 overflow-y-auto max-h-screen">
+              {evacPins ? (
+                activeEvac ? (
                   <Row
-                    postId={String(path.id)}
-                    title="Flood"
-                    address={path.description}
-                    datePosted={path.posted_at}
-                    link={`/HazardForm/${path.id}`}
-                    isExpired={path.is_expired}
+                    postId="123"
+                    title="Home"
+                    address="Blk 123 Lot 2 Avenue street"
+                    datePosted="March 13, 2005"
+                    availability
+                    isAvailable
+                    link="/EvacForm"
                   />
-                );
-            })
-          ) : (
-            floodPaths.map((path) => {
-              if (path.is_expired)
-                return (
+                ) : (
                   <Row
-                    postId={String(path.id)}
-                    title="Flood"
-                    address={path.description}
-                    datePosted={path.posted_at}
-                    link="/HazardForm"
-                    isExpired={path.is_expired}
+                    postId="123"
+                    title="Home"
+                    address="Blk 123 Lot 2 Avenue street"
+                    datePosted="March 13, 2005"
+                    availability
+                    link="/EvacForm"
                   />
-                );
-            })
-          )}
-        </div>
+                )
+              ) : activeHaz ? (
+                floodPaths.map((path) => {
+                  if (!path.is_expired)
+                    return (
+                      <Row
+                        postId={String(path.id)}
+                        title="Flood"
+                        address={path.description}
+                        datePosted={path.posted_at}
+                        link={`/HazardForm/${path.id}`}
+                        isExpired={path.is_expired}
+                      />
+                    );
+                })
+              ) : (
+                floodPaths.map((path) => {
+                  if (path.is_expired)
+                    return (
+                      <Row
+                        postId={String(path.id)}
+                        title="Flood"
+                        address={path.description}
+                        datePosted={path.posted_at}
+                        link="/HazardForm"
+                        isExpired={path.is_expired}
+                      />
+                    );
+                })
+              )}
+            </div>
+          </>
+        )}
       </div>
     </div>
   );
