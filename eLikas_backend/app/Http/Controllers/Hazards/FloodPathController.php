@@ -63,23 +63,23 @@ class FloodPathController extends Controller
         return response()->json([
             'count' => $floodPaths->count(),
             'flood_paths' => $floodPaths->map(fn($fp) => [
-                'id'             => $fp->id,
-                'level'          => $fp->floodLevel,
-                'description'    => $fp->description, //LANDMARK
+                'id'             => $fp->id, 
+                // 'level'          => $fp->floodLevel,
+                'description'    => $fp->description, 
                 'last_confirmed' => $fp->last_confirmed
                     ? $fp->last_confirmed->timezone('Asia/Manila')->toDateTimeString()
                     : null,
-                'posted_at' => $fp->socialElement->posted_at
-                    ? $fp->socialElement->posted_at->timezone('Asia/Manila')->toDateTimeString()
-                    : null,
+                // 'posted_at' => $fp->socialElement->posted_at
+                //     ? $fp->socialElement->posted_at->timezone('Asia/Manila')->toDateTimeString()
+                //     : null,
                 'is_expired' => $fp->expiry < now(),
                 'is_deactivated' => !is_null(
                     $fp->socialElement->deactivated_at
                 ),
-                'posted_by' => [
-                        'id' => $fp->socialElement->user?->id,
-                        'username' => $fp->socialElement->user?->username,
-                ],
+                // 'posted_by' => [
+                //         'id' => $fp->socialElement->user?->id,
+                //         'username' => $fp->socialElement->user?->username,
+                // ],
             ]),
         ], 200);
     }
@@ -321,7 +321,7 @@ class FloodPathController extends Controller
             // 'element_id'     => $floodPath->element_id,
             'level'          => $floodPath->floodLevel->level_name,
             'posted_by'      => $floodPath->socialElement->user?->username,
-            // 'path'           => $this->formatPath($floodPath->path),
+            'path'           => $this->formatPath($floodPath->path),
             'description'    => $floodPath->description,
             'upvotes'        => $floodPath->upvotes,
             'downvotes'      => $floodPath->downvotes,
