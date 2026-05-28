@@ -330,7 +330,7 @@ type FloodPath = {
 
 interface RoadMappingProps {
   showPaths?: boolean;
-  onPinClick: (pin: any, midpoint: [number, number]) => void;
+  onPinClick?: (pin: any, midpoint: [number, number]) => void;
 }
 
 export function RoadMapping({ onPinClick }: RoadMappingProps) {
@@ -370,7 +370,11 @@ export function RoadMapping({ onPinClick }: RoadMappingProps) {
                 key={pin.id}
                 position={midpoint}
                 icon={icon}
-                eventHandlers={{ click: () => onPinClick(pin, midpoint) }}
+                eventHandlers={{
+                  click: () => {
+                    onPinClick && onPinClick(pin, midpoint);
+                  },
+                }}
               />
               <Polyline positions={pin.path} weight={6} color="#5F80AA" />
             </Fragment>
@@ -420,6 +424,7 @@ export function MapClickHandler({ onPinClick, clickedLoc, setClickedLoc }) {
   return clickedLoc ? <Marker position={clickedLoc} icon={icon} /> : null;
 }
 
+// Calculates distance between two coordinates in meters
 const haversineDistance = (
   [lat1, lng1]: [number, number],
   [lat2, lng2]: [number, number],
@@ -435,6 +440,7 @@ const haversineDistance = (
   return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
 };
 
+// Checks the surroundings of a point in meters for road validation
 export const snapAllPointsToRoads = async (
   points: [number, number][],
 ): Promise<[number, number][] | null> => {
