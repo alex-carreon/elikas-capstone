@@ -76,6 +76,7 @@ function App() {
             <Route path="/Settings" element={<Settings />} />
             <Route path="/EvacForm" element={<EvacForm />} />
             <Route path="/HazardForm" element={<HazardForm />} />
+            <Route path="/HazardForm/:id" element={<HazardForm />} />
             <Route path="/Profile" element={<Profile />} />
           </Route>
         </Route>

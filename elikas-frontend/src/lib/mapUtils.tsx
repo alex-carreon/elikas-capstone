@@ -41,25 +41,6 @@ export const sensorPins = [
   },
 ];
 
-// export const roadPins = [
-//   {
-//     id: 1,
-//     type: "Flood",
-//     routePoints: [
-//       [14.563073993490859, 120.99483862617527],
-//       [14.564512191308419, 120.99417612053263],
-//     ] as [number, number][],
-//   },
-//   {
-//     id: 2,
-//     type: "Flood",
-//     routePoints: [
-//       [14.565964762707946, 120.99792427464776],
-//       [14.565580554465614, 120.99691576407419],
-//     ] as [number, number][],
-//   },
-// ];
-
 type PinType = (typeof pins)[0];
 
 function getNearestWaypoint(
@@ -321,7 +302,7 @@ export function FlyToLocation({
   return null;
 }
 
-function getMidpoint(positions: [number, number][]): [number, number] {
+export function getMidpoint(positions: [number, number][]): [number, number] {
   if (positions.length === 0) return [0, 0];
   if (positions.length === 1) return positions[0];
 
@@ -474,25 +455,6 @@ export function FormMapClickHandler({
   // const [clickedLoc, setClickedLoc] = useState<[number, number] | null>(null);
   const map = useMap();
 
-  // const snapToRoad = async (
-  //   lat: number,
-  //   lng: number,
-  // ): Promise<[number, number]> => {
-  //   try {
-  //     const res = await fetch(
-  //       `https://router.project-osrm.org/nearest/v1/driving/${lng},${lat}?number=1`,
-  //     );
-  //     const data = await res.json();
-  //     if (data.waypoints?.[0]) {
-  //       const [snappedLng, snappedLat] = data.waypoints[0].location;
-  //       return [snappedLat, snappedLng];
-  //     }
-  //   } catch (err) {
-  //     console.error("Snap failed:", err);
-  //   }
-  //   return [lat, lng]; // fallback to original if snap fails
-  // };
-
   const icon = divIcon({
     html: renderToString(<BlankPin width={50} height={50} />),
     className: "",
@@ -544,56 +506,3 @@ export function FormMapClickHandler({
 
   return null;
 }
-
-// export function RoadRoutingHandler({
-//   onRouteFound,
-// }: {
-//   onRouteFound: (routePoints: [number, number][]) => void;
-// }) {
-//   const map = useMap();
-
-//   useEffect(() => {
-//     const routingControl = L.Routing.control({
-//       waypoints: [],
-//       router: L.Routing.osrmv1({
-//         serviceUrl: "https://router.project-osrm.org/route/v1",
-//       }),
-//       routeWhileDragging: true,
-//       addWaypoints: false,
-//       fitSelectedRoutes: false, // don't auto-zoom
-//       show: false,
-//       lineOptions: {
-//         styles: [{ color: "#5F80AA", weight: 6 }],
-//         extendToWaypoints: true,
-//         missingRouteTolerance: 0,
-//       },
-//     }).addTo(map);
-
-//     const handleClick = (e: L.LeafletMouseEvent) => {
-//       const waypoints = routingControl
-//         .getWaypoints()
-//         .filter((wp) => wp.latLng !== null);
-//       routingControl.setWaypoints([
-//         ...waypoints.map((wp) => wp.latLng),
-//         e.latlng,
-//       ]);
-//     };
-
-//     routingControl.on("routesfound", (e: any) => {
-//       const coordinates = e.routes[0].coordinates.map(
-//         ({ lat, lng }: { lat: number; lng: number }) =>
-//           [lat, lng] as [number, number],
-//       );
-//       onRouteFound(coordinates);
-//     });
-
-//     map.on("click", handleClick);
-
-//     return () => {
-//       map.off("click", handleClick);
-//       map.removeControl(routingControl);
-//     };
-//   }, [map]);
-
-//   return null;
-// }
