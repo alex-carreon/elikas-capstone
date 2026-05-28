@@ -5,8 +5,8 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\Dashboards\UserController;
-use App\Http\Controllers\SensorController;
-use App\Http\Controllers\PublicSensorController;
+use App\Http\Controllers\SensorControllers\SensorController;
+use App\Http\Controllers\SensorControllers\PublicSensorController;
 use App\Http\Controllers\Hazards\FloodPathController;
 use App\Http\Controllers\Hazards\FloodLevelController;
 use App\Http\Controllers\Dashboards\FloodPathAdminController;
@@ -115,7 +115,7 @@ Route::middleware(['firebase.auth', 'role:1,2,3'])->group(function () {
 
     //FLOOD LEVELS
     Route::get('flood-levels', [FloodLevelController::class, 'index']);
-    
+
     //FLOODS
     Route::post('flood-paths', [FloodPathController::class, 'store']);
     Route::get('/flood-paths/my',     [FloodPathController::class, 'my']);
