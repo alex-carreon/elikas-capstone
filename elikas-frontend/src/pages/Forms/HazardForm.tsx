@@ -3,15 +3,20 @@ import SelectDropdown from "@/components/SelectDropdown";
 import TextField from "@/components/TextField";
 import { Field, FieldDescription, FieldLabel } from "@/components/ui/field";
 import colors from "@/constants/colors";
-import { FormMapClickHandler } from "@/lib/mapUtils";
+import { FormMapClickHandler, getMidpoint } from "@/lib/mapUtils";
 import { snapAllPointsToRoads } from "@/lib/mapUtils";
 import { useState, useEffect, useRef } from "react";
 import { MapContainer, TileLayer, Marker, Polyline } from "react-leaflet";
-import { useLocation, useNavigate } from "react-router";
+import { isSession, useLocation, useNavigate, useParams } from "react-router";
 import CheckBox from "@/components/CheckBox";
 import { renderToString } from "react-dom/server";
 import BlankPin from "@/assets/Map/BlankPin.svg?react";
-import { divIcon, latLng } from "leaflet";
+import {
+  divIcon,
+  latLng,
+  type LatLngExpression,
+  type LatLngTuple,
+} from "leaflet";
 import { InputGroupTextarea } from "@/components/ui/input-group";
 import { toast } from "sonner";
 import { formatInTimeZone } from "date-fns-tz";
@@ -19,10 +24,33 @@ import { addDays } from "date-fns";
 import api from "@/api";
 import { useUserContext } from "@/context/AuthContext";
 import { Skeleton } from "@/components/ui/skeleton";
+import { differenceInDays } from "date-fns";
+import FloodIcon from "@/assets/Map/FloodIcon.svg?react";
 
 type FloodLevel = {
   id: number;
   level_name: string;
+};
+
+type PostedBy = {
+  id: number;
+  username: string;
+};
+
+type FloodDetails = {
+  id: number;
+  element_id: number;
+  is_expired: boolean;
+  is_deactivated: boolean;
+  level: FloodLevel;
+  path: [number, number][];
+  posted_by: PostedBy;
+  description: string;
+  upvotes: number;
+  downvotes: number;
+  last_confirmed: string;
+  expiry: string;
+  posted_at: string;
 };
 
 function HazardForm() {
@@ -44,6 +72,13 @@ function HazardForm() {
   const [snapped, setSnapped] = useState<[number, number][]>([]);
   const [levels, setLevels] = useState<FloodLevel[]>();
   const [loading, setLoading] = useState(true);
+  const [floodDetails, setFloodDetails] = useState<FloodDetails>();
+  const [daysLeft, setDaysleft] = useState(0);
+  const [midpoint, setMidpoint] = useState<[number, number]>();
+  const [isEditable, setIsEditable] = useState(false);
+  const [hasUpdated, setHasUpdated] = useState(false);
+
+  const { id } = useParams();
 
   const rawLoc = localStorage.getItem("clickedPin");
   const clickedLoc: [number, number] | null = rawLoc
@@ -61,6 +96,12 @@ function HazardForm() {
     html: renderToString(<BlankPin width={50} height={50} />),
     className: "",
     iconAnchor: [25, 50],
+  });
+
+  const floodIcon = divIcon({
+    html: renderToString(<FloodIcon width={36} height={36} />),
+    className: "",
+    iconAnchor: [18, 20],
   });
 
   const fileOnChange = (e: any) => {
@@ -87,24 +128,84 @@ function HazardForm() {
   };
 
   useEffect(() => {
-    const getFloodLevels = async () => {
-      try {
-        const response = await api.get("/flood-levels", {
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
-          },
-        });
+    if (id) {
+      const getFloodDetails = async () => {
+        try {
+          setHasUpdated(false);
+          setLoading(true);
+          const response = await api.get(`/flood-paths/${id}`);
+          console.log("response", response);
+          const floodDetails = await response.data.flood_path;
+          console.log("Details", floodDetails);
+          setFloodDetails(floodDetails);
 
-        const levelData = await response.data.flood_levels;
-        setLevels(levelData);
-      } catch (err: string | any) {
-        Error(err.message || "An error occurred");
-      }
-      setLoading(false);
-    };
-    getFloodLevels();
-  }, []);
+          const midpoint = getMidpoint(floodDetails.path);
+          setMidpoint(midpoint);
+
+          const today = new Date();
+          const expDate = new Date(floodDetails.expiry);
+
+          setDaysleft(differenceInDays(expDate, today));
+        } catch (err: string | any) {
+          console.log(err.message || "An error occurred");
+        } finally {
+          setLoading(false);
+        }
+      };
+      getFloodDetails();
+    } else if (!id) {
+      const getFloodLevels = async () => {
+        try {
+          setLoading(true);
+          const response = await api.get("/flood-levels", {
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${token}`,
+            },
+          });
+
+          const levelData = await response.data.flood_levels;
+          setLevels(levelData);
+        } catch (err: string | any) {
+          Error(err.message || "An error occurred");
+        } finally {
+          setLoading(false);
+        }
+      };
+      getFloodLevels();
+    }
+  }, [hasUpdated]);
+
+  useEffect(() => {
+    if (isEditable) {
+      const getFloodLevels = async () => {
+        try {
+          setLoading(true);
+          const response = await api.get("/flood-levels", {
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${token}`,
+            },
+          });
+
+          const levelData = await response.data.flood_levels;
+          setLevels(levelData);
+        } catch (err: string | any) {
+          Error(err.message || "An error occurred");
+        } finally {
+          setLoading(false);
+        }
+      };
+      getFloodLevels();
+    }
+  }, [isEditable]);
+
+  useEffect(() => {
+    if (isEditable && floodDetails) {
+      setRoutePoints(floodDetails.path);
+      setFloodLevel(String(floodDetails.level.id));
+    }
+  }, [isEditable, floodDetails]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -154,6 +255,71 @@ function HazardForm() {
     }
   };
 
+  const handleUpdate = async (e: React.FormEvent) => {
+    e.preventDefault();
+
+    try {
+      const originalPath = floodDetails?.path ?? [];
+      const newPoints = routePoints.slice(originalPath.length);
+
+      const snapped =
+        newPoints.length > 0 ? await snapAllPointsToRoads(routePoints) : [];
+
+      if (!snapped) {
+        toast("You went off-road. Please re-draw");
+        return;
+      } else if (snapped.length < 2) {
+        toast("Please indicate the hazard on the map");
+        return;
+      } else {
+        const fullPath = [...originalPath, ...snapped];
+        setSnapped(fullPath);
+      }
+
+      const dateTime = formatInTimeZone(
+        new Date(),
+        "Asia/Manila",
+        "MMMM dd, yyyy, h:mm a",
+      );
+
+      const expDate = addDays(dateTime, 7);
+
+      console.log(floodLevel);
+      console.log(desc);
+      console.log(expDate);
+      console.log(snapped);
+
+      const response = await api.patch(
+        `/flood-paths/${id}`,
+        {
+          level_id: floodLevel,
+          description: desc,
+          expiry: expDate,
+          path: snapped,
+        },
+        {
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+        },
+      );
+
+      console.log(response);
+
+      if (!response) {
+        console.log("Creating Path Failed");
+        return;
+      }
+      setIsEditable(false);
+      setHasUpdated(true);
+    } catch (err: string | any) {
+      console.log(err.message || "An error occurred");
+    }
+  };
+
+  if (!id) return null;
+
   return loading ? (
     <>
       <div className="w-full h-full flex flex-col items-center p-12 mt-8 mb-2 gap-4">
@@ -193,11 +359,13 @@ function HazardForm() {
           className="font-bold text-lg text-center"
           style={{ color: colors.heading }}
         >
-          {existingHazard
+          {id
             ? "Hazard Pin Details"
-            : "Report Evacuation Road Status"}
+            : isEditable
+              ? "Hazard Pin Update"
+              : "Report Evacuation Road Status"}
         </p>
-        {existingHazard ? null : (
+        {id ? null : (
           <p
             className="text-align italic text-sm"
             style={{ color: colors.label }}
@@ -208,7 +376,7 @@ function HazardForm() {
       </div>
       <form
         id="HazardPin_Form"
-        onSubmit={handleSubmit}
+        onSubmit={id ? (isEditable ? handleUpdate : undefined) : handleSubmit}
         className="w-full flex flex-col justify-center items-center m-0"
       >
         <div className="w-full max-w-md flex flex-col gap-5">
@@ -222,7 +390,7 @@ function HazardForm() {
             />
             {fileName && (
               <>
-                <img src={imagePreview} />{" "}
+                <img src={imagePreview} />
                 <ButtonComp
                   text="Clear"
                   variant="outline"
@@ -250,7 +418,7 @@ function HazardForm() {
               Map Location
             </FieldLabel>
             <MapContainer
-              center={center}
+              center={id ? midpoint : center}
               zoom={17}
               scrollWheelZoom={false}
               style={{ height: "30vh", width: "100%" }}
@@ -260,53 +428,127 @@ function HazardForm() {
                 attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
                 url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
               />
-              <Marker position={center} icon={icon} />
-              <FormMapClickHandler
-                onPinClick={null}
-                setClickedLoc={setRoutePoints}
-                clickedLoc={routePoints}
-                center={center}
-              />
-              {snapped.length > 0 ? (
-                <Polyline positions={snapped} weight={6} color="#5F80AA" />
+              {id ? (
+                <>
+                  {floodDetails ? (
+                    isEditable ? (
+                      <>
+                        <FormMapClickHandler
+                          onPinClick={null}
+                          setClickedLoc={setRoutePoints}
+                          clickedLoc={routePoints}
+                          center={floodDetails.path.at(-1)}
+                        />
+                        {snapped.length > 0 ? (
+                          <Polyline
+                            positions={snapped}
+                            weight={6}
+                            color="#5F80AA"
+                          />
+                        ) : (
+                          routePoints.length > 0 && (
+                            <Polyline
+                              positions={routePoints}
+                              weight={6}
+                              color="#5F80AA"
+                            />
+                          )
+                        )}
+                      </>
+                    ) : (
+                      <>
+                        <Marker
+                          position={midpoint as LatLngExpression}
+                          icon={floodIcon}
+                        />
+                        <Polyline
+                          positions={floodDetails.path as LatLngTuple[]}
+                          weight={6}
+                          color="#5F80AA"
+                        />
+                      </>
+                    )
+                  ) : (
+                    console.log("Can't find path")
+                  )}
+                </>
               ) : (
-                routePoints.length > 0 && (
-                  <Polyline
-                    positions={[center, ...routePoints]}
-                    weight={6}
-                    color="#5F80AA"
+                <>
+                  <Marker position={center} icon={icon} />
+                  <FormMapClickHandler
+                    onPinClick={null}
+                    setClickedLoc={setRoutePoints}
+                    clickedLoc={routePoints}
+                    center={center}
                   />
-                )
+                  {snapped.length > 0 ? (
+                    <Polyline positions={snapped} weight={6} color="#5F80AA" />
+                  ) : (
+                    routePoints.length > 0 && (
+                      <Polyline
+                        positions={[center, ...routePoints]}
+                        weight={6}
+                        color="#5F80AA"
+                      />
+                    )
+                  )}
+                </>
               )}
             </MapContainer>
-            <ButtonComp
-              text="Clear"
-              variant="outline"
-              id="HazardPin_PinClearBtn"
-              onClick={handleClearRoutePoints}
-            ></ButtonComp>
+            {(!id || isEditable) && (
+              <ButtonComp
+                text="Clear"
+                variant="outline"
+                id="HazardPin_PinClearBtn"
+                onClick={handleClearRoutePoints}
+              ></ButtonComp>
+            )}
           </Field>
           <Field>
             <FieldLabel
               className={"text-sm w-s"}
               style={{ color: colors.label }}
             >
-              Description (Optional)
+              Description
             </FieldLabel>
+            {(!id || isEditable) && (
+              <FieldDescription>
+                A description will help users distinguish your pin. This could
+                be a nearby landmark or an address.
+              </FieldDescription>
+            )}
             <InputGroupTextarea
               className="h-10 border rounded-lg text-xs"
               id="HazardPin_DescField"
               onChange={(e) => setDesc(e.target.value)}
+              value={id ? floodDetails?.description : ""}
+              readOnly={!id || isEditable ? false : true}
             />
           </Field>
-          <TextField
-            label="Nearby Landmark (optional)"
-            placeholder="Enter a landmark near the hazard"
-            id="HazardPin_LandmarkField"
-            inputType="text"
-            onSubmit={(e) => setLandmark(e.target.value)}
-          ></TextField>
-          {levels ? (
+          {(!id || isEditable) && levels ? (
+            <SelectDropdown
+              value={floodLevel}
+              onValueChange={setFloodLevel}
+              label="Flood Level*"
+              placeholder="Select the Flood Level"
+              id="HazardPin_FloodLevelField"
+              onSubmit={(e) => setFloodLevel(e.target.value)}
+              options={levels?.map((level) => ({
+                label: level.level_name,
+                value: String(level.id),
+              }))}
+              isRequired={!id ? true : false}
+            />
+          ) : (
+            <TextField
+              label="Flood Level"
+              inputType="text"
+              id="HazardPin_FloodlevelExisting"
+              value={id ? floodDetails?.level.level_name : ""}
+              readonly
+            />
+          )}
+          {/* {levels ? (
             <SelectDropdown
               value={floodLevel}
               onValueChange={setFloodLevel}
@@ -320,24 +562,61 @@ function HazardForm() {
               }))}
               isRequired
             />
-          ) : null}
-          {existingHazard ? (
+          ) : (
+            <TextField
+              label="Flood Level"
+              inputType="text"
+              id="HazardPin_FloodlevelExisting"
+              value={id ? floodDetails?.level.level_name : ""}
+              readonly
+            />
+          )} */}
+          {id ? (
             <>
+              <p className="italic" style={{ color: colors.label }}>
+                Expires in {daysLeft} days
+              </p>
               <div className="mx-2 flex justify-evenly shrink gap-4">
-                <ButtonComp
-                  text="Update"
-                  id="HazardPin_ClosePinBtn"
-                  variant="primary"
-                  heightSize="10"
-                  widthSize="20"
-                ></ButtonComp>
-                <ButtonComp
-                  text="Close"
-                  id="HazardPin_ClosePinBtn"
-                  variant="important"
-                  widthSize="20"
-                  heightSize="10"
-                ></ButtonComp>
+                {!isEditable ? (
+                  <>
+                    <ButtonComp
+                      text="Update"
+                      id="HazardPin_UpdatePinBtn"
+                      variant="primary"
+                      heightSize="40px"
+                      widthSize="20"
+                      type="button"
+                      onClick={() => setIsEditable(true)}
+                    ></ButtonComp>
+                    <ButtonComp
+                      text="Close"
+                      id="HazardPin_ClosePinBtn"
+                      variant="important"
+                      heightSize="40px"
+                      widthSize="20"
+                      type="button"
+                    ></ButtonComp>
+                  </>
+                ) : (
+                  <>
+                    <ButtonComp
+                      text="Submit"
+                      id="HazardPin_SubmitUpdPinBtn"
+                      variant="primary"
+                      heightSize="40px"
+                      widthSize="20"
+                      type="submit"
+                    ></ButtonComp>
+                    <ButtonComp
+                      text="Cancel"
+                      id="HazardPin_ClosePinBtn"
+                      variant="outline"
+                      heightSize="40px"
+                      widthSize="20"
+                      type="button"
+                    ></ButtonComp>
+                  </>
+                )}
               </div>
             </>
           ) : (

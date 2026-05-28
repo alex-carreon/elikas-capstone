@@ -73,14 +73,6 @@ type FloodPath = {
   path: [number, number][];
 };
 
-// interface Pin {
-//   id: number;
-//   name: string;
-//   description: string;
-//   lat: number;
-//   long: number;
-// }
-
 interface DrawerProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
