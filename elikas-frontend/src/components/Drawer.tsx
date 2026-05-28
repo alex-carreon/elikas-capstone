@@ -375,7 +375,29 @@ function DrawerComp({
             >
               <img src={sample} />
             </PostRow>
-          ) : null}
+          ) : (
+            <>
+              <div className="h-70 flex justify-center items-center">
+                <div className="flex flex-col justify-center items-center gap-2">
+                  <div className="flex flex-col justify-center items-center">
+                    <p className="text-center">Join the community!</p>
+                    <p className="text-center">
+                      Create an account to view other people's comments.
+                    </p>
+                  </div>
+                  <Link to="/Login">
+                    <ButtonComp
+                      text="Sign in"
+                      id="Drawer_HazardSignIn"
+                      variant="primary"
+                      heightSize="40px"
+                      widthSize="100px"
+                    />
+                  </Link>
+                </div>
+              </div>
+            </>
+          )}
         </div>
       </>
     );
@@ -512,7 +534,7 @@ function DrawerComp({
                 <ButtonComp
                   text="Sign in"
                   variant="primary"
-                  id="Drawer_SignIn"
+                  id="Drawer_EvacSignIn"
                   heightSize="38px"
                   widthSize="30"
                 />

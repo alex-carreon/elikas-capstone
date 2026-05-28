@@ -170,7 +170,7 @@ function LogIn() {
                 </Link>
               </div>
             </div>
-            <div className="w-full flex justify-center items-center m-0">
+            <div className="w-full flex flex-col justify-center items-center m-0 gap-2">
               <ButtonComp
                 text="Log In"
                 variant="primary"
@@ -179,6 +179,16 @@ function LogIn() {
                 heightSize="38px"
                 widthSize="100%"
               ></ButtonComp>
+              <Link to="/" className="w-full flex justify-center">
+                <ButtonComp
+                  text="View the Map"
+                  variant="outline"
+                  type="button"
+                  id="LogIn_MapBtn"
+                  heightSize="38px"
+                  widthSize="100%"
+                ></ButtonComp>
+              </Link>
             </div>
           </form>
           <div className="flex justify-start flex-col content-center mx-auto text-sm gap-3">

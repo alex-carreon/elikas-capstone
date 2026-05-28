@@ -79,6 +79,7 @@ function HazardForm() {
   const [isEditable, setIsEditable] = useState(false);
   const [hasUpdated, setHasUpdated] = useState(false);
   const [willDeactivate, setWillDeactivate] = useState(false);
+  const [error, setError] = useState("");
 
   const { id } = useParams();
 
@@ -228,6 +229,7 @@ function HazardForm() {
         toast("Please indicate the hazard on the map");
         return;
       }
+
       setSnapped(snapped);
       setMidpoint(getMidpoint(snapped));
 
@@ -236,6 +238,11 @@ function HazardForm() {
         "Asia/Manila",
         "MMMM dd, yyyy, h:mm a",
       );
+
+      if (!desc) {
+        setError("This field is required.");
+        return;
+      }
 
       const expDate = addDays(dateTime, 7);
 
@@ -257,13 +264,14 @@ function HazardForm() {
         );
 
         if (!response) {
-          reject(console.log("Creating Path Failed"));
+          reject(new Error("Please try again"));
         } else resolve(response);
       });
 
       toast.promise(addPromise, {
         loading: "Adding your pin to the map...",
         success: "Pin successfully added!",
+        error: (err) => err?.message || "Please try again.",
         position: "top-center",
       });
 
@@ -413,7 +421,7 @@ function HazardForm() {
       {willDeactivate && (
         <AlertDialogue
           contentId="HazardForm_DeacContent"
-          closeId="HazardFprm_DeacClose"
+          closeId="HazardForm_DeacClose"
           actionId="HazardForm_DeacBtn"
           open={willDeactivate}
           title="You are about to delete this pin"
@@ -586,7 +594,7 @@ function HazardForm() {
                 className={"text-sm w-s"}
                 style={{ color: colors.label }}
               >
-                Description
+                Description*
               </FieldLabel>
               {(!id || isEditable) && (
                 <FieldDescription>
@@ -601,6 +609,7 @@ function HazardForm() {
                 value={desc}
                 readOnly={!id || isEditable ? false : true}
               />
+              <p className="text-xs text-red-500">{error}</p>
             </Field>
             {(!id || isEditable) && levels ? (
               <SelectDropdown
@@ -644,7 +653,7 @@ function HazardForm() {
                       ></ButtonComp>
                       <ButtonComp
                         text="Delete"
-                        id="HazardPin_ClosePinBtn"
+                        id="HazardPin_DeletePinBtn"
                         variant="important"
                         heightSize="40px"
                         widthSize="20"
