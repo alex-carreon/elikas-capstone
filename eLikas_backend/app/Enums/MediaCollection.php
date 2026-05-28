@@ -5,4 +5,5 @@ enum MediaCollection: string
 {
     case FloodReports = 'flood-reports';
     case Comments = 'comments';
+    case EvacAreas = 'uploads/evacuation-centers';
 }
