@@ -135,7 +135,7 @@ class FloodPathController extends Controller
             'path.*'      => ['required', 'array', 'size:2'],
             'path.*.0'    => ['required', 'numeric', 'between:-90,90'],    // lat
             'path.*.1'    => ['required', 'numeric', 'between:-180,180'],  // lng
-            'description' => ['nullable', 'string', 'max:1000'],
+            'description' => ['required', 'string', 'max:1000'],
             'expiry'      => ['required', 'date', 'after:now'],
         ]);
 
