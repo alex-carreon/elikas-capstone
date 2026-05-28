@@ -6,17 +6,23 @@ use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Models\EvacArea;
 use App\Models\SocialElement;
+use App\Models\MediaFile;
 use Illuminate\Support\Facades\DB;
 use MatanYadaev\EloquentSpatial\Objects\Point;
 use Carbon\Carbon;
-
+use App\Services\MediaUploadService;
+use App\Enums\MediaCollection;
+use App\Http\Requests\UploadMediaRequest;
 
 class StoreEvacuationAreaController extends Controller
 {
-    public function storeEvacuationArea(Request $request)
+    public function __construct(
+        protected MediaUploadService $mediaUploadService
+    ) {}
+
+    public function storeEvacuationArea(UploadMediaRequest $request)
     {
         try {
-
             $user = $request->attributes->get('firebase_user');
 
             $request->validate([
@@ -44,6 +50,7 @@ class StoreEvacuationAreaController extends Controller
                 'contact_person' => 'nullable|string|max:255',
                 'contact_number' => 'nullable|string|max:20',
                 'expiry' => 'nullable|date',
+                'file' => ['nullable', 'file', 'image', 'mimes:jpg,jpeg,png,heic', 'max:8192'],
             ]);
 
             $expiry = $request->expiry
@@ -52,12 +59,30 @@ class StoreEvacuationAreaController extends Controller
 
             DB::beginTransaction();
 
+            $uploadedPath = null;
+            if ($request->hasFile('file')) {
+                $uploadedPath = $this->mediaUploadService->upload($request->file('file'), MediaCollection::EvacAreas);
+            }
+
             $element = SocialElement::create([
                 'user_id' => $user->id,
                 'posted_at' => now(),
                 'type_id' => 1,
-                'has_media' => false,
+                'has_media' => !is_null($uploadedPath),
             ]);
+
+            $mediaId = null;
+
+            if ($uploadedPath) {
+                $media = MediaFile::create([
+                    'parent_id' => $element->id,
+                    'user_id' => $user->id,
+                    'file_path' => $uploadedPath,
+                    'file_type' => 'image',
+                    'uploaded_at' => now(),
+                ]);
+                $mediaId = $media->id;
+            }
 
             $pin = EvacArea::create([
                 'element_id' => $element->id,
@@ -92,7 +117,9 @@ class StoreEvacuationAreaController extends Controller
             return response()->json([
                 'message' => 'Evacuation area created successfully',
                 'pin_id' => $pin->id,
-                'element_id' => $element->id
+                'element_id' => $element->id,
+                'media_id' => $mediaId,
+                'media_path' => $uploadedPath,
             ], 201);
 
         } catch (\Exception $e) {
