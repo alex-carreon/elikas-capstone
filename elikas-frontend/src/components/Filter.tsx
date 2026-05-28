@@ -1,5 +1,4 @@
 import { ListFilterIcon } from "lucide-react";
-
 import { Button } from "@/components/ui/button";
 import {
   Collapsible,
@@ -9,6 +8,7 @@ import {
 import { Switch } from "@/components/ui/switch";
 import { Separator } from "@base-ui/react";
 import { useState } from "react";
+import { useMapFilterContext } from "@/context/MapFilterContext";
 
 function Filter() {
   const [isOpen, setIsOpen] = useState(false);
@@ -16,15 +16,13 @@ function Filter() {
   const [userFilter, setUserFilter] = useState(true);
   const [hazardFilter, setHazardFilter] = useState(true);
 
+  const { showPaths, setShowPaths } = useMapFilterContext();
+
   const handleBarangayToggle = () => {
     //Filter endpoint
   };
 
   const handleUserToggle = () => {
-    //Filter endpoint
-  };
-
-  const handleHazardToggle = () => {
     //Filter endpoint
   };
 
@@ -63,7 +61,7 @@ function Filter() {
               id="MapFilter_User"
               size="sm"
               checked={userFilter}
-              onCheckedChange={handleUserToggle}
+              onCheckedChange={setUserFilter}
             />
             <p className="">By Other Users</p>
           </div>
@@ -72,8 +70,8 @@ function Filter() {
             <Switch
               id="MapFilter_Hazard"
               size="sm"
-              checked={hazardFilter}
-              onCheckedChange={handleHazardToggle}
+              checked={showPaths}
+              onCheckedChange={setShowPaths}
             />
             <p className="font-bold">Show Flooded Roads</p>
           </div>
