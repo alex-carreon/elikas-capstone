@@ -16,6 +16,7 @@ import "leaflet-routing-machine";
 import { toast } from "sonner";
 import { Trophy } from "lucide-react";
 import api from "@/api";
+import { useMapFilterContext } from "@/context/MapFilterContext";
 
 export const pins = [
   {
@@ -327,12 +328,14 @@ type FloodPath = {
   path: [number, number][];
 };
 
-export function RoadMapping({
-  onPinClick,
-}: {
+interface RoadMappingProps {
+  showPaths?: boolean;
   onPinClick: (pin: any, midpoint: [number, number]) => void;
-}) {
+}
+
+export function RoadMapping({ onPinClick }: RoadMappingProps) {
   const [floodPaths, setFloodPaths] = useState<FloodPath[]>([]);
+  const { showPaths } = useMapFilterContext();
 
   const icon = divIcon({
     html: renderToString(<FloodIcon width={36} height={36} />),
@@ -358,20 +361,21 @@ export function RoadMapping({
 
   return (
     <>
-      {floodPaths.map((pin) => {
-        const midpoint = getMidpoint(pin.path);
-        return (
-          <Fragment key={pin.id}>
-            <Marker
-              key={pin.id}
-              position={midpoint}
-              icon={icon}
-              eventHandlers={{ click: () => onPinClick(pin, midpoint) }}
-            />
-            <Polyline positions={pin.path} weight={6} color="#5F80AA" />
-          </Fragment>
-        );
-      })}
+      {showPaths &&
+        floodPaths.map((pin) => {
+          const midpoint = getMidpoint(pin.path);
+          return (
+            <Fragment key={pin.id}>
+              <Marker
+                key={pin.id}
+                position={midpoint}
+                icon={icon}
+                eventHandlers={{ click: () => onPinClick(pin, midpoint) }}
+              />
+              <Polyline positions={pin.path} weight={6} color="#5F80AA" />
+            </Fragment>
+          );
+        })}
     </>
   );
 }
