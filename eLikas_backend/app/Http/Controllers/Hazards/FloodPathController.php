@@ -185,10 +185,10 @@ class FloodPathController extends Controller
  
             return response()->json([
                 'message'    => 'Flood path created successfully.',
-                'flood_path' => $this->formatFloodPath($floodPath->load([
-                    'floodLevel:id,level_name,description',
-                    'socialElement:id,user_id,posted_at,deactivated_at',
-                ])),
+                // 'flood_path' => $this->formatFloodPath($floodPath->load([
+                //     'floodLevel:id,level_name,description',
+                //     'socialElement:id,user_id,posted_at,deactivated_at',
+                // ])),
             ], 201);
  
         } catch (\Throwable $e) {
@@ -255,10 +255,10 @@ class FloodPathController extends Controller
  
         return response()->json([
             'message'    => 'Flood path updated successfully.',
-            'flood_path' => $this->formatFloodPath($floodPath->load([
-                'floodLevel:id,level_name,description',
-                'socialElement:id,user_id,posted_at,deactivated_at',
-            ])),
+            // 'flood_path' => $this->formatFloodPath($floodPath->load([
+            //     'floodLevel:id,level_name,description',
+            //     'socialElement:id,user_id,posted_at,deactivated_at',
+            // ])),
         ], 200);
     }
  
@@ -318,13 +318,13 @@ class FloodPathController extends Controller
     {
         return [
             'id'             => $floodPath->id,
-            'element_id'     => $floodPath->element_id,
+            // 'element_id'     => $floodPath->element_id,
             'level'          => $floodPath->floodLevel,
             'posted_by' => [
-                'id' => $floodPath->socialElement->user?->id,
+                // 'id' => $floodPath->socialElement->user?->id,
                 'username' => $floodPath->socialElement->user?->username,
             ],
-            'path'           => $this->formatPath($floodPath->path),
+            // 'path'           => $this->formatPath($floodPath->path),
             'description'    => $floodPath->description,
             'upvotes'        => $floodPath->upvotes,
             'downvotes'      => $floodPath->downvotes,
@@ -334,9 +334,9 @@ class FloodPathController extends Controller
             'expiry' => $floodPath->expiry
                 ? $floodPath->expiry->timezone('Asia/Manila')->toDateTimeString()
                 : null,
-            'posted_at' => $floodPath->socialElement->posted_at
-                ? $floodPath->socialElement->posted_at->timezone('Asia/Manila')->toDateTimeString()
-                : null,
+            // 'posted_at' => $floodPath->socialElement->posted_at
+            //     ? $floodPath->socialElement->posted_at->timezone('Asia/Manila')->toDateTimeString()
+            //     : null,
             'is_expired' => $floodPath->expiry < now(),
             'is_deactivated' => !is_null(
                 $floodPath->socialElement->deactivated_at
