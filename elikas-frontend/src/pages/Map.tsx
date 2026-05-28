@@ -8,12 +8,10 @@ function Map() {
   return (
     <div className="flex justify-center pt-13 w-full">
       <div className="max-w-md w-full">
-        <MapFilterProvider>
-          {/* <div className="fixed w-full max-w-md"> */}
-          <Filter />
-          {/* </div> */}
-          <MapComp />
-        </MapFilterProvider>
+        {/* <div className="fixed w-full max-w-md"> */}
+        <Filter />
+        {/* </div> */}
+        <MapComp />
       </div>
     </div>
   );
