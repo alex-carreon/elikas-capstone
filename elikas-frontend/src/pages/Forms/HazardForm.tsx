@@ -4,39 +4,27 @@ import TextField from "@/components/TextField";
 import { Field, FieldDescription, FieldLabel } from "@/components/ui/field";
 import colors from "@/constants/colors";
 import { FormMapClickHandler, getMidpoint } from "@/lib/mapUtils";
-import { snapAllPointsToRoads, RoadMapping } from "@/lib/mapUtils";
+import { RoadMapping } from "@/lib/mapUtils";
 import React, { useState, useEffect, useRef } from "react";
 import { MapContainer, TileLayer, Marker, Polyline } from "react-leaflet";
-import { isSession, useLocation, useNavigate, useParams } from "react-router";
+import { useNavigate, useParams } from "react-router";
 import CheckBox from "@/components/CheckBox";
 import { renderToString } from "react-dom/server";
 import BlankPin from "@/assets/Map/BlankPin.svg?react";
-import {
-  divIcon,
-  latLng,
-  type LatLngExpression,
-  type LatLngTuple,
-} from "leaflet";
+import { divIcon, type LatLngExpression, type LatLngTuple } from "leaflet";
 import { InputGroupTextarea } from "@/components/ui/input-group";
-import { toast } from "sonner";
-import { formatInTimeZone } from "date-fns-tz";
-import { addDays } from "date-fns";
 import api from "@/api";
 import { useUserContext } from "@/context/AuthContext";
-import { Skeleton } from "@/components/ui/skeleton";
 import { differenceInDays } from "date-fns";
 import FloodIcon from "@/assets/Map/FloodIcon.svg?react";
 import AlertDialogue from "@/components/AlertDialogue";
 import { useMapFilterContext } from "@/context/MapFilterContext";
+import { handleSubmit, handleUpdate, handleDelete } from "@/lib/hazardUtils";
+import FormSkeleton from "../Skeletons/FormSkeleton";
 
 type FloodLevel = {
   id: number;
   level_name: string;
-};
-
-type PostedBy = {
-  id: number;
-  username: string;
 };
 
 type FloodDetails = {
@@ -44,9 +32,9 @@ type FloodDetails = {
   element_id: number;
   is_expired: boolean;
   is_deactivated: boolean;
-  level: FloodLevel;
+  flood_levels: FloodLevel;
   path: [number, number][];
-  posted_by: PostedBy;
+  posted_by: string;
   description: string;
   upvotes: number;
   downvotes: number;
@@ -56,17 +44,13 @@ type FloodDetails = {
 };
 
 function HazardForm() {
-  const location = useLocation();
   const inputRef = useRef<HTMLInputElement | null>(null);
   const navigate = useNavigate();
   const { token } = useUserContext();
 
-  const [existingHazard, setExistingHazard] = useState(false);
   const [fileName, setFileName] = useState("");
   const [imagePreview, setImagePreview] = useState<undefined | string>();
   const [desc, setDesc] = useState("");
-  const [hazard, setHazard] = useState("");
-  const [landmark, setLandmark] = useState("");
   const [floodLevel, setFloodLevel] = useState("");
   const [validCheck, setValidCheck] = useState(false);
   const [infoCheck, setInfoCheck] = useState(false);
@@ -91,12 +75,6 @@ function HazardForm() {
     ? JSON.parse(rawLoc)
     : null;
   const center: [number, number] = clickedLoc ?? [14.5995, 120.9842];
-
-  useEffect(() => {
-    if (location.state?.from === "/History") {
-      setExistingHazard(true);
-    }
-  }, [[location.state?.from]]);
 
   const icon = divIcon({
     html: renderToString(<BlankPin width={50} height={50} />),
@@ -171,6 +149,7 @@ function HazardForm() {
           });
 
           const levelData = await response.data.flood_levels;
+
           setLevels(levelData);
         } catch (err: string | any) {
           Error(err.message || "An error occurred");
@@ -215,210 +194,49 @@ function HazardForm() {
   useEffect(() => {
     if (isEditable && floodDetails) {
       setRoutePoints(floodDetails.path);
-      setFloodLevel(String(floodDetails.level.id));
+      setFloodLevel(String(floodDetails.flood_levels.id));
+      setDesc(floodDetails.description);
+
+      console.log(floodDetails.path);
     }
   }, [isEditable, floodDetails]);
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    try {
-      const fullPath: [number, number][] = [center, ...routePoints];
-      const snapped = await snapAllPointsToRoads(fullPath);
+  useEffect(() => {
+    console.log(routePoints);
+  }, [routePoints]);
 
-      if (!snapped) {
-        toast("You went off-road. Please re-draw");
-        return;
-      } else if (snapped.length < 2) {
-        toast("Please indicate the hazard on the map");
-        return;
-      }
+  const submit = (e: React.FormEvent) =>
+    handleSubmit({
+      e: e,
+      center: center,
+      routePoints: routePoints,
+      desc: desc,
+      floodLevel: floodLevel,
+      token: token,
+      setSnapped: setSnapped,
+      setMidpoint: setMidpoint,
+      setError: setError,
+      navigate: navigate,
+    });
 
-      setSnapped(snapped);
-      setMidpoint(getMidpoint(snapped));
+  const update = (e: React.FormEvent) =>
+    handleUpdate({
+      e: e,
+      routePoints: routePoints,
+      desc: desc,
+      floodLevel: floodLevel,
+      token: token,
+      setSnapped: setSnapped,
+      floodDetails: floodDetails,
+      id: id,
+      setIsEditable: setIsEditable,
+      setHasUpdated: setHasUpdated,
+    });
 
-      const dateTime = formatInTimeZone(
-        new Date(),
-        "Asia/Manila",
-        "MMMM dd, yyyy, h:mm a",
-      );
-
-      if (!desc) {
-        setError("This field is required.");
-        return;
-      }
-
-      const expDate = addDays(dateTime, 7);
-
-      const addPromise = new Promise(async (resolve, reject) => {
-        const response = await api.post(
-          "/flood-paths",
-          {
-            level_id: floodLevel,
-            description: desc,
-            expiry: expDate,
-            path: snapped,
-          },
-          {
-            headers: {
-              "Content-Type": "application/json",
-              Authorization: `Bearer ${token}`,
-            },
-          },
-        );
-
-        if (!response) {
-          reject(new Error("Please try again"));
-        } else resolve(response);
-      });
-
-      toast.promise(addPromise, {
-        loading: "Adding your pin to the map...",
-        success: "Pin successfully added!",
-        error: (err) => err?.message || "Please try again.",
-        position: "top-center",
-      });
-
-      addPromise.then(() => {
-        navigate("/map");
-      });
-    } catch (err: string | any) {
-      Error(err.message || "An error occurred during registration");
-    }
-  };
-
-  const handleUpdate = async (e: React.FormEvent) => {
-    e.preventDefault();
-
-    try {
-      const originalPath = floodDetails?.path ?? [];
-      const newPoints = routePoints.slice(originalPath.length);
-
-      const snapped =
-        newPoints.length > 0 ? await snapAllPointsToRoads(routePoints) : [];
-
-      if (!snapped) {
-        toast("You went off-road. Please re-draw");
-        return;
-      } else if (snapped.length < 2) {
-        toast("Please indicate the hazard on the map");
-        return;
-      } else {
-        const fullPath = [...originalPath, ...snapped];
-        setSnapped(fullPath);
-      }
-
-      const dateTime = formatInTimeZone(
-        new Date(),
-        "Asia/Manila",
-        "MMMM dd, yyyy, h:mm a",
-      );
-
-      const expDate = addDays(dateTime, 7);
-
-      const updPromise = new Promise(async (resolve, reject) => {
-        const response = await api.patch(
-          `/flood-paths/${id}`,
-          {
-            level_id: floodLevel,
-            description: desc,
-            expiry: expDate,
-            path: snapped,
-          },
-          {
-            headers: {
-              "Content-Type": "application/json",
-              Authorization: `Bearer ${token}`,
-            },
-          },
-        );
-
-        console.log(response);
-
-        if (!response) {
-          reject(console.log("Creating Path Failed"));
-          return;
-        } else resolve(response);
-      });
-
-      toast.promise(updPromise, {
-        loading: "Saving your updates...",
-        success: "Pin successfully updated!",
-        position: "top-center",
-      });
-
-      updPromise.then(() => {
-        setIsEditable(false);
-        setHasUpdated(true);
-      });
-    } catch (err: string | any) {
-      console.log(err.message || "An error occurred");
-    }
-  };
-
-  const handleDelete = async () => {
-    try {
-      const deacPromise = new Promise(async (resolve, reject) => {
-        const response = await api.patch(`/flood-paths/${id}/deactivate`, {
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
-          },
-        });
-
-        console.log(response);
-
-        if (!response) {
-          reject(console.log("Creating Path Failed"));
-          return;
-        } else resolve(response);
-      });
-
-      toast.promise(deacPromise, {
-        loading: "Deleting pin...",
-        success: "Pin Deleted!",
-        position: "top-center",
-      });
-
-      deacPromise.then(() => {
-        navigate("/History");
-      });
-    } catch (err) {
-      console.error("Error Deactivating");
-    }
-  };
+  const deleteHazard = () => handleDelete({ id: id, navigate: navigate });
 
   return loading ? (
-    <>
-      <div className="w-full h-full flex flex-col items-center p-12 mt-8 mb-2 gap-4">
-        <div className="flex w-full max-w-xs flex-col gap-7">
-          <div className="flex flex-col gap-3">
-            <Skeleton className="h-4 w-20 bg-[#59260B]/30" />
-            <Skeleton className="h-8 w-full bg-[#59260B]/30" />
-          </div>
-          <div className="flex flex-col gap-3">
-            <Skeleton className="h-4 w-24 bg-[#59260B]/30" />
-            <Skeleton className="h-8 w-full bg-[#59260B]/30" />
-          </div>
-          <div className="flex flex-col gap-3">
-            <Skeleton className="h-4 w-24 bg-[#59260B]/30" />
-            <Skeleton className="h-8 w-full bg-[#59260B]/30" />
-          </div>
-          <div className="flex flex-col gap-3">
-            <Skeleton className="h-4 w-24 bg-[#59260B]/30" />
-            <Skeleton className="h-8 w-full bg-[#59260B]/30" />
-          </div>
-          <div className="flex flex-col gap-3">
-            <Skeleton className="h-4 w-24 bg-[#59260B]/30" />
-            <Skeleton className="h-8 w-full bg-[#59260B]/30" />
-          </div>
-          <div className="flex flex-col gap-3">
-            <Skeleton className="h-4 w-24 bg-[#59260B]/30" />
-            <Skeleton className="h-8 w-full bg-[#59260B]/30" />
-          </div>
-          <Skeleton className="h-8 w-24 bg-[#59260B]/30" />
-        </div>
-      </div>
-    </>
+    <FormSkeleton />
   ) : (
     <>
       {willDeactivate && (
@@ -433,7 +251,7 @@ function HazardForm() {
           onClose={() => {
             setWillDeactivate(false);
           }}
-          onClick={handleDelete}
+          onClick={deleteHazard}
         />
       )}
       <div className="w-full h-full flex flex-col items-center p-12 mt-8 mb-2 gap-4">
@@ -459,7 +277,7 @@ function HazardForm() {
         </div>
         <form
           id="HazardPin_Form"
-          onSubmit={id ? (isEditable ? handleUpdate : undefined) : handleSubmit}
+          onSubmit={id ? (isEditable ? update : undefined) : submit}
           className="w-full flex flex-col justify-center items-center m-0"
         >
           <div className="w-full max-w-md flex flex-col gap-5">
@@ -634,7 +452,7 @@ function HazardForm() {
                 label="Flood Level"
                 inputType="text"
                 id="HazardPin_FloodlevelExisting"
-                value={id ? floodDetails?.level.level_name : ""}
+                value={id ? floodDetails?.flood_levels.level_name : ""}
                 readonly
               />
             )}
@@ -651,7 +469,7 @@ function HazardForm() {
                         id="HazardPin_UpdatePinBtn"
                         variant="primary"
                         heightSize="40px"
-                        widthSize="20"
+                        widthSize="20px"
                         type="button"
                         onClick={() => setIsEditable(true)}
                       ></ButtonComp>
@@ -660,7 +478,7 @@ function HazardForm() {
                         id="HazardPin_DeletePinBtn"
                         variant="important"
                         heightSize="40px"
-                        widthSize="20"
+                        widthSize="20px"
                         type="button"
                         onClick={() => {
                           setWillDeactivate(true);
@@ -669,22 +487,27 @@ function HazardForm() {
                     </>
                   ) : (
                     <>
-                      <ButtonComp
-                        text="Submit"
-                        id="HazardPin_SubmitUpdPinBtn"
-                        variant="primary"
-                        heightSize="40px"
-                        widthSize="20"
-                        type="submit"
-                      ></ButtonComp>
-                      <ButtonComp
-                        text="Cancel"
-                        id="HazardPin_ClosePinBtn"
-                        variant="outline"
-                        heightSize="40px"
-                        widthSize="20"
-                        type="button"
-                      ></ButtonComp>
+                      <div className="mx-2 flex justify-evenly shrink gap-4">
+                        <ButtonComp
+                          text="Submit"
+                          id="HazardPin_SubmitUpdPinBtn"
+                          variant="primary"
+                          heightSize="40px"
+                          widthSize="200px"
+                          type="submit"
+                        ></ButtonComp>
+                        <ButtonComp
+                          text="Cancel"
+                          id="HazardPin_CancelBtn"
+                          variant="outline"
+                          heightSize="40px"
+                          widthSize="200px"
+                          type="button"
+                          onClick={() => {
+                            setIsEditable(false);
+                          }}
+                        ></ButtonComp>
+                      </div>
                     </>
                   )}
                 </div>
