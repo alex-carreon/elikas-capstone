@@ -48,6 +48,7 @@ class LocationsController extends Controller
             ->get();
 
         return response()->json([
+            'count'     => count($barangays),
             'Barangays' => $barangays
         ]);
     }
