@@ -55,7 +55,7 @@ function TextField({
 
   return (
     <div className="flex flex-col w-full max-w-s self-center">
-      <Field className="flex shrink">
+      <Field className="flex shrink gap-1">
         <FieldLabel className={"text-sm w-s"} style={{ color: colors.label }}>
           {label}
         </FieldLabel>

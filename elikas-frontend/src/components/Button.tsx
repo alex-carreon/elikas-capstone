@@ -42,7 +42,7 @@ function ButtonComp({
     return (
       <Button
         onClick={onClick}
-        className={`size-lg w-${widthSize} max-w-xs h-${heightSize} bg-transparent`}
+        className={`size-lg w-${widthSize} max-w-xs h-${heightSize} grow bg-transparent`}
         style={{
           borderColor: colors.heading,
           width: widthSize,

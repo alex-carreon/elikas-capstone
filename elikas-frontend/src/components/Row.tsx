@@ -1,16 +1,17 @@
 import colors from "@/constants/colors";
-import { Link, type To } from "react-router";
+import { Link } from "react-router";
 import ButtonComp from "./Button";
 
 interface rowProps {
   postId: string;
   title: string;
   address: string;
-  datePosted: string;
+  datePosted?: string;
   isAvailable?: boolean;
   availability?: boolean;
   isExpired?: boolean;
   link: string;
+  buttonId: string;
 }
 
 function Row({
@@ -22,6 +23,7 @@ function Row({
   availability,
   isExpired,
   link,
+  buttonId,
 }: rowProps) {
   return (
     <div className="border border-#9E9898 rounded-md p-2 flex flex-row items-center justify-between">
@@ -48,11 +50,11 @@ function Row({
           {datePosted}
         </p>
       </div>
-      <Link to={link} state={{ from: location.pathname }}>
+      <Link to={link} state={{ from: location.pathname }} className="ml-2">
         <ButtonComp
           variant="important"
           text="Details"
-          id="History_PinDetailsBtn"
+          id={buttonId}
           heightSize="45px"
           widthSize="100%"
         ></ButtonComp>
