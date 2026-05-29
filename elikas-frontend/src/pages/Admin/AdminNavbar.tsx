@@ -1,6 +1,5 @@
-import { Outlet } from "react-router";
-import WhiteLogo from "../../components/WhiteLogo";
-import { SidebarTrigger, useSidebar } from "@/components/ui/sidebar";
+import WhiteLogo from "@/components/Admin/WhiteLogo";
+import { useSidebar } from "@/components/ui/sidebar";
 import { Menu } from "lucide-react";
 import colors from "@/constants/colors";
 

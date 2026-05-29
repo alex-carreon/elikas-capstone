@@ -104,9 +104,6 @@ function Profile() {
             Authorization: `Bearer ${token}`,
           },
         });
-
-        console.log(response);
-
         const userDataDelete = await response.data;
 
         if (!response) {
