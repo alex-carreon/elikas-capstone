@@ -36,11 +36,4 @@ class FloodPathAdminController extends Controller
             ]),
         ]);
     }
-
-    // private function formatPath(LineString $path): array
-    // {
-    //     return $path->getGeometries()
-    //         ->map(fn(Point $point) => [$point->latitude, $point->longitude])
-    //         ->toArray();
-    // }
 }
