@@ -65,8 +65,13 @@ class UserController extends Controller
                     'role' => $user->role?->role_name,
 
                     'location' =>
-                        $user->indivAcc?->location?->name
+                        $user->indivAcc?->location?->city_location
                         ?? $user->govOp?->location?->name,
+                        
+                    'parent_location' =>
+                        $user->govOp?->location
+                            ? $user->govOp->location->city_location
+                            : null
                 ];
             });
 
@@ -145,7 +150,7 @@ class UserController extends Controller
                     = $user->indivAcc?->location?->id;
 
                 $response['indiv_location']
-                    = $user->indivAcc?->location?->name;
+                    =  $user->indivAcc?->location?->full_location;
             }
 
             // GovOp-only fields
@@ -163,7 +168,7 @@ class UserController extends Controller
                     = $user->govOp?->location?->name;
 
                 $response['govop_level']
-                    = $user->govOp?->locationLevel?->level_name;
+                    =  $user->govOp?->location?->full_location;
 
                 $response['point_person']
                     = $user->govOp?->point_person;

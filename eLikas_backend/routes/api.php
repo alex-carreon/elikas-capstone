@@ -1,23 +1,24 @@
 <?php
 
 use App\Http\Controllers\AdminController;
-use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\AuthController;
-use App\Http\Controllers\ProfileController;
-use App\Http\Controllers\Dashboards\UserController;
-use App\Http\Controllers\SensorControllers\SensorController;
-use App\Http\Controllers\SensorControllers\PublicSensorController;
-use App\Http\Controllers\Hazards\FloodPathController;
-use App\Http\Controllers\Hazards\FloodLevelController;
 use App\Http\Controllers\Dashboards\FloodPathAdminController;
-use App\Http\Controllers\PinControllers\GetEvacAreasController;
+use App\Http\Controllers\Dashboards\UserController;
+use App\Http\Controllers\Hazards\FloodLevelController;
+use App\Http\Controllers\Hazards\FloodPathController;
+use App\Http\Controllers\LocationsController;
+use App\Http\Controllers\PinControllers\DeleteEvacuationAreaController;
 use App\Http\Controllers\PinControllers\GetEvacAreaDetailsController;
-use App\Http\Controllers\PinControllers\GetNearbyEvacuationAreasController;
+use App\Http\Controllers\PinControllers\GetEvacAreasController;
 use App\Http\Controllers\PinControllers\GetEvacuationRoutesController;
+use App\Http\Controllers\PinControllers\GetNearbyEvacuationAreasController;
 use App\Http\Controllers\PinControllers\StoreEvacuationAreaController;
 use App\Http\Controllers\PinControllers\UpdateEvacuationAreaController;
-use App\Http\Controllers\PinControllers\DeleteEvacuationAreaController;
 use App\Http\Controllers\PinControllers\VerifyEvacuationAreaController;
+use App\Http\Controllers\ProfileController;
+use App\Http\Controllers\SensorControllers\PublicSensorController;
+use App\Http\Controllers\SensorControllers\SensorController;
+use Illuminate\Support\Facades\Route;
 
 
 Route::get('/test', function () {
@@ -35,7 +36,8 @@ Route::get('/public/sensors', [PublicSensorController::class, 'index']);
 
 Route::get('flood-paths', [FloodPathController::class, 'index']);
 
-
+Route::get('/locations/cities', [LocationsController::class, 'cities']);
+Route::get('/locations/barangays', [LocationsController::class, 'barangays']);
 // ---------------------------------------------------------------
 // PIN PUBLIC ROUTES — no token required
 // ---------------------------------------------------------------
