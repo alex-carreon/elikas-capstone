@@ -9,6 +9,8 @@ interface SidebarRowProps {
   link: string;
   icon: LucideIcon;
   id: string;
+  clicked?: boolean;
+  onClick?: () => void;
 }
 
 function SidebarRow({
@@ -17,10 +19,18 @@ function SidebarRow({
   link,
   icon: Icon,
   id,
+  onClick,
+  clicked,
 }: SidebarRowProps) {
   return (
-    <Link to={link} id={id}>
-      <SidebarGroup className="flex flex-row items-center gap-2">
+    <Link to={link} id={id} onClick={onClick}>
+      <SidebarGroup
+        className={
+          clicked
+            ? "flex flex-row items-center gap-2"
+            : "flex flex-row items-center gap-2 opacity-50"
+        }
+      >
         <Icon size={50} strokeWidth={2} color={colors.activeIcon} />
         <div className="flex flex-col w-full">
           <SidebarGroupLabel

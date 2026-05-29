@@ -25,6 +25,8 @@ import Profile from "./pages/Profile";
 import Feedback from "./pages/Indiv/Feedback";
 import HotlinesForm from "./pages/brgy_ops/HotlinesForm";
 import Layout from "@/pages/Admin/layout";
+import IndivUsers from "@/pages/Admin/IndivUsers";
+import UserDetails from "./pages/Admin/Forms/UserDetails";
 
 function App() {
   return (
@@ -68,7 +70,10 @@ function App() {
         <Route element={<ProtectedRoute userRole={"admin"} />}>
           <Route element={<Layout />}>
             <Route path="/admin-map" element={<Map />} />
+            <Route path="/admin-indiv" element={<IndivUsers />} />
           </Route>
+
+          <Route path="/admin-userDetails/:id" element={<UserDetails />} />
         </Route>
 
         <Route element={<ProtectedRoute />}>
