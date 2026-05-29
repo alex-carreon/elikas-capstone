@@ -141,6 +141,9 @@ class UserController extends Controller
 
                 $user->load('indivAcc.location');
 
+                $response['indiv_location_id']
+                    = $user->indivAcc?->location?->id;
+
                 $response['indiv_location']
                     = $user->indivAcc?->location?->name;
             }
@@ -152,6 +155,9 @@ class UserController extends Controller
                     'govOp.location',
                     'govOp.locationLevel'
                 ]);
+
+                $response['govop_location_id']
+                    = $user->govOp?->location?->id;
 
                 $response['govop_location']
                     = $user->govOp?->location?->name;
