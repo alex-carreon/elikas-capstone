@@ -203,44 +203,58 @@ class FloodPathController extends Controller
  
     /**
      * PATCH /flood-paths/{id}
-     *
-     * Updates a flood path. Only the owner can update their own path.
      */
     public function update(Request $request, int $id)
     {
         $user = $request->attributes->get('firebase_user');
- 
-        $floodPath = FloodPath::with('socialElement')
-            ->whereHas('socialElement', fn($q) => $q
-                ->where('user_id', $user->id)
-                ->whereNull('deactivated_at')
-            )
-            ->find($id);
- 
+
+        $query = FloodPath::with('socialElement')
+            ->whereHas('socialElement', fn($q) =>
+                $q->whereNull('deactivated_at')
+            );
+
+   
+        // Only apply ownership filtering to normal individual users.
+        //
+        // Admins/GovOps can edit any flood path.
+        if ($user->role_id == 3) {
+
+            $query->whereHas('socialElement', fn($q) =>
+                $q->where('user_id', $user->id)
+            );
+        }
+
+        $floodPath = $query->find($id);
+
         if (!$floodPath) {
             return response()->json([
                 'message' => 'Flood path not found or you do not have permission to update it.',
             ], 404);
         }
- 
+
         $validated = $request->validate([
             'level_id'    => ['sometimes', 'integer', 'exists:FloodLevels,id'],
+
             'path'        => ['sometimes', 'array', 'min:2'],
             'path.*'      => ['required_with:path', 'array', 'size:2'],
             'path.*.0'    => ['required_with:path', 'numeric', 'between:-90,90'],
             'path.*.1'    => ['required_with:path', 'numeric', 'between:-180,180'],
+
             'description' => ['sometimes', 'nullable', 'string', 'max:1000'],
+
             'expiry'      => ['sometimes', 'date', 'after:now'],
         ]);
 
         if (isset($validated['expiry'])) {
+
             $validated['expiry'] = \Carbon\Carbon::parse(
                 $validated['expiry'],
                 'Asia/Manila'
             )->utc();
         }
- 
+
         if (isset($validated['path'])) {
+
             $validated['path'] = new LineString(
                 array_map(
                     fn($point) => new Point($point[0], $point[1]),
@@ -250,41 +264,48 @@ class FloodPathController extends Controller
         }
 
         $validated['last_confirmed'] = now();
- 
+
+
         $floodPath->update($validated);
- 
+
         return response()->json([
-            'message'    => 'Flood path updated successfully.',
-            // 'flood_path' => $this->formatFloodPath($floodPath->load([
-            //     'floodLevel:id,level_name,description',
-            //     'socialElement:id,user_id,posted_at,deactivated_at',
-            // ])),
+            'message' => 'Flood path updated successfully.',
+
+            'updated_by' => [
+                'id' => $user->id,
+                'role_id' => $user->role_id,
+            ],
         ], 200);
     }
- 
+
     /**
      * DELETE /flood-paths/{id}
-     *
-     * Soft deletes a flood path by setting deactivated_at on its SocialElement.
-     * Only the owner can deactivate their own path.
      */
     public function destroy(Request $request, int $id)
     {
         $user = $request->attributes->get('firebase_user');
- 
-        $floodPath = FloodPath::with('socialElement')
-            ->whereHas('socialElement', fn($q) => $q
-                ->where('user_id', $user->id)
-                ->whereNull('deactivated_at')
-            )
-            ->find($id);
- 
+
+        $query = FloodPath::with('socialElement')
+            ->whereHas('socialElement', fn($q) =>
+                $q->whereNull('deactivated_at')
+            );
+
+        // Only apply ownership restriction to normal users.
+        if ($user->role_id == 3) {
+
+            $query->whereHas('socialElement', fn($q) =>
+                $q->where('user_id', $user->id)
+            );
+        }
+
+        $floodPath = $query->find($id);
+
         if (!$floodPath) {
             return response()->json([
                 'message' => 'Flood path not found or you do not have permission to delete it.',
             ], 404);
         }
-        
+
         $deactivatedAt = now();
 
         $floodPath->socialElement->update([
@@ -293,12 +314,21 @@ class FloodPathController extends Controller
 
         return response()->json([
             'message' => 'Flood path deactivated successfully.',
+
             'deactivated_at' => $deactivatedAt
                 ->timezone('Asia/Manila')
                 ->toDateTimeString(),
+
+            // helpful for admin audit logs
+            'deactivated_by' => [
+                'id' => $user->id,
+                'role_id' => $user->role_id,
+            ],
         ], 200);
     }
  
+  
+
     // ── Private Helpers ───────────────────────────────────────────────────────
  
     /**
