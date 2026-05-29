@@ -236,7 +236,9 @@ function HazardForm() {
   const deleteHazard = () => handleDelete({ id: id, navigate: navigate });
 
   return loading ? (
-    <FormSkeleton />
+    <div className="w-full h-full flex flex-col items-center p-12 mt-8 mb-2 gap-4">
+      <FormSkeleton />
+    </div>
   ) : (
     <>
       {willDeactivate && (

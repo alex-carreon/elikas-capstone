@@ -192,6 +192,7 @@ function History() {
                     availability
                     isAvailable
                     link="/EvacForm"
+                    buttonId="History_ActiveEvacDetailsBtn"
                   />
                 ) : (
                   <Row
@@ -201,6 +202,7 @@ function History() {
                     datePosted="March 13, 2005"
                     availability
                     link="/EvacForm"
+                    buttonId="History_ClosedEvacDetailsBtn"
                   />
                 )
               ) : activeHaz ? (
@@ -214,6 +216,7 @@ function History() {
                         datePosted={path.posted_at}
                         link={`/HazardForm/${path.id}`}
                         isExpired={path.is_expired}
+                        buttonId="History_ActiveHazardDetailsBtn"
                       />
                     );
                 })
@@ -228,6 +231,7 @@ function History() {
                         datePosted={path.posted_at}
                         link="/HazardForm"
                         isExpired={path.is_expired}
+                        buttonId="History_ExpHazardDetailsBtn"
                       />
                     );
                 })
