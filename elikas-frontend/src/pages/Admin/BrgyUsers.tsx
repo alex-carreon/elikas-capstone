@@ -11,31 +11,36 @@ import {
 import { Filter, Search } from "lucide-react";
 import Row from "@/components/Row";
 import { Skeleton } from "@/components/ui/skeleton";
+import ButtonComp from "@/components/Button";
+import { Link } from "react-router";
 
-type Users = {
+type BrgyUser = {
   id: number;
   location: string;
   name: string;
   role: string;
 };
 
-function IndivUsers() {
+function BrgyUsers() {
+  const [loading, setLoading] = useState(false);
   const [activeCount, setActiveCount] = useState(0);
   const [deacCount, setDeacCount] = useState(0);
+  const [activeUsers, setActiveUsers] = useState<BrgyUser[]>([]);
+  const [deacUsers, setDeacUsers] = useState<BrgyUser[]>([]);
   const [isActiveUsers, setIsActiveUsers] = useState(true);
-  const [isFeedback, setIsFeedback] = useState(false);
-  const [activeUsers, setActiveUsers] = useState<Users[]>([]);
-  const [deacUsers, setDeacUsers] = useState<Users[]>([]);
-  const [loading, setLoading] = useState(false);
+  const [isSMS, setIsSMS] = useState(false);
 
   useEffect(() => {
     const getIndivData = async () => {
       try {
         setLoading(true);
         const [activeResponse, deacResponse] = await Promise.all([
-          api.get("/admin/users?role=indiv&active=true"),
-          api.get("/admin/users?role=indiv&active=false"),
+          api.get("/admin/users?role=brgy_op&active=true"),
+          api.get("/admin/users?role=brgy_op&active=false"),
         ]);
+
+        console.log("active", activeResponse);
+        console.log("deac", deacResponse);
 
         setActiveCount(activeResponse.data.count);
         setActiveUsers(activeResponse.data.users);
@@ -55,7 +60,7 @@ function IndivUsers() {
     <>
       <div className="w-full flex flex-col items-center">
         <div className="w-full max-w-md">
-          <DashboardHeader title="Indiv Users">
+          <DashboardHeader title="Barangay Users">
             <CountRow
               title="Active Users"
               lastUpdated="Last updated 3 minutes ago"
@@ -66,12 +71,6 @@ function IndivUsers() {
               title="Deactivated Users"
               lastUpdated="Last updated 3 minutes ago"
               count={deacCount}
-              loading={loading}
-            />
-            <CountRow
-              title="Active Users"
-              lastUpdated="Last updated 3 minutes ago"
-              count={0}
               loading={loading}
             />
           </DashboardHeader>
@@ -85,9 +84,9 @@ function IndivUsers() {
                   value="Active"
                   onClick={() => {
                     setIsActiveUsers(true);
-                    setIsFeedback(false);
+                    setIsSMS(false);
                   }}
-                  id="Admin_IndivIsActiveTrigger"
+                  id="Admin_BrgyIsActiveTrigger"
                 >
                   Active
                 </TabsTrigger>
@@ -95,9 +94,9 @@ function IndivUsers() {
                   value="Deactivated"
                   onClick={() => {
                     setIsActiveUsers(false);
-                    setIsFeedback(false);
+                    setIsSMS(false);
                   }}
-                  id="Admin_IndivNotActiveTrigger"
+                  id="Admin_BrgyNotActiveTrigger"
                 >
                   Deactivated
                 </TabsTrigger>
@@ -105,26 +104,40 @@ function IndivUsers() {
                   value="Feedback"
                   onClick={() => {
                     setIsActiveUsers(false);
-                    setIsFeedback(true);
+                    setIsSMS(true);
                   }}
-                  id="Admin_IndivFeedbackTrigger"
+                  id="Admin_BrgyFeedbackTrigger"
                 >
                   Feedback
                 </TabsTrigger>
               </TabsList>
             </Tabs>
-            <div className="w-2/3 flex justify-start items-center gap-2">
-              <InputGroup className="w-2/3">
-                <InputGroupInput
-                  className="text-sm h-8"
-                  id="Admin_IndivSearchField"
-                ></InputGroupInput>
-                <InputGroupAddon align="inline-end">
-                  <Search />
-                </InputGroupAddon>
-              </InputGroup>
-              <Filter size={18} id="Admin_IndivFilterBtn" />
+            <div className="flex flex-row">
+              <div className="w-2/3 flex justify-start items-center gap-2">
+                <InputGroup className="w-2/3">
+                  <InputGroupInput
+                    className="text-sm h-8"
+                    id="Admin_BrgySearchField"
+                  ></InputGroupInput>
+                  <InputGroupAddon align="inline-end">
+                    <Search />
+                  </InputGroupAddon>
+                </InputGroup>
+                <Filter size={18} id="Admin_BrgyFilterBtn" />
+              </div>
+              <div className="w-30">
+                <Link to="/admin-brgyAdd">
+                  <ButtonComp
+                    variant="primary"
+                    text="Add"
+                    id="Admin_BrgyAddBtn"
+                    heightSize="30px"
+                    widthSize="100%"
+                  />
+                </Link>
+              </div>
             </div>
+
             <div className="flex flex-col gap-2">
               {loading ? (
                 <>
@@ -148,14 +161,14 @@ function IndivUsers() {
                     <Row
                       key={index}
                       postId={String(user.id)}
-                      title={user.name}
-                      address={user.location}
-                      link={`/admin-userDetails/${user.id}`}
+                      title={user.location}
+                      address="San Juan city, Manila"
+                      link={`/admin-brgyDetails/${user.id}`}
                       buttonId="Admin_ActiveIndivDetailsBtn"
                     />
                   );
                 })
-              ) : isFeedback ? (
+              ) : isSMS ? (
                 <></>
               ) : (
                 deacUsers.map((user, index) => {
@@ -163,10 +176,10 @@ function IndivUsers() {
                     <Row
                       key={index}
                       postId={String(user.id)}
-                      title={user.name}
-                      address={user.location}
-                      link={`/admin-userDetails/${user.id}`}
-                      buttonId="Admin_DeacIndivDetailsBtn"
+                      title={user.location}
+                      address="San Juan city, Manila"
+                      link={`/admin-brgyDetails/${user.id}`}
+                      buttonId="Admin_ActiveIndivDetailsBtn"
                     />
                   );
                 })
@@ -180,4 +193,4 @@ function IndivUsers() {
   );
 }
 
-export default IndivUsers;
+export default BrgyUsers;

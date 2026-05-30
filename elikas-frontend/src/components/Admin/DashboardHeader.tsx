@@ -3,7 +3,13 @@ import { useState, useEffect } from "react";
 import { Outlet } from "react-router";
 import { toast } from "sonner";
 
-function DashboardHeader({ children }: { children: React.ReactNode }) {
+function DashboardHeader({
+  children,
+  title,
+}: {
+  children: React.ReactNode;
+  title: string;
+}) {
   const [username, setUsername] = useState("");
   const [email, setEmail] = useState("");
 
@@ -41,7 +47,7 @@ function DashboardHeader({ children }: { children: React.ReactNode }) {
         <div className="flex flex-row justify-between items-center">
           <div className="w-1/2">
             <p className="text-white BeVietnamPro text-2xl font-bold">
-              Indiv Users Information
+              {title}
             </p>
           </div>
           <div className="text-white BeVietnamPro text-end">
