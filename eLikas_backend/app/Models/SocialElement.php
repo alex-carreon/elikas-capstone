@@ -12,14 +12,14 @@ use Illuminate\Database\Eloquent\Model;
 
 /**
  * Class SocialElement
- * 
+ *
  * @property int $id
  * @property int|null $user_id
  * @property Carbon $posted_at
  * @property int $type_id
  * @property bool $has_media
  * @property Carbon|null $deactivated_at
- * 
+ *
  * @property User|null $user
  * @property TargetTable $target_table
  * @property Collection|Comment[] $comments
@@ -27,7 +27,7 @@ use Illuminate\Database\Eloquent\Model;
  * @property Collection|EvacArea[] $evac_areas
  * @property Collection|Flag[] $flags
  * @property Collection|FloodPath[] $flood_paths
- * @property Collection|Medium[] $media
+ * @property Collection|MediaFile[] $media
  * @property Collection|ModerationLog[] $moderation_logs
  * @property Collection|Sensor[] $sensors
  * @property Collection|Vote[] $votes
@@ -35,7 +35,7 @@ use Illuminate\Database\Eloquent\Model;
  * @package App\Models
  */
 class SocialElement extends Model
-{	
+{
 	protected $table = 'SocialElements';
 	public $timestamps = false;
 
@@ -92,7 +92,7 @@ class SocialElement extends Model
 
 	public function media()
 	{
-		return $this->hasMany(Medium::class, 'parent_id');
+		return $this->hasMany(MediaFile::class, 'parent_id');
 	}
 
 	public function moderationLog()

@@ -13,6 +13,7 @@ class GetEvacAreaDetailsController extends Controller
 
             $pin = EvacArea::with([
                 'social_element.user',
+                'social_element.media',
                 'gov_op.user'
             ])->find($id);
 
@@ -71,7 +72,13 @@ class GetEvacAreaDetailsController extends Controller
                         ? $pin->social_element->posted_at->timezone('Asia/Manila')->toDateTimeString()
                         : null,
                 ],
-
+                'media' => $pin->social_element?->media->map(function ($media) {
+                    return [
+                        'id' => $media->id,
+                        'url' => config('app.media_base_url') . '/' . $media->file_path,
+                        'type' => $media->file_type,
+                    ];
+                })->toArray() ?? [],
                 'last_confirmed' => $pin->verified_at
                     ? $pin->verified_at->timezone('Asia/Manila')->toDateTimeString()
                     : null,
