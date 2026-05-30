@@ -21,6 +21,7 @@ interface AlertDialogueProps {
   contentId: string;
   closeId: string;
   actionId: string;
+  btnType?: "submit" | "button" | "reset" | undefined;
 }
 
 function AlertDialogue({
@@ -34,6 +35,7 @@ function AlertDialogue({
   contentId,
   closeId,
   actionId,
+  btnType,
 }: AlertDialogueProps) {
   return (
     <>
@@ -66,6 +68,7 @@ function AlertDialogue({
               className="h-10 w-full"
               onClick={onClick}
               id={actionId}
+              type={btnType}
             >
               {buttonText}
             </AlertDialogAction>

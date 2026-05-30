@@ -10,6 +10,7 @@ interface ButtonProps {
   isDisabled?: boolean;
   widthSize?: string;
   heightSize?: string;
+  formId?: string;
 }
 
 function ButtonComp({
@@ -21,6 +22,7 @@ function ButtonComp({
   isDisabled,
   widthSize,
   heightSize,
+  formId,
 }: ButtonProps) {
   if (variant === "primary") {
     return (
@@ -34,6 +36,7 @@ function ButtonComp({
         id={id}
         type={type}
         disabled={isDisabled}
+        form={formId}
       >
         {text}
       </Button>
@@ -50,6 +53,7 @@ function ButtonComp({
         }}
         id={id}
         disabled={isDisabled}
+        form={formId}
       >
         {text}
       </Button>
@@ -67,6 +71,7 @@ function ButtonComp({
         }}
         id={id}
         disabled={isDisabled}
+        form={formId}
       >
         {text}
       </Button>
