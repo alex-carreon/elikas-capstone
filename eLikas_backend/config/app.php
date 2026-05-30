@@ -123,4 +123,6 @@ return [
         'store' => env('APP_MAINTENANCE_STORE', 'database'),
     ],
 
+    'media_base_url' => env('MEDIA_BASE_URL', 'http://nginx'),
+
 ];

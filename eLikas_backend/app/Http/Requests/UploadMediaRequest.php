@@ -23,7 +23,7 @@ class UploadMediaRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'file' => ['required', 'file', 'image', 'mimes:jpg,jpeg,png,heic', 'max:8192']
+            'file' => ['required', 'file', 'image', 'mimes:jpg,jpeg,png', 'max:8192']
         ];
     }
 }
