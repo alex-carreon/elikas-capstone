@@ -1,6 +1,6 @@
 import WhiteLogo from "@/components/Admin/WhiteLogo";
 import { ArrowLeft } from "lucide-react";
-import { Outlet, useNavigate } from "react-router";
+import { useNavigate } from "react-router";
 import { bigSmile } from "@dicebear/collection";
 import { createAvatar } from "@dicebear/core";
 import ButtonComp from "@/components/Button";
@@ -10,8 +10,15 @@ interface FormLayoutProps {
   children: React.ReactNode;
   updateId?: string;
   deleteId?: string;
+  submitUpdId?: string;
+  closeUpdId?: string;
   deleteClick?: () => void;
   updateClick?: () => void;
+  closeUpdClick?: () => void;
+  isEditable?: boolean;
+  formId?: string;
+  updBtnLabel?: string;
+  btnType?: "button" | "submit" | "reset" | undefined;
 }
 
 function FormLayout({
@@ -21,6 +28,13 @@ function FormLayout({
   deleteId,
   deleteClick,
   updateClick,
+  isEditable,
+  submitUpdId,
+  closeUpdId,
+  closeUpdClick,
+  formId,
+  updBtnLabel,
+  btnType,
 }: FormLayoutProps) {
   const navigate = useNavigate();
 
@@ -38,7 +52,7 @@ function FormLayout({
 
   return (
     <>
-      <div className="h-full w-full flex flex-col items-center">
+      <div className="h-screen w-full flex flex-col items-center">
         <div className="w-full max-w-md">
           <div className="pt-6 bg-[#FFB13B] px-6 pb-14 flex flex-col gap-4">
             <div className="flex flex-row justify-between items-center">
@@ -54,7 +68,7 @@ function FormLayout({
             <div className="bg-white h-12 w-9/10 rounded-lg flex items-center pt-2 pl-4">
               <ArrowLeft id="Admin_BackBtn" onClick={() => navigate(-1)} />
             </div>
-            <div className="bg-white h-content w-full -m-2 rounded-lg flex flex-col gap-8">
+            <div className="bg-white h-full w-full -m-2 rounded-lg flex flex-col justify-between">
               <div className="flex flex-col items-center">
                 {isAvatar && <img src={dataUri} className="w-24" />}
                 <div
@@ -67,7 +81,28 @@ function FormLayout({
                   {children}
                 </div>
               </div>
-              {updateId && deleteId ? (
+              {isEditable && submitUpdId && closeUpdId ? (
+                <>
+                  <div className="mx-4 flex justify-evenly shrink gap-4 mb-8">
+                    <ButtonComp
+                      text="Submit"
+                      variant="primary"
+                      id={submitUpdId}
+                      heightSize="38px"
+                      type="submit"
+                      formId={formId}
+                    />
+                    <ButtonComp
+                      text="Cancel"
+                      variant="outline"
+                      id={closeUpdId}
+                      heightSize="38px"
+                      type="button"
+                      onClick={closeUpdClick}
+                    />
+                  </div>
+                </>
+              ) : updateId && deleteId ? (
                 <div className="mx-4 flex justify-evenly shrink gap-4 mb-8">
                   <ButtonComp
                     text="Update"
@@ -89,14 +124,15 @@ function FormLayout({
                 </div>
               ) : (
                 <div className="w-full flex justify-center items-center px-4 mb-8">
-                  {updateId && (
+                  {updateId && updBtnLabel && (
                     <ButtonComp
-                      text="Update"
+                      text={updBtnLabel}
                       variant="primary"
                       id={updateId}
                       heightSize="38px"
-                      type="button"
-                      onClick={updateClick}
+                      type={btnType}
+                      // onClick={updateClick}
+                      formId={formId}
                     />
                   )}
                   {deleteId && (

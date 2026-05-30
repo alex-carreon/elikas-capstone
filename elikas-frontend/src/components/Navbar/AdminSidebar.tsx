@@ -52,7 +52,7 @@ function AdminSidebar() {
       label: "Barangay Management",
       description: "Manage Barangay Accounts",
       icon: Landmark,
-      link: "",
+      link: "/admin-brgy",
       testId: "Admin_BurgerNavBrgy",
     },
     {

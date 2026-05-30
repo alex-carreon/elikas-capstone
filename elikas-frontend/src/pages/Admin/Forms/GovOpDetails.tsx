@@ -13,21 +13,21 @@ type UserData = {
   created_at: string;
   deactivated_at: string;
   email: string;
-  first_name: string;
-  id: number;
-  indiv_location: string;
-  indiv_location_id: number;
-  last_name: string;
-  phone: string | null;
-  role: string | null;
   username: string;
+  govop_level: string;
+  id: number;
+  govop_location: string;
+  govop_location_id: number;
+  point_person: string;
+  point_position: string;
+  role: string | null;
 };
 
 type Barangays = {
   id: number;
   name: string;
-  parent_id: number;
-  parent_location: Cities;
+  role: string;
+  location: string;
 };
 
 type Cities = {
@@ -43,18 +43,18 @@ type Province = {
   name: string;
 };
 
-function UserDetails() {
+function BrgyDetails() {
   const { id } = useParams();
   const { token } = useUserContext();
   const navigate = useNavigate();
 
   const [username, setUsername] = useState("");
-  const [firstname, setFirstname] = useState("");
-  const [lastname, setLastname] = useState("");
   const [email, setEmail] = useState("");
   const [location, setLocation] = useState("");
   const [locationId, setLocationId] = useState("");
-  const [phone, setPhone] = useState<string>("");
+  const [pointPerson, setPointPerson] = useState("");
+  const [pointPosition, setPointPosition] = useState("");
+  const [locLevel, setLocLevel] = useState("");
   const [createdAt, setCreatedAt] = useState("");
   const [loading, setLoading] = useState(false);
   const [willDeac, setWillDeac] = useState(false);
@@ -63,9 +63,11 @@ function UserDetails() {
   const [barangays, setBarangays] = useState<Barangays[]>([]);
   const [cities, setCities] = useState<Cities[]>([]);
   const [cityId, setCityId] = useState(0);
+  const [brgyLoad, setBrgyLoad] = useState(false);
+  const [isCity, setIsCity] = useState(false);
 
   //   Get Details
-  const getIndivDetails = async () => {
+  const getGovopDetails = async () => {
     try {
       setLoading(true);
       const response = await api.get(`/admin/users/${id}`, {
@@ -83,19 +85,25 @@ function UserDetails() {
       const userDetails = response.data;
       setUserData(userDetails);
       setUsername(userDetails.username);
-      setFirstname(userDetails.first_name);
-      setLastname(userDetails.last_name);
       setEmail(userDetails.email);
-      setLocation(userDetails.indiv_location);
-      setLocationId(String(userDetails.indiv_location_id));
-      setPhone(userDetails.phone);
+      setLocation(userDetails.govop_location);
+      setLocationId(String(userDetails.govop_location_id));
       setCreatedAt(userDetails.created_at);
+      setPointPerson(userDetails.point_person);
+      setPointPosition(userDetails.point_position);
+      setLocLevel(userDetails.govop_level);
     } catch (err: string | any) {
       Error(err.message || "An error occurred");
     } finally {
       setLoading(false);
     }
   };
+
+  useEffect(() => {
+    if (locLevel === "city") {
+      setIsCity(true);
+    }
+  }, [locLevel]);
 
   const getCity = async () => {
     try {
@@ -112,10 +120,13 @@ function UserDetails() {
   };
 
   useEffect(() => {
-    if (!cityId) return;
+    if (!cityId) {
+      return;
+    }
 
     const getBrgy = async () => {
       try {
+        setBrgyLoad(true);
         const brgyRes = await api.get(`/locations/barangays?city_id=${cityId}`);
 
         const barangays = brgyRes.data.Barangays;
@@ -123,23 +134,16 @@ function UserDetails() {
         setBarangays(barangays);
       } catch (err: any) {
         console.log(err.message);
+      } finally {
+        setBrgyLoad(false);
       }
     };
 
     getBrgy();
   }, [cityId]);
 
-  const updateIndiv = async (e: React.FormEvent) => {
+  const updateGovop = async (e: React.FormEvent) => {
     e.preventDefault();
-
-    console.log("Sending:", {
-      username,
-      email,
-      first_name: firstname,
-      last_name: lastname,
-      phone,
-      indiv_location_id: locationId,
-    });
 
     try {
       const response = await api.patch(
@@ -147,11 +151,9 @@ function UserDetails() {
         {
           username: username,
           email: email,
-          first_name: firstname,
-          last_name: lastname,
-          ...(phone ? { phone } : {}),
-          // indiv_location_id: location,
-          indiv_location_id: locationId,
+          govop_location_id: locationId,
+          pointPerson: pointPerson,
+          pointPosition: pointPosition,
         },
         {
           headers: {
@@ -165,14 +167,14 @@ function UserDetails() {
         return;
       } else {
         setIsEditable(false);
-        getIndivDetails();
+        getGovopDetails();
       }
     } catch (err: string | any) {
       console.log(err.response?.data);
     }
   };
 
-  const deacIndiv = async () => {
+  const deacGovop = async () => {
     try {
       const deacPromise = new Promise(async (resolve, reject) => {
         const response = await api.patch(`/admin/users/${id}/deactivate`, {
@@ -198,7 +200,7 @@ function UserDetails() {
       });
 
       deacPromise.then(() => {
-        navigate("/admin-indiv");
+        navigate("/admin-brgy");
       });
     } catch (error) {
       console.error("Error during logout:", error);
@@ -206,9 +208,10 @@ function UserDetails() {
   };
 
   useEffect(() => {
-    getIndivDetails();
+    getGovopDetails();
 
     if (isEditable) {
+      console.log(locLevel);
       getCity();
     }
   }, [isEditable]);
@@ -217,10 +220,12 @@ function UserDetails() {
     if (isEditable && userData) {
       setUsername(userData.username);
       setEmail(userData.email);
-      setFirstname(userData.first_name);
-      setLastname(userData.last_name);
-      setPhone(userData.phone ?? "");
-      setLocationId(String(userData.indiv_location_id));
+      setLocation(userData.govop_location);
+      setLocationId(String(userData.govop_location_id));
+      setCreatedAt(userData.created_at);
+      setPointPerson(userData.point_person);
+      setPointPosition(userData.point_position);
+      setLocLevel(userData.govop_level);
     }
   }, [isEditable]);
 
@@ -228,33 +233,33 @@ function UserDetails() {
     <>
       {willDeac && (
         <AlertDialogue
-          contentId="Admin_IndivDeacContent"
-          closeId="Admin_IndivDeacClose"
-          actionId="Admin_IndivDeacBtn"
+          contentId="Admin_GovopDeacContent"
+          closeId="Admin_GovopDeacClose"
+          actionId="Admin_GovopDeacBtn"
           open={willDeac}
-          title="You are about to delete this pin"
-          description="Deleting this pin will remove it from the map and your history permanently."
+          title="You are about to delete this Barangay account"
+          description="By deleting this barangay, it will not be called again."
           buttonText="Delete"
           onClose={() => {
             setWillDeac(false);
           }}
-          onClick={deacIndiv}
+          onClick={deacGovop}
         />
       )}
       <FormLayout
-        isAvatar
-        updateId="Admin_IndivUpdateBtn"
-        deleteId="Admin_IndivDeleteBtn"
+        updateId="Admin_GovopUpdateBtn"
+        updBtnLabel="Update"
+        deleteId="Admin_GovopDeleteBtn"
         deleteClick={() => setWillDeac(true)}
-        submitUpdId="Admin_IndivSubmitUpdBtn"
-        closeUpdId="Admin_IndivCloseUpdBtn"
+        submitUpdId="Admin_GovopSubmitUpdBtn"
+        closeUpdId="Admin_GovopCloseUpdBtn"
         isEditable={isEditable}
         updateClick={() => setIsEditable(true)}
         closeUpdClick={() => {
           setIsEditable(false);
-          getIndivDetails();
+          getGovopDetails();
         }}
-        formId="Admin_IndivUpdateForm"
+        formId="Admin_GovopUpdateForm"
       >
         {loading ? (
           <div className="flex justify-center">
@@ -263,75 +268,61 @@ function UserDetails() {
         ) : (
           <>
             <form
-              onSubmit={updateIndiv}
+              onSubmit={updateGovop}
               className="flex flex-col gap-4"
-              id="Admin_IndivUpdateForm"
+              id="Admin_GovopUpdateForm"
             >
               <TextField
                 label="User ID"
                 inputType="text"
-                id="Admin_IndivIdField"
+                id="Admin_GovopIdField"
                 value={id}
                 readonly
               />
               <TextField
                 label="Username"
                 inputType="text"
-                id="Admin_IndivUsernameField"
+                id="Admin_GovopUsernameField"
                 value={username}
                 readonly={!isEditable}
                 onSubmit={(e) => setUsername(e.target.value)}
               />
               <TextField
-                label="First Name"
-                inputType="text"
-                id="Admin_IndivFirstnameField"
-                value={firstname}
-                readonly={!isEditable}
-                onSubmit={(e) => setFirstname(e.target.value)}
-              />
-              <TextField
-                label="Last Name"
-                inputType="text"
-                id="Admin_IndivLastnameField"
-                value={lastname}
-                readonly={!isEditable}
-                onSubmit={(e) => setLastname(e.target.value)}
-              />
-              <TextField
                 label="Email"
                 inputType="text"
-                id="Admin_IndivEmailField"
+                id="Admin_GovopEmailField"
                 value={email}
-                readonly={!isEditable}
-                onSubmit={(e) => setEmail(e.target.value)}
-              />
-              {/* <TextField
-                label="Address"
-                inputType="text"
-                id="Admin_IndivAddressField"
-                value={location}
                 readonly
-              /> */}
+              />
               {!isEditable ? (
-                <TextField
-                  label="Address"
-                  inputType="text"
-                  id="Admin_IndivAddressField"
-                  value={location}
-                  readonly
-                />
+                <>
+                  <TextField
+                    label="Government Level"
+                    inputType="text"
+                    id="Admin_GovopLevelField"
+                    value={locLevel}
+                    readonly={!isEditable}
+                    onSubmit={(e) => setLocLevel(e.target.value)}
+                  />
+                  <TextField
+                    label="Address"
+                    inputType="text"
+                    id="Admin_GovopAddressField"
+                    value={location}
+                    readonly={!isEditable}
+                    // onSubmit={(e) => setLocation(e.target.value)}
+                  />
+                </>
               ) : (
                 <>
                   <SelectDropdown
                     value={String(cityId)}
                     onValueChange={(val) => {
-                      setCityId;
                       setCityId(Number(val));
                     }}
                     label="City"
                     placeholder="Select a City"
-                    id="Admin_IndivCityField"
+                    id="Admin_GovopCityField"
                     onSubmit={(e) => setLocation(e.target.value)}
                     options={cities?.map((city) => ({
                       label: city.name,
@@ -339,34 +330,44 @@ function UserDetails() {
                     }))}
                     isRequired={!id ? true : false}
                   />
-                  <SelectDropdown
-                    value={String(locationId)}
-                    onValueChange={setLocationId}
-                    label="Barangay"
-                    placeholder="Select a Barangay (Please select a city first)"
-                    id="Admin_IndivBrgyField"
-                    onSubmit={(e) => setLocation(e.target.value)}
-                    options={barangays?.map((brgy) => ({
-                      label: brgy.name,
-                      value: String(brgy.id),
-                    }))}
-                    isRequired={!id ? true : false}
-                  />
+                  {isCity ? null : (
+                    <SelectDropdown
+                      value={String(locationId)}
+                      onValueChange={setLocationId}
+                      label="Barangay"
+                      placeholder="Select a Barangay (Please select a city first)"
+                      id="Admin_GovopBrgyField"
+                      onSubmit={(e) => setLocation(e.target.value)}
+                      options={barangays?.map((brgy) => ({
+                        label: brgy.name,
+                        value: String(brgy.id),
+                      }))}
+                      isRequired={!id ? true : false}
+                      loading={brgyLoad}
+                    />
+                  )}
                 </>
               )}
 
               <TextField
-                label="Contact Number"
+                label="Point person"
                 inputType="text"
-                id="Admin_IndivContactNoField"
-                value={phone ?? ""}
+                id="Admin_GovopPointPersonField"
+                value={pointPerson}
                 readonly={!isEditable}
-                onSubmit={(e) => setPhone(e.target.value)}
+                onSubmit={(e) => setPointPerson(e.target.value)}
+              />
+              <TextField
+                label="Point person's position"
+                inputType="text"
+                id="Admin_GovopPointPositionField"
+                value={pointPosition}
+                readonly
               />
               <TextField
                 label="Created At"
                 inputType="text"
-                id="Admin_IndivCreatedField"
+                id="Admin_GovopCreatedField"
                 value={createdAt}
                 readonly
               />
@@ -378,4 +379,4 @@ function UserDetails() {
   );
 }
 
-export default UserDetails;
+export default BrgyDetails;
