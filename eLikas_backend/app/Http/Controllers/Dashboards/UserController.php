@@ -165,10 +165,10 @@ class UserController extends Controller
                     = $user->govOp?->location?->id;
 
                 $response['govop_location']
-                    = $user->govOp?->location?->name;
+                    = $user->govOp?->location?->full_location;
 
                 $response['govop_level']
-                    =  $user->govOp?->location?->full_location;
+                    =  $user->govOp?->location?->locationLevel->level_name;
 
                 $response['point_person']
                     = $user->govOp?->point_person;
