@@ -5,7 +5,7 @@ import ButtonComp from "./Button";
 interface rowProps {
   postId: string;
   title: string;
-  address: string;
+  address?: string;
   datePosted?: string;
   isAvailable?: boolean;
   availability?: boolean;

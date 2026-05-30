@@ -27,6 +27,9 @@ import HotlinesForm from "./pages/brgy_ops/HotlinesForm";
 import Layout from "@/pages/Admin/layout";
 import IndivUsers from "@/pages/Admin/IndivUsers";
 import UserDetails from "./pages/Admin/Forms/UserDetails";
+import BrgyUsers from "./pages/Admin/BrgyUsers";
+import GovopDetails from "./pages/Admin/Forms/GovOpDetails";
+import BrgyAdd from "./pages/Admin/Forms/GovopAdd";
 
 function App() {
   return (
@@ -71,9 +74,12 @@ function App() {
           <Route element={<Layout />}>
             <Route path="/admin-map" element={<Map />} />
             <Route path="/admin-indiv" element={<IndivUsers />} />
+            <Route path="/admin-brgy" element={<BrgyUsers />} />
           </Route>
 
           <Route path="/admin-userDetails/:id" element={<UserDetails />} />
+          <Route path="/admin-brgyDetails/:id" element={<GovopDetails />} />
+          <Route path="/admin-brgyAdd" element={<BrgyAdd />} />
         </Route>
 
         <Route element={<ProtectedRoute />}>

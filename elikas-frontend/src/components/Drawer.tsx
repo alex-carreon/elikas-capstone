@@ -403,13 +403,15 @@ function DrawerComp({
     content = (
       <>
         <div className="flex justify-between px-4">
-          <ButtonComp
-            text={expanded ? "Press to Collapse" : "Press to Expand"}
-            id="DrawerInfo_ExpandCollapse"
-            variant="outline"
-            onClick={() => setExpanded(!expanded)}
-            widthSize="40"
-          ></ButtonComp>
+          <div>
+            <ButtonComp
+              text={expanded ? "Press to Collapse" : "Press to Expand"}
+              id="DrawerInfo_ExpandCollapse"
+              variant="outline"
+              onClick={() => setExpanded(!expanded)}
+              widthSize="40"
+            ></ButtonComp>
+          </div>
           <DrawerClose id="DrawerInfo_Close">
             <CircleX size={28} fill="#CECECE" strokeWidth={1} />
           </DrawerClose>

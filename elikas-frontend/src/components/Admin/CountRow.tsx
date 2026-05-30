@@ -5,9 +5,10 @@ interface CountRowProps {
   title: string;
   lastUpdated: string;
   count: number | null;
+  loading: boolean;
 }
 
-function CountRow({ title, lastUpdated, count }: CountRowProps) {
+function CountRow({ title, lastUpdated, count, loading }: CountRowProps) {
   return (
     <div className="bg-white w-full rounded-lg h-content py-2 px-4 flex flex-row justify-between items-center shadow-md">
       <div className="flex flex-col">
@@ -19,7 +20,7 @@ function CountRow({ title, lastUpdated, count }: CountRowProps) {
         </p>
       </div>
       <div className="text-2xl text-[#FFA011] font-bold">
-        {count === 0 ? <Spinner /> : <p>{count}</p>}
+        {loading ? <Spinner /> : <p>{count}</p>}
       </div>
     </div>
   );
