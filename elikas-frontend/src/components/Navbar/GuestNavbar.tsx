@@ -13,14 +13,14 @@ function GuestNavbar() {
   return (
     <>
       <div className="fixed top-0 left-0 z-50 w-full h-content flex flex-col justify-center items-center gap-3">
-        <div className="w-full max-w-md flex flex-row justify-between items-center p-3 shadow-lg bg-white">
+        <div className="w-full max-w-md flex flex-row justify-between items-center p-2 shadow-lg bg-white">
           <Link to="/Login">
             <div>
               <ButtonComp
                 text="Sign-in"
                 variant="primary"
                 id="Navbar_SignIn"
-                heightSize="45px"
+                heightSize="40px"
                 widthSize="100%"
               />
             </div>
@@ -33,7 +33,7 @@ function GuestNavbar() {
               id="NavbarGuest_Hotlines"
               className="flex flex-col justify-center items-center"
             >
-              <Phone style={{ color: colors.heading }} />
+              <Phone style={{ color: colors.heading }} size={20} />
               <p
                 className="text-xs text-center p-1"
                 style={{ color: colors.label }}

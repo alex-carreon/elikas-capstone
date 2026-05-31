@@ -1,6 +1,6 @@
 import "../App.css";
 import colors from "../constants/colors";
-import { Field, FieldLabel } from "@/components/ui/field";
+import { Field, FieldLabel, FieldDescription } from "@/components/ui/field";
 import { type LucideIcon } from "lucide-react";
 import {
   InputGroup,
@@ -13,6 +13,7 @@ import { Eye } from "lucide-react";
 
 interface TextFieldProps {
   label?: string;
+  description?: string;
   placeholder?: string;
   icon?: LucideIcon;
   endIcon?: LucideIcon;
@@ -25,6 +26,10 @@ interface TextFieldProps {
   error?: string;
   value?: string;
   ref?: Ref<HTMLInputElement>;
+  accept?: string;
+  readonly?: boolean;
+  defaultValue?: string;
+  capture?: boolean;
 }
 
 function TextField({
@@ -40,15 +45,21 @@ function TextField({
   error,
   value,
   ref,
+  accept,
+  readonly,
+  defaultValue,
+  description,
+  capture,
 }: TextFieldProps) {
   const [showPassword, setShowPassword] = useState(false);
 
   return (
     <div className="flex flex-col w-full max-w-s self-center">
-      <Field className="flex shrink">
+      <Field className="flex shrink gap-1">
         <FieldLabel className={"text-sm w-s"} style={{ color: colors.label }}>
           {label}
         </FieldLabel>
+        <FieldDescription>{description}</FieldDescription>
         <InputGroup>
           <InputGroupInput
             required={isRequired}
@@ -59,6 +70,10 @@ function TextField({
             onChange={onSubmit}
             value={value}
             ref={ref}
+            accept={accept}
+            readOnly={readonly}
+            defaultValue={defaultValue}
+            capture={capture}
           ></InputGroupInput>
           <InputGroupAddon>
             {Icon && <Icon style={{ color: colors.activeIcon }}></Icon>}

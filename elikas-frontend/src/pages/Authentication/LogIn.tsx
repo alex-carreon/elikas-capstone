@@ -6,10 +6,11 @@ import CheckBox from "@/components/CheckBox";
 import ButtonComp from "@/components/Button";
 import { Mail } from "lucide-react";
 import { Lock } from "lucide-react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { useState } from "react";
 import { auth } from "@/firebase";
 import { signInWithEmailAndPassword } from "@firebase/auth";
+import { toast } from "sonner";
 
 function LogIn() {
   const [email, setEmail] = useState("");
@@ -19,11 +20,10 @@ function LogIn() {
     password: "",
     general: "",
   });
+  const navigate = useNavigate();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    console.log(email, password);
-    console.log("Submitting login form with:", { email, password });
 
     try {
       // Step 1: Sign in with Firebase — checks email + password
@@ -35,44 +35,53 @@ function LogIn() {
 
       if (!userCredential.user.emailVerified) {
         // Optionally sign them out so they can't access protected routes
-        console.log("not verified");
         await auth.signOut();
         setErrors({
           email: "",
           password: "",
           general: "Please verify your email before logging in.",
         });
+        return;
       }
 
       // Step 2: Get the ID token — this is proof of identity sent to Laravel
       const token = await userCredential.user.getIdToken();
 
-      console.log("Firebase Token:", token); // to see the token
-
       // Step 3: Send token to Laravel to get the user's role
-      const response = await fetch("http://localhost:8000/api/auth/login", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
+      const loginPromise = new Promise(async (resolve, reject) => {
+        const response = await fetch("http://localhost:8000/api/auth/login", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+        });
+        // // Step 4: Save user info so other pages can access it
+        // localStorage.setItem("user", JSON.stringify(userData));
+        const userData = await response.json();
+
+        if (!response.ok) {
+          reject(setErrors(userData.error || "Login failed"));
+        } else {
+          resolve(userData);
+        }
       });
 
-      const userData = await response.json();
-
-      if (!response.ok) {
-        setErrors(userData.error || "Login failed");
-      }
-
-      // // Step 4: Save user info so other pages can access it
-      // localStorage.setItem("user", JSON.stringify(userData));
+      toast.promise(loginPromise, {
+        loading: "Logging you in...",
+        success: "You're logged in!",
+        error: "User not found",
+        position: "top-center",
+      });
 
       // Step 5: Redirect based on role
-      if (userData.role === "admin") {
-        window.location.href = "/admin-dashboard";
-      } else {
-        window.location.href = "/Map";
-      }
+      loginPromise.then((userData: any) => {
+        if (userData.role === "admin") {
+          window.location.href = "/admin-map";
+        } else {
+          navigate("/Map");
+        }
+      });
     } catch (err: string | any) {
       if (
         err.code === "auth/user-not-found" ||
@@ -161,7 +170,7 @@ function LogIn() {
                 </Link>
               </div>
             </div>
-            <div className="w-full flex justify-center items-center m-0">
+            <div className="w-full flex flex-col justify-center items-center m-0 gap-2">
               <ButtonComp
                 text="Log In"
                 variant="primary"
@@ -170,9 +179,19 @@ function LogIn() {
                 heightSize="38px"
                 widthSize="100%"
               ></ButtonComp>
+              <Link to="/" className="w-full flex justify-center">
+                <ButtonComp
+                  text="View the Map"
+                  variant="outline"
+                  type="button"
+                  id="LogIn_MapBtn"
+                  heightSize="38px"
+                  widthSize="100%"
+                ></ButtonComp>
+              </Link>
             </div>
           </form>
-          <div className="flex justify-start flex-col content-center mx-auto text-sm">
+          <div className="flex justify-start flex-col content-center mx-auto text-sm gap-3">
             <p className={"flex justify-self-center truncate"}>
               Don't have an account yet? &nbsp;
               <Link to="/Registration/Splash" id="L-Register">
@@ -185,6 +204,15 @@ function LogIn() {
                 </span>
               </Link>
               !
+            </p>
+            <p className="text-center">
+              Contact us at{" "}
+              <span
+                className="font-medium"
+                style={{ color: colors.activeIcon }}
+              >
+                elikasteam@gmail.com
+              </span>
             </p>
           </div>
         </div>

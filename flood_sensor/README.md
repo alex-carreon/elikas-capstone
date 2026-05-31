@@ -21,19 +21,13 @@
       <ul>
         <li><a href="#distance-calculation">Distance Calculation</a></li>
         <li><a href="#connectivity">Connectivity</a></li>
-        <li><a href="#connectivity">Over-the-Air (OTA) Updates</a></li>
+        <li><a href="#ntp-implementation--timestamping">Over-the-Air (OTA) Updates</a></li>
+        <li><a href="#signal-filtering--sampling-strategy">Signal Filtering & Sampling Strategy</a></li>
         <li><a href="#data-transmission-json-api">Data Transmission (JSON API)</a></li>
       </ul>
     </li>
     <li>
       <a href="#roadmap">Roadmap</a>
-      <ul>
-        <li><a href="#phase-1-basic-prototyping">Phase 1: Basic Prototyping</a></li>
-        <li><a href="#phase-2-data-handling--connectivity">Phase 2: Data Handling & Connectivity</a></li>
-        <li><a href="#phase-3-logic--reliability">Phase 3: Logic & Reliability</a></li>
-        <li><a href="#phase-4-final-hardware--power">Phase 4: Final Hardware & Power</a></li>
-        <li><a href="#phase-5-deployment">Phase 5: Deployment</a></li>
-      </ul>
     </li>
   </ol>
 </details>
@@ -143,6 +137,31 @@ const int daylightOffset_sec = 0;  // DST off per PST
 All HTTP POST requests are withheld until the internal clock has been successfully synchronized with an NTP server, preventing invalid timestamps (e.g., Unix epoch `1970-01-01 00:00:00`) from being recorded in the database.
 
 Using the strftime function, the raw system time is converted into a standardized string formatted as `YYYY-MM-DD HH:MM:SS`. This format allows lexicographic sorting (i.e., timestamps can be ordered even as simple strings) and aligns with most databases' `DATETIME` standards. 
+
+<p align="right">(<a href="#readme-top">back to top</a>)</p>
+
+
+### Signal Filtering & Sampling Strategy
+Raw ultrasonic readings are inherently noisy because of the way that the sensor measures distance. Since water is not a stable surface, ripples, floating debris, and reflected pulses from nearby objects can cause erroneous spikes, making a single raw reading unreliable ([Harres, 2012](https://www.edn.com/median-filters-an-efficient-way-to-remove-impulse-noise/)).
+
+To address this, the device takes a short burst of readings every minute and computes for the **median**, specifically chosen because it is more resistant to extreme outlier values common in ultrasonic water surface measurements. A **median filter discards straggler values** entirely rather than allowing them to drag the result in either direction, unlike a mean-based moving average ([Harres, 2012](https://www.edn.com/median-filters-an-efficient-way-to-remove-impulse-noise/)).
+
+#### Two-Tiered Relay Strategy
+Under normal conditions, the system operates in a **quiescent state**, reporting a final water level **every 10 minutes**. This reflects established practice in IoT river level monitoring, where 10 minutes is a commonly recognized transmission interval for non-critical conditions ([Manx Tech Group, 2026](https://manxtechgroup.com/iot-ultrasonic-sensors-revolutionising-river-level-monitoring/)).
+
+However, 10-minute resolution is insufficient during a rapidly developing flood. Research on flash flood hydrographs shows that the rising limb, or the period when water climbs fastest, can involve stage increases exceeding 1 meter per hour, and that coarser reporting intervals cause this critical surge window to be missed entirely ([Huang et al., 2020](https://doi.org/10.3390/w12010255]). 
+
+For instance, the NOAA FLASH project runs at a fine, 5-minute interval to capture rapidly developing flash floods (NOAA, 2012). Industry guidance similarly mention quick intervals ranging from a few times per second to minutely for higher-risk rivers and pre-emptive flood detection scenarios ([Manx Tech Group, 2026](https://manxtechgroup.com/iot-ultrasonic-sensors-revolutionising-river-level-monitoring/); [MaxBotix, 2025](https://maxbotix.com/pages/ultrasonic-flood-level-monitoring)).
+
+As such, the system transitions to an **active state** if consecutive per-minute medians reflect a consistent and significant upward trend in water level, escalating the relay interval to **once per minute**. This adaptive escalation is grounded in embedded systems debouncing practice, where a state change is only accepted after N consecutive stable readings confirm the trend, preventing a single anomalous rise from triggering premature escalation ([Gala, 2025](https://kalapiinfotech.in/the-debouncing-pattern-in-embedded-systems/)).
+
+The result is a three-layer design:
+
+1. **Noise filtering within each burst** — the median removes transient spikes before any value is retained.
+2. **Trend detection across per-minute medians** — sustained rises trigger the transition to active reporting.
+3. **Adaptive transmission** — 15-minute intervals during dry periods, 1-minute intervals during the critical surge window.
+
+This ensures that the sensor is less likely to miss the onset of a sudden flood while avoiding overwhelming the database with redundant readings during normal conditions.
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 

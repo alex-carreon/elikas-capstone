@@ -1,14 +1,22 @@
-import { useEffect, useRef, useState } from "react";
+import { Fragment, useEffect, useRef, useState } from "react";
 import { useMap, Marker, Polyline } from "react-leaflet";
 import leaflet, { point, type LocationEvent } from "leaflet";
 import { LatLng, divIcon } from "leaflet";
+import L from "leaflet";
 import "leaflet-routing-machine";
 import colors from "@/constants/colors";
 import PinIcon from "@/assets/Map/Pins.svg?react";
+import SensorIcon from "@/components/sensorIcon";
 import { renderToString } from "react-dom/server";
 import MarkerClusterGroup from "react-leaflet-cluster";
 import FloodIcon from "@/assets/Map/FloodIcon.svg?react";
 import BlankPin from "@/assets/Map/BlankPin.svg?react";
+import "leaflet-routing-machine/dist/leaflet-routing-machine.css";
+import "leaflet-routing-machine";
+import { toast } from "sonner";
+import { Trophy } from "lucide-react";
+import api from "@/api";
+import { useMapFilterContext } from "@/context/MapFilterContext";
 
 export const pins = [
   {
@@ -22,6 +30,15 @@ export const pins = [
     name: "Taft Campus",
     lat: 14.563803477668346,
     long: 120.99479571081709,
+  },
+];
+
+export const sensorPins = [
+  {
+    id: 1,
+    name: "Test Sensor",
+    lat: 14.564622906838178,
+    long: 120.99761278890365,
   },
 ];
 
@@ -46,30 +63,21 @@ function getNearestWaypoint(
 }
 
 // Add properties based on the pin info from db
-export function NearestRouting({ onPinSelected }) {
-  const [position, setPosition] = useState<LatLng | null>(null);
+export function NearestRouting({
+  onPinSelected,
+  userPosition,
+}: {
+  onPinSelected: any;
+  userPosition: LatLng | null; // add this
+}) {
+  // const [position, setPosition] = useState<LatLng | null>(null);
   const map = useMap();
   const routeControlRef = useRef<any>(null);
 
-  // For getting location
   useEffect(() => {
-    map.locate({ setView: true, maxZoom: 50 });
+    if (!userPosition) return;
 
-    const onLocationFound = (e: LocationEvent) => {
-      setPosition(e.latlng);
-    };
-
-    map.on("locationfound", onLocationFound);
-
-    return () => {
-      map.off("locationfound", onLocationFound);
-    };
-  }, [map]);
-
-  useEffect(() => {
-    if (!position) return;
-
-    const nearest = getNearestWaypoint(position, pins);
+    const nearest = getNearestWaypoint(userPosition, pins);
     if (!nearest) return;
 
     onPinSelected?.(nearest);
@@ -78,7 +86,10 @@ export function NearestRouting({ onPinSelected }) {
     }
 
     routeControlRef.current = leaflet.Routing.control({
-      waypoints: [position, leaflet.latLng(nearest.lat, nearest.long)],
+      waypoints: [
+        leaflet.latLng(userPosition.lat, userPosition.lng),
+        leaflet.latLng(nearest.lat, nearest.long),
+      ],
       router: new leaflet.Routing.OSRMv1({
         serviceUrl: "https://router.project-osrm.org/route/v1",
       }),
@@ -106,35 +117,28 @@ export function NearestRouting({ onPinSelected }) {
     return () => {
       routeControlRef.current.remove();
     };
-  }, [position, map]);
+  }, [userPosition, map]);
 
   return null;
 }
 
 // Add properties based on the pin info from db
-export function Routing({ onPinSelected, selectedPin }) {
-  const [position, setPosition] = useState<LatLng | null>(null);
+export function Routing({
+  onPinSelected,
+  selectedPin,
+  userPosition,
+}: {
+  onPinSelected: any;
+  selectedPin: any;
+  userPosition: LatLng | null; // add this
+}) {
+  // const [position, setPosition] = useState<LatLng | null>(null);
   const map = useMap();
   const routeControlRef = useRef<any>(null);
 
-  // For getting location
-  useEffect(() => {
-    map.locate({ setView: true, maxZoom: 50 });
-
-    const onLocationFound = (e: LocationEvent) => {
-      setPosition(e.latlng);
-    };
-
-    map.on("locationfound", onLocationFound);
-
-    return () => {
-      map.off("locationfound", onLocationFound);
-    };
-  }, [map]);
-
   //   For Routing
   useEffect(() => {
-    if (!position || !selectedPin) return;
+    if (!userPosition || !selectedPin) return;
 
     const destination = leaflet.latLng(selectedPin.lat, selectedPin.long);
 
@@ -150,7 +154,10 @@ export function Routing({ onPinSelected, selectedPin }) {
     }
 
     routeControlRef.current = leaflet.Routing.control({
-      waypoints: [leaflet.latLng(position.lat, position.lng), destination],
+      waypoints: [
+        leaflet.latLng(userPosition.lat, userPosition.lng),
+        destination,
+      ],
       collapsible: true,
       addWaypoints: false,
       draggableWaypoints: false,
@@ -170,13 +177,13 @@ export function Routing({ onPinSelected, selectedPin }) {
         routeControlRef.current = null;
       }
     };
-  }, [map, position, selectedPin]);
+  }, [map, userPosition, selectedPin]);
 
   return null;
 }
 
 // Add properties based on the pin info from db
-export function PinMarking({ onPinClick }) {
+export function PinMarking({ onPinClick }: { onPinClick: (pin: any) => void }) {
   const createClusterCustomIcon = (cluster: any) => {
     return divIcon({
       html: `<div style="background-color: #FFA011; color: ${colors.heading}; border-radius: 50%; width: 40px; height: 40px; display: flex; align-items: center; justify-content: center; font-size: 14px;">${cluster.getChildCount()}</div>`,
@@ -197,6 +204,7 @@ export function PinMarking({ onPinClick }) {
       iconCreateFunction={createClusterCustomIcon}
       maxClusterRadius={50}
       chunkedLoading
+      id="Map_MarkerBubble"
     >
       {pins.map((pin) => (
         <Marker
@@ -207,6 +215,60 @@ export function PinMarking({ onPinClick }) {
         />
       ))}
     </MarkerClusterGroup>
+  );
+}
+
+// Add sensor logic here
+export function SensorMarking({
+  onPinClick,
+}: {
+  onPinClick: (pin: any) => void;
+}) {
+  const [height, setHeight] = useState(0);
+  const [color, setColor] = useState("");
+
+  const colorSensor = {
+    yellow: "#F3C217",
+    orange: "#E6793B",
+    red: "#B22B42",
+    purple: "#6E4998",
+  };
+
+  useEffect(() => {
+    setHeight(30);
+  });
+
+  useEffect(() => {
+    if (height >= 40) {
+      setColor(colorSensor.purple);
+    } else if (height >= 30) {
+      setColor(colorSensor.red);
+    } else if (height >= 20) {
+      setColor(colorSensor.orange);
+    } else if (height >= 10) {
+      setColor(colorSensor.yellow);
+    }
+  }, [height]);
+
+  const sensorIcon = divIcon({
+    html: renderToString(<SensorIcon color={color} width={30} height={30} />),
+    className: "",
+    iconAnchor: [12, 12],
+    iconSize: [50, 50],
+  });
+
+  return (
+    <>
+      {sensorPins.map((pin) => (
+        <Marker
+          key={pin.id}
+          position={[pin.lat, pin.long]}
+          icon={sensorIcon}
+          eventHandlers={{ click: () => onPinClick(pin) }}
+        />
+      ))}
+      ;
+    </>
   );
 }
 
@@ -222,17 +284,26 @@ export function FlyToLocation({
 
   useEffect(() => {
     if (position) {
-      map.flyTo([position.lat, position.long], 18);
+      let coords: [number, number];
+
+      if (position.routePoints?.length > 0) {
+        coords = getMidpoint(position.routePoints as [number, number][]);
+      } else {
+        coords = [position.lat, position.long];
+      }
+
+      console.log("position", position);
+      console.log("coords", coords);
+
+      if (coords[0] === undefined || coords[1] === undefined) return;
+
+      map.flyTo(coords, 18);
     }
   }, [flyTrigger]);
   return null;
 }
 
-interface PolylineProps {
-  position: [number, number][];
-}
-
-function getMidpoint(positions: [number, number][]): [number, number] {
+export function getMidpoint(positions: [number, number][]): [number, number] {
   if (positions.length === 0) return [0, 0];
   if (positions.length === 1) return positions[0];
 
@@ -244,21 +315,71 @@ function getMidpoint(positions: [number, number][]): [number, number] {
   return positions[midIndex];
 }
 
-export function RoadMapping({ position }: PolylineProps) {
-  const midpoint = getMidpoint(position);
+type FloodLevel = {
+  id: number;
+  level_name: string;
+};
 
-  localStorage.setItem("midpoint", JSON.stringify(getMidpoint(position)));
-  localStorage.setItem("position", JSON.stringify(position));
+type FloodPath = {
+  id: number;
+  is_expired: boolean;
+  is_deactivated: boolean;
+  level: FloodLevel;
+  path: [number, number][];
+};
+
+interface RoadMappingProps {
+  showPaths?: boolean;
+  onPinClick?: (pin: any, midpoint: [number, number]) => void;
+}
+
+export function RoadMapping({ onPinClick }: RoadMappingProps) {
+  const [floodPaths, setFloodPaths] = useState<FloodPath[]>([]);
+  const { showPaths } = useMapFilterContext();
 
   const icon = divIcon({
     html: renderToString(<FloodIcon width={36} height={36} />),
     className: "",
     iconAnchor: [18, 20],
   });
+
+  let floodData;
+
+  const getFloodPaths = async () => {
+    try {
+      const response = await api.get("/flood-paths");
+      floodData = await response.data.flood_paths;
+      setFloodPaths(floodData);
+    } catch (err: string | any) {
+      Error(err.message || "An error occurred");
+    }
+  };
+
+  useEffect(() => {
+    getFloodPaths();
+  }, []);
+
   return (
     <>
-      <Polyline positions={position} weight={6} color="#5F80AA" />
-      <Marker position={midpoint} icon={icon} />
+      {showPaths &&
+        floodPaths.map((pin) => {
+          const midpoint = getMidpoint(pin.path);
+          return (
+            <Fragment key={pin.id}>
+              <Marker
+                key={pin.id}
+                position={midpoint}
+                icon={icon}
+                eventHandlers={{
+                  click: () => {
+                    onPinClick && onPinClick(pin, midpoint);
+                  },
+                }}
+              />
+              <Polyline positions={pin.path} weight={6} color="#5F80AA" />
+            </Fragment>
+          );
+        })}
     </>
   );
 }
@@ -303,19 +424,119 @@ export function MapClickHandler({ onPinClick, clickedLoc, setClickedLoc }) {
   return clickedLoc ? <Marker position={clickedLoc} icon={icon} /> : null;
 }
 
+// Calculates distance between two coordinates in meters
+const haversineDistance = (
+  [lat1, lng1]: [number, number],
+  [lat2, lng2]: [number, number],
+): number => {
+  const R = 6371000;
+  const dLat = ((lat2 - lat1) * Math.PI) / 180;
+  const dLng = ((lng2 - lng1) * Math.PI) / 180;
+  const a =
+    Math.sin(dLat / 2) ** 2 +
+    Math.cos((lat1 * Math.PI) / 180) *
+      Math.cos((lat2 * Math.PI) / 180) *
+      Math.sin(dLng / 2) ** 2;
+  return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
+};
+
+// Checks the surroundings of a point in meters for road validation
+export const snapAllPointsToRoads = async (
+  points: [number, number][],
+): Promise<[number, number][] | null> => {
+  if (points.length < 2) return points;
+
+  const coords = points.map(([lat, lng]) => `${lng},${lat}`).join(";");
+  const radiuses = points.map(() => 3).join(";");
+
+  try {
+    const res = await fetch(
+      `https://router.project-osrm.org/match/v1/driving/${coords}` +
+        `?radiuses=${radiuses}&overview=full&geometries=geojson&steps=false`,
+    );
+    const data = await res.json();
+
+    console.log("OSRM response:", data);
+    console.log("OSRM code:", data.code);
+
+    if (data.code !== "Ok" || !data.matchings?.length) {
+      return null;
+    }
+
+    if (data.code === "NoMatch") {
+      console.log("Went off-road");
+      return null;
+    }
+
+    const offRoadPoints = data.tracepoints.filter((tp: any, i: number) => {
+      if (tp === null) return true;
+      const snappedLat = tp.location[1];
+      const snappedLng = tp.location[0];
+      const [origLat, origLng] = points[i];
+      const dist = haversineDistance(
+        [origLat, origLng],
+        [snappedLat, snappedLng],
+      );
+
+      return dist > 3;
+    });
+
+    if (offRoadPoints.length > 0) {
+      return points;
+    }
+
+    return points;
+  } catch (err) {
+    console.error("Snap error:", err);
+    return null;
+  }
+};
+
 // Add properties based on the pin info from db
-export function FormMapClickHandler({ onPinClick, clickedLoc, setClickedLoc }) {
+export function FormMapClickHandler({
+  onPinClick,
+  clickedLoc,
+  setClickedLoc,
+  center,
+}) {
   // const [clickedLoc, setClickedLoc] = useState<[number, number] | null>(null);
   const map = useMap();
+
   const icon = divIcon({
     html: renderToString(<BlankPin width={50} height={50} />),
     className: "",
     iconAnchor: [25, 50],
   });
 
+  const maxRadius = 500;
+
+  const getDistance = (a: [number, number], b: [number, number]) => {
+    const R = 6371000;
+    const dLat = ((b[0] - a[0]) * Math.PI) / 180;
+    const dLng = ((b[1] - a[1]) * Math.PI) / 180;
+    const x =
+      Math.sin(dLat / 2) * Math.sin(dLat / 2) +
+      Math.cos((a[0] * Math.PI) / 180) *
+        Math.cos((b[0] * Math.PI) / 180) *
+        Math.sin(dLng / 2) *
+        Math.sin(dLng / 2);
+    return R * 2 * Math.atan2(Math.sqrt(x), Math.sqrt(1 - x));
+  };
+
   useEffect(() => {
     const handleClick = (e: any) => {
+      if (clickedLoc.length > 10) {
+        toast("You have reached the 10 point limit.");
+        return;
+      }
+
       const { lat, lng } = e.latlng;
+      const newPoint: [number, number] = [lat, lng];
+
+      if (getDistance(center, newPoint) > maxRadius) {
+        toast("Oops! You're going too far from your reported location");
+        return;
+      }
       setClickedLoc((prev: [number, number]) => [...prev, [lat, lng]]);
       if (onPinClick) onPinClick({ lat, long: lng });
       // parse latlng to string for it to be stored in local storage
@@ -326,7 +547,7 @@ export function FormMapClickHandler({ onPinClick, clickedLoc, setClickedLoc }) {
     return () => {
       map.off("click", handleClick);
     };
-  }, [map]);
+  }, [map, clickedLoc]);
 
   // localStorage.setItem("clickedPin", clickedLoc.JSON.stringify);
 

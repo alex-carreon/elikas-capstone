@@ -12,14 +12,14 @@ use Illuminate\Database\Eloquent\Model;
 
 /**
  * Class User
- * 
+ *
  * @property int $id
  * @property string $username
  * @property string $email
  * @property int $role_id
  * @property Carbon $created_at
  * @property Carbon|null $deactivated_at
- * 
+ *
  * @property Role $role
  * @property Collection|Admin[] $admins
  * @property Collection|AuditLog[] $audit_logs
@@ -27,7 +27,7 @@ use Illuminate\Database\Eloquent\Model;
  * @property Collection|Flag[] $flags
  * @property Collection|GovOp[] $gov_ops
  * @property Collection|IndivAcc[] $indiv_accs
- * @property Collection|Medium[] $media
+ * @property Collection|MediaFile[] $media
  * @property Collection|Name[] $names
  * @property Collection|PhoneNumber[] $phone_numbers
  * @property Collection|SocialElement[] $social_elements
@@ -91,7 +91,7 @@ class User extends Model
 
 	public function media()
 	{
-		return $this->hasMany(Medium::class, 'user_id');
+		return $this->hasMany(MediaFile::class, 'user_id');
 	}
 
 	public function name()

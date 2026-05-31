@@ -6,11 +6,12 @@ import { useUserContext } from "@/context/AuthContext";
 
 function AuthNavbar() {
   const { role } = useUserContext();
+  console.log(role);
 
   return (
     <>
       <div className="fixed top-0 left-0 z-50 w-full h-content flex justify-center">
-        <div className="w-full max-w-md flex flex-row justify-between items-center p-3 shadow-lg bg-white">
+        <div className="w-full max-w-md flex flex-row justify-between items-center p-2 shadow-lg bg-white">
           <div>
             <LogoComp />
           </div>
@@ -21,7 +22,7 @@ function AuthNavbar() {
                   id="Navbar_SMS"
                   className="flex flex-col justify-center items-center"
                 >
-                  <MessageSquare style={{ color: colors.heading }} />
+                  <MessageSquare style={{ color: colors.heading }} size={20} />
                   <p
                     className="text-xs text-center p-1"
                     style={{ color: colors.label }}
@@ -36,7 +37,7 @@ function AuthNavbar() {
                 id="Navbar_Hotlines"
                 className="flex flex-col justify-center items-center"
               >
-                <Phone style={{ color: colors.heading }} />
+                <Phone style={{ color: colors.heading }} size={20} />
                 <p
                   className="text-xs text-center p-1"
                   style={{ color: colors.label }}
@@ -45,12 +46,12 @@ function AuthNavbar() {
                 </p>
               </div>
             </Link>
-            <Link to="">
+            <Link to="/History">
               <div
                 id="Navbar_History"
                 className="flex flex-col justify-center items-center"
               >
-                <MapPin style={{ color: colors.heading }} />
+                <MapPin style={{ color: colors.heading }} size={20} />
                 <p
                   className="text-xs text-center p-1"
                   style={{ color: colors.label }}
@@ -64,7 +65,7 @@ function AuthNavbar() {
                 id="Navbar_Settings"
                 className="flex flex-col justify-center items-center"
               >
-                <Settings style={{ color: colors.heading }} />
+                <Settings style={{ color: colors.heading }} size={20} />
                 <p
                   className="text-xs text-center p-1"
                   style={{ color: colors.label }}

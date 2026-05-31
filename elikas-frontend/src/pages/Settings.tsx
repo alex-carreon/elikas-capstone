@@ -7,16 +7,39 @@ import { useNavigate, Link } from "react-router-dom";
 import SettingsIcon from "@/assets/Settings/SettingsIcon.svg";
 import { UserCircle, Star, Text } from "lucide-react";
 import { Separator } from "@/components/ui/separator";
+import { toast } from "sonner";
+import { useState } from "react";
 
 function Settings() {
   const navigate = useNavigate();
+  const [error, setError] = useState("");
 
   const handleLogout = async () => {
     try {
       localStorage.clear();
-      await api.post("/auth/logout");
-      await signOut(auth);
-      navigate("/");
+
+      const logoutPromise = new Promise(async (resolve, reject) => {
+        const response = await api.post("/auth/logout");
+
+        const userData = await response;
+
+        if (!response) {
+          reject(setError("Logout failed"));
+        } else {
+          resolve(userData);
+          await signOut(auth);
+        }
+      });
+
+      toast.promise(logoutPromise, {
+        loading: "Logging you out...",
+        success: "You're logged out!",
+        position: "top-center",
+      });
+
+      logoutPromise.then(() => {
+        navigate("/");
+      });
     } catch (error) {
       console.error("Error during logout:", error);
     }
@@ -34,7 +57,7 @@ function Settings() {
           <img src={SettingsIcon} className="w-60" />
         </div>
         <div className="flex flex-col gap-4">
-          <Link to="/map">
+          <Link to="/Profile">
             <div className="flex flex-col gap-3">
               <div
                 id="Settings_AccountBtn"
@@ -63,7 +86,7 @@ function Settings() {
             </div>
           </Link>
 
-          <Link to="">
+          <Link to="/TermsConditions">
             <div className="flex flex-col gap-3">
               <div
                 id="Settings_TermsBtn"
