@@ -3,24 +3,91 @@ import colors from "@/constants/colors";
 import TextField from "@/components/TextField";
 import ButtonComp from "@/components/Button";
 import Select from "@/components/SelectDropdown";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import {
   createUserWithEmailAndPassword,
   sendEmailVerification,
 } from "@firebase/auth";
 import { auth } from "@/firebase";
 import RegisterHeader from "@/components/RegisterHeader";
+import api from "@/api";
+import SelectDropdown from "@/components/SelectDropdown";
+
+type Barangays = {
+  id: number;
+  name: string;
+  role: string;
+  location: string;
+};
+
+type Cities = {
+  id: number;
+  name: string;
+  parent_id: number;
+  parent_location: Province;
+};
+
+type Province = {
+  id: number;
+  level_id: number;
+  name: string;
+};
 
 function FormRegistration() {
   const [last_name, setLn] = useState("");
   const [first_name, setFn] = useState("");
   const [email, setEmail] = useState("");
-  const [city, setCity] = useState("");
+  const [cities, setCities] = useState<Cities[]>([]);
+  const [cityId, setCityId] = useState(0);
   const [brgy, setBrgy] = useState("");
+  const [barangays, setBarangays] = useState<Barangays[]>([]);
   const [pw, setPw] = useState("");
   const [confirmPw, setConfirmPw] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [brgyLoad, setBrgyLoad] = useState(false);
   const [errors, setErrors] = useState({ pw: "", confirmPw: "", email: "" });
   const navigate = useNavigate();
+
+  useEffect(() => {
+    const getCity = async () => {
+      try {
+        setLoading(true);
+        const cityRes = await api.get("/locations/cities");
+
+        const cities = cityRes.data.Cities;
+        setCities(cities);
+      } catch (err: any) {
+        console.log(err.message);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    getCity();
+  }, []);
+
+  useEffect(() => {
+    if (!cityId) {
+      return;
+    }
+
+    const getBrgy = async () => {
+      try {
+        setBrgyLoad(true);
+        const brgyRes = await api.get(`/locations/barangays?city_id=${cityId}`);
+
+        const barangays = brgyRes.data.Barangays;
+        console.log(barangays);
+        setBarangays(barangays);
+      } catch (err: any) {
+        console.log(err.message);
+      } finally {
+        setBrgyLoad(false);
+      }
+    };
+
+    getBrgy();
+  }, [cityId]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -124,15 +191,19 @@ function FormRegistration() {
               onSubmit={(e) => setEmail(e.target.value)}
               error={errors.email}
             />
-            <Select
-              value={city}
-              onValueChange={setCity}
+            <SelectDropdown
+              value={String(cityId)}
+              onValueChange={(val) => setCityId(Number(val))}
               label="City"
-              placeholder="Select your city"
+              placeholder="Select your City"
               id="RegisForm_CITYfield"
-              onSubmit={(e) => setCity(e.target.value)}
-              options={[{ label: "San Juan", value: "10" }]}
+              onSubmit={(e) => setCityId(Number(e.target.value))}
+              options={cities?.map((city) => ({
+                label: city.name,
+                value: String(city.id),
+              }))}
               isRequired
+              loading={loading}
             />
             <Select
               value={brgy}
@@ -141,11 +212,12 @@ function FormRegistration() {
               placeholder="Select your barangay"
               id="RegisForm_BRGYfield"
               onSubmit={(e) => setBrgy(e.target.value)}
-              options={[
-                { label: "Salapan", value: "11" },
-                { label: "Batis", value: "12" },
-              ]}
+              options={barangays?.map((brgy) => ({
+                label: brgy.name,
+                value: String(brgy.id),
+              }))}
               isRequired
+              loading={brgyLoad}
             />
             <TextField
               label="Password"
