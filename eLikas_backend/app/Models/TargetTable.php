@@ -29,12 +29,12 @@ class TargetTable extends Model
 		'table_name'
 	];
 
-	public function audit_logs()
+	public function auditLog()
 	{
 		return $this->hasMany(AuditLog::class, 'target_type');
 	}
 
-	public function social_elements()
+	public function socialElement()
 	{
 		return $this->hasMany(SocialElement::class, 'type_id');
 	}

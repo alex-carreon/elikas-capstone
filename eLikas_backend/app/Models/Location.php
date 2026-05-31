@@ -61,6 +61,50 @@ class Location extends Model
 		return $this->hasMany(Location::class, 'parent_id');
 	}
 
+	// public function fullLocation()
+	// {
+	// 	$parts = [];
+	// 	$current = $this;
+
+	// 	while ($current) {
+	// 		$parts[] = $current->name;
+	// 		$current = $current->parentLocation;
+	// 	}
+
+	// 	return implode(', ', $parts);
+	// }
+
+	public function getFullLocationAttribute()
+	{
+		$parts = [];
+		$current = $this;
+
+		while ($current) {
+			$parts[] = $current->name;
+			$current = $current->parentLocation;
+		}
+
+		return implode(', ', $parts);
+	}
+
+	public function getCityLocationAttribute()
+	{
+		$parts = [];
+		$current = $this;
+
+		while ($current) {
+
+			// Skip barangay level
+			if ($current->locationLevel?->level_name !== 'Barangay') {
+				$parts[] = $current->name;
+			}
+
+			$current = $current->parentLocation;
+		}
+
+		return implode(', ', $parts);
+	}
+
 	public function emergencyContact()
 	{
 		return $this->hasMany(EmergencyContact::class, 'location_id');

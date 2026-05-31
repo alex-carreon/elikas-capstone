@@ -1,60 +1,22 @@
 <?php
 
-/**
- * Created by Reliese Model.
- */
-
 namespace App\Models;
 
-use Carbon\Carbon;
-use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Model;
+use MatanYadaev\EloquentSpatial\Objects\Point;
+use MatanYadaev\EloquentSpatial\Traits\HasSpatial;
 
-/**
- * Class EvacArea
- *
- * @property int $id
- * @property int $element_id
- * @property int $location_id
- * @property point $location
- * @property int $area_type
- * @property string $address
- * @property string|null $description
- * @property string $name
- * @property int $capacity_level
- * @property Carbon|null $last_updated
- * @property bool $is_persistent
- * @property int|null $verified_by
- * @property bool|null $for_reg_flood
- * @property bool|null $for_heavy_flood
- * @property bool|null $has_accom
- * @property int|null $toilet_count
- * @property int|null $kitchen_count
- * @property bool|null $has_DRRMO
- * @property bool|null $has_health
- * @property bool|null $pwd_friendly
- * @property bool|null $has_catchment
- * @property int|null $child_prayer_count
- * @property int|null $breastfeed_count
- * @property string|null $other_facilities
- * @property string|null $contact_person
- * @property string|null $contact_number
- * @property Carbon|null $expiry
- *
- * @property SocialElement $social_element
- * @property EvacType $evac_type
- * @property GovOp|null $gov_op
- *
- * @package App\Models
- */
 class EvacArea extends Model
 {
+    use HasSpatial;
+
     protected $table = 'EvacAreas';
     public $timestamps = false;
 
     protected $casts = [
         'element_id'         => 'int',
         'location_id'        => 'int',
+        'location'           => Point::class,
         'area_type'          => 'int',
         'capacity_level'     => 'int',
         'last_updated'       => 'datetime',
@@ -74,9 +36,10 @@ class EvacArea extends Model
         'expiry'             => 'datetime',
     ];
 
-	protected $fillable = [
+    protected $fillable = [
         'element_id',
         'location_id',
+        'location',              // ← added so Eloquent create() can set the Point
         'area_type',
         'address',
         'description',
@@ -102,27 +65,27 @@ class EvacArea extends Model
         'expiry',
     ];
 
-	public function social_element()
+    public function social_element()
     {
         return $this->belongsTo(SocialElement::class, 'element_id');
     }
 
-	public function location_info()
+    public function location_info()
     {
         return $this->belongsTo(Location::class, 'location_id');
     }
 
-	public function evac_type()
+    public function evac_type()
     {
         return $this->belongsTo(EvacType::class, 'area_type');
     }
 
-	public function capacity_level_info()
+    public function capacity_level_info()
     {
         return $this->belongsTo(CapacityLevel::class, 'capacity_level');
     }
 
-	public function gov_op()
+    public function gov_op()
     {
         return $this->belongsTo(GovOp::class, 'verified_by');
     }

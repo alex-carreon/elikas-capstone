@@ -24,10 +24,10 @@ class ProfileController extends Controller
                 'last_name'  => $user->name?->last_name,
 
                 'phone' => $user->phoneNumber?->phone_no,
-                'location' => $user->indivAcc?->location?->name,
+                'location' => $user->indivAcc?->location?->fullLocation(),
 
-                'created_at' => $user->created_at,
-                'deactivated_at' => $user->deactivated_at
+                'created_at' => $user->created_at->timezone('Asia/Manila')->toDateTimeString(),
+                'deactivated_at' => $user->deactivated_at?->timezone('Asia/Manila')->toDateTimeString()
             ]);
 
         } catch (\Exception $e) {

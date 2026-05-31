@@ -10,21 +10,21 @@ use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Model;
 
 /**
- * Class Medium
- * 
+ * Class MediaFile
+ *
  * @property int $id
  * @property int $parent_id
  * @property int $user_id
  * @property string $file_path
  * @property string $file_type
  * @property Carbon $uploaded_at
- * 
+ *
  * @property SocialElement $social_element
  * @property User $user
  *
  * @package App\Models
  */
-class Medium extends Model
+class MediaFile extends Model
 {
 	protected $table = 'Media';
 	public $timestamps = false;

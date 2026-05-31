@@ -13,29 +13,14 @@ class UserController extends Controller
     {
         try {
 
-            // ---------------------------------------------------
-            // START QUERY
-            // ---------------------------------------------------
             $query = User::with([
                 'role',
                 'name',
-                'phoneNumber',
-
-                // Individual account
                 'indivAcc.location',
-
-                // GovOp account
-                'govOp.location',
-                'govOp.locationLevel',
+                'govOp.location'
             ]);
 
-            // ---------------------------------------------------
-            // FILTER BY ROLE
-            // Example:
-            // ?role=admin
-            // ?role=brgy_op
-            // ?role=indiv
-            // ---------------------------------------------------
+            // Filter by role
             if ($request->filled('role')) {
 
                 $query->whereHas('role', function ($q) use ($request) {
@@ -45,12 +30,7 @@ class UserController extends Controller
                 });
             }
 
-            // ---------------------------------------------------
-            // FILTER BY DEACTIVATION STATUS
-            //
-            // ?active=true
-            // ?active=false
-            // ---------------------------------------------------
+            // Filter by activation
             if ($request->filled('active')) {
 
                 $active = filter_var(
@@ -60,72 +40,45 @@ class UserController extends Controller
 
                 if ($active) {
 
-                    // active users only
                     $query->whereNull('deactivated_at');
 
                 } else {
 
-                    // deactivated users only
                     $query->whereNotNull('deactivated_at');
                 }
             }
 
-            // ---------------------------------------------------
-            // FETCH USERS
-            // ---------------------------------------------------
             $users = $query->get();
 
-            // ---------------------------------------------------
-            // FORMAT RESPONSE
-            // ---------------------------------------------------
             $formattedUsers = $users->map(function ($user) {
 
                 return [
 
                     'id' => $user->id,
 
-                    'username' => $user->username,
-                    'email' => $user->email,
+                    'name' =>
+                        trim(
+                            ($user->name?->first_name ?? '') . ' ' .
+                            ($user->name?->last_name ?? '')
+                        ),
 
-                    // role
                     'role' => $user->role?->role_name,
 
-                    // name
-                    'first_name' => $user->name?->first_name,
-                    'last_name' => $user->name?->last_name,
-
-                    // phone
-                    'phone' => $user->phoneNumber?->phone_no,
-
-                    // indiv account location
-                    'indiv_location' =>
-                        $user->indivAcc?->location?->name,
-
-                    // govop location
-                    'govop_location' =>
-                        $user->govOp?->location?->name,
-
-                    // govop level
-                    'govop_level' =>
-                        $user->govOp?->locationLevel?->level_name,
-
-                    // govop details
-                    'point_person' =>
-                        $user->govOp?->point_person,
-
-                    'point_position' =>
-                        $user->govOp?->point_position,
-
-                    // status
-                    'is_deactivated' =>
-                        $user->deactivated_at !== null,
-
-                    'created_at' => $user->created_at,
-                    'deactivated_at' => $user->deactivated_at,
+                    'location' =>
+                        $user->indivAcc?->location?->city_location
+                        ?? $user->govOp?->location?->name,
+                        
+                    'parent_location' =>
+                        $user->govOp?->location
+                            ? $user->govOp->location->city_location
+                            : null
                 ];
             });
 
-            return response()->json($formattedUsers);
+            return response()->json([
+                'count' => $formattedUsers->count(),
+                'users' => $formattedUsers
+            ]);
 
         } catch (\Exception $e) {
 
@@ -147,7 +100,7 @@ class UserController extends Controller
             return response()->json([
                 'message' => 'User deactivated successfully',
                 'user_id' => $user->id,
-                'deactivated_at' => $user->deactivated_at
+                'deactivated_at' => $user->deactivated_at->timezone('Asia/Manila')->toDateTimeString()
             ]);
 
         } catch (\Exception $e) {
@@ -159,18 +112,16 @@ class UserController extends Controller
     }
 
     public function getUser($id)
-    {
+     {
         try {
+
             $user = User::with([
                 'role',
                 'name',
-                'phoneNumber',
-                'indivAcc.location',
-                'govOp.location',
-                'govOp.locationLevel'
+                'phoneNumber'
             ])->findOrFail($id);
 
-            return response()->json([
+            $response = [
                 'id' => $user->id,
                 'username' => $user->username,
                 'email' => $user->email,
@@ -182,18 +133,51 @@ class UserController extends Controller
 
                 'phone' => $user->phoneNumber?->phone_no,
 
-                // Individual account location
-                'indiv_location' => $user->indivAcc?->location?->name,
+                'created_at' => $user->created_at
+                    ->timezone('Asia/Manila')
+                    ->toDateTimeString(),
 
-                // GovOp details
-                'govop_location' => $user->govOp?->location?->name,
-                'govop_level' => $user->govOp?->locationLevel?->level_name,
-                'point_person' => $user->govOp?->point_person,
-                'point_position' => $user->govOp?->point_position,
+                'deactivated_at' => $user->deactivated_at?->timezone('Asia/Manila')
+                    ->toDateTimeString(),
+            ];
 
-                'created_at' => $user->created_at,
-                'deactivated_at' => $user->deactivated_at
-            ]);
+            // Individual-only fields
+            if ($user->role?->role_name === 'indiv') {
+
+                $user->load('indivAcc.location');
+
+                $response['indiv_location_id']
+                    = $user->indivAcc?->location?->id;
+
+                $response['indiv_location']
+                    =  $user->indivAcc?->location?->full_location;
+            }
+
+            // GovOp-only fields
+            if ($user->role?->role_name === 'brgy_op') {
+
+                $user->load([
+                    'govOp.location',
+                    'govOp.locationLevel'
+                ]);
+
+                $response['govop_location_id']
+                    = $user->govOp?->location?->id;
+
+                $response['govop_location']
+                    = $user->govOp?->location?->full_location;
+
+                $response['govop_level']
+                    =  $user->govOp?->location?->locationLevel->level_name;
+
+                $response['point_person']
+                    = $user->govOp?->point_person;
+
+                $response['point_position']
+                    = $user->govOp?->point_position;
+            }
+
+            return response()->json($response);
 
         } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
 
@@ -205,6 +189,163 @@ class UserController extends Controller
 
             return response()->json([
                 'error' => 'Failed to get user details',
+                'details' => $e->getMessage()
+            ], 500);
+        }
+    }
+
+    public function updateUser(Request $request, $id)
+    {
+        try {
+
+            $user = User::with([
+                'name',
+                'phoneNumber',
+                'indivAcc',
+                'govOp'
+            ])->findOrFail($id);
+
+            // BLOCK DEACTIVATED USERS
+            if ($user->deactivated_at !== null) {
+
+                return response()->json([
+                    'error' => 'This user is deactivated and cannot be updated'
+                ], 403);
+            }
+            $validated = $request->validate([
+
+                'username' => 'sometimes|string|max:255|unique:Users,username,' . $user->id,
+
+                'email' => 'sometimes|email|max:255|unique:Users,email,' . $user->id,
+
+                'first_name' => 'sometimes|string|max:255',
+                'last_name' => 'sometimes|string|max:255',
+
+                'phone' => 'sometimes|string|max:20',
+
+                // Individual
+                'indiv_location_id' => 'sometimes|integer|exists:Locations,id',
+
+                // GovOp
+                'govop_location_id' => 'sometimes|integer|exists:Locations,id',
+                'govop_level_id' => 'sometimes|integer|exists:LocationLevels,id',
+
+                'point_person' => 'sometimes|string|max:255',
+                'point_position' => 'sometimes|string|max:255',
+            ]);
+
+            // -----------------------------------------
+            // UPDATE USER
+            // -----------------------------------------
+            if ($request->filled('username')) {
+
+                $user->username = $validated['username'];
+            }
+
+            if ($request->filled('email')) {
+
+                $user->email = $validated['email'];
+            }
+
+            $user->save();
+
+            // UPDATE NAME
+            if ($user->name) {
+
+                if ($request->filled('first_name')) {
+
+                    $user->name->first_name =
+                        $validated['first_name'];
+                }
+
+                if ($request->filled('last_name')) {
+
+                    $user->name->last_name =
+                        $validated['last_name'];
+                }
+
+                $user->name->save();
+            }
+
+            // UPDATE PHONE
+            if ($user->phoneNumber && $request->filled('phone')) {
+
+                $user->phoneNumber->phone_no =
+                    $validated['phone'];
+
+                $user->phoneNumber->save();
+            }
+
+            // UPDATE INDIV ACCOUNT
+            if (
+                $user->role?->role_name === 'indiv'
+                && $user->indivAcc
+            ) {
+
+                if ($request->filled('indiv_location_id')) {
+
+                    $user->indivAcc->location_id =
+                        $validated['indiv_location_id'];
+
+                    $user->indivAcc->save();
+                }
+            }
+
+            // UPDATE GOVOP ACCOUNT
+            if (
+                $user->role?->role_name === 'brgy_op'
+                && $user->govOp
+            ) {
+
+                if ($request->filled('govop_location_id')) {
+
+                    $user->govOp->location_id =
+                        $validated['govop_location_id'];
+                }
+
+                if ($request->filled('govop_level_id')) {
+
+                    $user->govOp->location_level_id =
+                        $validated['govop_level_id'];
+                }
+
+                if ($request->filled('point_person')) {
+
+                    $user->govOp->point_person =
+                        $validated['point_person'];
+                }
+
+                if ($request->filled('point_position')) {
+
+                    $user->govOp->point_position =
+                        $validated['point_position'];
+                }
+
+                $user->govOp->save();
+            }
+
+            return response()->json([
+                'message' => 'User updated successfully',
+                'user_id' => $user->id
+            ]);
+
+        } catch (\Illuminate\Database\Eloquent\ModelNotFoundException $e) {
+
+            return response()->json([
+                'error' => 'User not found'
+            ], 404);
+
+        } catch (\Illuminate\Validation\ValidationException $e) {
+
+            return response()->json([
+                'error' => 'Validation failed',
+                'details' => $e->errors()
+            ], 422);
+
+        } catch (\Exception $e) {
+
+            return response()->json([
+                'error' => 'Failed to update user',
                 'details' => $e->getMessage()
             ], 500);
         }
