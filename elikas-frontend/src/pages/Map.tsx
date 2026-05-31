@@ -1,8 +1,6 @@
 import MapComp from "@/components/Map";
 import "leaflet/dist/leaflet.css";
 import Filter from "@/components/Filter";
-import { useState } from "react";
-import { MapFilterProvider } from "@/context/MapFilterContext";
 
 function Map() {
   return (

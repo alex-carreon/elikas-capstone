@@ -63,21 +63,30 @@ function LocationMarker({
       onPositionFound(e.latlng);
     };
 
+    const onLocationError = () => {
+      locationFound(false);
+    };
+
     // listens when to trigger onLocationFound
 
     map.on("locationfound", onLocationFound);
+    map.on("locationerror", onLocationError);
 
     // clean up - switches event off
     return () => {
       map.off("locationfound", onLocationFound);
+      map.off("locationerror", onLocationError);
     };
   }, [map]);
 
   // find location on click
   useEffect(() => {
     if (flyToLocation && position) {
-      map.flyTo(position, map.getZoom());
-      console.log("hasLocated3: ", hasLocated);
+      // map.flyTo(position, map.getZoom());
+      // console.log("hasLocated3: ", hasLocated);
+      setTimeout(() => {
+        map.flyTo(position, 18);
+      }, 0);
     }
   }, [flyToLocation, position, map]);
 
