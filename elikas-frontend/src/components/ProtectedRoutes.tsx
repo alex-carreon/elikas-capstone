@@ -35,7 +35,7 @@ export default function ProtectedRoute({ userRole }: ProtectedRouteProps) {
     }
     if (userRole && role) {
       if (userRole && role !== userRole) {
-        const fallback = roleDefault[role] ?? "/map";
+        const fallback = roleDefault[role] ?? "/";
         navigate(fallback);
       }
     }
