@@ -20,6 +20,8 @@ use App\Http\Controllers\SensorControllers\PublicSensorController;
 use App\Http\Controllers\SensorControllers\SensorController;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\SMSController;
+use App\Http\Controllers\EmergencyContactController;
+use App\Http\Controllers\EvacTypeController;
 
 
 Route::get('/test', function () {
@@ -39,6 +41,8 @@ Route::get('flood-paths', [FloodPathController::class, 'index']);
 
 Route::get('/locations/cities', [LocationsController::class, 'cities']);
 Route::get('/locations/barangays', [LocationsController::class, 'barangays']);
+Route::get('/emergency-contacts', [EmergencyContactController::class, 'index']);
+Route::get('/evac-types', [EvacTypeController::class, 'index']);
 // ---------------------------------------------------------------
 // PIN PUBLIC ROUTES — no token required
 // ---------------------------------------------------------------
@@ -47,6 +51,8 @@ Route::get('/pins/history', [GetEvacAreasController::class, 'getMyEvacAreas'])->
 Route::get('/pins/nearby', [GetNearbyEvacuationAreasController::class, 'getNearbyEvacuationAreas']);
 Route::get('/pins/routes', [GetEvacuationRoutesController::class, 'getEvacuationRoutes']);
 Route::get('/pins/{id}', [GetEvacAreaDetailsController::class, 'getEvacAreaDetails']);
+
+
 
 
 Route::middleware('firebase.auth')->group(function () {
@@ -98,6 +104,9 @@ Route::middleware(['firebase.auth', 'role:1,2'])->group(function () {
     Route::get('flood-paths/{id}', [FloodPathController::class, 'show']);
     Route::patch('/pins/{id}/verify', [VerifyEvacuationAreaController::class, 'verifyEvacuationArea']);
 
+    Route::post('/emergency-contacts', [EmergencyContactController::class, 'store']);
+    Route::patch('/emergency-contacts/{id}/deactivate', [EmergencyContactController::class, 'destroy']);
+    Route::patch('/emergency-contacts/{id}/restore', [EmergencyContactController::class, 'restore']);
 });
 
 // ALL ROLES EXCEPT GUEST
