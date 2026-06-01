@@ -65,7 +65,7 @@ function Map({ onLocationFound, showLocation, nearestRouteTrigger }: MapProps) {
     if (hasLocated.current === true) return;
 
     // Locate user, zooms into location, how much zoom
-    map.locate({ watch: true, setView: true, maxZoom: 50 });
+    map.locate({ watch: false, setView: true, maxZoom: 50 });
 
     // For rendering the marker
     // e contains lat and long
@@ -94,7 +94,7 @@ function Map({ onLocationFound, showLocation, nearestRouteTrigger }: MapProps) {
       map.off("locationfound", onLocationFoundHandler);
       map.off("locationerror", onLocationError);
     };
-  }, [map]);
+  }, []);
 
   // Fly to user's location on button click
   useEffect(() => {
@@ -108,11 +108,6 @@ function Map({ onLocationFound, showLocation, nearestRouteTrigger }: MapProps) {
   // find location on click
   useEffect(() => {
     if (nearestRouteTrigger === 0) return;
-    // // map.flyTo(position, map.getZoom());
-    // // console.log("hasLocated3: ", hasLocated);
-    // setTimeout(() => {
-    //   map.flyTo(position, 18);
-    // }, 0);
 
     setShowNearestRoute(true);
     setShowRoute(false);
@@ -163,18 +158,12 @@ function Map({ onLocationFound, showLocation, nearestRouteTrigger }: MapProps) {
     setIsHazard(false);
   };
 
-  const handleHazardClick = ({
-    pin,
-    midpoint,
-  }: {
-    pin: any;
-    midpoint: any;
-  }) => {
+  const handleHazardClick = (pin: any, midpoint: [number, number]) => {
     const normalizedPin = {
       ...pin,
       lat: midpoint[0],
       long: midpoint[1],
-      routePoints: pin.path, // ← map path to routePoints
+      routePoints: pin.path,
     };
 
     setSelectedPin({ ...normalizedPin, midpoint });
@@ -322,7 +311,8 @@ function Map({ onLocationFound, showLocation, nearestRouteTrigger }: MapProps) {
       <DrawerComp
         open={open}
         onOpenChange={handleDrawerClose}
-        selectedPin={selectedPin}
+        selectedEvacPin={selectedPin}
+        selectedFloodPin={selectedPin}
         onFindRoute={handlePressRoute}
         newPin={newPin}
         isSensor={isSensor}
