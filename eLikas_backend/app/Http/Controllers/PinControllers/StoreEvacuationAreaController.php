@@ -108,7 +108,7 @@ class StoreEvacuationAreaController extends Controller
                 'other_facilities' => $request->other_facilities,
                 'contact_person' => $request->contact_person,
                 'contact_number' => $request->contact_number,
-                'expiry' => 'nullable|date|after:now',
+                'expiry' => $expiry,
             ]);
 
             DB::commit();
