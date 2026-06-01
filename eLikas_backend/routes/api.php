@@ -19,6 +19,7 @@ use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\SensorControllers\PublicSensorController;
 use App\Http\Controllers\SensorControllers\SensorController;
 use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\SMSController;
 
 
 Route::get('/test', function () {
@@ -47,17 +48,9 @@ Route::get('/pins/nearby', [GetNearbyEvacuationAreasController::class, 'getNearb
 Route::get('/pins/routes', [GetEvacuationRoutesController::class, 'getEvacuationRoutes']);
 Route::get('/pins/{id}', [GetEvacAreaDetailsController::class, 'getEvacAreaDetails']);
 
-// ---------------------------------------------------------------
-// ONLY CITIZEN ROUTES
-// ---------------------------------------------------------------
+
 Route::middleware('firebase.auth')->group(function () {
-    //Pins related shtuff
-    Route::post('/pins', [StoreEvacuationAreaController::class, 'storeEvacuationArea']);
-    Route::put('/pins/{id}', [UpdateEvacuationAreaController::class, 'updateEvacuationArea']);
-    Route::delete('/pins/{id}', [DeleteEvacuationAreaController::class, 'deleteEvacuationArea']);
-    Route::patch('/pins/{id}/deactivate', [DeleteEvacuationAreaController::class, 'deleteEvacuationArea']);
-    Route::put('/pins/{id}/deactivate', [DeleteEvacuationAreaController::class, 'deleteEvacuationArea']);
-    Route::patch('/pins/{id}/verify', [VerifyEvacuationAreaController::class, 'verifyEvacuationArea']);
+    Route::patch('/pins/{id}/restore', [DeleteEvacuationAreaController::class, 'restoreEvacuationArea']);
 });
 
 
@@ -67,6 +60,7 @@ Route::middleware('firebase.auth')->group(function () {
 Route::prefix('admin')->middleware(['firebase.auth', 'role:1'])->group(function () {
     Route::post('/create-admin', [AdminController::class, 'createUser']);
 
+    // Changed from deleteUser to match your controller naming preference
     Route::patch('/users/{id}/deactivate', [UserController::class, 'deactivateUser']);
 
     Route::post('/create-govop', [AdminController::class, 'createGovOp']);
@@ -82,6 +76,8 @@ Route::prefix('admin')->middleware(['firebase.auth', 'role:1'])->group(function 
 Route::middleware(['firebase.auth', 'role:2'])->group(function () {
     Route::apiResource('sensors', SensorController::class)->except(['destroy']);
     Route::patch('/sensors/{sensor}/deactivate', [SensorController::class, 'deactivate']);
+    Route::post('/sms/broadcasts', [SMSController::class, 'sendBroadcast']);
+    Route::get('/sms/recipients', [SMSController::class, 'recipients']);
 });
 
 
@@ -100,6 +96,7 @@ Route::middleware(['firebase.auth', 'role:1,2'])->group(function () {
     Route::apiResource('flood-levels', FloodLevelController::class)->except(['index']);
 
     Route::get('flood-paths/{id}', [FloodPathController::class, 'show']);
+    Route::patch('/pins/{id}/verify', [VerifyEvacuationAreaController::class, 'verifyEvacuationArea']);
 
 });
 
@@ -125,5 +122,10 @@ Route::middleware(['firebase.auth', 'role:1,2,3'])->group(function () {
         ->whereNumber('id');
     Route::patch('/flood-paths/{id}', [FloodPathController::class, 'update']);
     Route::patch('/flood-paths/{id}/deactivate', [FloodPathController::class, 'destroy']); // soft delete
+    Route::post('/pins', [StoreEvacuationAreaController::class, 'storeEvacuationArea']);
+    Route::put('/pins/{id}', [UpdateEvacuationAreaController::class, 'updateEvacuationArea']);
+    Route::delete('/pins/{id}', [DeleteEvacuationAreaController::class, 'deleteEvacuationArea']);
+    Route::patch('/pins/{id}/deactivate', [DeleteEvacuationAreaController::class, 'deleteEvacuationArea']);
+
 
 });

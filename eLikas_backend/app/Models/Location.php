@@ -11,12 +11,12 @@ use Illuminate\Database\Eloquent\Model;
 
 /**
  * Class Location
- * 
+ *
  * @property int $id
  * @property string $name
  * @property int $level_id
  * @property int|null $parent_id
- * 
+ *
  * @property LocationLevel $location_level
  * @property Location|null $location
  * @property Collection|EmergencyContact[] $emergency_contacts
@@ -107,7 +107,7 @@ class Location extends Model
 
 	public function emergencyContact()
 	{
-		return $this->hasMany(EmergencyContact::class, 'location_id');
+		return $this->hasMany(EmergencyContact::class, 'location_id', 'id');
 	}
 
 	public function evacArea()
@@ -124,9 +124,9 @@ class Location extends Model
 	{
 		return $this->hasMany(IndivAcc::class, 'location_id');
 	}
-	
+
 	public function smsBroadcast()
 	{
-		return $this->hasMany(SMSBroadcast::class, 'location_id');
+		return $this->hasMany(SMSBroadcast::class, 'location_id', 'id');
 	}
 }

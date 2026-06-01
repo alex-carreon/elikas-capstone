@@ -29,7 +29,6 @@ class GetNearbyEvacuationAreasController extends Controller
                 })
                 ->where(function ($q) {
                     $q->whereNull('expiry')
-                      // FIXED: Explicitly force query comparison against UTC now
                       ->orWhere('expiry', '>', now('UTC'));
                 })
                 ->withDistanceSphere('location', $origin, 'distance_meters')
@@ -38,12 +37,16 @@ class GetNearbyEvacuationAreasController extends Controller
                 ->get();
 
             $formattedPins = $pins->map(function ($pin) {
+                $coordinates = [
+                    $pin->location?->latitude,
+                    $pin->location?->longitude,
+                ];
+
                 return [
                     'id' => $pin->id,
                     'name' => $pin->name,
                     'address' => $pin->address,
-                    'lat' => $pin->location?->latitude,
-                    'lng' => $pin->location?->longitude,
+                    'coordinates' => $coordinates,
                     'area_type' => $pin->area_type,
                     'capacity_level' => $pin->capacity_level,
                     'is_verified' => $pin->verified_by !== null,
