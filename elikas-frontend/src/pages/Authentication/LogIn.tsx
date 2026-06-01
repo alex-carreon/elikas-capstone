@@ -191,7 +191,7 @@ function LogIn() {
               </Link>
             </div>
           </form>
-          <div className="flex justify-start flex-col content-center mx-auto text-sm gap-3">
+          <div className="flex justify-start flex-col content-center mx-auto text-sm gap-3 mt-24">
             <p className={"flex justify-self-center truncate"}>
               Don't have an account yet? &nbsp;
               <Link to="/Registration/Splash" id="L-Register">
