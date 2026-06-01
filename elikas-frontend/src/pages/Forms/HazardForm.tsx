@@ -118,7 +118,6 @@ function HazardForm() {
           setHasUpdated(false);
           setLoading(true);
           const response = await api.get(`/flood-paths/${id}`);
-          console.log("response", response);
           const floodDetails = await response.data.flood_path;
           console.log("Details", floodDetails);
           setFloodDetails(floodDetails);
