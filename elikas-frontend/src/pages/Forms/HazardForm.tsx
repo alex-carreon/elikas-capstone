@@ -204,7 +204,9 @@ function HazardForm() {
     console.log(routePoints);
   }, [routePoints]);
 
-  const submit = (e: React.FormEvent) =>
+  const submit = (e: React.FormEvent) => {
+    console.log(routePoints);
+
     handleSubmit({
       e: e,
       center: center,
@@ -217,6 +219,7 @@ function HazardForm() {
       setError: setError,
       navigate: navigate,
     });
+  };
 
   const update = (e: React.FormEvent) =>
     handleUpdate({

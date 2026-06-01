@@ -69,7 +69,6 @@ function HazardDrawer({ selectedPin }: { selectedPin: FloodPath }) {
 
   return loading ? (
     <>
-      <DrawerTitle />
       <div className="w-full px-4 pb-4 flex flex-col gap-4">
         <div className="w-full flex flex-row justify-between">
           <div className="flex flex-row gap-2">

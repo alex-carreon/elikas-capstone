@@ -121,8 +121,12 @@ function Map({ onLocationFound, showLocation, nearestRouteTrigger }: MapProps) {
   }, [nearestRouteTrigger]);
 
   // Have pin's type to be needed information from db
-  const handlePinClick = (pin) => {
-    setSelectedPin(pin);
+  const handlePinClick = (pin: any) => {
+    const normalizedPin = pin.coordinates
+      ? { ...pin, lat: pin.coordinates[0], long: pin.coordinates[1] }
+      : pin;
+
+    setSelectedPin(normalizedPin);
     setOpen(true);
     setFlyTrigger((prev) => prev + 1);
     setShowNearestRoute(false);
@@ -140,7 +144,7 @@ function Map({ onLocationFound, showLocation, nearestRouteTrigger }: MapProps) {
     setIsHazard(false);
   };
 
-  const handleSensorClick = (pin) => {
+  const handleSensorClick = (pin: any) => {
     setSelectedPin(pin);
     setOpen(true);
     setFlyTrigger((prev) => prev + 1);
@@ -159,8 +163,21 @@ function Map({ onLocationFound, showLocation, nearestRouteTrigger }: MapProps) {
     setIsHazard(false);
   };
 
-  const handleHazardClick = (pin, midpoint) => {
-    setSelectedPin({ ...pin, midpoint });
+  const handleHazardClick = ({
+    pin,
+    midpoint,
+  }: {
+    pin: any;
+    midpoint: any;
+  }) => {
+    const normalizedPin = {
+      ...pin,
+      lat: midpoint[0],
+      long: midpoint[1],
+      routePoints: pin.path, // ← map path to routePoints
+    };
+
+    setSelectedPin({ ...normalizedPin, midpoint });
     setOpen(true);
     setFlyTrigger((prev) => prev + 1);
     setShowNearestRoute(false);
