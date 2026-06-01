@@ -1,8 +1,7 @@
 import { Fragment, useEffect, useRef, useState } from "react";
 import { useMap, Marker, Polyline } from "react-leaflet";
-import leaflet, { point, type LocationEvent } from "leaflet";
+import leaflet, { point } from "leaflet";
 import { LatLng, divIcon } from "leaflet";
-import L from "leaflet";
 import "leaflet-routing-machine";
 import colors from "@/constants/colors";
 import PinIcon from "@/assets/Map/Pins.svg?react";
@@ -14,7 +13,6 @@ import BlankPin from "@/assets/Map/BlankPin.svg?react";
 import "leaflet-routing-machine/dist/leaflet-routing-machine.css";
 import "leaflet-routing-machine";
 import { toast } from "sonner";
-import { Trophy } from "lucide-react";
 import api from "@/api";
 import { useMapFilterContext } from "@/context/MapFilterContext";
 
@@ -76,16 +74,29 @@ export function NearestRouting({
 
   useEffect(() => {
     if (!userPosition) return;
+    console.log("NearestRouting mounted");
 
     const nearest = getNearestWaypoint(userPosition, pins);
     if (!nearest) return;
 
     onPinSelected?.(nearest);
+
+    let cancelled = false;
+
     if (routeControlRef.current) {
-      routeControlRef.current.remove();
+      try {
+        if (routeControlRef.current._map) {
+          console.log("removed successfully");
+          routeControlRef.current.remove();
+          console.log("removed successfully");
+        }
+      } catch (e) {
+        console.log("Previous routing cleanup:", e);
+      }
+      routeControlRef.current = null;
     }
 
-    routeControlRef.current = leaflet.Routing.control({
+    const control = leaflet.Routing.control({
       waypoints: [
         leaflet.latLng(userPosition.lat, userPosition.lng),
         leaflet.latLng(nearest.lat, nearest.long),
@@ -114,8 +125,35 @@ export function NearestRouting({
     } as any).addTo(map);
     // Kulit ni typescript - as any meaning thats my styles dont bother them
 
+    routeControlRef.current = control;
+
+    control.on("routesfound", () => {
+      if (cancelled) return;
+    });
+
     return () => {
-      routeControlRef.current.remove();
+      cancelled = true;
+      setTimeout(() => {
+        try {
+          if (routeControlRef.current) {
+            // Remove the route line directly
+            if (routeControlRef.current._line) {
+              map.removeLayer(routeControlRef.current._line);
+            }
+            // Remove the plan (waypoint markers)
+            if (routeControlRef.current._plan) {
+              map.removeLayer(routeControlRef.current._plan);
+            }
+            // Remove the container element
+            if (routeControlRef.current._container) {
+              routeControlRef.current._container.remove();
+            }
+            routeControlRef.current = null;
+          }
+        } catch (e) {
+          console.warn("Routing cleanup:", e);
+        }
+      }, 0);
     };
   }, [userPosition, map]);
 

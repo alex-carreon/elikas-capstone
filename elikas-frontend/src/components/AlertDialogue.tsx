@@ -50,6 +50,7 @@ function AlertDialogue({
           onClick={(e) => e.stopPropagation()}
           id={contentId}
         >
+          <AlertDialogTitle />
           <AlertDialogHeader>
             <CircleX
               size={28}
