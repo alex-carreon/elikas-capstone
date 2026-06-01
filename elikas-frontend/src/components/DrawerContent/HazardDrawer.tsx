@@ -4,7 +4,6 @@ import ButtonComp from "@/components/Button";
 import CSIcon from "@/assets/Map/CrowdsourceIcon.svg";
 import PostRow from "@/components/PostRow";
 import { Link } from "react-router";
-import sample from "@/assets/Map/SamplePhoto.png";
 import { Skeleton } from "@/components/ui/skeleton";
 import { useEffect, useState } from "react";
 import { differenceInDays } from "date-fns";
@@ -27,6 +26,7 @@ type FloodPath = {
 type FloodDetails = {
   id: number;
   element_id: number;
+  media: string;
   is_expired: boolean;
   is_deactivated: boolean;
   flood_levels: FloodLevel;
@@ -122,7 +122,7 @@ function HazardDrawer({ selectedPin }: { selectedPin: FloodPath }) {
             expiryDays={daysLeft}
             isSimple
           >
-            <img src={sample} />
+            <img src={floodDetails.media} />
           </PostRow>
         ) : (
           <>
