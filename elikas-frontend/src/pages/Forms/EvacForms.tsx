@@ -7,7 +7,7 @@ import colors from "@/constants/colors";
 import { MapClickHandler } from "@/lib/mapUtils";
 import { useState, useEffect, useRef } from "react";
 import { MapContainer, TileLayer } from "react-leaflet";
-import { useLocation, useNavigate } from "react-router";
+import { useLocation, useNavigate, useParams } from "react-router";
 import MultiSelect from "@/components/MultiSelect";
 import CheckBox from "@/components/CheckBox";
 import {
@@ -15,10 +15,64 @@ import {
   InputGroupTextarea,
 } from "@/components/ui/input-group";
 import { Camera } from "lucide-react";
+import { handleSubmit, handleUpdate } from "@/lib/evacUtils";
+import { useUserContext } from "@/context/AuthContext";
+import api from "@/api";
+
+type EvacType = {
+  id: number;
+  evac_type: string;
+};
+
+type verifiedBy = {
+  gov_op_id: number | null;
+  username: string | null;
+};
+
+type postedBy = {
+  user_id: number;
+  username: string;
+  posted_at: string;
+};
+
+type EvacPin = {
+  id: number;
+  name: string;
+  address: string;
+  description: string;
+  lat: number;
+  lng: number;
+  location_id: number;
+  area_type: EvacType;
+  capacity_level: number;
+  is_persistent: boolean;
+  for_reg_flood: boolean;
+  for_heavy_flood: boolean;
+  has_accom: boolean;
+  has_DRRMO: boolean;
+  has_health: boolean;
+  pwd_friendly: boolean;
+  has_catchment: boolean;
+  toilet_count: number;
+  kitchen_count: number;
+  child_prayer_count: number;
+  breastfeed_count: number;
+  other_facilities: string;
+  contact_person: string;
+  contact_number: string;
+  is_deactivated: boolean;
+  is_expired: boolean;
+  expiry: string | null | undefined;
+  deactivated_at: string | null;
+  last_updated: string | null;
+  verified_by: verifiedBy;
+  posted_by: postedBy;
+  last_confirmed: string | null;
+};
 
 function EvacPin() {
   const [existingPin, setExistingPin] = useState(false);
-  const [fileName, setFileName] = useState("");
+  const [fileName, setFileName] = useState<File | undefined>();
   const [imagePreview, setImagePreview] = useState<undefined | string>();
   const [locationType, setLocationType] = useState("");
   const [pinName, setPinName] = useState("");
@@ -27,6 +81,7 @@ function EvacPin() {
   const [street, setStreet] = useState<string | undefined>();
   const [capacity, setCapacity] = useState("");
   const [address, setAddress] = useState("");
+  const [isPersistent, setIsPersistent] = useState(false);
   const [other, setOther] = useState("");
   const [contactPerson, setContactPerson] = useState("");
   const [contactNumber, setContactNumber] = useState("");
@@ -39,12 +94,22 @@ function EvacPin() {
   const [hasHealth, setHasHealth] = useState(false);
   const [pwdFriendly, setPWDFriendly] = useState(false);
   const [hasCatchment, setHasCatchment] = useState(false);
+  const [hasToilet, setHasToilet] = useState(false);
   const [toilet, setToilet] = useState("");
+  const [hasKitchen, setHasKitchen] = useState(false);
   const [kitchen, setKicthen] = useState("");
+  const [hasChildPrayer, setHasChildPrayer] = useState(false);
   const [childPrayer, setChildPrayer] = useState("");
+  const [hasBreastfeed, setHasBreastfeed] = useState(false);
   const [breastfeed, setBreastfeed] = useState("");
   const [desc, setDesc] = useState("");
   const [error, setError] = useState("");
+  const [evacTypes, setEvacTypes] = useState<EvacType[]>([]);
+  const [areaType, setAreaType] = useState(0);
+  const [isEditable, setIsEditable] = useState(false);
+  const [hasUpdated, setHasUpdated] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [evacPins, setEvacPins] = useState<EvacPin | undefined>();
 
   const location = useLocation();
   const navigate = useNavigate();
@@ -55,6 +120,9 @@ function EvacPin() {
   const kitchenCount = Number(kitchen);
   const childPrayerCount = Number(childPrayer);
   const breastfeedCount = Number(breastfeed);
+
+  const { role } = useUserContext();
+  const { id } = useParams();
 
   useEffect(() => {
     if (location.state?.from === "/History") {
@@ -72,7 +140,7 @@ function EvacPin() {
   };
 
   const handleClearImage = () => {
-    setFileName("");
+    setFileName(undefined);
 
     if (inputRef.current) {
       console.log(inputRef.current);
@@ -93,52 +161,156 @@ function EvacPin() {
     setStreet(description);
   });
 
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    setError("");
+  useEffect(() => {
+    if (id) {
+      getEvacDetails();
+    } else if (!id) {
+      const getAreaTypes = async () => {
+        try {
+          const response = await api.get("/evac-types");
+          setEvacTypes(response.data);
 
-    var fullAddress = "";
+          if (!response) {
+            console.log("Failed to fetch evac types");
+            return;
+          }
+        } catch (error: any) {
+          console.error(error.response.data);
+        }
+      };
 
-    if (blkLot || !houseNo) {
-      fullAddress = `${blkLot} ${street}`;
-    } else if (houseNo || blkLot) {
-      fullAddress = `${houseNo} ${street}`;
-    } else fullAddress = `${street}`;
+      getAreaTypes();
+    }
+  }, [hasUpdated]);
 
-    setAddress(fullAddress);
+  useEffect(() => {
+    console.log("evacPins:", evacPins);
+    if (isEditable && evacPins) {
+      setRegFlood(evacPins.for_reg_flood);
+      setDesc(evacPins.description);
+      setRegFlood(evacPins.for_reg_flood);
+      setHeavyFlood(evacPins.for_heavy_flood);
+      setAreaType(evacPins.area_type.id);
+      setPinName(evacPins.name);
+      setDesc(evacPins.description);
+      setAddress(evacPins.address);
+      // setCapacity(String(evacPins.capacity_level));
+      setHasAccom(evacPins.has_accom);
+      setHasDRRMO(evacPins.has_DRRMO);
+      setHasHealth(evacPins.has_health);
+      setPWDFriendly(evacPins.pwd_friendly);
+      setHasCatchment(evacPins.has_catchment);
+      console.log(evacPins.for_reg_flood);
+    }
+  }, [isEditable, evacPins]);
 
-    console.log("locationPoint", center);
-    console.log("locationType", locationType);
-    console.log("address", fullAddress);
-    console.log("EvacDescription", desc);
-    console.log("pinName", pinName);
-    console.log("Capacity", capacityCount);
-    console.log("forRegularFlood", regFlood);
-    console.log("forHeavyFlood", heavyFlood);
-    console.log("hasAccomodation", hasAccom);
-    console.log("toiletCount", toiletCount);
-    console.log("kitchenCount", kitchenCount);
-    console.log("hasDRRMO", hasDRRMO);
-    console.log("hasHealthStation", hasHealth);
-    console.log("pwdFriendly", pwdFriendly);
-    console.log("hasCatchment", hasCatchment);
-    console.log("Child and PrayerArea", childPrayerCount);
-    console.log("breastfeedCount", breastfeedCount);
-    console.log("Other Facilities", other);
-    console.log("contactPerson", contactPerson);
-    console.log("contactNumber", contactNumber);
+  const getEvacDetails = async () => {
+    try {
+      setLoading(true);
+      setHasUpdated(false);
+      const response = await api.get(`/pins/${id}`);
+      const evacDetails = await response.data;
 
-    console.log("Media: TBA");
+      setRegFlood(evacDetails.for_reg_flood);
+      setHeavyFlood(evacDetails.for_heavy_flood);
+      setAreaType(evacDetails.area_type);
+      setPinName(evacDetails.name);
+      setDesc(evacDetails.description);
+      setAddress(evacDetails.address);
+      // setCapacity(String(evacDetails.capacity_level));
+      setHasAccom(evacDetails.has_accom);
+      setHasDRRMO(evacDetails.has_DRRMO);
+      setHasHealth(evacDetails.has_health);
+      setPWDFriendly(evacDetails.pwd_friendly);
+      setHasCatchment(evacDetails.has_catchment);
+      if (evacDetails.toilet_count) {
+        setHasToilet(true);
+      }
+      setToilet(String(evacDetails.toilet_count));
+      if (evacDetails.kitchen_count) {
+        setHasKitchen(true);
+      }
+      setKicthen(String(evacDetails.kitchen_count));
+      if (evacDetails.breastfeed_count) {
+        setHasBreastfeed(true);
+      }
+      setChildPrayer(String(evacDetails.child_prayer_count));
+      if (evacDetails.child_prayer_count) {
+        setHasChildPrayer(true);
+      }
+      setBreastfeed(String(evacDetails.breastfeed_count));
+      setOther(evacDetails.other_facilities);
+      setContactPerson(evacDetails.contact_person);
+      setContactNumber(evacDetails.contact_number);
+      setEvacPins(evacDetails);
+    } catch (err: string | any) {
+      console.log(err.response.data);
+    } finally {
+      setLoading(false);
+    }
+  };
 
-    // File not sure yet - localStorage.setItem("fileName", last_name);
-    // Facilities not sure as well
-    localStorage.setItem("locationType", locationType);
-    localStorage.setItem("pinName", pinName);
-    localStorage.setItem("address", fullAddress);
-    localStorage.setItem("contactPerson", contactPerson);
-    localStorage.setItem("contactNumber", contactNumber);
+  const submit = (e: React.FormEvent) => {
+    handleSubmit({
+      e: e,
+      name: pinName,
+      address: address,
+      description: desc,
+      lat: center[0],
+      lng: center[1],
+      location_id: 1,
+      area_type: areaType,
+      capacity_level: capacityCount,
+      is_persistent: role === "indiv" ? false : isPersistent,
+      for_reg_flood: regFlood,
+      for_heavy_flood: heavyFlood,
+      has_accom: hasAccom,
+      has_DRRMO: hasDRRMO,
+      has_health: hasHealth,
+      pwd_friendly: pwdFriendly,
+      has_catchment: hasCatchment,
+      toilet_count: toiletCount,
+      kitchen_count: kitchenCount,
+      child_prayer_count: childPrayerCount,
+      breastfeed_count: breastfeedCount,
+      other_facilities: other,
+      contact_person: contactPerson,
+      contact_number: contactNumber,
+      expiry: null,
+      file: fileName,
+      navigate: navigate,
+    });
+  };
 
-    navigate("/Map");
+  const update = (e: React.FormEvent) => {
+    handleUpdate({
+      e: e,
+      id: id,
+      name: pinName,
+      address: `${blkLot ?? ""} ${houseNo ?? ""} ${street ?? ""}`,
+      description: desc,
+      // location_id: 1,
+      area_type: areaType,
+      // capacity_level: capacityCount,
+      is_persistent: role === "indiv" ? false : isPersistent,
+      for_reg_flood: regFlood,
+      for_heavy_flood: heavyFlood,
+      has_accom: hasAccom,
+      has_DRRMO: hasDRRMO,
+      has_health: hasHealth,
+      pwd_friendly: pwdFriendly,
+      has_catchment: hasCatchment,
+      toilet_count: toiletCount,
+      kitchen_count: kitchenCount,
+      child_prayer_count: childPrayerCount,
+      breastfeed_count: breastfeedCount,
+      other_facilities: other,
+      contact_person: contactPerson,
+      contact_number: contactNumber,
+      expiry: null,
+      setIsEditable: setIsEditable,
+      setHasUpdated: setHasUpdated,
+    });
   };
 
   return (
@@ -163,7 +335,7 @@ function EvacPin() {
       </div>
       <form
         id="EvacPin_Form"
-        onSubmit={handleSubmit}
+        onSubmit={id ? (isEditable ? update : undefined) : submit}
         className="w-full flex flex-col justify-center items-center m-0"
       >
         <div className="w-full max-w-md flex flex-col gap-5">
@@ -180,12 +352,14 @@ function EvacPin() {
                 id="EvacPin_isRegChckbox"
                 checked={regFlood}
                 onCheckedChange={setRegFlood}
+                readOnly={!isEditable}
               />
               <CheckBox
                 text="for Heavy Flooding"
                 id="EvacPin_isHeavyChckbox"
                 checked={heavyFlood}
                 onCheckedChange={setHeavyFlood}
+                readOnly={!isEditable}
               />
             </div>
           </Field>
@@ -212,23 +386,37 @@ function EvacPin() {
               </>
             )}
           </div>
-          <SelectDropdown
-            value={locationType}
-            onValueChange={setLocationType}
-            label="Location Type*"
-            placeholder="Select the location type"
-            id="EvacPin_LocTypeField"
-            onSubmit={(e) => setLocationType(e.target.value)}
-            options={[{ label: "Private Residence (My Home)", value: "1" }]}
-            isRequired
-          />
+          {isEditable ? (
+            <SelectDropdown
+              value={String(areaType)}
+              onValueChange={(val) => setAreaType(Number(val))}
+              label="Location Type*"
+              placeholder="Select the location type"
+              id="EvacPin_LocTypeField"
+              onSubmit={(e) => setAreaType(Number(e.target.value))}
+              options={evacTypes.map((type) => ({
+                label: type.evac_type,
+                value: type.id.toString(),
+              }))}
+            />
+          ) : (
+            <TextField
+              label="Location Type"
+              value={String(evacPins?.area_type) ?? ""}
+              inputType="text"
+              id="EvacPin_LocType"
+              readonly
+            />
+          )}
+
           <TextField
             label="Pin Name*"
+            value={pinName}
             inputType="text"
             id="EvacPin_PinNameField"
             placeholder={existingPin ? "Gamoras" : "Enter your last name"}
             onSubmit={(e) => setPinName(e.target.value)}
-            isRequired
+            readonly={!isEditable}
           />
           <Field>
             <FieldLabel
@@ -240,7 +428,9 @@ function EvacPin() {
             <InputGroupTextarea
               className="h-10 border rounded-lg text-xs"
               id="EvacPin_DescField"
+              value={desc || ""}
               onChange={(e) => setDesc(e.target.value)}
+              readOnly={!isEditable}
             />
           </Field>
           <Field>
@@ -277,31 +467,37 @@ function EvacPin() {
                 clickedLoc={center}
               />
             </MapContainer>
-            <TextField
-              label="Block and Lot"
-              placeholder="Blk # Lot #"
-              id="EvacPin_BlkLotField"
-              inputType="text"
-              onSubmit={(e) => setBlkLot(e.target.value)}
-            ></TextField>
-            <TextField
-              label="House Number"
-              placeholder="i.e. 111"
-              id="EvacPin_HouseNumberField"
-              inputType="text"
-              onSubmit={(e) => setHouseNo(e.target.value)}
-            ></TextField>
-            <FieldLabel
-              className={"text-sm w-s"}
-              style={{ color: colors.label }}
-            >
-              Street
-            </FieldLabel>
-            <Textarea
-              readOnly
-              placeholder={description}
-              id="EvacPin_StreetField"
-            ></Textarea>
+            {id && <p className="text-sm">{address}</p>}
+            {!id ||
+              (isEditable && (
+                <>
+                  <TextField
+                    label="Block and Lot"
+                    placeholder="Blk # Lot #"
+                    id="EvacPin_BlkLotField"
+                    inputType="text"
+                    onSubmit={(e) => setBlkLot(e.target.value)}
+                  ></TextField>
+                  <TextField
+                    label="House Number"
+                    placeholder="i.e. 111"
+                    id="EvacPin_HouseNumberField"
+                    inputType="text"
+                    onSubmit={(e) => setHouseNo(e.target.value)}
+                  ></TextField>
+                  <FieldLabel
+                    className={"text-sm w-s"}
+                    style={{ color: colors.label }}
+                  >
+                    Street
+                  </FieldLabel>
+                  <Textarea
+                    readOnly
+                    placeholder={description}
+                    id="EvacPin_StreetField"
+                  ></Textarea>
+                </>
+              ))}
           </Field>
           <SelectDropdown
             value={capacity}
@@ -314,7 +510,7 @@ function EvacPin() {
               { label: "1 - 1-49 individuals", value: "1" },
               { label: "2 - 50-99 individuals", value: "2" },
             ]}
-            isRequired
+            isRequired={id ? false : true}
           />
           <Field>
             <FieldLabel
@@ -332,12 +528,14 @@ function EvacPin() {
                     id="EvacPin_AccomodationChckbox"
                     checked={hasAccom}
                     onCheckedChange={() => setHasAccom(!hasAccom)}
+                    readOnly={!isEditable}
                   />
                   <CheckBox
                     text="DRRMO Office"
                     id="EvacPin_DRRMOChckbox"
                     checked={hasDRRMO}
                     onCheckedChange={() => setHasDRRMO(!hasDRRMO)}
+                    readOnly={!isEditable}
                   />
                 </div>
                 <div className="flex gap-6">
@@ -346,12 +544,46 @@ function EvacPin() {
                     id="EvacPin_HealthChckbox"
                     checked={hasHealth}
                     onCheckedChange={() => setHasHealth(!hasHealth)}
+                    readOnly={!isEditable}
                   />
                   <CheckBox
                     text="PWD Friendly"
                     id="EvacPin_PWDChckbox"
                     checked={pwdFriendly}
                     onCheckedChange={() => setPWDFriendly(!pwdFriendly)}
+                    readOnly={!isEditable}
+                  />
+                </div>
+                <div className="flex gap-6">
+                  <CheckBox
+                    text="Toilet"
+                    id="EvacPin_ToiletChckbox"
+                    checked={hasToilet}
+                    onCheckedChange={() => setHasToilet(!hasToilet)}
+                    readOnly={!isEditable}
+                  />
+                  <CheckBox
+                    text="Kitchen"
+                    id="EvacPin_KitchenChckbox"
+                    checked={hasKitchen}
+                    onCheckedChange={() => setHasKitchen(!hasKitchen)}
+                    readOnly={!isEditable}
+                  />
+                </div>
+                <div className="flex gap-6">
+                  <CheckBox
+                    text="Child/Prayer Area"
+                    id="EvacPin_ChildPrayerChckbox"
+                    checked={hasChildPrayer}
+                    onCheckedChange={() => setHasChildPrayer(!hasChildPrayer)}
+                    readOnly={!isEditable}
+                  />
+                  <CheckBox
+                    text="Breastfeeding Area"
+                    id="EvacPin_BreastfeedChckbox"
+                    checked={hasBreastfeed}
+                    onCheckedChange={() => setHasBreastfeed(!hasBreastfeed)}
+                    readOnly={!isEditable}
                   />
                 </div>
                 <div className="flex gap-4">
@@ -360,38 +592,51 @@ function EvacPin() {
                     id="EvacPin_RainCatchChckbox"
                     checked={hasCatchment}
                     onCheckedChange={() => setHasCatchment(!hasCatchment)}
+                    readOnly={!isEditable}
                   />
                 </div>
               </div>
               <div className="flex gap-4 flex-col">
-                <TextField
-                  label="Number of Toilets (optional)"
-                  placeholder="i.e. 2"
-                  id="EvacPin_ToiletField"
-                  inputType="number"
-                  onSubmit={(e) => setToilet(e.target.value)}
-                />
-                <TextField
-                  label="Number of Kitchens (optional)"
-                  placeholder="i.e. 2"
-                  id="EvacPin_KitchenField"
-                  inputType="number"
-                  onSubmit={(e) => setKicthen(e.target.value)}
-                />
-                <TextField
-                  label="Number of Prayer Areas/Child-friendly areas (optional)"
-                  placeholder="i.e. 2"
-                  id="EvacPin_PrayerChildField"
-                  inputType="number"
-                  onSubmit={(e) => setChildPrayer(e.target.value)}
-                />
-                <TextField
-                  label="Number of Breastfeeding areas (optional)"
-                  placeholder="i.e. 2"
-                  id="EvacPin_BreastfeedField"
-                  inputType="number"
-                  onSubmit={(e) => setBreastfeed(e.target.value)}
-                />
+                {hasToilet && (
+                  <TextField
+                    label="Number of Toilets (optional)"
+                    placeholder="i.e. 2"
+                    id="EvacPin_ToiletField"
+                    inputType="number"
+                    onSubmit={(e) => setToilet(e.target.value)}
+                    value={toilet}
+                  />
+                )}
+                {hasKitchen && (
+                  <TextField
+                    label="Number of Kitchens (optional)"
+                    placeholder="i.e. 2"
+                    id="EvacPin_KitchenField"
+                    inputType="number"
+                    onSubmit={(e) => setKicthen(e.target.value)}
+                    value={kitchen}
+                  />
+                )}
+                {hasChildPrayer && (
+                  <TextField
+                    label="Number of Prayer Areas/Child-friendly areas (optional)"
+                    placeholder="i.e. 2"
+                    id="EvacPin_PrayerChildField"
+                    inputType="number"
+                    onSubmit={(e) => setChildPrayer(e.target.value)}
+                    value={childPrayer}
+                  />
+                )}
+                {hasBreastfeed && (
+                  <TextField
+                    label="Number of Breastfeeding areas (optional)"
+                    placeholder="i.e. 2"
+                    id="EvacPin_BreastfeedField"
+                    inputType="number"
+                    onSubmit={(e) => setBreastfeed(e.target.value)}
+                    value={breastfeed}
+                  />
+                )}
               </div>
             </div>
           </Field>
@@ -401,6 +646,7 @@ function EvacPin() {
             id="EvacPin_OtherFacilitiesField"
             inputType="text"
             onSubmit={(e) => setOther(e.target.value)}
+            value={other}
           ></TextField>
           <TextField
             label="Contact Person*"
@@ -408,7 +654,8 @@ function EvacPin() {
             id="EvacPin_ContactPersonField"
             inputType="text"
             onSubmit={(e) => setContactPerson(e.target.value)}
-            isRequired
+            value={contactPerson}
+            readonly={!isEditable}
           ></TextField>
           <TextField
             label="Contact Number*"
@@ -416,27 +663,58 @@ function EvacPin() {
             id="EvacPin_ContactNumberField"
             inputType="text"
             onSubmit={(e) => setContactNumber(e.target.value)}
-            isRequired
+            value={contactNumber}
+            readonly={!isEditable}
           ></TextField>
-          {existingPin ? (
-            <>
-              <div className="mx-2 flex justify-evenly shrink gap-4">
-                <ButtonComp
-                  text="Update"
-                  id="EvacPin_UpdatePinBtn"
-                  variant="primary"
-                  heightSize="38px"
-                  widthSize="20"
-                ></ButtonComp>
-                <ButtonComp
-                  text="Close"
-                  id="EvacPin_ClosePinBtn"
-                  variant="important"
-                  heightSize="38px"
-                  widthSize="20"
-                ></ButtonComp>
-              </div>
-            </>
+          {id ? (
+            !isEditable ? (
+              <>
+                <div className="mx-2 flex justify-evenly shrink gap-4">
+                  <ButtonComp
+                    text="Update"
+                    id="EvacPin_UpdatePinBtn"
+                    variant="primary"
+                    heightSize="38px"
+                    widthSize="20"
+                    onClick={() => setIsEditable(true)}
+                    type="button"
+                  ></ButtonComp>
+                  <ButtonComp
+                    text="Close"
+                    id="EvacPin_ClosePinBtn"
+                    variant="important"
+                    heightSize="38px"
+                    widthSize="20"
+                    type="button"
+                  ></ButtonComp>
+                </div>
+              </>
+            ) : (
+              <>
+                <div className="mx-2 flex justify-evenly shrink gap-4">
+                  <ButtonComp
+                    text="Submit"
+                    id="EvacPin_SubmitUpdBtn"
+                    type="submit"
+                    variant="primary"
+                    heightSize="38px"
+                    widthSize="20"
+                  ></ButtonComp>
+                  <ButtonComp
+                    text="Cancel"
+                    id="EvacPin_CancelUpdBtn"
+                    variant="outline"
+                    heightSize="38px"
+                    widthSize="20"
+                    onClick={() => {
+                      setIsEditable(false);
+                      getEvacDetails();
+                    }}
+                    type="button"
+                  ></ButtonComp>
+                </div>
+              </>
+            )
           ) : (
             <>
               <div>
