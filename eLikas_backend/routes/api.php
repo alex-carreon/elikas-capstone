@@ -4,6 +4,8 @@ use App\Http\Controllers\AdminController;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\Dashboards\FloodPathAdminController;
 use App\Http\Controllers\Dashboards\UserController;
+use App\Http\Controllers\EmergencyContactController;
+use App\Http\Controllers\EvacTypeController;
 use App\Http\Controllers\Hazards\FloodLevelController;
 use App\Http\Controllers\Hazards\FloodPathController;
 use App\Http\Controllers\LocationsController;
@@ -18,10 +20,9 @@ use App\Http\Controllers\PinControllers\VerifyEvacuationAreaController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\SensorControllers\PublicSensorController;
 use App\Http\Controllers\SensorControllers\SensorController;
-use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\SMSController;
-use App\Http\Controllers\EmergencyContactController;
-use App\Http\Controllers\EvacTypeController;
+use App\Http\Controllers\VoteController;
+use Illuminate\Support\Facades\Route;
 
 
 Route::get('/test', function () {
@@ -136,5 +137,6 @@ Route::middleware(['firebase.auth', 'role:1,2,3'])->group(function () {
     Route::delete('/pins/{id}', [DeleteEvacuationAreaController::class, 'deleteEvacuationArea']);
     Route::patch('/pins/{id}/deactivate', [DeleteEvacuationAreaController::class, 'deleteEvacuationArea']);
 
-
+    //VOTE
+    Route::post('/flood-paths/{floodPathId}/vote', [VoteController::class, 'vote']);
 });
