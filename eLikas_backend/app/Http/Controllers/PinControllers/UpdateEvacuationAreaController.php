@@ -39,7 +39,7 @@ class UpdateEvacuationAreaController extends Controller
                 'other_facilities' => 'nullable|string',
                 'contact_person' => 'nullable|string|max:255',
                 'contact_number' => 'nullable|string|max:20',
-                'expiry' => 'nullable|date',
+                'expiry' => 'nullable|date|after:now',
             ]);
 
             if (($request->filled('lat') && !$request->filled('lng')) || (!$request->filled('lat') && $request->filled('lng'))) {
