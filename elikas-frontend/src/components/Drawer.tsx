@@ -33,8 +33,6 @@ import SensorIconDetailed from "./SensorIconDetailed";
 import { bigSmile } from "@dicebear/collection";
 import { createAvatar } from "@dicebear/core";
 import { InputGroup, InputGroupAddon, InputGroupInput } from "./ui/input-group";
-import api from "@/api";
-import { differenceInDays } from "date-fns";
 import HazardDrawer from "./DrawerContent/HazardDrawer";
 
 type FloodLevel = {
@@ -69,7 +67,7 @@ type FloodPath = {
 interface DrawerProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  selectedPin: FloodPath;
+  selectedPin: FloodPath | null;
   onFindRoute: (findRoute: boolean) => void;
   newPin: boolean;
   isSensor: boolean;
@@ -103,28 +101,6 @@ function DrawerComp({
 
   const fileInputRef = useRef<HTMLInputElement>(null);
   const cameraInputRef = useRef<HTMLInputElement>(null);
-
-  useEffect(() => {
-    if (!selectedPin) return;
-
-    const getFloodDetails = async () => {
-      try {
-        setLoading(true);
-        const response = await api.get(`/flood-paths/${selectedPin.id}`);
-        const floodDetails = await response.data.flood_path;
-        setFloodDetails(floodDetails);
-
-        const today = new Date();
-        const expDate = new Date(floodDetails.expiry);
-
-        setDaysleft(differenceInDays(expDate, today));
-      } catch (err: string | any) {
-        console.log(err.message || "An error occurred");
-      }
-      setLoading(false);
-    };
-    getFloodDetails();
-  }, [selectedPin?.id]);
 
   const handleSubmit = () => {
     console.log(comment);
@@ -311,94 +287,9 @@ function DrawerComp({
   } else if (isHazard) {
     content = (
       <>
-        <HazardDrawer
-          loading={loading}
-          floodDetails={floodDetails}
-          daysLeft={daysLeft}
-        />
+        <HazardDrawer selectedPin={selectedPin} />
       </>
     );
-    //   <>
-    //     <div className="w-full px-4 pb-4 flex flex-col gap-4">
-    //       <div className="w-full flex flex-row justify-between">
-    //         <div className="flex flex-row gap-2">
-    //           <div className="flex flex-row items-center gap-2 px-4">
-    //             <img src={CSIcon} className="w-12" />
-    //             <p className="text-base">
-    //               <b>Crowdsourced Updates</b>
-    //             </p>
-    //           </div>
-    //         </div>
-    //         <DrawerClose id="DrawerMark_CloseBtn" className="self-start">
-    //           <CircleX size={28} fill="#CECECE" strokeWidth={1} />
-    //         </DrawerClose>
-    //       </div>
-    //       <div className="w-full flex flex-col self-start gap-2">
-    //         <div className="h-full w-full flex items-center gap-4">
-    //           <Skeleton className="h-12 w-12 rounded-full bg-[#59260B]/30" />
-    //           <div className="w-full space-y-2 items-start justify-center">
-    //             <Skeleton className="h-4 w-full bg-[#59260B]/30" />
-    //             <Skeleton className="h-4 w-[200px] bg-[#59260B]/30" />
-    //           </div>
-    //         </div>
-    //         <Skeleton className="h-56 w-full bg-[#59260B]/30" />
-    //       </div>
-    //     </div>
-    //   </>
-    // ) : (
-    //   <>
-    //     <div className="px-4 pb-4 flex flex-col">
-    //       <div className="w-full flex flex-row justify-between">
-    //         <div className="flex flex-row gap-2">
-    //           <div className="flex flex-row items-center gap-2 px-4">
-    //             <img src={CSIcon} className="w-12" />
-    //             <p className="text-base">
-    //               <b>Crowdsourced Updates</b>
-    //             </p>
-    //           </div>
-    //         </div>
-    //         <DrawerClose id="DrawerMark_CloseBtn" className="self-start">
-    //           <CircleX size={28} fill="#CECECE" strokeWidth={1} />
-    //         </DrawerClose>
-    //       </div>
-    //       {floodDetails ? (
-    //         <PostRow
-    //           username={floodDetails.posted_by.username}
-    //           timePosted={floodDetails.posted_at}
-    //           description={floodDetails.description}
-    //           upVotesCount={floodDetails.upvotes}
-    //           downVotesCount={floodDetails.downvotes}
-    //           level={floodDetails.level.level_name}
-    //           expiryDays={daysLeft}
-    //           isSimple
-    //         >
-    //           <img src={sample} />
-    //         </PostRow>
-    //       ) : (
-    //         <>
-    //           <div className="h-70 flex justify-center items-center">
-    //             <div className="flex flex-col justify-center items-center gap-2">
-    //               <div className="flex flex-col justify-center items-center">
-    //                 <p className="text-center">Join the community!</p>
-    //                 <p className="text-center">
-    //                   Create an account to view other people's comments.
-    //                 </p>
-    //               </div>
-    //               <Link to="/Login">
-    //                 <ButtonComp
-    //                   text="Sign in"
-    //                   id="Drawer_HazardSignIn"
-    //                   variant="primary"
-    //                   heightSize="40px"
-    //                   widthSize="100px"
-    //                 />
-    //               </Link>
-    //             </div>
-    //           </div>
-    //         </>
-    //       )}
-    //     </div>
-    //   </>
   } else {
     content = (
       <>
@@ -630,31 +521,6 @@ function DrawerComp({
 
   return (
     <>
-      {/* {openDialog &&
-        createPortal(
-          <div
-            className="fixed inset-0 z-[498]"
-            onClick={() => setOpenDialog(false)}
-          />,
-          document.body,
-        )}
-      {openDialog &&
-        createPortal(
-          <AlertDialogue
-            open={openDialog}
-            title="Flag a Comment"
-            description="Why do you think this is an inappropriate comment? Check all that applies."
-            buttonText="Report"
-            onClose={() => {
-              setOpenDialog(false);
-            }}
-            contentId="Drawer_ReportDialogContent"
-            closeId="Drawer_ReportDialogClose"
-            actionId="Drawer_ReportDialogSubmit"
-          />,
-          document.body,
-        )} */}
-
       <Drawer
         open={open}
         onOpenChange={onOpenChange}
@@ -668,6 +534,8 @@ function DrawerComp({
           )}
           id="Drawer_DrawerContent"
         >
+          <DrawerTitle />
+          <DrawerDescription />
           {content}
         </DrawerContent>
       </Drawer>
