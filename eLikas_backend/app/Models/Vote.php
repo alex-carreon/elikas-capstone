@@ -43,7 +43,7 @@ class Vote extends Model
 		return $this->belongsTo(User::class, 'user_id');
 	}
 
-	public function social_element()
+	public function socialElement()
 	{
 		return $this->belongsTo(SocialElement::class, 'element_id');
 	}
