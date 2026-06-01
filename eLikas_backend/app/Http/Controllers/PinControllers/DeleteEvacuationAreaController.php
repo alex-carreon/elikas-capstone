@@ -27,12 +27,6 @@ class DeleteEvacuationAreaController extends Controller
                 ], 404);
             }
 
-            if (!in_array($user->role_id, [1, 2, 3])) {
-                return response()->json([
-                    'error' => 'Forbidden'
-                ], 403);
-            }
-
             if ($user->role_id == 3 && $pin->social_element?->user_id != $user->id) {
                 return response()->json([
                     'error' => 'Forbidden. You may only deactivate your own evacuation area pins'
@@ -64,4 +58,46 @@ class DeleteEvacuationAreaController extends Controller
             ], 500);
         }
     }
+    public function restoreEvacuationArea(Request $request, $id)
+{
+    try {
+        $user = $request->attributes->get('firebase_user');
+
+        $pin = EvacArea::with('social_element')->find($id);
+
+        if (!$pin) {
+            return response()->json([
+                'error' => 'Evacuation area not found'
+            ], 404);
+        }
+
+        if (!$pin->social_element) {
+            return response()->json([
+                'error' => 'Evacuation area has no linked social element'
+            ], 422);
+        }
+
+        if ($pin->social_element->user_id != $user->id) {
+            return response()->json([
+                'error' => 'Forbidden. You may only restore your own evacuation area pins'
+            ], 403);
+        }
+
+        $pin->social_element->deactivated_at = null;
+        $pin->social_element->save();
+
+        return response()->json([
+            'message' => 'Evacuation area restored successfully',
+            'pin_id' => $pin->id,
+            'element_id' => $pin->social_element->id,
+            'deactivated_at' => null
+        ], 200);
+
+    } catch (\Exception $e) {
+        return response()->json([
+            'error' => 'Failed to restore evacuation area',
+            'details' => $e->getMessage()
+        ], 500);
+    }
+}
 }
