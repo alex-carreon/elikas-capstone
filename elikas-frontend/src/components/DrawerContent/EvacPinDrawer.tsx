@@ -171,9 +171,6 @@ function EvacPinDrawer({
   const cameraInputRef = useRef<HTMLInputElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
-  if (evacPinDetails) {
-  }
-
   const avatar = createAvatar(bigSmile, {
     seed: "Felix",
     backgroundColor: ["b6e3f4", "c0aede", "d1d4f9"],

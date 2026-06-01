@@ -200,10 +200,6 @@ function HazardForm() {
     }
   }, [isEditable, floodDetails]);
 
-  useEffect(() => {
-    console.log(routePoints);
-  }, [routePoints]);
-
   const submit = (e: React.FormEvent) => {
     console.log(routePoints);
 
