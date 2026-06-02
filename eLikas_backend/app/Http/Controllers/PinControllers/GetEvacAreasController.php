@@ -121,32 +121,10 @@ class GetEvacAreasController extends Controller
 
     private function formatEvacArea(EvacArea $pin)
     {
-        $lat = $pin->location?->latitude;
-        $lng = $pin->location?->longitude;
-
         return [
             'id' => $pin->id,
-            'element_id' => $pin->element_id,
-            'name' => $pin->name,
-            'address' => $pin->address,
-            'description' => $pin->description,
-
-            'coordinates' => [
-                $lat,
-                $lng,
-            ],
-
-            'location_id' => $pin->location_id,
-
-            'area_type_id' => $pin->area_type,
-            'area_type' => $pin->evac_type?->evac_type,
-
-            'capacity_level_id' => $pin->capacity_level,
-            'capacity_name' => $pin->capacity_level_info?->capacity_level,
-
-            'is_persistent' => $pin->is_persistent,
-            'for_reg_flood' => $pin->for_reg_flood,
-            'for_heavy_flood' => $pin->for_heavy_flood,
+            'lat' => $pin->location?->latitude,
+            'lng' => $pin->location?->longitude,
         ];
     }
 
