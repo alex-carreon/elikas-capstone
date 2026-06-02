@@ -16,7 +16,7 @@ interface PostRowProps {
   username: string;
   timePosted: string;
   description: string;
-  level: string;
+  level?: string;
   locationVerified?: boolean;
   upVotesCount: number;
   downVotesCount: number;
