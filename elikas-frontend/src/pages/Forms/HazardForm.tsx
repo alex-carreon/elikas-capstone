@@ -461,15 +461,15 @@ function HazardForm() {
                 <p className="italic" style={{ color: colors.label }}>
                   Expires in {daysLeft} days
                 </p>
-                <div className="mx-2 flex justify-evenly shrink gap-4">
-                  {!isEditable ? (
-                    <>
+                {!isEditable ? (
+                  <>
+                    <div className="mx-2 flex justify-evenly shrink gap-4">
                       <ButtonComp
                         text="Update"
                         id="HazardPin_UpdatePinBtn"
                         variant="primary"
-                        heightSize="40px"
-                        widthSize="20px"
+                        heightSize="38px"
+                        widthSize="20"
                         type="button"
                         onClick={() => setIsEditable(true)}
                       ></ButtonComp>
@@ -477,40 +477,40 @@ function HazardForm() {
                         text="Delete"
                         id="HazardPin_DeletePinBtn"
                         variant="important"
-                        heightSize="40px"
-                        widthSize="20px"
+                        heightSize="38px"
+                        widthSize="20"
                         type="button"
                         onClick={() => {
                           setWillDeactivate(true);
                         }}
                       ></ButtonComp>
-                    </>
-                  ) : (
-                    <>
-                      <div className="mx-2 flex justify-evenly shrink gap-4">
-                        <ButtonComp
-                          text="Submit"
-                          id="HazardPin_SubmitUpdPinBtn"
-                          variant="primary"
-                          heightSize="40px"
-                          widthSize="200px"
-                          type="submit"
-                        ></ButtonComp>
-                        <ButtonComp
-                          text="Cancel"
-                          id="HazardPin_CancelBtn"
-                          variant="outline"
-                          heightSize="40px"
-                          widthSize="200px"
-                          type="button"
-                          onClick={() => {
-                            setIsEditable(false);
-                          }}
-                        ></ButtonComp>
-                      </div>
-                    </>
-                  )}
-                </div>
+                    </div>
+                  </>
+                ) : (
+                  <>
+                    <div className="mx-2 flex justify-evenly shrink gap-4">
+                      <ButtonComp
+                        text="Submit"
+                        id="HazardPin_SubmitUpdPinBtn"
+                        variant="primary"
+                        heightSize="38px"
+                        widthSize="20"
+                        type="submit"
+                      ></ButtonComp>
+                      <ButtonComp
+                        text="Cancel"
+                        id="HazardPin_CancelBtn"
+                        variant="outline"
+                        heightSize="38px"
+                        widthSize="20"
+                        type="button"
+                        onClick={() => {
+                          setIsEditable(false);
+                        }}
+                      ></ButtonComp>
+                    </div>
+                  </>
+                )}
               </>
             ) : (
               <>
