@@ -20,7 +20,8 @@ import { useUserContext } from "@/context/AuthContext";
 import api from "@/api";
 import FormSkeleton from "../Skeletons/FormSkeleton";
 import DatePickerInput from "@/components/DateField";
-import { toZonedTime, format } from "date-fns-tz";
+import { toZonedTime, format, formatInTimeZone } from "date-fns-tz";
+import { addDays } from "date-fns";
 
 type EvacType = {
   id: number;
@@ -43,8 +44,15 @@ type postedBy = {
   posted_at: string;
 };
 
+type media = {
+  id: number;
+  type: string;
+  url: File;
+};
+
 type EvacPin = {
   id: number;
+  media: media;
   name: string;
   address: string;
   description: string;
@@ -120,7 +128,8 @@ function EvacPin() {
   const [hasUpdated, setHasUpdated] = useState(false);
   const [loading, setLoading] = useState(false);
   const [evacPins, setEvacPins] = useState<EvacPin | undefined>();
-  const [expiry, setExpiry] = useState<Date>();
+  const [expiry, setExpiry] = useState<Date | undefined>();
+  const [expireDefault, setExpireDefault] = useState<Date>();
 
   const location = useLocation();
   const navigate = useNavigate();
@@ -238,7 +247,17 @@ function EvacPin() {
         }
       };
 
+      const getCapacityLevels = async () => {
+        try {
+          const response = await api.get("/capacity-levels");
+          setCapacityLevels(response.data);
+        } catch (error: any) {
+          console.error(error.response.data);
+        }
+      };
+
       getAreaTypes();
+      getCapacityLevels();
     }
   }, [hasUpdated]);
 
@@ -305,39 +324,52 @@ function EvacPin() {
   }, [expiry]);
 
   const submit = (e: React.FormEvent) => {
+    // const dateTime = formatInTimeZone(new Date(), "Asia/Manila", "yyyy-MM-dd");
+    e.preventDefault();
+    const formData = new FormData();
+
+    const expDate = expiry ?? addDays(new Date(), 7);
+
+    let imageFormData;
+
+    if (fileName) {
+      formData.append("file", fileName);
+    }
+
+    formData.append("name", pinName);
+    formData.append(
+      "address",
+      `${blkLot ?? ""} ${houseNo ?? ""} ${street ?? ""}`,
+    );
+    formData.append("description", desc);
+    formData.append("lat", String(center[0]));
+    formData.append("lng", String(center[1]));
+    formData.append("location_id", "16");
+    formData.append("area_type", String(areaType));
+    formData.append("capacity_level", String(capacityCount));
+    formData.append(
+      "is_persistent",
+      String(role === "indiv" ? 0 : isPersistent),
+    );
+    formData.append("for_reg_flood", regFlood ? "1" : "0");
+    formData.append("for_heavy_flood", heavyFlood ? "1" : "0");
+    formData.append("has_accom", hasAccom ? "1" : "0");
+    formData.append("has_DRRMO", hasDRRMO ? "1" : "0");
+    formData.append("has_health", hasHealth ? "1" : "0");
+    formData.append("pwd_friendly", pwdFriendly ? "1" : "0");
+    formData.append("has_catchment", hasCatchment ? "1" : "0");
+    formData.append("toilet_count", String(toiletCount));
+    formData.append("kitchen_count", String(kitchenCount));
+    formData.append("child_prayer_count", String(childPrayerCount));
+    formData.append("breastfeed_count", String(breastfeedCount));
+    formData.append("other_facilities", other);
+    formData.append("contact_person", contactPerson);
+    formData.append("contact_number", contactNumber);
+    formData.append("expiry", format(expDate, "yyyy-MM-dd"));
+
     handleSubmit({
       e: e,
-      name: pinName,
-      address: address,
-      description: desc,
-      lat: center[0],
-      lng: center[1],
-      location_id: 1,
-      area_type: areaType,
-      capacity_level: capacityCount,
-      is_persistent: role === "indiv" ? false : isPersistent,
-      for_reg_flood: regFlood,
-      for_heavy_flood: heavyFlood,
-      has_accom: hasAccom,
-      has_DRRMO: hasDRRMO,
-      has_health: hasHealth,
-      pwd_friendly: pwdFriendly,
-      has_catchment: hasCatchment,
-      toilet_count: toiletCount,
-      kitchen_count: kitchenCount,
-      child_prayer_count: childPrayerCount,
-      breastfeed_count: breastfeedCount,
-      other_facilities: other,
-      contact_person: contactPerson,
-      contact_number: contactNumber,
-      expiry: format(
-        toZonedTime(expiry!, "Asia/Manila"),
-        "yyyy-MM-dd HH:mm:ss",
-        {
-          timeZone: "Asia/Manila",
-        },
-      ),
-      file: fileName,
+      formData: formData,
       navigate: navigate,
     });
   };
@@ -349,7 +381,6 @@ function EvacPin() {
       name: pinName,
       address: `${blkLot ?? ""} ${houseNo ?? ""} ${street ?? ""}`,
       description: desc,
-      // location_id: areaType,
       area_type: areaType,
       capacity_level: Number(capacity),
       is_persistent: role === "indiv" ? false : isPersistent,
@@ -425,41 +456,49 @@ function EvacPin() {
                 id="EvacPin_isRegChckbox"
                 checked={regFlood}
                 onCheckedChange={setRegFlood}
-                readOnly={!isEditable}
+                readOnly={!id || isEditable ? false : true}
               />
               <CheckBox
                 text="for Heavy Flooding"
                 id="EvacPin_isHeavyChckbox"
                 checked={heavyFlood}
                 onCheckedChange={setHeavyFlood}
-                readOnly={!isEditable}
+                readOnly={!id || isEditable ? false : true}
               />
             </div>
           </Field>
           <div className="flex flex-col gap-3">
             {/* To test when PWA is done */}
-            <TextField
-              label="Location Image*"
-              inputType="file"
-              id="EvacPin_PhotoField"
-              onSubmit={fileOnChange}
-              ref={inputRef}
-              accept="image/png, image/jpeg, image/heic"
-              endIcon={Camera}
-            />
-            {fileName && (
+            {!id ? (
               <>
-                <img src={imagePreview} />{" "}
-                <ButtonComp
-                  text="Clear"
-                  variant="outline"
-                  id="EvacPin_ImageClearBtn"
-                  onClick={handleClearImage}
-                ></ButtonComp>
+                <TextField
+                  label="Location Image*"
+                  inputType="file"
+                  id="EvacPin_PhotoField"
+                  onSubmit={fileOnChange}
+                  ref={inputRef}
+                  accept="image/png, image/jpeg, image/heic"
+                  endIcon={Camera}
+                />
+                {fileName && (
+                  <>
+                    <img src={imagePreview} />{" "}
+                    <ButtonComp
+                      text="Clear"
+                      variant="outline"
+                      id="EvacPin_ImageClearBtn"
+                      onClick={handleClearImage}
+                    ></ButtonComp>
+                  </>
+                )}
+              </>
+            ) : (
+              <>
+                <img src={String(evacPins?.media.url)} />
               </>
             )}
           </div>
-          {isEditable ? (
+          {isEditable || !id ? (
             <SelectDropdown
               value={String(areaType)}
               onValueChange={(val) => setAreaType(Number(val))}
@@ -489,7 +528,7 @@ function EvacPin() {
             id={!id || isEditable ? "EvacPin_PinNameField" : ""}
             placeholder={existingPin ? "Gamoras" : "Enter your last name"}
             onSubmit={(e) => setPinName(e.target.value)}
-            readonly={!isEditable}
+            readonly={!id || isEditable ? false : true}
           />
           <Field>
             <FieldLabel
@@ -503,7 +542,7 @@ function EvacPin() {
               id="EvacPin_DescField"
               value={desc || ""}
               onChange={(e) => setDesc(e.target.value)}
-              readOnly={!isEditable}
+              readOnly={!id || isEditable ? false : true}
             />
           </Field>
           <Field>
@@ -541,36 +580,35 @@ function EvacPin() {
               />
             </MapContainer>
             {id && <p className="text-sm">{address}</p>}
-            {!id ||
-              (isEditable && (
-                <>
-                  <TextField
-                    label="Block and Lot"
-                    placeholder="Blk # Lot #"
-                    id="EvacPin_BlkLotField"
-                    inputType="text"
-                    onSubmit={(e) => setBlkLot(e.target.value)}
-                  ></TextField>
-                  <TextField
-                    label="House Number"
-                    placeholder="i.e. 111"
-                    id="EvacPin_HouseNumberField"
-                    inputType="text"
-                    onSubmit={(e) => setHouseNo(e.target.value)}
-                  ></TextField>
-                  <FieldLabel
-                    className={"text-sm w-s"}
-                    style={{ color: colors.label }}
-                  >
-                    Street
-                  </FieldLabel>
-                  <Textarea
-                    readOnly
-                    placeholder={description}
-                    id="EvacPin_StreetField"
-                  ></Textarea>
-                </>
-              ))}
+            {!id || isEditable ? (
+              <>
+                <TextField
+                  label="Block and Lot"
+                  placeholder="Blk # Lot #"
+                  id="EvacPin_BlkLotField"
+                  inputType="text"
+                  onSubmit={(e) => setBlkLot(e.target.value)}
+                ></TextField>
+                <TextField
+                  label="House Number"
+                  placeholder="i.e. 111"
+                  id="EvacPin_HouseNumberField"
+                  inputType="text"
+                  onSubmit={(e) => setHouseNo(e.target.value)}
+                ></TextField>
+                <FieldLabel
+                  className={"text-sm w-s"}
+                  style={{ color: colors.label }}
+                >
+                  Street
+                </FieldLabel>
+                <Textarea
+                  readOnly
+                  placeholder={description}
+                  id="EvacPin_StreetField"
+                ></Textarea>
+              </>
+            ) : null}
           </Field>
           {isEditable || !id ? (
             <SelectDropdown
@@ -612,14 +650,14 @@ function EvacPin() {
                     id="EvacPin_AccomodationChckbox"
                     checked={hasAccom}
                     onCheckedChange={() => setHasAccom(!hasAccom)}
-                    readOnly={!isEditable}
+                    readOnly={!id || isEditable ? false : true}
                   />
                   <CheckBox
                     text="DRRMO Office"
                     id="EvacPin_DRRMOChckbox"
                     checked={hasDRRMO}
                     onCheckedChange={() => setHasDRRMO(!hasDRRMO)}
-                    readOnly={!isEditable}
+                    readOnly={!id || isEditable ? false : true}
                   />
                 </div>
                 <div className="flex gap-6">
@@ -628,14 +666,14 @@ function EvacPin() {
                     id="EvacPin_HealthChckbox"
                     checked={hasHealth}
                     onCheckedChange={() => setHasHealth(!hasHealth)}
-                    readOnly={!isEditable}
+                    readOnly={!id || isEditable ? false : true}
                   />
                   <CheckBox
                     text="PWD Friendly"
                     id="EvacPin_PWDChckbox"
                     checked={pwdFriendly}
                     onCheckedChange={() => setPWDFriendly(!pwdFriendly)}
-                    readOnly={!isEditable}
+                    readOnly={!id || isEditable ? false : true}
                   />
                 </div>
                 <div className="flex gap-6">
@@ -644,14 +682,14 @@ function EvacPin() {
                     id="EvacPin_ToiletChckbox"
                     checked={hasToilet}
                     onCheckedChange={() => setHasToilet(!hasToilet)}
-                    readOnly={!isEditable}
+                    readOnly={!id || isEditable ? false : true}
                   />
                   <CheckBox
                     text="Kitchen"
                     id="EvacPin_KitchenChckbox"
                     checked={hasKitchen}
                     onCheckedChange={() => setHasKitchen(!hasKitchen)}
-                    readOnly={!isEditable}
+                    readOnly={!id || isEditable ? false : true}
                   />
                 </div>
                 <div className="flex gap-6">
@@ -660,14 +698,14 @@ function EvacPin() {
                     id="EvacPin_ChildPrayerChckbox"
                     checked={hasChildPrayer}
                     onCheckedChange={() => setHasChildPrayer(!hasChildPrayer)}
-                    readOnly={!isEditable}
+                    readOnly={!id || isEditable ? false : true}
                   />
                   <CheckBox
                     text="Breastfeeding Area"
                     id="EvacPin_BreastfeedChckbox"
                     checked={hasBreastfeed}
                     onCheckedChange={() => setHasBreastfeed(!hasBreastfeed)}
-                    readOnly={!isEditable}
+                    readOnly={!id || isEditable ? false : true}
                   />
                 </div>
                 <div className="flex gap-4">
@@ -676,7 +714,7 @@ function EvacPin() {
                     id="EvacPin_RainCatchChckbox"
                     checked={hasCatchment}
                     onCheckedChange={() => setHasCatchment(!hasCatchment)}
-                    readOnly={!isEditable}
+                    readOnly={!id || isEditable ? false : true}
                   />
                 </div>
               </div>
@@ -733,6 +771,7 @@ function EvacPin() {
             inputType="text"
             onSubmit={(e) => setOther(e.target.value)}
             value={other || ""}
+            readonly={!id || isEditable ? false : true}
           ></TextField>
           <TextField
             label="Contact Person*"
@@ -741,7 +780,7 @@ function EvacPin() {
             inputType="text"
             onSubmit={(e) => setContactPerson(e.target.value)}
             value={contactPerson}
-            readonly={!isEditable}
+            readonly={!id || isEditable ? false : true}
           ></TextField>
           <TextField
             label="Contact Number*"
@@ -752,7 +791,7 @@ function EvacPin() {
             inputType="text"
             onSubmit={(e) => setContactNumber(e.target.value)}
             value={contactNumber}
-            readonly={!isEditable}
+            readonly={!id || isEditable ? false : true}
           ></TextField>
           <DatePickerInput
             label="Expiry Date"
@@ -765,9 +804,8 @@ function EvacPin() {
             }
             value={expiry}
             onChange={setExpiry}
-            readonly={!isEditable}
-            edit={isEditable}
-            isRequired={!id}
+            readonly={!id || isEditable ? false : true}
+            edit={isEditable || !id}
             showTime
           />
           {id ? (

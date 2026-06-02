@@ -33,6 +33,7 @@ interface handleActionProps {
   navigate?: NavigateFunction;
   setIsEditable?: React.Dispatch<React.SetStateAction<boolean>>;
   setHasUpdated?: React.Dispatch<React.SetStateAction<boolean>>;
+  formData?: FormData;
 }
 
 export const handleSubmit = async ({
@@ -63,56 +64,44 @@ export const handleSubmit = async ({
   expiry,
   file,
   navigate,
+  formData,
 }: handleActionProps) => {
   e?.preventDefault();
 
   try {
-    const addPromise = new Promise(async (resolve, reject) => {
-      const response = await api.post("/pins", {
-        name: name,
-        address: address,
-        description: description,
-        lat: lat,
-        lng: lng,
-        location_id: location_id,
-        area_type: area_type,
-        capacity_level: capacity_level,
-        is_persistent: is_persistent,
-        for_reg_flood: for_reg_flood,
-        for_heavy_flood: for_heavy_flood,
-        has_accom: has_accom,
-        has_DRRMO: has_DRRMO,
-        has_health: has_health,
-        pwd_friendly: pwd_friendly,
-        has_catchment: has_catchment,
-        toilet_count: toilet_count,
-        kitchen_count: kitchen_count,
-        child_prayer_count: child_prayer_count,
-        breastfeed_count: breastfeed_count,
-        other_facilities: other_facilities,
-        contact_person: contact_person,
-        contact_number: contact_number,
-        expiry: expiry,
-        file: file,
-      });
-
-      if (!response) {
-        reject("No response from server");
-      } else resolve(response);
+    const response = api.post("/pins", formData, {
+      headers: {
+        "Content-Type": undefined, // lets browser set it with boundary
+      },
     });
 
-    toast.promise(addPromise, {
+    console.log(response);
+
+    if (!response) {
+      console.log("No response from server");
+    }
+
+    toast.promise(response, {
       loading: "Adding your pin to the map...",
       success: "Pin successfully added!",
       error: (err) => err?.message || "Please try again.",
       position: "top-center",
     });
 
-    addPromise.then(() => {
+    response.then(() => {
       navigate?.("/map");
     });
-  } catch (error) {
-    console.error("Error occurred while submitting form:", error);
+  } catch (error: any) {
+    console.error("Request failed");
+
+    if (error.response) {
+      console.error("Status:", error.response.status);
+      console.error("Data:", error.response.data);
+    } else if (error.request) {
+      console.error("No response received:", error.request);
+    } else {
+      console.error("Error:", error.message);
+    }
   }
 
   return;

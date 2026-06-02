@@ -9,6 +9,7 @@ import {
   CircleX,
   File,
   Camera,
+  ChevronUpIcon,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -58,7 +59,7 @@ type postedBy = {
 type media = {
   id: number;
   type: string;
-  url: File;
+  url: string | undefined;
 };
 
 type EvacPin = {
@@ -179,6 +180,7 @@ function EvacPinDrawer({
   const [available, setAvailable] = useState<typeof facilities>([]);
   const [unavailable, setUnavailable] = useState<typeof facilities>([]);
   const [openCollapse, setOpenCollapse] = useState(false);
+  const [openImageCollapse, setOpenImageCollapse] = useState(false);
 
   const cameraInputRef = useRef<HTMLInputElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -230,8 +232,8 @@ function EvacPinDrawer({
         const response = await api.get(`/pins/${selectedPin.id}`);
         const evacPinDetails = await response.data;
         setEvacPinDetails(evacPinDetails);
-        console.log("response:", response.data.media.url);
-        console.log("evacPinDetails:", evacPinDetails.media[0].url);
+        console.log("response:", response.data.media?.[0]?.url);
+        console.log("evacPinDetails:", evacPinDetails.media?.[0]?.url);
         console.log("evacPinDetailsALL:", evacPinDetails);
 
         const today = new Date();
@@ -369,15 +371,19 @@ function EvacPinDrawer({
             isExpanded ? "opacity-100" : "opacity-0 pointer-events-none",
           )}
         >
-          <Collapsible className="rounded-md data-[state=open]:bg-muted px-4 ">
+          <Collapsible className="rounded-md data-[state=open]:bg-red px-4 ">
             <CollapsibleTrigger
               id="Drawer_FacilitiesTrigger"
               className="group w-full flex flex-col items-start"
-              onClick={() => setOpenCollapse(true)}
+              onClick={() => setOpenCollapse(!openCollapse)}
             >
               <div className="flex flex-row items-center">
                 Facilities Available
-                <ChevronDownIcon className="ml-auto group-data-[state=open]:rotate-180" />
+                {openCollapse ? (
+                  <ChevronUpIcon className="ml-auto group-data-[state=open]:rotate-180" />
+                ) : (
+                  <ChevronDownIcon className="ml-auto group-data-[state=open]:rotate-180" />
+                )}
                 <p className="text-xs italic">Press to see more</p>
               </div>
             </CollapsibleTrigger>
@@ -421,25 +427,31 @@ function EvacPinDrawer({
               <p className="text-xs">{evacPinDetails?.other_facilities}</p>
             </CollapsibleContent>
           </Collapsible>
-          <Collapsible className="rounded-md data-[state=open]:bg-muted px-4 ">
-            <CollapsibleTrigger
-              id="Drawer_FacilitiesTrigger"
-              className="group w-full flex flex-col items-start"
-              onClick={() => setOpenCollapse(true)}
-            >
-              <div className="flex flex-row items-center">
-                Attached Photo
-                <ChevronDownIcon className="ml-auto group-data-[state=open]:rotate-180" />
-                <p className="text-xs italic">Press to see more</p>
-              </div>
-            </CollapsibleTrigger>
-            <CollapsibleContent
-              id="Drawer_FacilitiesContent"
-              className="flex flex-col items-start px-2.5 pt-0 text-sm"
-            >
-              <img src={String(evacPinDetails?.media[0].url)} />
-            </CollapsibleContent>
-          </Collapsible>
+          {evacPinDetails?.media?.[0]?.url ? (
+            <Collapsible className="rounded-md data-[state=open]:bg-muted px-4 ">
+              <CollapsibleTrigger
+                id="Drawer_FacilitiesTrigger"
+                className="group w-full flex flex-col items-start"
+                onClick={() => setOpenImageCollapse(!openImageCollapse)}
+              >
+                <div className="flex flex-row items-center">
+                  Attached Photo
+                  {openImageCollapse ? (
+                    <ChevronUpIcon className="ml-auto group-data-[state=open]:rotate-180" />
+                  ) : (
+                    <ChevronDownIcon className="ml-auto group-data-[state=open]:rotate-180" />
+                  )}
+                  <p className="text-xs italic">Press to see more</p>
+                </div>
+              </CollapsibleTrigger>
+              <CollapsibleContent
+                id="Drawer_FacilitiesContent"
+                className="flex flex-col items-start px-2.5 pt-0 text-sm"
+              >
+                <img src={evacPinDetails.media[0].url} />
+              </CollapsibleContent>
+            </Collapsible>
+          ) : null}
           <hr className="border-gray-400 m-4"></hr>
           <div className="">
             <div className="flex flex-row items-center gap-2 px-4">
