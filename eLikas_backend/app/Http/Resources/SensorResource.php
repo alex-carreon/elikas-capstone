@@ -28,9 +28,9 @@ class SensorResource extends JsonResource
             'yellowLevel'  => $this->yellow_level,
             'redLevel'     => $this->red_level,
             'currentStatus' => $this->current_status,
-            'mountLocation'   => $this->whenLoaded('location', function() {
-                return $this->location->name ?? null;
-            }),
+            'mountLocation'   => $this->whenLoaded('mountLocation')
+                ? $this->mountLocation->name
+                : null,
 
             'deactivatedAt' => $this->relationLoaded('social_element')
                 ? $this->social_element?->deactivated_at?->toIso8601String()
