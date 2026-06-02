@@ -69,8 +69,10 @@ type EvacPin = {
   lat: number;
   lng: number;
   location_id: number;
-  area_type: number;
-  capacity_level: number;
+  area_type_id: number;
+  area_type: string;
+  capacity_level_id: number;
+  capacity_name: string;
   is_persistent: boolean;
   for_reg_flood: boolean;
   for_heavy_flood: boolean;
@@ -331,6 +333,9 @@ function EvacPinDrawer({
             <p className="text-left text-xs italic">
               Expires in: {daysLeft} days
             </p>
+            <p className="text-left text-xs italic">
+              Posted By: {evacPinDetails?.posted_by.username}
+            </p>
           </div>
           <Button
             size="sm"
@@ -352,7 +357,7 @@ function EvacPinDrawer({
               <b>Area Type</b>: {evacPinDetails?.area_type}
             </li>
             <li>
-              <b>Capacity</b>: {evacPinDetails?.capacity_level}
+              <b>Capacity</b>: {evacPinDetails?.capacity_name}
             </li>
           </ul>
         </div>
@@ -449,8 +454,8 @@ function EvacPinDrawer({
                 timePosted="3:30pm"
                 description="Bring your own water"
                 locationVerified
-                upVotesCount={20}
-                downVotesCount={12}
+                // upVotesCount={20}
+                // downVotesCount={12}
                 flagCount={1}
                 expiryDays={30}
                 image={sample}
@@ -460,8 +465,8 @@ function EvacPinDrawer({
                 timePosted="3:30pm"
                 description="Bring your own water"
                 locationVerified
-                upVotesCount={20}
-                downVotesCount={12}
+                // upVotesCount={20}
+                // downVotesCount={12}
                 flagCount={1}
                 expiryDays={30}
                 image={sample}
