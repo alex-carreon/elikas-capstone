@@ -15,9 +15,10 @@ import {
   InputGroupTextarea,
 } from "@/components/ui/input-group";
 import { Camera } from "lucide-react";
-import { handleSubmit, handleUpdate } from "@/lib/evacUtils";
+import { handleDelete, handleSubmit, handleUpdate } from "@/lib/evacUtils";
 import { useUserContext } from "@/context/AuthContext";
 import api from "@/api";
+import FormSkeleton from "../Skeletons/FormSkeleton";
 
 type EvacType = {
   id: number;
@@ -110,6 +111,7 @@ function EvacPin() {
   const [hasUpdated, setHasUpdated] = useState(false);
   const [loading, setLoading] = useState(false);
   const [evacPins, setEvacPins] = useState<EvacPin | undefined>();
+  const [expiry, setExpiry] = useState("");
 
   const location = useLocation();
   const navigate = useNavigate();
@@ -163,6 +165,52 @@ function EvacPin() {
 
   useEffect(() => {
     if (id) {
+      const getEvacDetails = async () => {
+        try {
+          setLoading(true);
+          setHasUpdated(false);
+          const response = await api.get(`/pins/${id}`);
+          const evacDetails = await response.data;
+
+          setRegFlood(evacDetails.for_reg_flood);
+          setHeavyFlood(evacDetails.for_heavy_flood);
+          setAreaType(evacDetails.area_type);
+          setPinName(evacDetails.name);
+          setDesc(evacDetails.description);
+          setAddress(evacDetails.address);
+          setCapacity(String(evacDetails.capacity_level));
+          setHasAccom(evacDetails.has_accom);
+          setHasDRRMO(evacDetails.has_DRRMO);
+          setHasHealth(evacDetails.has_health);
+          setPWDFriendly(evacDetails.pwd_friendly);
+          setHasCatchment(evacDetails.has_catchment);
+          setExpiry(evacDetails.expiry);
+          if (evacDetails.toilet_count) {
+            setHasToilet(true);
+          }
+          setToilet(String(evacDetails.toilet_count));
+          if (evacDetails.kitchen_count) {
+            setHasKitchen(true);
+          }
+          setKicthen(String(evacDetails.kitchen_count));
+          if (evacDetails.breastfeed_count) {
+            setHasBreastfeed(true);
+          }
+          setChildPrayer(String(evacDetails.child_prayer_count));
+          if (evacDetails.child_prayer_count) {
+            setHasChildPrayer(true);
+          }
+          setBreastfeed(String(evacDetails.breastfeed_count));
+          setOther(evacDetails.other_facilities);
+          setContactPerson(evacDetails.contact_person);
+          setContactNumber(evacDetails.contact_number);
+          setEvacPins(evacDetails);
+        } catch (err: string | any) {
+          console.log(err.response.data);
+        } finally {
+          setLoading(false);
+        }
+      };
       getEvacDetails();
     } else if (!id) {
       const getAreaTypes = async () => {
@@ -203,52 +251,6 @@ function EvacPin() {
       console.log(evacPins.for_reg_flood);
     }
   }, [isEditable, evacPins]);
-
-  const getEvacDetails = async () => {
-    try {
-      setLoading(true);
-      setHasUpdated(false);
-      const response = await api.get(`/pins/${id}`);
-      const evacDetails = await response.data;
-
-      setRegFlood(evacDetails.for_reg_flood);
-      setHeavyFlood(evacDetails.for_heavy_flood);
-      setAreaType(evacDetails.area_type);
-      setPinName(evacDetails.name);
-      setDesc(evacDetails.description);
-      setAddress(evacDetails.address);
-      // setCapacity(String(evacDetails.capacity_level));
-      setHasAccom(evacDetails.has_accom);
-      setHasDRRMO(evacDetails.has_DRRMO);
-      setHasHealth(evacDetails.has_health);
-      setPWDFriendly(evacDetails.pwd_friendly);
-      setHasCatchment(evacDetails.has_catchment);
-      if (evacDetails.toilet_count) {
-        setHasToilet(true);
-      }
-      setToilet(String(evacDetails.toilet_count));
-      if (evacDetails.kitchen_count) {
-        setHasKitchen(true);
-      }
-      setKicthen(String(evacDetails.kitchen_count));
-      if (evacDetails.breastfeed_count) {
-        setHasBreastfeed(true);
-      }
-      setChildPrayer(String(evacDetails.child_prayer_count));
-      if (evacDetails.child_prayer_count) {
-        setHasChildPrayer(true);
-      }
-      setBreastfeed(String(evacDetails.breastfeed_count));
-      setOther(evacDetails.other_facilities);
-      setContactPerson(evacDetails.contact_person);
-      setContactNumber(evacDetails.contact_number);
-      setEvacPins(evacDetails);
-    } catch (err: string | any) {
-      console.log(err.response.data);
-    } finally {
-      setLoading(false);
-    }
-  };
 
   const submit = (e: React.FormEvent) => {
     handleSubmit({
@@ -313,7 +315,15 @@ function EvacPin() {
     });
   };
 
-  return (
+  const deac = () => {
+    handleDelete({ id: id, navigate: navigate });
+  };
+
+  return loading ? (
+    <div className="w-full h-full flex flex-col items-center p-12 mt-8 mb-2 gap-4">
+      <FormSkeleton />
+    </div>
+  ) : (
     <div className="w-full h-full flex flex-col items-center p-12 mt-8 mb-2 gap-4">
       <div>
         <p
@@ -333,9 +343,8 @@ function EvacPin() {
           </p>
         )}
       </div>
-      <form
+      <div
         id="EvacPin_Form"
-        onSubmit={id ? (isEditable ? update : undefined) : submit}
         className="w-full flex flex-col justify-center items-center m-0"
       >
         <div className="w-full max-w-md flex flex-col gap-5">
@@ -413,7 +422,7 @@ function EvacPin() {
             label="Pin Name*"
             value={pinName}
             inputType="text"
-            id="EvacPin_PinNameField"
+            id={!id || isEditable ? "EvacPin_PinNameField" : ""}
             placeholder={existingPin ? "Gamoras" : "Enter your last name"}
             onSubmit={(e) => setPinName(e.target.value)}
             readonly={!isEditable}
@@ -499,19 +508,30 @@ function EvacPin() {
                 </>
               ))}
           </Field>
-          <SelectDropdown
-            value={capacity}
-            onValueChange={setCapacity}
-            label="Capacity Level*"
-            placeholder="Select the capacity level"
-            id="EvacPin_CapacityField"
-            onSubmit={(e) => setLocationType(e.target.value)}
-            options={[
-              { label: "1 - 1-49 individuals", value: "1" },
-              { label: "2 - 50-99 individuals", value: "2" },
-            ]}
-            isRequired={id ? false : true}
-          />
+          {isEditable || !id ? (
+            <SelectDropdown
+              value={capacity}
+              onValueChange={setCapacity}
+              label="Capacity Level*"
+              placeholder="Select the capacity level"
+              id="EvacPin_CapacityField"
+              onSubmit={(e) => setLocationType(e.target.value)}
+              options={[
+                { label: "1 - 1-49 individuals", value: "1" },
+                { label: "2 - 50-99 individuals", value: "2" },
+              ]}
+              isRequired={id ? false : true}
+            />
+          ) : (
+            <TextField
+              label="Capacity Level"
+              id="EvacPin_Capacity"
+              inputType="text"
+              value={capacity}
+              readonly
+            ></TextField>
+          )}
+
           <Field>
             <FieldLabel
               className={"text-sm w-s"}
@@ -600,7 +620,7 @@ function EvacPin() {
                 {hasToilet && (
                   <TextField
                     label="Number of Toilets (optional)"
-                    placeholder="i.e. 2"
+                    placeholder={!id || isEditable ? "i.e. 2" : ""}
                     id="EvacPin_ToiletField"
                     inputType="number"
                     onSubmit={(e) => setToilet(e.target.value)}
@@ -610,7 +630,7 @@ function EvacPin() {
                 {hasKitchen && (
                   <TextField
                     label="Number of Kitchens (optional)"
-                    placeholder="i.e. 2"
+                    placeholder={!id || isEditable ? "i.e. 2" : ""}
                     id="EvacPin_KitchenField"
                     inputType="number"
                     onSubmit={(e) => setKicthen(e.target.value)}
@@ -620,7 +640,7 @@ function EvacPin() {
                 {hasChildPrayer && (
                   <TextField
                     label="Number of Prayer Areas/Child-friendly areas (optional)"
-                    placeholder="i.e. 2"
+                    placeholder={!id || isEditable ? "i.e. 2" : ""}
                     id="EvacPin_PrayerChildField"
                     inputType="number"
                     onSubmit={(e) => setChildPrayer(e.target.value)}
@@ -630,7 +650,7 @@ function EvacPin() {
                 {hasBreastfeed && (
                   <TextField
                     label="Number of Breastfeeding areas (optional)"
-                    placeholder="i.e. 2"
+                    placeholder={!id || isEditable ? "i.e. 2" : ""}
                     id="EvacPin_BreastfeedField"
                     inputType="number"
                     onSubmit={(e) => setBreastfeed(e.target.value)}
@@ -642,11 +662,13 @@ function EvacPin() {
           </Field>
           <TextField
             label="Other Facilities (optional)"
-            placeholder="Enter other facilities available"
+            placeholder={
+              !id || isEditable ? "Enter other facilities available" : ""
+            }
             id="EvacPin_OtherFacilitiesField"
             inputType="text"
             onSubmit={(e) => setOther(e.target.value)}
-            value={other}
+            value={other || ""}
           ></TextField>
           <TextField
             label="Contact Person*"
@@ -659,11 +681,24 @@ function EvacPin() {
           ></TextField>
           <TextField
             label="Contact Number*"
-            placeholder="Enter the contact number for this pin"
+            placeholder={
+              !id || isEditable ? "Enter the contact number for this pin" : ""
+            }
             id="EvacPin_ContactNumberField"
             inputType="text"
             onSubmit={(e) => setContactNumber(e.target.value)}
             value={contactNumber}
+            readonly={!isEditable}
+          ></TextField>
+          <TextField
+            label="Expiration Date*"
+            placeholder={
+              !id || isEditable ? "Enter the expiry date for this pin" : ""
+            }
+            id="EvacPin_ExpiryField"
+            inputType="text"
+            onSubmit={(e) => setExpiry(e.target.value)}
+            value={expiry}
             readonly={!isEditable}
           ></TextField>
           {id ? (
@@ -686,6 +721,7 @@ function EvacPin() {
                     heightSize="38px"
                     widthSize="20"
                     type="button"
+                    onClick={() => deac()}
                   ></ButtonComp>
                 </div>
               </>
@@ -695,10 +731,11 @@ function EvacPin() {
                   <ButtonComp
                     text="Submit"
                     id="EvacPin_SubmitUpdBtn"
-                    type="submit"
+                    // type="button"
                     variant="primary"
                     heightSize="38px"
                     widthSize="20"
+                    onClick={(e) => update(e)}
                   ></ButtonComp>
                   <ButtonComp
                     text="Cancel"
@@ -708,7 +745,6 @@ function EvacPin() {
                     widthSize="20"
                     onClick={() => {
                       setIsEditable(false);
-                      getEvacDetails();
                     }}
                     type="button"
                   ></ButtonComp>
@@ -747,12 +783,13 @@ or account restriction."
                   isDisabled={!safetyCheck || !infoCheck}
                   heightSize="38px"
                   widthSize="100%"
+                  onClick={(e) => submit(e)}
                 />
               </div>
             </>
           )}
         </div>
-      </form>
+      </div>
     </div>
   );
 }
