@@ -19,10 +19,17 @@ import { handleDelete, handleSubmit, handleUpdate } from "@/lib/evacUtils";
 import { useUserContext } from "@/context/AuthContext";
 import api from "@/api";
 import FormSkeleton from "../Skeletons/FormSkeleton";
+import DatePickerInput from "@/components/DateField";
+import { toZonedTime, format } from "date-fns-tz";
 
 type EvacType = {
   id: number;
   evac_type: string;
+};
+
+type CapacityLevel = {
+  id: number;
+  capacity_level: string;
 };
 
 type verifiedBy = {
@@ -44,8 +51,10 @@ type EvacPin = {
   lat: number;
   lng: number;
   location_id: number;
-  area_type: EvacType;
-  capacity_level: number;
+  area_type_id: number;
+  area_type: string;
+  capacity_level_id: number;
+  capacity_name: string;
   is_persistent: boolean;
   for_reg_flood: boolean;
   for_heavy_flood: boolean;
@@ -63,7 +72,7 @@ type EvacPin = {
   contact_number: string;
   is_deactivated: boolean;
   is_expired: boolean;
-  expiry: string | null | undefined;
+  expiry: Date;
   deactivated_at: string | null;
   last_updated: string | null;
   verified_by: verifiedBy;
@@ -81,6 +90,7 @@ function EvacPin() {
   const [houseNo, setHouseNo] = useState("");
   const [street, setStreet] = useState<string | undefined>();
   const [capacity, setCapacity] = useState("");
+  const [capacityLevels, setCapacityLevels] = useState<CapacityLevel[]>([]);
   const [address, setAddress] = useState("");
   const [isPersistent, setIsPersistent] = useState(false);
   const [other, setOther] = useState("");
@@ -104,14 +114,13 @@ function EvacPin() {
   const [hasBreastfeed, setHasBreastfeed] = useState(false);
   const [breastfeed, setBreastfeed] = useState("");
   const [desc, setDesc] = useState("");
-  const [error, setError] = useState("");
   const [evacTypes, setEvacTypes] = useState<EvacType[]>([]);
   const [areaType, setAreaType] = useState(0);
   const [isEditable, setIsEditable] = useState(false);
   const [hasUpdated, setHasUpdated] = useState(false);
   const [loading, setLoading] = useState(false);
   const [evacPins, setEvacPins] = useState<EvacPin | undefined>();
-  const [expiry, setExpiry] = useState("");
+  const [expiry, setExpiry] = useState<Date>();
 
   const location = useLocation();
   const navigate = useNavigate();
@@ -171,6 +180,7 @@ function EvacPin() {
           setHasUpdated(false);
           const response = await api.get(`/pins/${id}`);
           const evacDetails = await response.data;
+          console.log(response);
 
           setRegFlood(evacDetails.for_reg_flood);
           setHeavyFlood(evacDetails.for_heavy_flood);
@@ -217,6 +227,7 @@ function EvacPin() {
         try {
           const response = await api.get("/evac-types");
           setEvacTypes(response.data);
+          console.log("evac types", response);
 
           if (!response) {
             console.log("Failed to fetch evac types");
@@ -232,17 +243,48 @@ function EvacPin() {
   }, [hasUpdated]);
 
   useEffect(() => {
+    if (isEditable) {
+      const getAreaTypes = async () => {
+        try {
+          const response = await api.get("/evac-types");
+          setEvacTypes(response.data);
+          console.log("evac types", response);
+
+          if (!response) {
+            console.log("Failed to fetch evac types");
+            return;
+          }
+        } catch (error: any) {
+          console.error(error.response.data);
+        }
+      };
+
+      const getCapacityLevels = async () => {
+        try {
+          const response = await api.get("/capacity-levels");
+          setCapacityLevels(response.data);
+        } catch (error: any) {
+          console.error(error.response.data);
+        }
+      };
+
+      getAreaTypes();
+      getCapacityLevels();
+    }
+  }, [isEditable]);
+
+  useEffect(() => {
     console.log("evacPins:", evacPins);
     if (isEditable && evacPins) {
       setRegFlood(evacPins.for_reg_flood);
       setDesc(evacPins.description);
       setRegFlood(evacPins.for_reg_flood);
       setHeavyFlood(evacPins.for_heavy_flood);
-      setAreaType(evacPins.area_type.id);
+      setAreaType(evacPins.area_type_id);
       setPinName(evacPins.name);
       setDesc(evacPins.description);
       setAddress(evacPins.address);
-      // setCapacity(String(evacPins.capacity_level));
+      setCapacity(String(evacPins.capacity_level_id));
       setHasAccom(evacPins.has_accom);
       setHasDRRMO(evacPins.has_DRRMO);
       setHasHealth(evacPins.has_health);
@@ -251,6 +293,16 @@ function EvacPin() {
       console.log(evacPins.for_reg_flood);
     }
   }, [isEditable, evacPins]);
+
+  useEffect(() => {
+    if (!expiry) return;
+    console.log(
+      "expiry data",
+      format(toZonedTime(expiry!, "Asia/Manila"), "yyyy-MM-dd HH:mm:ss", {
+        timeZone: "Asia/Manila",
+      }),
+    );
+  }, [expiry]);
 
   const submit = (e: React.FormEvent) => {
     handleSubmit({
@@ -278,7 +330,13 @@ function EvacPin() {
       other_facilities: other,
       contact_person: contactPerson,
       contact_number: contactNumber,
-      expiry: null,
+      expiry: format(
+        toZonedTime(expiry!, "Asia/Manila"),
+        "yyyy-MM-dd HH:mm:ss",
+        {
+          timeZone: "Asia/Manila",
+        },
+      ),
       file: fileName,
       navigate: navigate,
     });
@@ -291,9 +349,9 @@ function EvacPin() {
       name: pinName,
       address: `${blkLot ?? ""} ${houseNo ?? ""} ${street ?? ""}`,
       description: desc,
-      // location_id: 1,
+      // location_id: areaType,
       area_type: areaType,
-      // capacity_level: capacityCount,
+      capacity_level: Number(capacity),
       is_persistent: role === "indiv" ? false : isPersistent,
       for_reg_flood: regFlood,
       for_heavy_flood: heavyFlood,
@@ -309,7 +367,13 @@ function EvacPin() {
       other_facilities: other,
       contact_person: contactPerson,
       contact_number: contactNumber,
-      expiry: null,
+      expiry: format(
+        toZonedTime(expiry!, "Asia/Manila"),
+        "yyyy-MM-dd HH:mm:ss",
+        {
+          timeZone: "Asia/Manila",
+        },
+      ),
       setIsEditable: setIsEditable,
       setHasUpdated: setHasUpdated,
     });
@@ -411,7 +475,7 @@ function EvacPin() {
           ) : (
             <TextField
               label="Location Type"
-              value={String(evacPins?.area_type) ?? ""}
+              value={evacPins?.area_type}
               inputType="text"
               id="EvacPin_LocType"
               readonly
@@ -516,10 +580,10 @@ function EvacPin() {
               placeholder="Select the capacity level"
               id="EvacPin_CapacityField"
               onSubmit={(e) => setLocationType(e.target.value)}
-              options={[
-                { label: "1 - 1-49 individuals", value: "1" },
-                { label: "2 - 50-99 individuals", value: "2" },
-              ]}
+              options={capacityLevels?.map((level) => ({
+                label: level.capacity_level,
+                value: String(level.id),
+              }))}
               isRequired={id ? false : true}
             />
           ) : (
@@ -527,7 +591,7 @@ function EvacPin() {
               label="Capacity Level"
               id="EvacPin_Capacity"
               inputType="text"
-              value={capacity}
+              value={evacPins?.capacity_name}
               readonly
             ></TextField>
           )}
@@ -690,17 +754,22 @@ function EvacPin() {
             value={contactNumber}
             readonly={!isEditable}
           ></TextField>
-          <TextField
-            label="Expiration Date*"
+          <DatePickerInput
+            label="Expiry Date"
+            idField="EvacPin_ExpiryField"
+            idBtn="EvacPin_CalendarBtn"
             placeholder={
-              !id || isEditable ? "Enter the expiry date for this pin" : ""
+              !id || isEditable
+                ? "Enter other facilities available"
+                : String(expiry)
             }
-            id="EvacPin_ExpiryField"
-            inputType="text"
-            onSubmit={(e) => setExpiry(e.target.value)}
             value={expiry}
+            onChange={setExpiry}
             readonly={!isEditable}
-          ></TextField>
+            edit={isEditable}
+            isRequired={!id}
+            showTime
+          />
           {id ? (
             !isEditable ? (
               <>
