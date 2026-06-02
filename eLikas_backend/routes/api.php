@@ -2,6 +2,9 @@
 
 use App\Http\Controllers\AdminController;
 use App\Http\Controllers\AuthController;
+use App\Http\Controllers\CapacityLevelController;
+use App\Http\Controllers\Dashboards\CommentsAdminController;
+use App\Http\Controllers\Comments\EvacComments;
 use App\Http\Controllers\Dashboards\FloodPathAdminController;
 use App\Http\Controllers\Dashboards\UserController;
 use App\Http\Controllers\EmergencyContactController;
@@ -23,7 +26,6 @@ use App\Http\Controllers\SensorControllers\SensorController;
 use App\Http\Controllers\SMSController;
 use App\Http\Controllers\VoteController;
 use Illuminate\Support\Facades\Route;
-use App\Http\Controllers\CapacityLevelController;
 
 
 Route::get('/test', function () {
@@ -46,6 +48,7 @@ Route::get('/locations/barangays', [LocationsController::class, 'barangays']);
 Route::get('/emergency-contacts', [EmergencyContactController::class, 'index']);
 Route::get('/evac-types', [EvacTypeController::class, 'index']);
 Route::get('/capacity-levels', [CapacityLevelController::class, 'index']);
+
 // ---------------------------------------------------------------
 // PIN PUBLIC ROUTES — no token required
 // ---------------------------------------------------------------
@@ -71,6 +74,11 @@ Route::prefix('admin')->middleware(['firebase.auth', 'role:1'])->group(function 
     Route::get('/pins', [GetEvacAreasController::class, 'getAdminEvacAreas']);
 
     Route::get('flood-paths', [FloodPathAdminController::class, 'index']);
+    
+    //Comments
+    Route::patch('/comments/{id}', [CommentsAdminController::class, 'update']);
+    Route::patch('/comments/{id}/deactivate',[CommentsAdminController::class, 'deactivate']);
+
 });
 
 // ---------------------------------------------------------------
@@ -135,4 +143,8 @@ Route::middleware(['firebase.auth', 'role:1,2,3'])->group(function () {
 
     //VOTE
     Route::post('/flood-paths/{floodPathId}/vote', [VoteController::class, 'vote']);
+
+    //COMMENTS
+    Route::get('/evac-areas/{evacAreaId}/comments', [EvacComments::class, 'index']);
+    Route::post('/evac-areas/{evacAreaId}/comments', [EvacComments::class, 'store']);
 });

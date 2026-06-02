@@ -46,4 +46,9 @@ class Comment extends Model
 	{
 		return $this->belongsTo(SocialElement::class, 'parent_id');
 	}
+
+	public function element() 
+	{ 
+		return $this->belongsTo(SocialElement::class,'element_id'); 
+	}
 }
