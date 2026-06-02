@@ -20,9 +20,6 @@ class SensorService
     public function create(array $validated, User $user): Sensor
     {
         return DB::transaction(function () use ($validated, $user) {
-            $govOp = $user->govOp;
-            $locationId = $govOp->location_id;
-
             $element = SocialElement::create([
                 'user_id'   => $user->id,
                 'posted_at' => now(),
@@ -30,17 +27,18 @@ class SensorService
                 'has_media' => false,
             ]);
 
-            // Count existing sensors at this location for the sequence
-            $sequence = Sensor::whereHas('social_element.user.govOp', function ($q) use ($locationId) {
-                $q->where('location_id', $locationId);
-            })->count() + 1;
+            $sensor = Sensor::create([
+                'element_id' => $element->id,
+                'mount_height' => $validated['mount_height'],
+                'name' => $validated['name'],
+                'location' => $validated['location'],
+                'address' => $validated['address'],
+                'yellow_level' => $validated['yellow_level'],
+                'red_level' => $validated['red_level'],
+                'location_id' => $validated['location_id'],
+            ]);
 
-            $sensor = new Sensor($validated);
-            $sensor->element_id     = $element->id;
-            $sensor->sensor_code    = sprintf('SN-%d-%03d', $locationId, $sequence);
-            $sensor->current_status = 'normal';
-            $sensor->last_online    = null;
-            $sensor->save();
+            $sensor->refresh();
 
             return $sensor;
         });
