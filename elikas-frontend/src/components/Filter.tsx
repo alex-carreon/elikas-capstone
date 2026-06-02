@@ -33,9 +33,9 @@ function Filter() {
     >
       <div className="flex items-center justify-end m-4">
         <CollapsibleTrigger id="Map_FilterTrigger">
-          <Button size="icon" className="size-8 bg-white">
+          <div className="size-8 bg-white rounded-md flex items-center justify-center cursor-pointer hover:bg-gray-100">
             <ListFilterIcon strokeWidth={3} />
-          </Button>
+          </div>
         </CollapsibleTrigger>
       </div>
       <div className="flex justify-end">

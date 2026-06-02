@@ -1,8 +1,7 @@
 import { Fragment, useEffect, useRef, useState } from "react";
 import { useMap, Marker, Polyline } from "react-leaflet";
-import leaflet, { point, type LocationEvent } from "leaflet";
+import leaflet, { point } from "leaflet";
 import { LatLng, divIcon } from "leaflet";
-import L from "leaflet";
 import "leaflet-routing-machine";
 import colors from "@/constants/colors";
 import PinIcon from "@/assets/Map/Pins.svg?react";
@@ -14,24 +13,8 @@ import BlankPin from "@/assets/Map/BlankPin.svg?react";
 import "leaflet-routing-machine/dist/leaflet-routing-machine.css";
 import "leaflet-routing-machine";
 import { toast } from "sonner";
-import { Trophy } from "lucide-react";
 import api from "@/api";
 import { useMapFilterContext } from "@/context/MapFilterContext";
-
-export const pins = [
-  {
-    id: 1,
-    name: "Atrium",
-    lat: 14.565518250363224,
-    long: 120.99809311129499,
-  },
-  {
-    id: 2,
-    name: "Taft Campus",
-    lat: 14.563803477668346,
-    long: 120.99479571081709,
-  },
-];
 
 export const sensorPins = [
   {
@@ -41,8 +24,6 @@ export const sensorPins = [
     long: 120.99761278890365,
   },
 ];
-
-type PinType = (typeof pins)[0];
 
 function getNearestWaypoint(
   userLatLng: LatLng,
@@ -76,16 +57,29 @@ export function NearestRouting({
 
   useEffect(() => {
     if (!userPosition) return;
+    console.log("NearestRouting mounted");
 
     const nearest = getNearestWaypoint(userPosition, pins);
     if (!nearest) return;
 
     onPinSelected?.(nearest);
+
+    let cancelled = false;
+
     if (routeControlRef.current) {
-      routeControlRef.current.remove();
+      try {
+        if (routeControlRef.current._map) {
+          console.log("removed successfully");
+          routeControlRef.current.remove();
+          console.log("removed successfully");
+        }
+      } catch (e) {
+        console.log("Previous routing cleanup:", e);
+      }
+      routeControlRef.current = null;
     }
 
-    routeControlRef.current = leaflet.Routing.control({
+    const control = leaflet.Routing.control({
       waypoints: [
         leaflet.latLng(userPosition.lat, userPosition.lng),
         leaflet.latLng(nearest.lat, nearest.long),
@@ -114,8 +108,35 @@ export function NearestRouting({
     } as any).addTo(map);
     // Kulit ni typescript - as any meaning thats my styles dont bother them
 
+    routeControlRef.current = control;
+
+    control.on("routesfound", () => {
+      if (cancelled) return;
+    });
+
     return () => {
-      routeControlRef.current.remove();
+      cancelled = true;
+      setTimeout(() => {
+        try {
+          if (routeControlRef.current) {
+            // Remove the route line directly
+            if (routeControlRef.current._line) {
+              map.removeLayer(routeControlRef.current._line);
+            }
+            // Remove the plan (waypoint markers)
+            if (routeControlRef.current._plan) {
+              map.removeLayer(routeControlRef.current._plan);
+            }
+            // Remove the container element
+            if (routeControlRef.current._container) {
+              routeControlRef.current._container.remove();
+            }
+            routeControlRef.current = null;
+          }
+        } catch (e) {
+          console.warn("Routing cleanup:", e);
+        }
+      }, 0);
     };
   }, [userPosition, map]);
 
@@ -182,8 +203,15 @@ export function Routing({
   return null;
 }
 
+type EvacPin = {
+  id: number;
+  coordinates: [number, number];
+};
+
 // Add properties based on the pin info from db
 export function PinMarking({ onPinClick }: { onPinClick: (pin: any) => void }) {
+  const [evacPins, setEvacPins] = useState<EvacPin[]>([]);
+
   const createClusterCustomIcon = (cluster: any) => {
     return divIcon({
       html: `<div style="background-color: #FFA011; color: ${colors.heading}; border-radius: 50%; width: 40px; height: 40px; display: flex; align-items: center; justify-content: center; font-size: 14px;">${cluster.getChildCount()}</div>`,
@@ -199,6 +227,22 @@ export function PinMarking({ onPinClick }: { onPinClick: (pin: any) => void }) {
     iconAnchor: [12, 12],
   });
 
+  let evacPinData;
+
+  useEffect(() => {
+    const getEvacPins = async () => {
+      try {
+        const response = await api.get("/pins");
+        evacPinData = await response.data.pins;
+        setEvacPins(evacPinData);
+      } catch (err: string | any) {
+        Error(err.message || "An error occurred");
+      }
+    };
+
+    getEvacPins();
+  }, []);
+
   return (
     <MarkerClusterGroup
       iconCreateFunction={createClusterCustomIcon}
@@ -206,10 +250,10 @@ export function PinMarking({ onPinClick }: { onPinClick: (pin: any) => void }) {
       chunkedLoading
       id="Map_MarkerBubble"
     >
-      {pins.map((pin) => (
+      {evacPins.map((pin) => (
         <Marker
           key={pin.id}
-          position={[pin.lat, pin.long]}
+          position={[pin.coordinates[0], pin.coordinates[1]]}
           icon={icon}
           eventHandlers={{ click: () => onPinClick(pin) }}
         />
@@ -337,6 +381,15 @@ export function RoadMapping({ onPinClick }: RoadMappingProps) {
   const [floodPaths, setFloodPaths] = useState<FloodPath[]>([]);
   const { showPaths } = useMapFilterContext();
 
+  const createClusterCustomIcon = (cluster: any) => {
+    return divIcon({
+      html: `<div style="background-color: #5F80AA; color: white; border-radius: 50%; width: 40px; height: 40px; display: flex; align-items: center; justify-content: center; font-size: 14px;">${cluster.getChildCount()}</div>`,
+      className: "cluster-marker",
+      iconSize: point(40, 40, true),
+      iconAnchor: [25, 50],
+    });
+  };
+
   const icon = divIcon({
     html: renderToString(<FloodIcon width={36} height={36} />),
     className: "",
@@ -361,25 +414,32 @@ export function RoadMapping({ onPinClick }: RoadMappingProps) {
 
   return (
     <>
-      {showPaths &&
-        floodPaths.map((pin) => {
-          const midpoint = getMidpoint(pin.path);
-          return (
-            <Fragment key={pin.id}>
-              <Marker
-                key={pin.id}
-                position={midpoint}
-                icon={icon}
-                eventHandlers={{
-                  click: () => {
-                    onPinClick && onPinClick(pin, midpoint);
-                  },
-                }}
-              />
-              <Polyline positions={pin.path} weight={6} color="#5F80AA" />
-            </Fragment>
-          );
-        })}
+      <MarkerClusterGroup
+        iconCreateFunction={createClusterCustomIcon}
+        maxClusterRadius={50}
+        chunkedLoading
+        id="Map_MarkerBubble"
+      >
+        {showPaths &&
+          floodPaths.map((pin) => {
+            const midpoint = getMidpoint(pin.path);
+            return (
+              <Fragment key={pin.id}>
+                <Marker
+                  key={pin.id}
+                  position={midpoint}
+                  icon={icon}
+                  eventHandlers={{
+                    click: () => {
+                      onPinClick && onPinClick(pin, midpoint);
+                    },
+                  }}
+                />
+                <Polyline positions={pin.path} weight={6} color="#5F80AA" />
+              </Fragment>
+            );
+          })}
+      </MarkerClusterGroup>
     </>
   );
 }
@@ -498,6 +558,11 @@ export function FormMapClickHandler({
   clickedLoc,
   setClickedLoc,
   center,
+}: {
+  onPinClick: any;
+  clickedLoc: any;
+  setClickedLoc: any;
+  center: any;
 }) {
   // const [clickedLoc, setClickedLoc] = useState<[number, number] | null>(null);
   const map = useMap();

@@ -9,13 +9,25 @@ interface CheckBoxProps {
   id: string;
   checked?: boolean;
   onCheckedChange?: (checked: boolean) => void;
+  readOnly?: boolean;
 }
 
-function CheckBox({ text, id, checked, onCheckedChange }: CheckBoxProps) {
+function CheckBox({
+  text,
+  id,
+  checked,
+  onCheckedChange,
+  readOnly,
+}: CheckBoxProps) {
   return (
     <div className="flex flex-col">
       <Field orientation="horizontal">
-        <Checkbox id={id} checked={checked} onCheckedChange={onCheckedChange} />
+        <Checkbox
+          id={id}
+          checked={checked}
+          onCheckedChange={onCheckedChange}
+          readOnly={readOnly}
+        />
         <Label className={"text-xs w-auto"} style={{ color: colors.label }}>
           {text}
         </Label>

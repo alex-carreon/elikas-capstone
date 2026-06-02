@@ -11,7 +11,7 @@ use Illuminate\Database\Eloquent\Model;
 
 /**
  * Class EmergencyContact
- * 
+ *
  * @property int $id
  * @property int $element_id
  * @property int $location_id
@@ -20,7 +20,7 @@ use Illuminate\Database\Eloquent\Model;
  * @property string|null $mobile_number
  * @property string $address
  * @property Carbon $updated_at
- * 
+ *
  * @property SocialElement $social_element
  * @property Location $location
  *
@@ -33,7 +33,8 @@ class EmergencyContact extends Model
 
 	protected $casts = [
 		'element_id' => 'int',
-		'location_id' => 'int'
+		'location_id' => 'int',
+        'updated_at' => 'datetime'
 	];
 
 	protected $fillable = [

@@ -112,7 +112,7 @@ class Location extends Model
 
 	public function emergencyContact()
 	{
-		return $this->hasMany(EmergencyContact::class, 'location_id');
+		return $this->hasMany(EmergencyContact::class, 'location_id', 'id');
 	}
 
 	public function evacArea()
@@ -132,6 +132,6 @@ class Location extends Model
 
 	public function smsBroadcast()
 	{
-		return $this->hasMany(SMSBroadcast::class, 'location_id');
+		return $this->hasMany(SMSBroadcast::class, 'location_id', 'id');
 	}
 }
