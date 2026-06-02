@@ -23,6 +23,7 @@ use App\Http\Controllers\SensorControllers\SensorController;
 use App\Http\Controllers\SMSController;
 use App\Http\Controllers\VoteController;
 use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\CapacityLevelController;
 
 
 Route::get('/test', function () {
@@ -44,21 +45,16 @@ Route::get('/locations/cities', [LocationsController::class, 'cities']);
 Route::get('/locations/barangays', [LocationsController::class, 'barangays']);
 Route::get('/emergency-contacts', [EmergencyContactController::class, 'index']);
 Route::get('/evac-types', [EvacTypeController::class, 'index']);
+Route::get('/capacity-levels', [CapacityLevelController::class, 'index']);
 // ---------------------------------------------------------------
 // PIN PUBLIC ROUTES — no token required
 // ---------------------------------------------------------------
 Route::get('/pins', [GetEvacAreasController::class, 'getEvacAreas']);
-Route::get('/pins/history', [GetEvacAreasController::class, 'getMyEvacAreas'])->middleware('firebase.auth');
+Route::get('/evacpins/users', [GetEvacAreasController::class, 'getMyEvacAreas'])->middleware('firebase.auth');
 Route::get('/pins/nearby', [GetNearbyEvacuationAreasController::class, 'getNearbyEvacuationAreas']);
 Route::get('/pins/routes', [GetEvacuationRoutesController::class, 'getEvacuationRoutes']);
 Route::get('/pins/{id}', [GetEvacAreaDetailsController::class, 'getEvacAreaDetails']);
 
-
-
-
-Route::middleware('firebase.auth')->group(function () {
-    Route::patch('/pins/{id}/restore', [DeleteEvacuationAreaController::class, 'restoreEvacuationArea']);
-});
 
 
 // ---------------------------------------------------------------
@@ -134,8 +130,8 @@ Route::middleware(['firebase.auth', 'role:1,2,3'])->group(function () {
     Route::patch('/flood-paths/{id}/deactivate', [FloodPathController::class, 'destroy']); // soft delete
     Route::post('/pins', [StoreEvacuationAreaController::class, 'storeEvacuationArea']);
     Route::put('/pins/{id}', [UpdateEvacuationAreaController::class, 'updateEvacuationArea']);
-    Route::delete('/pins/{id}', [DeleteEvacuationAreaController::class, 'deleteEvacuationArea']);
-    Route::patch('/pins/{id}/deactivate', [DeleteEvacuationAreaController::class, 'deleteEvacuationArea']);
+    Route::delete('/pins/{id}', [DeleteEvacuationAreaController::class, 'deleteEvacuationArea']); //hard delete for admins
+    Route::patch('/pins/{id}/deactivate', [DeleteEvacuationAreaController::class, 'deleteEvacuationArea']); //everyone else uses soft delete
 
     //VOTE
     Route::post('/flood-paths/{floodPathId}/vote', [VoteController::class, 'vote']);
