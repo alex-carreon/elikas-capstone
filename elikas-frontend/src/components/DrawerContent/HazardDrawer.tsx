@@ -116,8 +116,8 @@ function HazardDrawer({ selectedPin }: { selectedPin: FloodPath }) {
             username={floodDetails.posted_by}
             timePosted={floodDetails.posted_at}
             description={floodDetails.description}
-            upVotesCount={floodDetails.upvotes}
-            downVotesCount={floodDetails.downvotes}
+            // upvotes={upVote}
+            // downvotes={downVote}
             level={floodDetails.flood_levels.level_name}
             expiryDays={daysLeft}
             isSimple
