@@ -41,6 +41,8 @@ import { DrawerTitle } from "@/components/ui/drawer";
 import { bigSmile } from "@dicebear/collection";
 import { createAvatar } from "@dicebear/core";
 import { Skeleton } from "@/components/ui/skeleton";
+import PostRow from "@/components/PostRow";
+import sample from "@/assets/Map/SamplePhoto.png";
 
 type verifiedBy = {
   gov_op_id: number | null;
@@ -51,6 +53,12 @@ type postedBy = {
   user_id: number;
   username: string;
   posted_at: string;
+};
+
+type media = {
+  id: number;
+  type: string;
+  url: File;
 };
 
 type EvacPin = {
@@ -86,6 +94,7 @@ type EvacPin = {
   verified_by: verifiedBy;
   posted_by: postedBy;
   last_confirmed: string | null;
+  media: media[];
 };
 
 type FacilityKey =
@@ -219,7 +228,9 @@ function EvacPinDrawer({
         const response = await api.get(`/pins/${selectedPin.id}`);
         const evacPinDetails = await response.data;
         setEvacPinDetails(evacPinDetails);
-        console.log(response);
+        console.log("response:", response.data.media.url);
+        console.log("evacPinDetails:", evacPinDetails.media[0].url);
+        console.log("evacPinDetailsALL:", evacPinDetails);
 
         const today = new Date();
         const expDate = new Date(evacPinDetails.expiry);
@@ -405,7 +416,25 @@ function EvacPinDrawer({
               <p className="text-xs">{evacPinDetails?.other_facilities}</p>
             </CollapsibleContent>
           </Collapsible>
-
+          <Collapsible className="rounded-md data-[state=open]:bg-muted px-4 ">
+            <CollapsibleTrigger
+              id="Drawer_FacilitiesTrigger"
+              className="group w-full flex flex-col items-start"
+              onClick={() => setOpenCollapse(true)}
+            >
+              <div className="flex flex-row items-center">
+                Attached Photo
+                <ChevronDownIcon className="ml-auto group-data-[state=open]:rotate-180" />
+                <p className="text-xs italic">Press to see more</p>
+              </div>
+            </CollapsibleTrigger>
+            <CollapsibleContent
+              id="Drawer_FacilitiesContent"
+              className="flex flex-col items-start px-2.5 pt-0 text-sm"
+            >
+              <img src={String(evacPinDetails?.media[0].url)} />
+            </CollapsibleContent>
+          </Collapsible>
           <hr className="border-gray-400 m-4"></hr>
           <div className="">
             <div className="flex flex-row items-center gap-2 px-4">
@@ -415,7 +444,7 @@ function EvacPinDrawer({
               </p>
             </div>
             <div className="flex flex-col gap-2 mb-4 mt-4 pb-16 px-4">
-              {/* <PostRow
+              <PostRow
                 username="Kurt Hacinas"
                 timePosted="3:30pm"
                 description="Bring your own water"
@@ -424,7 +453,7 @@ function EvacPinDrawer({
                 downVotesCount={12}
                 flagCount={1}
                 expiryDays={30}
-                image={Photo}
+                image={sample}
               />
               <PostRow
                 username="Kurt Hacinas"
@@ -435,8 +464,8 @@ function EvacPinDrawer({
                 downVotesCount={12}
                 flagCount={1}
                 expiryDays={30}
-                image={Photo}
-              /> */}
+                image={sample}
+              />
             </div>
 
             <div className="fixed bottom-0 z-100 bg-white w-full h-content">
