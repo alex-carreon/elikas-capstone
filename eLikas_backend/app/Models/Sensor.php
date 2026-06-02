@@ -67,7 +67,7 @@ class Sensor extends Model
 		return $this->hasMany(SensorLog::class, 'sensor_id');
 	}
 
-    public function location()
+    public function mountLocation()
     {
         return $this->belongsTo(Location::class, 'location_id');
     }

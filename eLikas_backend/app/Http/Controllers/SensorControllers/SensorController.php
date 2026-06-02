@@ -32,7 +32,7 @@ class SensorController extends Controller
     public function show(Sensor $sensor)
     {
         try {
-            $sensor->load('social_element', 'location');
+            $sensor->loadMissing('social_element', 'mountLocation');
             return new SensorResource($sensor);
         } catch (\Exception $e) {
             return response()->json([
