@@ -42,7 +42,7 @@ class Comment extends Model
 		'downvotes'
 	];
 
-	public function social_element()
+	public function socialElement()
 	{
 		return $this->belongsTo(SocialElement::class, 'parent_id');
 	}

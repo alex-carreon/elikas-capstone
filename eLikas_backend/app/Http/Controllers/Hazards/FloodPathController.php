@@ -2,21 +2,20 @@
 
 namespace App\Http\Controllers\Hazards;
 
+use App\Enums\MediaCollection;
 use App\Http\Controllers\Controller;
-use Illuminate\Http\Request;
 use App\Models\FloodPath;
+use App\Models\MediaFile;
 use App\Models\SocialElement;
 use App\Models\TargetTable;
+use App\Models\Vote;
+use App\Services\MediaUploadService;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Storage;
 use MatanYadaev\EloquentSpatial\Objects\LineString;
 use MatanYadaev\EloquentSpatial\Objects\Point;
-
-//Media
-use App\Services\MediaUploadService;
-use App\Enums\MediaCollection;
-use App\Models\MediaFile;
-use Illuminate\Support\Facades\Storage;
 
 class FloodPathController extends Controller
 {
@@ -127,8 +126,14 @@ class FloodPathController extends Controller
             ], 403);
         }
 
+        $userVote = Vote::where('user_id', $user->id)
+            ->where('element_id', $floodPath->element_id)
+            ->value('vote');
+
         return response()->json([
             'flood_path' => $this->formatFloodPath($floodPath),
+            'user_vote' => $userVote,
+
         ]);
     }
  

@@ -41,7 +41,14 @@ class VoteController extends Controller
                     $floodPath->increment($newVote === 1 ? 'upvotes' : 'downvotes');
 
                 } elseif ($existing->vote === $newVote) {
-                    throw new \Exception('already_voted');
+
+                    if ($newVote === 1) {
+                        $floodPath->decrement('upvotes');
+                    } else {
+                        $floodPath->decrement('downvotes');
+                    }
+
+                    $existing->delete();
 
                 } else {
                     $existing->update(['vote' => $newVote]);
@@ -64,12 +71,6 @@ class VoteController extends Controller
             ]);
 
         } catch (\Exception $e) {
-            if ($e->getMessage() === 'already_voted') {
-                return response()->json([
-                    'message' => 'You have already voted on this post.',
-                ], 409);
-            }
-
             return response()->json([
                 'error'   => 'Failed to process vote',
                 'details' => $e->getMessage()
