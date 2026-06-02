@@ -60,15 +60,14 @@ function History() {
         setLoading(true);
         const [floodResponse, evacResponse] = await Promise.all([
           api.get("/flood-paths/my"),
-          api.get("/pins/history"),
+          api.get("/evacpins/users?own_pins=true"),
         ]);
+
+        console.log(floodResponse);
 
         if (!floodResponse || !evacResponse) {
           console.log("Failed to retrieve data");
         }
-
-        console.log(evacResponse.data.pins);
-
         const myHazards = await floodResponse.data.flood_paths;
         const myEvacs = await evacResponse.data.pins;
         setFloodPaths(myHazards);
@@ -237,7 +236,7 @@ function History() {
                             postId={String(path.id)}
                             title="Flood"
                             address={path.description}
-                            datePosted={path.posted_at}
+                            datePosted={path.last_confirmed}
                             link={`/HazardForm/${path.id}`}
                             isExpired={path.is_expired}
                             buttonId="History_ActiveHazardDetailsBtn"
@@ -251,7 +250,7 @@ function History() {
                             postId={String(path.id)}
                             title="Flood"
                             address={path.description}
-                            datePosted={path.posted_at}
+                            datePosted={path.last_confirmed}
                             link="/HazardForm"
                             isExpired={path.is_expired}
                             buttonId="History_ExpHazardDetailsBtn"

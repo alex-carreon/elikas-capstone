@@ -205,12 +205,15 @@ export function Routing({
 
 type EvacPin = {
   id: number;
-  coordinates: [number, number];
+  lat: number;
+  lng: number;
 };
 
 // Add properties based on the pin info from db
 export function PinMarking({ onPinClick }: { onPinClick: (pin: any) => void }) {
   const [evacPins, setEvacPins] = useState<EvacPin[]>([]);
+  const [myPins, setMyPins] = useState<EvacPin[]>([]);
+  const { allPins, showGovPins } = useMapFilterContext();
 
   const createClusterCustomIcon = (cluster: any) => {
     return divIcon({
@@ -228,19 +231,22 @@ export function PinMarking({ onPinClick }: { onPinClick: (pin: any) => void }) {
   });
 
   let evacPinData;
+  const getEvacPins = async () => {
+    try {
+      const response = await api.get("/pins");
+      evacPinData = await response.data.pins;
+      setEvacPins(evacPinData);
+    } catch (err: string | any) {
+      Error(err.message || "An error occurred");
+    }
+  };
 
   useEffect(() => {
-    const getEvacPins = async () => {
-      try {
-        const response = await api.get("/pins");
-        evacPinData = await response.data.pins;
-        setEvacPins(evacPinData);
-      } catch (err: string | any) {
-        Error(err.message || "An error occurred");
-      }
-    };
-
-    getEvacPins();
+    if (allPins) {
+      getEvacPins();
+    } else {
+      // Only user pins
+    }
   }, []);
 
   return (
@@ -250,19 +256,33 @@ export function PinMarking({ onPinClick }: { onPinClick: (pin: any) => void }) {
       chunkedLoading
       id="Map_MarkerBubble"
     >
-      {evacPins.map((pin) => (
-        <Marker
-          key={pin.id}
-          position={[pin.coordinates[0], pin.coordinates[1]]}
-          icon={icon}
-          eventHandlers={{ click: () => onPinClick(pin) }}
-        />
-      ))}
+      {!allPins && showGovPins && <></>}
+      {/* If show all pins -> If showGovPins -> Show pins from govops */}
+      {allPins ? (
+        evacPins.map((pin) => (
+          <Marker
+            key={pin.id}
+            position={[pin.lat, pin.lng]}
+            icon={icon}
+            eventHandlers={{ click: () => onPinClick(pin) }}
+          />
+        ))
+      ) : (
+        // Show my pins
+        <></>
+      )}
     </MarkerClusterGroup>
   );
 }
 
-// Add sensor logic here
+type SensorsMap = {
+  id: number;
+  name: string;
+  location: [number, number];
+  current_status: string;
+};
+
+// ensor logic here
 export function SensorMarking({
   onPinClick,
 }: {
@@ -270,6 +290,7 @@ export function SensorMarking({
 }) {
   const [height, setHeight] = useState(0);
   const [color, setColor] = useState("");
+  const [sensors, setSensors] = useState<EvacPin[]>([]);
 
   const colorSensor = {
     yellow: "#F3C217",
