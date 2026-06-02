@@ -40,7 +40,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
 
       if (user) {
         try {
-          const t = await user?.getIdToken();
+          const t = await user?.getIdToken(true);
           setToken(t);
 
           const LoginResponse = await api.post(
@@ -60,6 +60,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
         }
       } else {
         setRole(null);
+        setToken(null);
       }
 
       setLoading(false);

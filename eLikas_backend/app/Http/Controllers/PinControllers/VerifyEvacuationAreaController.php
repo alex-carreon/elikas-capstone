@@ -18,12 +18,6 @@ class VerifyEvacuationAreaController extends Controller
                 'verified' => 'required|boolean',
             ]);
 
-            if (!in_array($user->role_id, [1, 2])) {
-                return response()->json([
-                    'error' => 'Only administrators and barangay operators may verify evacuation areas'
-                ], 403);
-            }
-
             $pin = EvacArea::with('social_element')
                 ->whereHas('social_element', function ($q) {
                     $q->whereNull('deactivated_at');

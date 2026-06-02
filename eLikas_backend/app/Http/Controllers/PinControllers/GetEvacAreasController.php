@@ -90,29 +90,15 @@ class GetEvacAreasController extends Controller
     }
 
     private function formatEvacArea($pin)
-    {
-        return [
-            'id' => $pin->id,
-            'name' => $pin->name,
-            'address' => $pin->address,
-            'lat' => $pin->location?->latitude,
-            'lng' => $pin->location?->longitude,
-            'expiry' => $pin->expiry
-                ? $pin->expiry->timezone('Asia/Manila')->toDateTimeString()
-                : null,
+{
+    $coordinates = [
+        $pin->location?->latitude,
+        $pin->location?->longitude,
+    ];
 
-            'is_expired' => $pin->expiry !== null && $pin->expiry->lte(now('UTC')),
-
-            'is_deactivated' => $pin->social_element?->deactivated_at !== null,
-            'deactivated_at' => $pin->social_element?->deactivated_at
-                ? $pin->social_element->deactivated_at->timezone('Asia/Manila')->toDateTimeString()
-                : null,
-            'posted_at' => $pin->social_element?->posted_at
-                ? $pin->social_element->posted_at->timezone('Asia/Manila')->toDateTimeString()
-                : null,
-            'last_confirmed' => $pin->verified_at
-                ? $pin->verified_at->timezone('Asia/Manila')->toDateTimeString()
-                : null,
-        ];
-    }
+    return [
+        'id' => $pin->id,
+        'coordinates' => $coordinates,
+    ];
+}
 }

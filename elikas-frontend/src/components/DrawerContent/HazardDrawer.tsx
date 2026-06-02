@@ -4,17 +4,29 @@ import ButtonComp from "@/components/Button";
 import CSIcon from "@/assets/Map/CrowdsourceIcon.svg";
 import PostRow from "@/components/PostRow";
 import { Link } from "react-router";
-import sample from "@/assets/Map/SamplePhoto.png";
 import { Skeleton } from "@/components/ui/skeleton";
+import { useEffect, useState } from "react";
+import { differenceInDays } from "date-fns";
+import api from "@/api";
+import { DrawerTitle } from "@/components/ui/drawer";
 
 type FloodLevel = {
   id: number;
   level_name: string;
 };
 
+type FloodPath = {
+  id: number;
+  is_expired: boolean;
+  is_deactivated: boolean;
+  level: FloodLevel;
+  path: [number, number][];
+};
+
 type FloodDetails = {
   id: number;
   element_id: number;
+  media: string;
   is_expired: boolean;
   is_deactivated: boolean;
   flood_levels: FloodLevel;
@@ -28,15 +40,33 @@ type FloodDetails = {
   posted_at: string;
 };
 
-function HazardDrawer({
-  loading,
-  floodDetails,
-  daysLeft,
-}: {
-  loading: boolean;
-  floodDetails: FloodDetails | undefined;
-  daysLeft: number;
-}) {
+function HazardDrawer({ selectedPin }: { selectedPin: FloodPath }) {
+  const [loading, setLoading] = useState(false);
+  const [floodDetails, setFloodDetails] = useState<FloodDetails | undefined>();
+  const [daysLeft, setDaysleft] = useState(0);
+
+  useEffect(() => {
+    if (!selectedPin) return;
+
+    const getFloodDetails = async () => {
+      try {
+        setLoading(true);
+        const response = await api.get(`/flood-paths/${selectedPin.id}`);
+        const floodDetails = await response.data.flood_path;
+        setFloodDetails(floodDetails);
+
+        const today = new Date();
+        const expDate = new Date(floodDetails.expiry);
+
+        setDaysleft(differenceInDays(expDate, today));
+      } catch (err: string | any) {
+        console.log(err.message || "An error occurred");
+      }
+      setLoading(false);
+    };
+    getFloodDetails();
+  }, [selectedPin?.id]);
+
   return loading ? (
     <>
       <div className="w-full px-4 pb-4 flex flex-col gap-4">
@@ -92,7 +122,7 @@ function HazardDrawer({
             expiryDays={daysLeft}
             isSimple
           >
-            <img src={sample} />
+            <img src={floodDetails.media} />
           </PostRow>
         ) : (
           <>

@@ -118,7 +118,6 @@ function HazardForm() {
           setHasUpdated(false);
           setLoading(true);
           const response = await api.get(`/flood-paths/${id}`);
-          console.log("response", response);
           const floodDetails = await response.data.flood_path;
           console.log("Details", floodDetails);
           setFloodDetails(floodDetails);
@@ -201,11 +200,9 @@ function HazardForm() {
     }
   }, [isEditable, floodDetails]);
 
-  useEffect(() => {
+  const submit = (e: React.FormEvent) => {
     console.log(routePoints);
-  }, [routePoints]);
 
-  const submit = (e: React.FormEvent) =>
     handleSubmit({
       e: e,
       center: center,
@@ -218,6 +215,7 @@ function HazardForm() {
       setError: setError,
       navigate: navigate,
     });
+  };
 
   const update = (e: React.FormEvent) =>
     handleUpdate({

@@ -11,14 +11,14 @@ use Illuminate\Database\Eloquent\Model;
 
 /**
  * Class GovOp
- * 
+ *
  * @property int $id
  * @property int $user_id
  * @property int $level_id
  * @property int $location_id
  * @property string|null $point_person
  * @property string|null $point_position
- * 
+ *
  * @property User $user
  * @property LocationLevel $location_level
  * @property Location $location
@@ -69,11 +69,11 @@ class GovOp extends Model
 
 	public function smsBroadcast()
 	{
-		return $this->hasMany(SMSBroadcast::class, 'sender_id');
+		return $this->hasMany(SMSBroadcast::class, 'sender_id', 'id');
 	}
 
 	public function smsTemplate()
 	{
-		return $this->hasMany(SMSTemplate::class, 'optr_id');
+		return $this->hasMany(SMSTemplate::class, 'optr_id', 'id');
 	}
 }

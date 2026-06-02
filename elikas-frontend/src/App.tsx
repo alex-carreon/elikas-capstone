@@ -51,7 +51,7 @@ function App() {
         <Route element={<ProtectedRoute userRole={"indiv"} />}>
           <Route element={<ConstNavbar />}>
             <Route path="/History" element={<History />} />
-            <Route path="/Feedback" element={<Feedback />} />
+            <Route path="/Feedback" element={<Feedback />} />{" "}
           </Route>
 
           <Route element={<AuthNavbar />}>
@@ -85,10 +85,11 @@ function App() {
         <Route element={<ProtectedRoute />}>
           <Route element={<ConstNavbar />}>
             <Route path="/Settings" element={<Settings />} />
+            <Route path="/Profile" element={<Profile />} />
             <Route path="/EvacForm" element={<EvacForm />} />
+            <Route path="/EvacForm/:id" element={<EvacForm />} />
             <Route path="/HazardForm" element={<HazardForm />} />
             <Route path="/HazardForm/:id" element={<HazardForm />} />
-            <Route path="/Profile" element={<Profile />} />
           </Route>
         </Route>
 

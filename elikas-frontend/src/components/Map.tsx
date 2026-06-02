@@ -1,7 +1,6 @@
 import { useRef, useEffect, useState } from "react";
-import { MapContainer, TileLayer, useMap, CircleMarker } from "react-leaflet";
+import { TileLayer, useMap, CircleMarker } from "react-leaflet";
 import "leaflet-routing-machine";
-import ButtonComp from "./Button";
 import {
   Routing,
   PinMarking,
@@ -13,99 +12,19 @@ import {
 } from "@/lib/mapUtils";
 import DrawerComp from "./Drawer";
 import MarkerClusterGroup from "react-leaflet-cluster";
-import {
-  divIcon,
-  point,
-  type LocationEvent,
-  LatLng,
-  type LatLngBoundsExpression,
-} from "leaflet";
-import CurrentLocation from "@/assets/Map/currentLocation.svg?react";
+import { divIcon, point, type LocationEvent, LatLng } from "leaflet";
 import AlertDialogue from "./AlertDialogue";
 import { createPortal } from "react-dom";
 import { useUserContext } from "@/context/AuthContext";
 import { toast } from "sonner";
-import { Map as LeafletMap } from "leaflet";
 
-// let locationFound = false;
-
-function LocationMarker({
-  flyToLocation,
-  locationFound,
-  onPositionFound,
-}: {
-  flyToLocation: boolean;
-  locationFound: (found: boolean) => void;
-  onPositionFound: (latlng: LatLng) => void;
-}) {
-  const [position, setPosition] = useState<LatLng | null>(null);
-  // const [showDialogue, setShowDialogue] = useState(true);
-  // const [hasLocated, setHasLocated] = useState(false);
-  const map = useMap();
-
-  const hasLocated = useRef(false);
-
-  // Auto find location
-  useEffect(() => {
-    if (hasLocated.current === true) return;
-
-    // Locate user, zooms into location, how much zoom
-    map.locate({ watch: true, setView: true, maxZoom: 50 });
-
-    // For rendering the marker
-    // e contains lat and long
-    // If it's the first time, map.flyTo flies to the specific location
-    const onLocationFound = (e: LocationEvent) => {
-      setPosition(e.latlng);
-      map.flyTo(e.latlng, map.getZoom());
-      hasLocated.current = true;
-      locationFound(true);
-      onPositionFound(e.latlng);
-    };
-
-    const onLocationError = () => {
-      locationFound(false);
-    };
-
-    // listens when to trigger onLocationFound
-
-    map.on("locationfound", onLocationFound);
-    map.on("locationerror", onLocationError);
-
-    // clean up - switches event off
-    return () => {
-      map.off("locationfound", onLocationFound);
-      map.off("locationerror", onLocationError);
-    };
-  }, [map]);
-
-  // find location on click
-  useEffect(() => {
-    if (flyToLocation && position) {
-      // map.flyTo(position, map.getZoom());
-      // console.log("hasLocated3: ", hasLocated);
-      setTimeout(() => {
-        map.flyTo(position, 18);
-      }, 0);
-    }
-  }, [flyToLocation, position, map]);
-
-  //Replace null with alertDialogue to prompt user to open location
-  return position === null ? null : (
-    <CircleMarker
-      center={position}
-      radius={8}
-      pathOptions={{
-        color: "white",
-        fillColor: "#569FFF",
-        fillOpacity: 1,
-        weight: 2,
-      }}
-    ></CircleMarker>
-  );
+interface MapProps {
+  onLocationFound: (found: boolean) => void;
+  showLocation: boolean;
+  nearestRouteTrigger: number;
 }
 
-function Map() {
+function Map({ onLocationFound, showLocation, nearestRouteTrigger }: MapProps) {
   const [showNearestRoute, setShowNearestRoute] = useState(false);
   const [showRoute, setShowRoute] = useState(false);
   const [open, setOpen] = useState(false);
@@ -115,18 +34,19 @@ function Map() {
   const [flyTrigger, setFlyTrigger] = useState(0);
   const [newPin, setNewPin] = useState(false);
   const [clickedLoc, setClickedLoc] = useState<[number, number] | null>(null);
-  const [showLocation, setShowLocation] = useState(false);
+  // const [showLocation, setShowLocation] = useState(false);
   const [locationFound, setLocationFound] = useState(false);
   const [isSensor, setIsSensor] = useState(false);
   const [isHazard, setIsHazard] = useState(false);
   const [userPosition, setUserPosition] = useState<LatLng | null>(null);
+  const [position, setPosition] = useState<LatLng | null>(null);
+  // const [showDialogue, setShowDialogue] = useState(true);
+  const [locateStatus, setLocateStatus] = useState<
+    "pending" | "found" | "error"
+  >("pending");
 
-  const mapRef = useRef<LeafletMap | null>(null);
-
-  const philippinesBounds: LatLngBoundsExpression = [
-    [4.5, 116.0], // southwest corner
-    [21.5, 127.0], // northeast corner
-  ];
+  const map = useMap();
+  const hasLocated = useRef(false);
 
   let authorized = false;
   let admin = false;
@@ -140,14 +60,74 @@ function Map() {
     admin = true;
   }
 
+  // Auto find location
+  useEffect(() => {
+    if (hasLocated.current === true) return;
+
+    // Locate user, zooms into location, how much zoom
+    map.locate({ watch: false, setView: true, maxZoom: 50 });
+
+    // For rendering the marker
+    // e contains lat and long
+    // If it's the first time, map.flyTo flies to the specific location
+    const onLocationFoundHandler = (e: LocationEvent) => {
+      setPosition(e.latlng);
+      map.flyTo(e.latlng, map.getZoom());
+      hasLocated.current = true;
+      setLocateStatus("found");
+      onLocationFound(true);
+      setUserPosition(e.latlng);
+    };
+
+    const onLocationError = () => {
+      onLocationFound(false);
+      setLocateStatus("error");
+    };
+
+    // listens when to trigger onLocationFound
+
+    map.on("locationfound", onLocationFoundHandler);
+    map.on("locationerror", onLocationError);
+
+    // clean up - switches event off
+    return () => {
+      map.off("locationfound", onLocationFoundHandler);
+      map.off("locationerror", onLocationError);
+    };
+  }, []);
+
+  // Fly to user's location on button click
+  useEffect(() => {
+    if (showLocation && position) {
+      setTimeout(() => {
+        map.flyTo(position, 18);
+      }, 0);
+    }
+  }, [showLocation, position, map]);
+
+  // find location on click
+  useEffect(() => {
+    if (nearestRouteTrigger === 0) return;
+
+    setShowNearestRoute(true);
+    setShowRoute(false);
+    setSelectedPin(null);
+    setOpenFromRoute(true);
+  }, [nearestRouteTrigger]);
+
   // Have pin's type to be needed information from db
-  const handlePinClick = (pin) => {
-    setSelectedPin(pin);
+  const handlePinClick = (pin: any) => {
+    const normalizedPin = pin.coordinates
+      ? { ...pin, lat: pin.coordinates[0], long: pin.coordinates[1] }
+      : pin;
+
+    setSelectedPin(normalizedPin);
     setOpen(true);
     setFlyTrigger((prev) => prev + 1);
     setShowNearestRoute(false);
     setShowRoute(false);
     setOpenFromRoute(false);
+    setLocationFound(true);
 
     const isExisting = !!pin.id;
     setNewPin(!isExisting);
@@ -159,7 +139,7 @@ function Map() {
     setIsHazard(false);
   };
 
-  const handleSensorClick = (pin) => {
+  const handleSensorClick = (pin: any) => {
     setSelectedPin(pin);
     setOpen(true);
     setFlyTrigger((prev) => prev + 1);
@@ -178,8 +158,15 @@ function Map() {
     setIsHazard(false);
   };
 
-  const handleHazardClick = (pin, midpoint) => {
-    setSelectedPin({ ...pin, midpoint });
+  const handleHazardClick = (pin: any, midpoint: [number, number]) => {
+    const normalizedPin = {
+      ...pin,
+      lat: midpoint[0],
+      long: midpoint[1],
+      routePoints: pin.path,
+    };
+
+    setSelectedPin({ ...normalizedPin, midpoint });
     setOpen(true);
     setFlyTrigger((prev) => prev + 1);
     setShowNearestRoute(false);
@@ -205,19 +192,14 @@ function Map() {
     } else console.log("Location not found");
   };
 
-  const handleNearestRoute = () => {
-    if (locationFound) {
-      setShowNearestRoute(true);
-      setShowRoute(false);
-      setSelectedPin(null);
-      setOpenFromRoute(true);
-    } else console.log("Location not found");
-  };
-
   const handleDrawerClose = (isOpen: boolean) => {
+    console.log("drawer closing, isOpen:", isOpen);
+
     setOpen(isOpen);
 
     if (!isOpen) {
+      console.log("clearing routes...");
+
       setShowRoute(false);
       setShowNearestRoute(false);
       setSelectedPin(null);
@@ -254,7 +236,7 @@ function Map() {
 
   return (
     <>
-      {!locationFound &&
+      {locateStatus === "error" &&
         createPortal(
           <AlertDialogue
             open={true}
@@ -262,107 +244,80 @@ function Map() {
             description="Your location/GPS must be turned on to view routes. Plese turn
               this on in your phone settings."
             buttonText="Got it!"
-            onClick={() => setLocationFound(true)}
-            onClose={() => setLocationFound(true)}
+            onClick={() => setLocateStatus("found")}
+            onClose={() => setLocateStatus("found")}
             contentId="Map_DialogContent"
             closeId="Map_DialogClose"
             actionId="Map_DialogAction"
           />,
           document.body,
         )}
-      <div
-        className="w-full max-w-md pointer-events-auto"
-        style={{ height: "94vh" }}
-      >
-        <MapContainer
-          id="Map_Container"
-          style={{ height: "94vh", width: "100%" }}
-          maxBounds={philippinesBounds}
-          maxBoundsViscosity={1.0}
-          minZoom={6}
-          ref={mapRef}
-        >
-          {/* Adding a pin */}
-          {authorized && !admin ? (
-            <MapClickHandler
-              onPinClick={handlePinClick}
-              setClickedLoc={setClickedLoc}
-              clickedLoc={clickedLoc}
-            />
-          ) : null}
-
-          <TileLayer
-            attribution='&copy; <a href="https://openstreetmap.org">OpenStreetMap</a> contributors'
-            url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-          />
-
-          {/* View and Click Pins */}
-          <PinMarking onPinClick={handlePinClick} />
-          <SensorMarking onPinClick={handleSensorClick} />
-          <RoadMapping onPinClick={handleHazardClick} />
-
-          {/* Bubble map function */}
-          <MarkerClusterGroup
-            iconCreateFunction={createClusterCustomIcon}
-            maxClusterRadius={50}
-            chunkedLoading
-          ></MarkerClusterGroup>
-
-          {/* See User's Location */}
-          <LocationMarker
-            flyToLocation={showLocation}
-            locationFound={setLocationFound}
-            onPositionFound={setUserPosition}
-          />
-
-          {/* Fly to that location */}
-          <FlyToLocation position={selectedPin} flyTrigger={flyTrigger} />
-
-          {/* <Routing /> */}
-          {showNearestRoute && !admin && (
-            <NearestRouting
-              onPinSelected={setSelectedPin}
-              userPosition={userPosition}
-            />
-          )}
-          {showRoute && !showNearestRoute && selectedPin && !admin && (
-            <Routing
-              onPinSelected={setSelectedPin}
-              selectedPin={selectedPin}
-              userPosition={userPosition}
-            />
-          )}
-        </MapContainer>
-
-        {/* Drawer for pins */}
-        <DrawerComp
-          open={open}
-          onOpenChange={handleDrawerClose}
-          selectedPin={selectedPin}
-          onFindRoute={handlePressRoute}
-          newPin={newPin}
-          isSensor={isSensor}
-          isHazard={isHazard}
+      {/* Adding a pin */}
+      {authorized && !admin ? (
+        <MapClickHandler
+          onPinClick={handlePinClick}
+          setClickedLoc={setClickedLoc}
+          clickedLoc={clickedLoc}
         />
-        <div className="fixed bottom-0 left-0 w-full flex justify-center items-center">
-          <div className="flex flex-col w-full max-w-md items-center justify-center mb-8">
-            <CurrentLocation
-              className="w-14 h-14 self-end m-4 drop-shadow-xl"
-              onClick={() => setShowLocation((prev) => !prev)}
-            />
-            {!admin && (
-              <ButtonComp
-                text="Find Evac Center"
-                variant="important"
-                id="Map_NearestRouteBtn"
-                onClick={handleNearestRoute}
-                widthSize="90%"
-                heightSize="50px"
-              />
-            )}
-          </div>
-        </div>
-      </div>
+      ) : null}
+
+      <TileLayer
+        attribution='&copy; <a href="https://openstreetmap.org">OpenStreetMap</a> contributors'
+        url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+      />
+      {position && (
+        <CircleMarker
+          center={position}
+          radius={8}
+          pathOptions={{
+            color: "white",
+            fillColor: "#569FFF",
+            fillOpacity: 1,
+            weight: 2,
+          }}
+        ></CircleMarker>
+      )}
+      {/* View and Click Pins */}
+      <PinMarking onPinClick={handlePinClick} />
+      <SensorMarking onPinClick={handleSensorClick} />
+      <RoadMapping onPinClick={handleHazardClick} />
+
+      {/* Bubble map function */}
+      <MarkerClusterGroup
+        iconCreateFunction={createClusterCustomIcon}
+        maxClusterRadius={50}
+        chunkedLoading
+      ></MarkerClusterGroup>
+
+      {/* Fly to that location */}
+      <FlyToLocation position={selectedPin} flyTrigger={flyTrigger} />
+
+      {/* <Routing /> */}
+      {showNearestRoute && (
+        <NearestRouting
+          onPinSelected={setSelectedPin}
+          userPosition={userPosition}
+        />
+      )}
+      {showRoute && !showNearestRoute && selectedPin && !admin && (
+        <Routing
+          onPinSelected={setSelectedPin}
+          selectedPin={selectedPin}
+          userPosition={userPosition}
+        />
+      )}
+
+      {/* Drawer for pins */}
+      <DrawerComp
+        open={open}
+        onOpenChange={handleDrawerClose}
+        selectedEvacPin={selectedPin}
+        selectedFloodPin={selectedPin}
+        onFindRoute={handlePressRoute}
+        newPin={newPin}
+        isSensor={isSensor}
+        isHazard={isHazard}
+      />
     </>
   );
 }

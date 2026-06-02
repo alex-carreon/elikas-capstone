@@ -54,6 +54,7 @@ function ButtonComp({
         id={id}
         disabled={isDisabled}
         form={formId}
+        type={type}
       >
         {text}
       </Button>
@@ -72,6 +73,7 @@ function ButtonComp({
         id={id}
         disabled={isDisabled}
         form={formId}
+        type={type}
       >
         {text}
       </Button>

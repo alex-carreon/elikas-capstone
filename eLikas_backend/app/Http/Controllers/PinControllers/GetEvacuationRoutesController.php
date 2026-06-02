@@ -38,12 +38,16 @@ class GetEvacuationRoutesController extends Controller
                 ->get();
 
             $formattedAreas = $nearestAreas->map(function ($pin) {
+                $coordinates = [
+                    $pin->location?->latitude,
+                    $pin->location?->longitude,
+                ];
+
                 return [
                     'id' => $pin->id,
                     'name' => $pin->name,
                     'address' => $pin->address,
-                    'lat' => $pin->location?->latitude,
-                    'lng' => $pin->location?->longitude,
+                    'coordinates' => $coordinates,
                     'capacity_level' => $pin->capacity_level,
                     'is_verified' => $pin->verified_by !== null,
                     'distance_meters' => round($pin->distance_meters, 2),

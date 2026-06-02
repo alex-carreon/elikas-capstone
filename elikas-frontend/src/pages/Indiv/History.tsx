@@ -28,41 +28,58 @@ type myFloodPaths = {
   posted_by: string;
 };
 
+type myEvacPins = {
+  id: number;
+  name: string;
+  address: string;
+  lat: number;
+  lng: number;
+  expiry: string;
+  is_expired: boolean;
+  is_deactivated: boolean;
+  deactivated_at: string | null;
+  posted_at: string;
+  // last_updated: string | null;
+  last_confirmed: string | null;
+};
+
 function History() {
   // const location = useLocation();
   const { token } = useUserContext();
 
-  const [evacPins, setEvacPins] = useState(true);
+  const [isEvac, setIsEvac] = useState(true);
+  const [evacPins, setEvacPins] = useState<myEvacPins[]>([]);
   const [activeEvac, setActiveEvac] = useState(true);
   const [activeHaz, setActiveHaz] = useState(true);
   const [floodPaths, setFloodPaths] = useState<myFloodPaths[]>([]);
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    const getMyHazards = async () => {
+    const getMyPins = async () => {
       try {
         setLoading(true);
-        const response = await api.get("/flood-paths/my", {
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
-          },
-        });
+        const [floodResponse, evacResponse] = await Promise.all([
+          api.get("/flood-paths/my"),
+          api.get("/pins/history"),
+        ]);
 
-        if (!response) {
+        if (!floodResponse || !evacResponse) {
           console.log("Failed to retrieve data");
         }
 
-        const myHazards = await response.data.flood_paths;
+        console.log(evacResponse.data.pins);
+
+        const myHazards = await floodResponse.data.flood_paths;
+        const myEvacs = await evacResponse.data.pins;
         setFloodPaths(myHazards);
+        setEvacPins(myEvacs);
       } catch (err: string | any) {
         Error(err.message || "An error occurred");
       } finally {
         setLoading(false);
       }
     };
-
-    getMyHazards();
+    getMyPins();
   }, []);
 
   return (
@@ -106,14 +123,14 @@ function History() {
                 <TabsList className="w-full flex justify-between">
                   <TabsTrigger
                     value="Evacuation"
-                    onClick={() => setEvacPins(true)}
+                    onClick={() => setIsEvac(true)}
                     id="History_EvacTrigger"
                   >
                     Evacuation Pins
                   </TabsTrigger>
                   <TabsTrigger
                     value="Hazard"
-                    onClick={() => setEvacPins(false)}
+                    onClick={() => setIsEvac(false)}
                     id="History_HazardTrigger"
                   >
                     Hazard Pins
@@ -124,7 +141,7 @@ function History() {
                 defaultValue="overview"
                 className="w-full max-w-md flex items-center"
               >
-                {evacPins ? (
+                {isEvac ? (
                   <TabsList
                     variant="line"
                     className="w-full flex justify-between"
@@ -182,18 +199,22 @@ function History() {
               <Filter size={18} id="History_FilterBtn" />
             </div>
             <div className="flex flex-col gap-2 overflow-y-auto max-h-screen">
-              {evacPins ? (
+              {isEvac ? (
                 activeEvac ? (
-                  <Row
-                    postId="123"
-                    title="Home"
-                    address="Blk 123 Lot 2 Avenue street"
-                    datePosted="March 13, 2005"
-                    availability
-                    isAvailable
-                    link="/EvacForm"
-                    buttonId="History_ActiveEvacDetailsBtn"
-                  />
+                  evacPins.map((pins) => {
+                    if (!pins.is_expired)
+                      return (
+                        <Row
+                          postId={String(pins.id)}
+                          title={pins.name}
+                          address={pins.address}
+                          datePosted={pins.posted_at}
+                          link={`/HazardForm/${pins.id}`}
+                          isExpired={pins.is_expired}
+                          buttonId="History_ActiveHazardDetailsBtn"
+                        />
+                      );
+                  })
                 ) : (
                   <Row
                     postId="123"

@@ -2,19 +2,25 @@
 
 namespace App\Http\Controllers\Hazards;
 
+use App\Enums\MediaCollection;
 use App\Http\Controllers\Controller;
-use Illuminate\Http\Request;
 use App\Models\FloodPath;
+use App\Models\MediaFile;
 use App\Models\SocialElement;
 use App\Models\TargetTable;
+use App\Models\Vote;
+use App\Services\MediaUploadService;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\Storage;
 use MatanYadaev\EloquentSpatial\Objects\LineString;
 use MatanYadaev\EloquentSpatial\Objects\Point;
 
-
 class FloodPathController extends Controller
 {
+    public function __construct(protected MediaUploadService $mediaUploadService) {}
+    
     /**
      * GET /flood-paths
      */
@@ -32,11 +38,11 @@ class FloodPathController extends Controller
         return response()->json([
             'count' => $floodPaths->count(),
             'flood_paths' => $floodPaths->map(fn ($fp) => [
-            'id'   => $fp->id,
-            'level'=> $fp->floodLevel,
-            'path' => $this->formatPath($fp->path),
-            'is_expired' => $fp->expiry < now(), 'is_deactivated' => 
-            !is_null( $fp->socialElement->deactivated_at ),
+                'id'   => $fp->id,
+                'level'=> $fp->floodLevel,
+                'path' => $this->formatPath($fp->path),
+                'is_expired' => $fp->expiry < now(), 'is_deactivated' => 
+                !is_null( $fp->socialElement->deactivated_at ),
             ]),
         ]);
     }
@@ -96,7 +102,8 @@ class FloodPathController extends Controller
         $floodPath = FloodPath::with([
             'floodLevel:id,level_name,description',
             'socialElement.user:id,username',
-            'socialElement:id,user_id,posted_at,deactivated_at',
+            'socialElement:id,user_id,posted_at,deactivated_at,has_media',
+            'socialElement.media'
         ])->find($id);
 
         if (!$floodPath) {
@@ -119,8 +126,14 @@ class FloodPathController extends Controller
             ], 403);
         }
 
+        $userVote = Vote::where('user_id', $user->id)
+            ->where('element_id', $floodPath->element_id)
+            ->value('vote');
+
         return response()->json([
             'flood_path' => $this->formatFloodPath($floodPath),
+            'user_vote' => $userVote,
+
         ]);
     }
  
@@ -137,6 +150,7 @@ class FloodPathController extends Controller
             'path.*.1'    => ['required', 'numeric', 'between:-180,180'],  // lng
             'description' => ['required', 'string', 'max:1000'],
             'expiry'      => ['required', 'date', 'after:now'],
+            'file'        => ['nullable', 'file', 'image', 'mimes:jpg,jpeg,png,heic', 'max:8192'],
         ]);
 
         // Convert Manila input -> UTC for database storage
@@ -159,6 +173,15 @@ class FloodPathController extends Controller
                 $validated['path']
             )
         );
+
+        $uploadedPath = null;
+
+        if ($request->hasFile('file')) {
+            $uploadedPath = $this->mediaUploadService->upload(
+                $request->file('file'),
+                MediaCollection::FloodReports
+            );
+        }
  
         DB::beginTransaction();
  
@@ -167,7 +190,7 @@ class FloodPathController extends Controller
                 'user_id'   => $request->attributes->get('firebase_user')->id,
                 'posted_at' => now(),
                 'type_id'   => $targetTable->id,
-                'has_media' => false,
+                'has_media' => !is_null($uploadedPath), // UPDATED
             ]);
  
             $floodPath = FloodPath::create([
@@ -180,6 +203,16 @@ class FloodPathController extends Controller
                 'downvotes'      => 0,
                 'expiry'         => $validated['expiry'],
             ]);
+
+            if ($uploadedPath) {
+            MediaFile::create([
+                'parent_id'   => $socialElement->id,
+                'user_id'     => $request->attributes->get('firebase_user')->id,
+                'file_path'   => $uploadedPath,
+                'file_type'   => 'jpg',
+                'uploaded_at' => now(),
+            ]);
+        }
  
             DB::commit();
  
@@ -194,6 +227,10 @@ class FloodPathController extends Controller
         } catch (\Throwable $e) {
             DB::rollBack();
             Log::error('FloodPath store failed: ' . $e->getMessage());
+
+            if ($uploadedPath) {
+                Storage::disk('sftp')->delete($uploadedPath);
+            }
  
             return response()->json([
                 'message' => 'Failed to create flood path. Please try again.',
@@ -370,6 +407,10 @@ class FloodPathController extends Controller
             'is_deactivated' => !is_null(
                 $floodPath->socialElement->deactivated_at
             ),
+            'media' => $floodPath->socialElement?->media
+                ->map(fn ($m) => config('app.media_base_url') . '/' . $m->file_path)
+                ->values()
+                ->toArray() ?? [],
         ];
     }
 }

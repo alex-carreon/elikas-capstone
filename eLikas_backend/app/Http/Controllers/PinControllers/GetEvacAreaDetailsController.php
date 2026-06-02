@@ -23,13 +23,17 @@ class GetEvacAreaDetailsController extends Controller
                 ], 404);
             }
 
+            $coordinates = [
+                $pin->location?->latitude,
+                $pin->location?->longitude,
+            ];
+
             return response()->json([
                 'id' => $pin->id,
                 'name' => $pin->name,
                 'address' => $pin->address,
                 'description' => $pin->description,
-                'lat' => $pin->location?->latitude,
-                'lng' => $pin->location?->longitude,
+                'coordinates' => $coordinates,
                 'location_id' => $pin->location_id,
                 'area_type' => $pin->area_type,
                 'capacity_level' => $pin->capacity_level,
