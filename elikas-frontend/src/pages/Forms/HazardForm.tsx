@@ -18,7 +18,6 @@ import { useUserContext } from "@/context/AuthContext";
 import { differenceInDays } from "date-fns";
 import FloodIcon from "@/assets/Map/FloodIcon.svg?react";
 import AlertDialogue from "@/components/AlertDialogue";
-import { useMapFilterContext } from "@/context/MapFilterContext";
 import { handleSubmit, handleUpdate, handleDelete } from "@/lib/hazardUtils";
 import FormSkeleton from "../Skeletons/FormSkeleton";
 
@@ -48,7 +47,7 @@ function HazardForm() {
   const navigate = useNavigate();
   const { token } = useUserContext();
 
-  const [fileName, setFileName] = useState("");
+  const [fileName, setFileName] = useState<File | undefined>();
   const [imagePreview, setImagePreview] = useState<undefined | string>();
   const [desc, setDesc] = useState("");
   const [floodLevel, setFloodLevel] = useState("");
@@ -65,8 +64,6 @@ function HazardForm() {
   const [hasUpdated, setHasUpdated] = useState(false);
   const [willDeactivate, setWillDeactivate] = useState(false);
   const [error, setError] = useState("");
-
-  const { showPaths } = useMapFilterContext();
 
   const { id } = useParams();
 
@@ -98,7 +95,7 @@ function HazardForm() {
   };
 
   const handleClearImage = () => {
-    setFileName("");
+    setFileName(undefined);
 
     if (inputRef.current) {
       console.log(inputRef.current);
@@ -201,7 +198,7 @@ function HazardForm() {
   }, [isEditable, floodDetails]);
 
   const submit = (e: React.FormEvent) => {
-    console.log(routePoints);
+    e.preventDefault();
 
     handleSubmit({
       e: e,
@@ -214,6 +211,7 @@ function HazardForm() {
       setMidpoint: setMidpoint,
       setError: setError,
       navigate: navigate,
+      media: fileName,
     });
   };
 

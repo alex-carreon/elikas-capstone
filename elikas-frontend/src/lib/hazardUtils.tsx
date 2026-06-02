@@ -6,6 +6,7 @@ import { toast } from "sonner";
 import { formatInTimeZone } from "date-fns-tz";
 import { addDays } from "date-fns";
 import api from "@/api";
+import { format } from "date-fns-tz";
 
 type FloodLevel = {
   id: number;
@@ -26,6 +27,7 @@ type FloodDetails = {
   last_confirmed: string;
   expiry: string;
   posted_at: string;
+  media?: File[] | undefined;
 };
 
 interface handleActionProps {
@@ -47,6 +49,7 @@ interface handleActionProps {
   setHasUpdated?: React.Dispatch<React.SetStateAction<boolean>>;
   snapped?: [number, number][];
   isEditable?: boolean;
+  media?: File | undefined;
 }
 
 export const handleSubmit = async ({
@@ -60,8 +63,11 @@ export const handleSubmit = async ({
   setMidpoint,
   setError,
   navigate,
+  media,
 }: handleActionProps) => {
   e?.preventDefault();
+
+  const formData = new FormData();
 
   try {
     if (center && routePoints) {
@@ -92,41 +98,51 @@ export const handleSubmit = async ({
 
       const expDate = addDays(dateTime, 7);
 
-      const addPromise = new Promise(async (resolve, reject) => {
-        const response = await api.post(
-          "/flood-paths",
-          {
-            level_id: floodLevel,
-            description: desc,
-            expiry: expDate,
-            path: snapped,
-          },
-          {
-            headers: {
-              "Content-Type": "application/json",
-              Authorization: `Bearer ${token}`,
-            },
-          },
-        );
+      formData.append("expiry", format(expDate, "yyyy-MM-dd"));
+      snapped.forEach((point, index) => {
+        formData.append(`path[${index}][0]`, String(point[0]));
+        formData.append(`path[${index}][1]`, String(point[1]));
+      });
+      if (media) {
+        formData.append("file", media);
+      }
+      formData.append("level_id", String(floodLevel));
+      formData.append("description", String(desc));
 
-        if (!response) {
-          reject(new Error("Please try again"));
-        } else resolve(response);
+      const response = api.post("/flood-paths", formData, {
+        headers: {
+          "Content-Type": "undefined",
+        },
       });
 
-      toast.promise(addPromise, {
+      console.log(response);
+
+      if (!response) {
+        console.log("No response from server");
+      }
+
+      toast.promise(response, {
         loading: "Adding your pin to the map...",
         success: "Pin successfully added!",
         error: (err) => err?.message || "Please try again.",
         position: "top-center",
       });
 
-      addPromise.then(() => {
+      response.then(() => {
         navigate?.("/map");
       });
     }
-  } catch (err: string | any) {
-    Error(err.message || "An error occurred during registration");
+  } catch (error: any) {
+    console.error("Request failed");
+
+    if (error.response) {
+      console.error("Status:", error.response.status);
+      console.error("Data:", error.response.data);
+    } else if (error.request) {
+      console.error("No response received:", error.request);
+    } else {
+      console.error("Error:", error.message);
+    }
   }
 
   return;
