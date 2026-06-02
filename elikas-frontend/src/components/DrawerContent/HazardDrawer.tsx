@@ -44,6 +44,8 @@ function HazardDrawer({ selectedPin }: { selectedPin: FloodPath }) {
   const [loading, setLoading] = useState(false);
   const [floodDetails, setFloodDetails] = useState<FloodDetails | undefined>();
   const [daysLeft, setDaysleft] = useState(0);
+  const [upVote, setUpvote] = useState(0);
+  const [downVote, setDownvote] = useState(0);
 
   useEffect(() => {
     if (!selectedPin) return;
@@ -54,6 +56,8 @@ function HazardDrawer({ selectedPin }: { selectedPin: FloodPath }) {
         const response = await api.get(`/flood-paths/${selectedPin.id}`);
         const floodDetails = await response.data.flood_path;
         setFloodDetails(floodDetails);
+        setUpvote(floodDetails.upvotes);
+        setDownvote(floodDetails.downvotes);
 
         const today = new Date();
         const expDate = new Date(floodDetails.expiry);
@@ -120,6 +124,7 @@ function HazardDrawer({ selectedPin }: { selectedPin: FloodPath }) {
             // downvotes={downVote}
             level={floodDetails.flood_levels.level_name}
             expiryDays={daysLeft}
+            id={floodDetails.id}
             isSimple
           >
             <img src={floodDetails.media} />
