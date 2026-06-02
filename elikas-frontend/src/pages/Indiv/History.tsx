@@ -155,11 +155,11 @@ function History() {
                       Active Pins
                     </TabsTrigger>
                     <TabsTrigger
-                      value="ClosedEvac"
-                      id="History_ClosedEvacTrigger"
+                      value="ExpiredEvac"
+                      id="History_ExpiredEvacTrigger"
                       onClick={() => setActiveEvac(false)}
                     >
-                      Closed Pins
+                      Expired Pins
                     </TabsTrigger>
                   </TabsList>
                 ) : (
@@ -199,64 +199,65 @@ function History() {
               <Filter size={18} id="History_FilterBtn" />
             </div>
             <div className="flex flex-col gap-2 overflow-y-auto max-h-screen">
-              {isEvac ? (
-                activeEvac ? (
-                  evacPins.map((pins) => {
-                    if (!pins.is_expired)
-                      return (
-                        <Row
-                          postId={String(pins.id)}
-                          title={pins.name}
-                          address={pins.address}
-                          datePosted={pins.posted_at}
-                          link={`/HazardForm/${pins.id}`}
-                          isExpired={pins.is_expired}
-                          buttonId="History_ActiveHazardDetailsBtn"
-                        />
-                      );
-                  })
-                ) : (
-                  <Row
-                    postId="123"
-                    title="Home"
-                    address="Blk 123 Lot 2 Avenue street"
-                    datePosted="March 13, 2005"
-                    availability
-                    link="/EvacForm"
-                    buttonId="History_ClosedEvacDetailsBtn"
-                  />
-                )
-              ) : activeHaz ? (
-                floodPaths.map((path) => {
-                  if (!path.is_expired)
-                    return (
-                      <Row
-                        postId={String(path.id)}
-                        title="Flood"
-                        address={path.description}
-                        datePosted={path.posted_at}
-                        link={`/HazardForm/${path.id}`}
-                        isExpired={path.is_expired}
-                        buttonId="History_ActiveHazardDetailsBtn"
-                      />
-                    );
-                })
-              ) : (
-                floodPaths.map((path) => {
-                  if (path.is_expired)
-                    return (
-                      <Row
-                        postId={String(path.id)}
-                        title="Flood"
-                        address={path.description}
-                        datePosted={path.posted_at}
-                        link="/HazardForm"
-                        isExpired={path.is_expired}
-                        buttonId="History_ExpHazardDetailsBtn"
-                      />
-                    );
-                })
-              )}
+              {isEvac
+                ? activeEvac
+                  ? evacPins.map((pins) => {
+                      if (!pins.is_expired)
+                        return (
+                          <Row
+                            postId={String(pins.id)}
+                            title={pins.name}
+                            address={pins.address}
+                            datePosted={pins.posted_at}
+                            link={`/EvacForm/${pins.id}`}
+                            isExpired={pins.is_expired}
+                            buttonId="History_ActiveEvacDetailsBtn"
+                          />
+                        );
+                    })
+                  : evacPins.map((pins) => {
+                      if (pins.is_expired)
+                        return (
+                          <Row
+                            postId={String(pins.id)}
+                            title={pins.name}
+                            address={pins.address}
+                            datePosted={pins.posted_at}
+                            link={`/EvacForm/${pins.id}`}
+                            isExpired={pins.is_expired}
+                            buttonId="History_ExpiredEvacDetailsBtn"
+                          />
+                        );
+                    })
+                : activeHaz
+                  ? floodPaths.map((path) => {
+                      if (!path.is_expired)
+                        return (
+                          <Row
+                            postId={String(path.id)}
+                            title="Flood"
+                            address={path.description}
+                            datePosted={path.posted_at}
+                            link={`/HazardForm/${path.id}`}
+                            isExpired={path.is_expired}
+                            buttonId="History_ActiveHazardDetailsBtn"
+                          />
+                        );
+                    })
+                  : floodPaths.map((path) => {
+                      if (path.is_expired)
+                        return (
+                          <Row
+                            postId={String(path.id)}
+                            title="Flood"
+                            address={path.description}
+                            datePosted={path.posted_at}
+                            link="/HazardForm"
+                            isExpired={path.is_expired}
+                            buttonId="History_ExpHazardDetailsBtn"
+                          />
+                        );
+                    })}
             </div>
           </>
         )}

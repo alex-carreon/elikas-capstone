@@ -248,8 +248,12 @@ export const handleDelete = async ({
     });
 
     toast.promise(deacPromise, {
-      loading: "Deleting pin...",
+      loading: "Deleting your pin...",
       success: "Pin Deleted!",
+      error: (err: any) => {
+        console.log(err.response?.data);
+        return err.response?.data?.message || "Please try again.";
+      },
       position: "top-center",
     });
 
