@@ -167,6 +167,7 @@ function EvacPinDrawer({
   const [imagePreview, setImagePreview] = useState("");
   const [available, setAvailable] = useState<typeof facilities>([]);
   const [unavailable, setUnavailable] = useState<typeof facilities>([]);
+  const [openCollapse, setOpenCollapse] = useState(false);
 
   const cameraInputRef = useRef<HTMLInputElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -345,88 +346,76 @@ function EvacPinDrawer({
           </ul>
         </div>
       </DrawerHeader>
-      <div
-        className={cn(
-          "overflow-auto transition-opacity duration-300",
-          isExpanded ? "opacity-100" : "opacity-0 pointer-events-none",
-        )}
-      >
-        <Collapsible className="rounded-md data-[state=open]:bg-muted px-4 ">
-          <CollapsibleTrigger
-            id="Drawer_FacilitiesTrigger"
-            className="group w-full flex flex-col items-start"
-          >
-            <div className="flex flex-row items-center">
-              Facilities Available
-              <ChevronDownIcon className="ml-auto group-data-[state=open]:rotate-180" />
-              <p className="text-xs italic">Press to see more</p>
-            </div>
-          </CollapsibleTrigger>
-          <CollapsibleContent
-            id="Drawer_FacilitiesContent"
-            className="flex flex-col items-start px-2.5 pt-0 text-sm"
-          >
-            <div className="flex flex-row w-full justify-evenly gap-2 pr-2.5 pt-1">
+      {isExpanded ? (
+        <div
+          className={cn(
+            "overflow-auto transition-opacity duration-300",
+            isExpanded ? "opacity-100" : "opacity-0 pointer-events-none",
+          )}
+        >
+          <Collapsible className="rounded-md data-[state=open]:bg-muted px-4 ">
+            <CollapsibleTrigger
+              id="Drawer_FacilitiesTrigger"
+              className="group w-full flex flex-col items-start"
+              onClick={() => setOpenCollapse(true)}
+            >
+              <div className="flex flex-row items-center">
+                Facilities Available
+                <ChevronDownIcon className="ml-auto group-data-[state=open]:rotate-180" />
+                <p className="text-xs italic">Press to see more</p>
+              </div>
+            </CollapsibleTrigger>
+            <CollapsibleContent
+              id="Drawer_FacilitiesContent"
+              className="flex flex-col items-start px-2.5 pt-0 text-sm"
+            >
+              <div className="flex flex-row w-full justify-evenly gap-2 pr-2.5 pt-1">
+                <div className="grid grid-cols-2 w-full justify-evenly gap-2 pr-2.5 pt-1">
+                  {available.map((facility) => (
+                    <div
+                      key={facility.key}
+                      className="flex flex-1 flex-row items-center gap-1"
+                    >
+                      <img src={String(facility.icon)} />
+                      <p className="text-xs">
+                        {facility.name}{" "}
+                        {facility.type === "count" &&
+                        evacPinDetails?.[facility.key] !== null
+                          ? ` (${evacPinDetails?.[facility.key]})`
+                          : ""}
+                      </p>
+                    </div>
+                  ))}
+                </div>
+                <div className="flex flex-1 flex-row items-center gap-1 ml-3"></div>
+              </div>
+              <p className="text-sm pt-4">Not Available</p>
               <div className="grid grid-cols-2 w-full justify-evenly gap-2 pr-2.5 pt-1">
-                {available.map((facility) => (
+                {unavailable.map((facility) => (
                   <div
                     key={facility.key}
-                    className="flex flex-1 flex-row items-center gap-1"
+                    className="flex flex-1 flex-row items-center gap-1 grayscale"
                   >
                     <img src={String(facility.icon)} />
-                    <p className="text-xs">
-                      {facility.name}{" "}
-                      {facility.type === "count" &&
-                      evacPinDetails?.[facility.key] !== null
-                        ? ` (${evacPinDetails?.[facility.key]})`
-                        : ""}
-                    </p>
+                    <p className="text-xs">{facility.name}</p>
                   </div>
                 ))}
               </div>
-              <div className="flex flex-1 flex-row items-center gap-1 ml-3"></div>
+              <p className="text-sm pt-4">Other Facilities</p>
+              <p className="text-xs">{evacPinDetails?.other_facilities}</p>
+            </CollapsibleContent>
+          </Collapsible>
+
+          <hr className="border-gray-400 m-4"></hr>
+          <div className="">
+            <div className="flex flex-row items-center gap-2 px-4">
+              <img src={CSIcon} className="w-12" />
+              <p className="text-base">
+                <b>Crowdsourced Updates</b>
+              </p>
             </div>
-            <p className="text-sm pt-4">Not Available</p>
-            <div className="grid grid-cols-2 w-full justify-evenly gap-2 pr-2.5 pt-1">
-              {unavailable.map((facility) => (
-                <div
-                  key={facility.key}
-                  className="flex flex-1 flex-row items-center gap-1 grayscale"
-                >
-                  <img src={String(facility.icon)} />
-                  <p className="text-xs">{facility.name}</p>
-                </div>
-              ))}
-            </div>
-            <p className="text-sm pt-4">Other Facilities</p>
-            <p className="text-xs">{evacPinDetails?.other_facilities}</p>
-          </CollapsibleContent>
-        </Collapsible>
-        <hr className="border-gray-400 m-4"></hr>
-        <div className="">
-          <div className="flex flex-row items-center gap-2 px-4">
-            <img src={CSIcon} className="w-12" />
-            <p className="text-base">
-              <b>Crowdsourced Updates</b>
-            </p>
-          </div>
-          {/* <div className="h-64 flex items-center justify-center flex-col gap-2">
-              <div className="text-center text-md">
-                <p>Join the conversation.</p>
-                <p>Sign in an account to view the comments.</p>
-              </div>
-              <Link to="/Login">
-                <ButtonComp
-                  text="Sign in"
-                  variant="primary"
-                  id="Drawer_EvacSignIn"
-                  heightSize="38px"
-                  widthSize="30"
-                />
-              </Link>
-            </div> */}
-          <div className="flex flex-col gap-2 mb-4 mt-4 pb-16 px-4">
-            {/* <PostRow
+            <div className="flex flex-col gap-2 mb-4 mt-4 pb-16 px-4">
+              {/* <PostRow
                 username="Kurt Hacinas"
                 timePosted="3:30pm"
                 description="Bring your own water"
@@ -448,8 +437,8 @@ function EvacPinDrawer({
                 expiryDays={30}
                 image={Photo}
               /> */}
-          </div>
-          {isExpanded ? (
+            </div>
+
             <div className="fixed bottom-0 z-100 bg-white w-full h-content">
               <div className="h-full flex flex-row items-center p-2 gap-2">
                 <img src={dataUri} className="w-11" />
@@ -506,9 +495,9 @@ function EvacPinDrawer({
                 </div>
               )}
             </div>
-          ) : null}
+          </div>
         </div>
-      </div>
+      ) : null}
     </>
   );
 }
