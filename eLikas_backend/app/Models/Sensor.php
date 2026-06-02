@@ -38,6 +38,7 @@ class Sensor extends Model
 
 	protected $casts = [
 		'element_id' => 'int',
+        'location_id' => 'int',
 		'mount_height' => 'float',
 		'location' => Point::class,
 		'last_online' => 'datetime',
@@ -46,12 +47,14 @@ class Sensor extends Model
 	];
 
 	protected $fillable = [
+        'element_id',
 		'mount_height',
 		'name',
 		'location',
 		'address',
         'yellow_level',
         'red_level',
+        'location_id'
 	];
 
 	public function social_element()
@@ -63,4 +66,9 @@ class Sensor extends Model
 	{
 		return $this->hasMany(SensorLog::class, 'sensor_id');
 	}
+
+    public function location()
+    {
+        return $this->belongsTo(Location::class, 'location_id');
+    }
 }
