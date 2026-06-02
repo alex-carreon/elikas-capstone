@@ -35,7 +35,7 @@ import {
 } from "@/components/ui/input-group";
 import ButtonComp from "@/components/Button";
 import CSIcon from "@/assets/Map/CrowdsourceIcon.svg";
-import { useEffect, useState, useRef, Fragment } from "react";
+import { useEffect, useState, useRef } from "react";
 import { differenceInDays } from "date-fns";
 import api from "@/api";
 import { DrawerTitle } from "@/components/ui/drawer";
