@@ -12,10 +12,13 @@ class GetEvacAreaDetailsController extends Controller
         try {
 
             $pin = EvacArea::with([
-                'social_element.user',
-                'social_element.media',
-                'gov_op.user'
-            ])->find($id);
+            'social_element.user',
+            'social_element.media',
+            'gov_op.user',
+            'evac_type',
+            'capacity_level_info',
+            'location_info',
+        ])->find($id);
 
             if (!$pin) {
                 return response()->json([
@@ -35,8 +38,11 @@ class GetEvacAreaDetailsController extends Controller
                 'description' => $pin->description,
                 'coordinates' => $coordinates,
                 'location_id' => $pin->location_id,
-                'area_type' => $pin->area_type,
-                'capacity_level' => $pin->capacity_level,
+                'barangay' => $pin->location_info?->name,
+                'area_type_id' => $pin->area_type,
+                'area_type' => $pin->evac_type?->evac_type,
+                'capacity_level_id' => $pin->capacity_level,
+                'capacity_name' => $pin->capacity_level_info?->capacity_level,
                 'is_persistent' => $pin->is_persistent,
                 'for_reg_flood' => $pin->for_reg_flood,
                 'for_heavy_flood' => $pin->for_heavy_flood,

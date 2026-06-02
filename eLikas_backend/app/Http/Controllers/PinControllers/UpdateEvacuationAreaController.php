@@ -44,31 +44,33 @@ class UpdateEvacuationAreaController extends Controller
 
             if (($request->filled('lat') && !$request->filled('lng')) || (!$request->filled('lat') && $request->filled('lng'))) {
                 return response()->json([
-                    'error' => 'Both lat and lng are required when updating location'
+                    'error' => 'Both lat and lng are required when updating location',
                 ], 422);
             }
 
-            $pin = EvacArea::with('social_element')
-                ->whereHas('social_element', function ($q) {
-                    $q->whereNull('deactivated_at');
-                })
-                ->find($id);
+            $pin = EvacArea::with('social_element')->find($id);
 
             if (!$pin) {
                 return response()->json([
-                    'error' => 'Evacuation area not found'
+                    'error' => 'Evacuation area not found',
                 ], 404);
             }
 
-            if ($user->role_id == 3 && $pin->social_element?->user_id != $user->id) {
+            if (!$pin->social_element) {
                 return response()->json([
-                    'error' => 'Forbidden. You may only update your own evacuation area pins'
+                    'error' => 'Evacuation area has no linked social element',
+                ], 422);
+            }
+
+            if ($user->role_id == 3 && $pin->social_element->user_id != $user->id) {
+                return response()->json([
+                    'error' => 'Forbidden. You may only update your own evacuation area pins',
                 ], 403);
             }
 
             if (!in_array($user->role_id, [1, 2, 3])) {
                 return response()->json([
-                    'error' => 'Forbidden'
+                    'error' => 'Forbidden',
                 ], 403);
             }
 
@@ -130,9 +132,16 @@ class UpdateEvacuationAreaController extends Controller
             }
 
             if ($request->has('expiry')) {
-                $pin->expiry = $request->expiry
+                $expiry = $request->filled('expiry')
                     ? Carbon::parse($request->expiry, 'Asia/Manila')->utc()
                     : null;
+
+                $pin->expiry = $expiry;
+
+                if ($expiry && $expiry->greaterThan(Carbon::now('UTC'))) {
+                    $pin->social_element->deactivated_at = null;
+                    $pin->social_element->save();
+                }
             }
 
             $pin->last_updated = now();
@@ -140,13 +149,19 @@ class UpdateEvacuationAreaController extends Controller
 
             return response()->json([
                 'message' => 'Evacuation area updated successfully',
-                'pin_id' => $pin->id
-            ]);
+                'pin_id' => $pin->id,
+                'expiry' => $pin->expiry
+                    ? $pin->expiry->timezone('Asia/Manila')->toDateTimeString()
+                    : null,
+                'deactivated_at' => $pin->social_element->deactivated_at
+                    ? $pin->social_element->deactivated_at->timezone('Asia/Manila')->toDateTimeString()
+                    : null,
+            ], 200);
 
         } catch (\Exception $e) {
             return response()->json([
                 'error' => 'Failed to update evacuation area',
-                'details' => $e->getMessage()
+                'details' => $e->getMessage(),
             ], 500);
         }
     }

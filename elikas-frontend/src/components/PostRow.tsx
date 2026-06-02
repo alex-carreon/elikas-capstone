@@ -5,12 +5,14 @@ import {
   CollapsibleTrigger,
 } from "@/components/ui/collapsible";
 import colors from "@/constants/colors";
-import React, { useState, type ReactHTMLElement } from "react";
-import { bigSmile } from "@dicebear/collection";
+import React, { useEffect, useState, type ReactHTMLElement } from "react";
+import { bigSmile, identicon } from "@dicebear/collection";
 import { createAvatar } from "@dicebear/core";
 import AlertDialogue from "./AlertDialogue";
 import { createPortal } from "react-dom";
 import Radio from "./Radio";
+import api from "@/api";
+import { Spinner } from "@/components/ui/spinner";
 
 interface PostRowProps {
   username: string;
@@ -18,13 +20,12 @@ interface PostRowProps {
   description: string;
   level?: string;
   locationVerified?: boolean;
-  upVotesCount: number;
-  downVotesCount: number;
   flagCount?: number;
   expiryDays: number;
   image?: string;
   isSimple?: boolean;
   children?: React.ReactNode;
+  id?: number;
 }
 
 function PostRow({
@@ -33,19 +34,22 @@ function PostRow({
   description,
   level,
   locationVerified,
-  upVotesCount,
-  downVotesCount,
   flagCount,
   expiryDays,
   image,
   isSimple,
   children,
+  id,
 }: PostRowProps) {
   const [report, setReport] = useState(false);
-  const [vote, setVote] = useState<"up" | "down" | null>(null);
+  const [upvote, setUpvote] = useState(0);
+  const [vote, setVote] = useState<1 | -1 | 0>(0);
+  const [downvote, setDownvote] = useState(0);
   const [seed, setSeed] = useState("Felix");
   const [openDialog, setOpenDialog] = useState(false);
   const [reason, setReason] = useState("");
+  const [voteLoad, setVoteLoad] = useState(false);
+  const [hasVoted, setHasVoted] = useState(false);
 
   console.log("openDialog", openDialog);
 
@@ -60,6 +64,42 @@ function PostRow({
   });
 
   const dataUri = avatar.toDataUri();
+
+  const getVotes = async () => {
+    try {
+      setVoteLoad(true);
+      const response = await api.get(`/flood-paths/${id}`);
+      setUpvote(response.data.flood_path.upvotes);
+      setDownvote(response.data.flood_path.downvotes);
+      const voted = response.data.user_vote;
+      if (voted === 1) {
+        setVote(1);
+      } else if (voted === -1) {
+        setVote(-1);
+      } else setVote(0);
+    } catch (err: string | any) {
+      console.log(err.message || "An error occurred");
+    } finally {
+      setVoteLoad(false);
+    }
+  };
+
+  useEffect(() => {
+    getVotes();
+  }, []);
+
+  const handleVote = async (voteValue: number) => {
+    try {
+      setVoteLoad(true);
+      const response = await api.post(`/flood-paths/${id}/vote`, {
+        vote: voteValue,
+      });
+      getVotes();
+    } catch (error) {
+      console.log("Error submitting vote:", error);
+      setVoteLoad(false);
+    }
+  };
 
   const handleSubmit = () => {
     console.log("reason", reason);
@@ -168,9 +208,13 @@ function PostRow({
           <div className="px-2 flex flex-row gap-4">
             <div
               className="flex flex-row items-center gap-1"
-              onClick={() => setVote(vote === "up" ? null : "up")}
+              onClick={() => {
+                const newVote = vote === 1 ? 0 : 1;
+                setVote(newVote);
+                handleVote(1);
+              }}
             >
-              {vote === "up" ? (
+              {vote === 1 ? (
                 <ThumbsUp
                   id="Drawer_PostUpvoteBtn"
                   size={16}
@@ -184,13 +228,20 @@ function PostRow({
                   strokeWidth={1.5}
                 />
               )}
-              <p className="text-xs">Upvote ({upVotesCount})</p>
+
+              <p className="text-xs flex flex-row">
+                Upvote {voteLoad ? <Spinner className="w-6" /> : `(${upvote})`}
+              </p>
             </div>
             <div
               className="flex flex-row items-center gap-1"
-              onClick={() => setVote(vote === "down" ? null : "down")}
+              onClick={() => {
+                const newVote = vote === -1 ? 0 : -1;
+                setVote(newVote);
+                handleVote(-1);
+              }}
             >
-              {vote === "down" ? (
+              {vote === -1 ? (
                 <ThumbsDown
                   id="Drawer_PostDownvoteBtn"
                   size={16}
@@ -204,8 +255,10 @@ function PostRow({
                   strokeWidth={1.5}
                 />
               )}
-
-              <p className="text-xs">Downvote ({downVotesCount})</p>
+              <p className="text-xs flex flex-row">
+                Downvote
+                {voteLoad ? <Spinner className="w-6" /> : `(${downvote})`}
+              </p>
             </div>
             {isSimple ? null : (
               <CollapsibleTrigger
@@ -224,11 +277,11 @@ function PostRow({
               </p>
               <div className="flex flex-row gap-2 text-xs">
                 <ThumbsUp size={16} strokeWidth={1.5} fill="#FFA215" />
-                {upVotesCount}
+                {upvote}
               </div>
               <div className="flex flex-row gap-2 text-xs">
                 <ThumbsDown size={16} strokeWidth={1.5} fill="#642424" />
-                {downVotesCount}
+                {downvote}
               </div>
               <div className="flex flex-row gap-2 text-xs">
                 <Flag size={16} strokeWidth={1.5} fill="#C43E3E" /> {flagCount}
