@@ -5,30 +5,30 @@ import { useNavigate, type NavigateFunction } from "react-router-dom";
 interface handleActionProps {
   e?: React.FormEvent<Element>;
   id?: string;
-  name: string;
-  address: string;
-  description: string;
+  name?: string;
+  address?: string;
+  description?: string;
   lat?: number;
   lng?: number;
   location_id?: number;
-  area_type: number;
+  area_type?: number;
   capacity_level?: number;
-  is_persistent: boolean;
-  for_reg_flood: boolean;
-  for_heavy_flood: boolean;
-  has_accom: boolean;
-  has_DRRMO: boolean;
-  has_health: boolean;
-  pwd_friendly: boolean;
-  has_catchment: boolean;
-  toilet_count: number;
-  kitchen_count: number;
-  child_prayer_count: number;
-  breastfeed_count: number;
-  other_facilities: string;
-  contact_person: string;
-  contact_number: string;
-  expiry: string | null | undefined;
+  is_persistent?: boolean;
+  for_reg_flood?: boolean;
+  for_heavy_flood?: boolean;
+  has_accom?: boolean;
+  has_DRRMO?: boolean;
+  has_health?: boolean;
+  pwd_friendly?: boolean;
+  has_catchment?: boolean;
+  toilet_count?: number;
+  kitchen_count?: number;
+  child_prayer_count?: number;
+  breastfeed_count?: number;
+  other_facilities?: string;
+  contact_person?: string;
+  contact_number?: string;
+  expiry?: string | null | undefined;
   file?: File | undefined;
   navigate?: NavigateFunction;
   setIsEditable?: React.Dispatch<React.SetStateAction<boolean>>;
@@ -146,9 +146,10 @@ export const handleUpdate = async ({
   setIsEditable,
   setHasUpdated,
 }: handleActionProps) => {
-  e?.preventDefault();
+  // e?.preventDefault();
 
   try {
+    e?.preventDefault();
     const responsePromise = api.put(`/pins/${id}`, {
       name: name,
       address: address,
@@ -186,6 +187,36 @@ export const handleUpdate = async ({
     responsePromise.then(() => {
       setIsEditable?.(false);
       setHasUpdated?.(true);
+    });
+  } catch (error: any) {
+    console.error("Request failed");
+
+    if (error.response) {
+      console.error("Status:", error.response.status);
+      console.error("Data:", error.response.data);
+    } else if (error.request) {
+      console.error("No response received:", error.request);
+    } else {
+      console.error("Error:", error.message);
+    }
+  }
+};
+
+export const handleDelete = async ({ id, navigate }: handleActionProps) => {
+  try {
+    const responsePromise = api.patch(`/pins/${id}/deactivate`);
+
+    toast.promise(responsePromise, {
+      loading: "Deleting your pin...",
+      success: () => {
+        navigate?.("/History");
+        return "Pin Deleted!";
+      },
+      error: (err: any) => {
+        console.log(err.response?.data);
+        return err.response?.data?.message || "Please try again.";
+      },
+      position: "top-center",
     });
   } catch (error: any) {
     console.error("Request failed");

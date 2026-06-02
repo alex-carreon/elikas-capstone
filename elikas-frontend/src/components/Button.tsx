@@ -4,7 +4,7 @@ import colors from "@/constants/colors";
 interface ButtonProps {
   text: string;
   variant: "primary" | "outline" | "important";
-  onClick?: () => void;
+  onClick?: (e?: any) => void;
   id: string;
   type?: "button" | "submit" | "reset";
   isDisabled?: boolean;
