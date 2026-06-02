@@ -51,7 +51,7 @@ class StoreEvacuationAreaController extends Controller
                 'other_facilities' => 'nullable|string',
                 'contact_person' => 'nullable|string|max:255',
                 'contact_number' => 'nullable|string|max:20',
-                'expiry' => 'nullable|date',
+                'expiry' => 'nullable|date|after:now',
                 'file' => ['nullable', 'file', 'image', 'mimes:jpg,jpeg,png', 'max:8192'],
             ]);
 
