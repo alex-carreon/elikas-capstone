@@ -24,7 +24,8 @@ use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\SensorControllers\PublicSensorController;
 use App\Http\Controllers\SensorControllers\SensorController;
 use App\Http\Controllers\SMSController;
-use App\Http\Controllers\VoteController;
+use App\Http\Controllers\Votes\VoteController;
+use App\Http\Controllers\Votes\VoteCommentController;
 use Illuminate\Support\Facades\Route;
 
 
@@ -95,7 +96,7 @@ Route::middleware(['firebase.auth', 'role:2'])->group(function () {
 });
 
 
-// 1 = admin; 2 = GovOp; 3 = indiv
+// 1 = admin; 2 = brgy_op; 3 = indiv; city_op = 3
 
 // BARANGAY OR ADMIN ROUTES
 Route::middleware(['firebase.auth', 'role:1,2'])->group(function () {
@@ -133,11 +134,13 @@ Route::middleware(['firebase.auth', 'role:1,2,3'])->group(function () {
 
     //FLOODS
     Route::post('flood-paths', [FloodPathController::class, 'store']);
-    Route::get('/flood-paths/my',     [FloodPathController::class, 'my']);
-    Route::get('/flood-paths/{id}',   [FloodPathController::class, 'show'])
+    Route::get('/flood-paths/my', [FloodPathController::class, 'my']);
+    Route::get('/flood-paths/{id}', [FloodPathController::class, 'show'])
         ->whereNumber('id');
     Route::patch('/flood-paths/{id}', [FloodPathController::class, 'update']);
     Route::patch('/flood-paths/{id}/deactivate', [FloodPathController::class, 'destroy']); // soft delete
+
+    //EVAC PINS
     Route::post('/pins', [StoreEvacuationAreaController::class, 'storeEvacuationArea']);
     Route::put('/pins/{id}', [UpdateEvacuationAreaController::class, 'updateEvacuationArea']);
     Route::delete('/pins/{id}', [DeleteEvacuationAreaController::class, 'deleteEvacuationArea']); //hard delete for admins
@@ -145,6 +148,7 @@ Route::middleware(['firebase.auth', 'role:1,2,3'])->group(function () {
 
     //VOTE
     Route::post('/flood-paths/{floodPathId}/vote', [VoteController::class, 'vote']);
+    Route::post('/comments/{commentId}/vote', [VoteCommentController::class, 'vote']);
 
     //COMMENTS
     Route::get('/evac-areas/{evacAreaId}/comments', [EvacComments::class, 'index']);
