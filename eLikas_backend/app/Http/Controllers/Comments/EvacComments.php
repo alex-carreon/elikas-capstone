@@ -2,18 +2,19 @@
 
 namespace App\Http\Controllers\Comments;
 
+use App\Enums\MediaCollection;
 use App\Http\Controllers\Controller;
 use App\Models\Comment;
 use App\Models\EvacArea;
 use App\Models\MediaFile;
 use App\Models\SocialElement;
 use App\Models\TargetTable;
+use App\Models\Vote;
 use App\Services\MediaUploadService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
-use App\Enums\MediaCollection;
 
 class EvacComments extends Controller
 {
@@ -43,13 +44,27 @@ class EvacComments extends Controller
             ->orderByDesc('id')
             ->get();
 
+        $user = $request->attributes->get('firebase_user');
+
+        $votes = collect();
+
+        if ($user) {
+            $votes = Vote::where('user_id', $user->id)
+                 ->whereIn('element_id', $comments->pluck('element_id'))
+                ->pluck('vote', 'element_id');
+        }
+
         return response()->json([
             'count' => $comments->count(),
-
-            'comments' => $comments->map(function ($comment) {
+            
+            'comments' => $comments->map(function ($comment) use ($votes){
                 return [
                     'id' => $comment->id,
                     'content' => $comment->content,
+
+                    'upvotes' => $comment->upvotes,
+                    'downvotes' => $comment->downvotes,
+                    'user_vote' => $votes->get($comment->element_id),
 
                     'posted_by' => [
                         'id' => $comment->element?->user?->id,
