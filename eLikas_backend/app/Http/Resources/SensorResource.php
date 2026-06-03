@@ -26,6 +26,7 @@ class SensorResource extends JsonResource
                 : null,
             'address'        => $this->address,
             'yellowLevel'  => $this->yellow_level,
+            'orangeLevel'  => $this->orange_level,
             'redLevel'     => $this->red_level,
             'currentStatus' => $this->current_status,
             'mountLocation'   => $this->whenLoaded('mountLocation')

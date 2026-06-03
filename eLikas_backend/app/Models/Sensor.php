@@ -43,7 +43,8 @@ class Sensor extends Model
 		'location' => Point::class,
 		'last_online' => 'datetime',
         'yellow_level' => 'float',
-        'red_level' => 'float'
+        'red_level' => 'float',
+        'orange_level' => 'float',
 	];
 
 	protected $fillable = [
@@ -54,6 +55,7 @@ class Sensor extends Model
 		'address',
         'yellow_level',
         'red_level',
+        'orange_level',
         'location_id'
 	];
 
