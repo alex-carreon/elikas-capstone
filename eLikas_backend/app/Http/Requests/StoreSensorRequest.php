@@ -23,7 +23,8 @@ class StoreSensorRequest extends FormRequest
             'address'      => ['required', 'string', 'max:255'],
             'location_id'  => ['required', 'integer', 'exists:Locations,id'],
             'yellow_level' => ['required', 'numeric', 'min:0'],
-            'red_level'    => ['sometimes', 'numeric', 'min:0', 'gt:yellow_level']
+            'orange_level' => ['sometimes', 'numeric', 'min:0', 'gt:yellow_level', 'lt:red_level'],
+            'red_level'    => ['sometimes', 'numeric', 'min:0', 'gt:orange_level']
         ];
     }
 
@@ -32,6 +33,7 @@ class StoreSensorRequest extends FormRequest
         $this->merge([
             'mount_height' => $this->mountHeight,
             'yellow_level' => $this->yellowLevel,
+            'orange_level' => $this->orangeLevel,
             'red_level'    => $this->redLevel,
             'location_id'  => $this->locationId,
         ]);
