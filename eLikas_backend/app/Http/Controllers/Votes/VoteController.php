@@ -1,7 +1,7 @@
 <?php
 
-namespace App\Http\Controllers;
-
+namespace App\Http\Controllers\Votes;
+use App\Http\Controllers\Controller;
 use App\Models\FloodPath;
 use App\Models\Vote;
 use Illuminate\Http\Request;
@@ -9,6 +9,7 @@ use Illuminate\Support\Facades\DB;
 
 class VoteController extends Controller
 {
+    //COMMENT ON FLLODS
     public function vote(Request $request, int $floodPathId)
     {
         try {
