@@ -79,6 +79,9 @@ Route::prefix('admin')->middleware(['firebase.auth', 'role:1'])->group(function 
     Route::patch('/comments/{id}', [CommentsAdminController::class, 'update']);
     Route::patch('/comments/{id}/deactivate',[CommentsAdminController::class, 'deactivate']);
 
+    Route::get('/evac-areas/{evacAreaId}/comments',[CommentsAdminController::class, 'index']);
+    Route::get('/comments/{id}',[CommentsAdminController::class, 'show']);
+
 });
 
 // ---------------------------------------------------------------
