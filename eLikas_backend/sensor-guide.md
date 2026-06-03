@@ -145,9 +145,8 @@ Only parameters in the explicit allowlist are processed. Any unknown query param
 ```json
 {
     "data": [
-        {
-            "id": 8,
-            "sensorCode": "SN-12-007",
+        "id": 8,
+            "sensorCode": "SR-159745",
             "name": "De Jesus Bridge Sensor",
             "waterLevel": null,
             "lastOnline": null,
@@ -159,9 +158,10 @@ Only parameters in the explicit allowlist are processed. Any unknown query param
             "address": "General S. De Jesus (Bridge)",
             "yellowLevel": 1.5,
             "redLevel": 2.5,
-            "currentStatus": "normal",
-            "deactivated_at": null,
-            "barangay": "Barangay Batis"
+            "currentStatus": null,
+            "mountLocation": "Barangay Batis",
+            "deactivatedAt": null,
+            "registeredBy": "Barangay Batis"
         }
   ],
   "links": { "...": "..." },
@@ -200,7 +200,7 @@ GET /api/sensors?location_id=36
 GET /api/sensors?location_id=36&current_status[]=yellow&current_status[]=red
 
 # Search by name, page 2
-GET /api/sensors?name=marikina&page=2
+GET /api/sensors?name=ibanez&page=2
 ```
 
 ---
@@ -230,20 +230,22 @@ Creates a new sensor. The `sensor_code` and `element_id` are set automatically �
     "location": [14.600140911054979, 121.04148573512468],
     "address": "V. Ibanez Street",
     "yellowLevel": 1.5,
-    "redLevel": 2.5
+    "redLevel": 2.5,
+    "locationId":11
 }
 ```
 
 | Field | Type | Required | Notes |
 |---|---|---|---|
-| `name` | string | Yes | Max 255 characters |
+| `name` | string | Yes | Max 50 characters |
 | `mountHeight` | number | Yes | Must be ≥ 0 |
 | `location` | array | Yes | `[latitude, longitude]` |
-| `location[0]` | number | Yes | Latitude, between -90 and 90 |
-| `location[1]` | number | Yes | Longitude, between -180 and 180 |
-| `address` | string | No | Max 255 characters |
+| `location[0]` | number | Yes | Latitude, between -90 and 90, required with location[1]|
+| `location[1]` | number | Yes | Longitude, between -180 and 180, required with location[0]|
+| `address` | string | Yes | Max 255 characters |
 | `yellowLevel` | number | Yes | Must be ≥ 0 |
 | `redLevel` | number | Yes | Must be ≥ 0; must be > `yellowLevel` |
+| `locationId` | number | Yes | ID be in `locations` table |
 
 **camelCase input is accepted** in accordance with json convention — `mountHeight`, `yellowLevel`, `redLevel` are automatically mapped to their snake_case DB equivalents before validation.
 
@@ -251,14 +253,12 @@ Creates a new sensor. The `sensor_code` and `element_id` are set automatically �
 
 | Field | Set by |
 |---|---|
-| `sensor_code` | Generated as `SN-{location_id}-{sequence}` e.g. `SN-36-001` |
+| `sensor_code` | Generated as `SR-XXXXXX` e.g. `SR-62BCC7` |
 | `element_id` | Created automatically via a new `SocialElement` record |
-| `current_status` | Defaults to `normal` |
+| `current_status` | Defaults to `null` |
 | `last_online` | Defaults to `null` |
 
 The `SocialElement` parent record is created in the same database transaction as the sensor. If either insert fails, both are rolled back.
-
-The `sensor_code` sequence is scoped per location — two sensors at different locations can both be `001`.
 
 #### Response
 
@@ -275,34 +275,22 @@ Updates an existing sensor. All fields are optional — only include what needs 
 ```json
 {
     "name": "Ibanez Street Sensor",
-    "location": [14.600140911054979, 121.04148573512468],
     "address": "V. Ibanez Street"
 }
 ```
 
+**Only the following** fields can be updated. In the case of location-related changes (e.g. sensor unit is moved to a different street or another barangay), it is **strongly encouraged** that the existing sensor is deactivated and registered as a new sensor when moved to preserve historical data. 
+
 | Field | Type | Required | Notes |
 |---|---|---|---|
-| `name` | string | No | Max 255 characters |
+| `name` | string | No | Max 50 characters |
 | `mountHeight` | number | No | Must be ≥ 0 |
-| `location` | array | No | `[latitude, longitude]` — replaces existing coordinates |
-| `location[0]` | number | No | Latitude, between -90 and 90 |
-| `location[1]` | number | No | Longitude, between -180 and 180 |
-| `address` | string | No | Max 255 characters; pass `null` to clear |
+| `address` | string | No | Max 255 characters |
 | `yellowLevel` | number | No | Must be ≥ 0 |
 | `redLevel` | number | No | Must be ≥ 0; must be > `yellowLevel` |
 
 **camelCase input is accepted** — same mapping as `POST`. Only fields that are actually present in the request body are validated and updated. Omitted fields are left unchanged.
 
-#### Fields that cannot be updated
-
-The following are managed by the system and are ignored even if passed:
-
-| Field | Reason |
-|---|---|
-| `sensor_code` | Assigned at creation, permanent |
-| `element_id` | Structural link to parent, never changes |
-| `current_status` | Written only by sensor log ingestion |
-| `last_online` | Written only by sensor log ingestion |
 
 #### Response
 
@@ -356,4 +344,4 @@ All endpoints return errors in this shape:
 - **SQL injection** — all values go through Laravel's PDO parameter binding. The one raw SQL query (`resolveLocationIds`) uses named bindings, not string interpolation.
 - **LIKE wildcards** — `%` and `_` in search inputs are escaped to literals before being passed to `LIKE` queries.
 - **`is_active` type safety** — only the string values `"0"` and `"1"` are accepted; any other value is ignored entirely.
-- **Protected fields** — `sensor_code`, `element_id`, `current_status`, and `last_online` are not in `$fillable` and cannot be mass-assigned through `store` or `update`.
+- **Protected fields** — `sensor_code`, `element_id`, `current_status`, and `last_online` are not in `$fillable` and cannot be assigned through `store` or `update`.
