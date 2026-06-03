@@ -15,6 +15,35 @@ import "leaflet-routing-machine";
 import { toast } from "sonner";
 import api from "@/api";
 import { useMapFilterContext } from "@/context/MapFilterContext";
+import { type Dispatch, type SetStateAction } from "react";
+
+type EvacPin = {
+  id: number;
+  lat: number;
+  lng: number;
+};
+
+type FloodLevel = {
+  id: number;
+  level_name: string;
+};
+
+type FloodPath = {
+  id: number;
+  is_expired: boolean;
+  is_deactivated: boolean;
+  level: FloodLevel;
+  path: [number, number][];
+};
+
+type Sensors = {
+  id: number;
+  name: string;
+  location: [number, number];
+  water_level: any | null;
+  last_only: any | null;
+  current_status: string;
+};
 
 export const sensorPins = [
   {
@@ -25,14 +54,44 @@ export const sensorPins = [
   },
 ];
 
+let evacPinData: EvacPin[];
+const getEvacPins = async ({
+  setEvacPins,
+}: {
+  setEvacPins: Dispatch<SetStateAction<EvacPin[]>>;
+}) => {
+  try {
+    const response = await api.get("/pins");
+    evacPinData = await response.data.pins;
+    setEvacPins(evacPinData);
+  } catch (err: string | any) {
+    Error(err.message || "An error occurred");
+  }
+};
+
+let sensorData: Sensors[];
+const getSensors = async ({
+  setSensors,
+}: {
+  setSensors: Dispatch<SetStateAction<Sensors[]>>;
+}) => {
+  try {
+    const response = await api.get("/public/sensors");
+    sensorData = await response.data;
+    setSensors(sensorData);
+  } catch (error) {
+    console.log(error);
+  }
+};
+
 function getNearestWaypoint(
   userLatLng: LatLng,
-  waypoints: typeof pins,
-): PinType | null {
-  let nearest: PinType | null = null;
+  waypoints: typeof evacPinData,
+): EvacPin | null {
+  let nearest: EvacPin | null = null;
   let minDist = Infinity;
 
-  waypoints.forEach((point) => {
+  waypoints.forEach((point: any) => {
     const dist = userLatLng.distanceTo(leaflet.latLng(point.lat, point.long));
     if (dist < minDist) {
       minDist = dist;
@@ -59,7 +118,7 @@ export function NearestRouting({
     if (!userPosition) return;
     console.log("NearestRouting mounted");
 
-    const nearest = getNearestWaypoint(userPosition, pins);
+    const nearest = getNearestWaypoint(userPosition, evacPinData);
     if (!nearest) return;
 
     onPinSelected?.(nearest);
@@ -82,7 +141,7 @@ export function NearestRouting({
     const control = leaflet.Routing.control({
       waypoints: [
         leaflet.latLng(userPosition.lat, userPosition.lng),
-        leaflet.latLng(nearest.lat, nearest.long),
+        leaflet.latLng(nearest.lat, nearest.lng),
       ],
       router: new leaflet.Routing.OSRMv1({
         serviceUrl: "https://router.project-osrm.org/route/v1",
@@ -203,12 +262,6 @@ export function Routing({
   return null;
 }
 
-type EvacPin = {
-  id: number;
-  lat: number;
-  lng: number;
-};
-
 // Add properties based on the pin info from db
 export function PinMarking({ onPinClick }: { onPinClick: (pin: any) => void }) {
   const [evacPins, setEvacPins] = useState<EvacPin[]>([]);
@@ -230,20 +283,9 @@ export function PinMarking({ onPinClick }: { onPinClick: (pin: any) => void }) {
     iconAnchor: [12, 12],
   });
 
-  let evacPinData;
-  const getEvacPins = async () => {
-    try {
-      const response = await api.get("/pins");
-      evacPinData = await response.data.pins;
-      setEvacPins(evacPinData);
-    } catch (err: string | any) {
-      Error(err.message || "An error occurred");
-    }
-  };
-
   useEffect(() => {
     if (allPins) {
-      getEvacPins();
+      getEvacPins({ setEvacPins });
     } else {
       // Only user pins
     }
@@ -275,66 +317,70 @@ export function PinMarking({ onPinClick }: { onPinClick: (pin: any) => void }) {
   );
 }
 
-type SensorsMap = {
-  id: number;
-  name: string;
-  location: [number, number];
-  current_status: string;
-};
-
 // ensor logic here
 export function SensorMarking({
   onPinClick,
 }: {
   onPinClick: (pin: any) => void;
 }) {
-  const [height, setHeight] = useState(0);
-  const [color, setColor] = useState("");
-  const [sensors, setSensors] = useState<EvacPin[]>([]);
+  const [sensors, setSensors] = useState<Sensors[]>([]);
+
+  const map = useMap();
+  const [zoom, setZoom] = useState(map.getZoom());
 
   const colorSensor = {
     yellow: "#F3C217",
     orange: "#E6793B",
     red: "#B22B42",
     purple: "#6E4998",
+    green: "#318631",
+    null: "#00000080",
   };
 
-  useEffect(() => {
-    setHeight(30);
-  });
+  const getColor = (height: number | null): string => {
+    if (height === null) return colorSensor.green;
 
-  useEffect(() => {
     if (height >= 40) {
-      setColor(colorSensor.purple);
+      return colorSensor.purple;
     } else if (height >= 30) {
-      setColor(colorSensor.red);
+      return colorSensor.red;
     } else if (height >= 20) {
-      setColor(colorSensor.orange);
+      return colorSensor.orange;
     } else if (height >= 10) {
-      setColor(colorSensor.yellow);
+      return colorSensor.yellow;
     }
-  }, [height]);
+    return colorSensor.green;
+  };
 
-  const sensorIcon = divIcon({
-    html: renderToString(<SensorIcon color={color} width={30} height={30} />),
-    className: "",
-    iconAnchor: [12, 12],
-    iconSize: [50, 50],
-  });
+  const sensorIcon = (color: string) =>
+    divIcon({
+      html: renderToString(<SensorIcon color={color} width={30} height={30} />),
+      className: "",
+      iconAnchor: [30, 30],
+      iconSize: [15, 30],
+    });
 
-  return (
-    <>
-      {sensorPins.map((pin) => (
-        <Marker
-          key={pin.id}
-          position={[pin.lat, pin.long]}
-          icon={sensorIcon}
-          eventHandlers={{ click: () => onPinClick(pin) }}
-        />
-      ))}
-      ;
-    </>
-  );
+  useEffect(() => {
+    getSensors({ setSensors });
+  }, []);
+
+  useEffect(() => {
+    map.on("zoomend", () => setZoom(map.getZoom()));
+    return () => {
+      map.off("zoomend");
+    };
+  }, [map]);
+
+  if (zoom < 12) return null;
+
+  return sensors.map((pin) => (
+    <Marker
+      key={pin.id}
+      position={[pin.location[0], pin.location[1]]}
+      icon={sensorIcon(getColor(pin.water_level))}
+      eventHandlers={{ click: () => onPinClick(pin) }}
+    />
+  ));
 }
 
 // When someone clicks, it zooms
@@ -379,19 +425,6 @@ export function getMidpoint(positions: [number, number][]): [number, number] {
   // return [avgLat, avgLng];
   return positions[midIndex];
 }
-
-type FloodLevel = {
-  id: number;
-  level_name: string;
-};
-
-type FloodPath = {
-  id: number;
-  is_expired: boolean;
-  is_deactivated: boolean;
-  level: FloodLevel;
-  path: [number, number][];
-};
 
 interface RoadMappingProps {
   showPaths?: boolean;

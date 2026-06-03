@@ -33,6 +33,7 @@ import { createAvatar } from "@dicebear/core";
 import { InputGroup, InputGroupAddon, InputGroupInput } from "./ui/input-group";
 import HazardDrawer from "./DrawerContent/HazardDrawer";
 import EvacPinDrawer from "./DrawerContent/EvacPinDrawer";
+import SensorDrawer from "./DrawerContent/SensorDrawer";
 
 type FloodLevel = {
   id: number;
@@ -74,6 +75,12 @@ type postedBy = {
   posted_at: string;
 };
 
+type media = {
+  id: number;
+  type: string;
+  url: string | undefined;
+};
+
 type EvacPin = {
   id: number;
   name: string;
@@ -82,8 +89,10 @@ type EvacPin = {
   lat: number;
   lng: number;
   location_id: number;
-  area_type: number;
-  capacity_level: number;
+  area_type_id: number;
+  area_type: string;
+  capacity_level_id: number;
+  capacity_name: string;
   is_persistent: boolean;
   for_reg_flood: boolean;
   for_heavy_flood: boolean;
@@ -91,7 +100,7 @@ type EvacPin = {
   has_DRRMO: boolean;
   has_health: boolean;
   pwd_friendly: boolean;
-  has_hatchment: boolean;
+  has_catchment: boolean;
   toilet_count: number;
   kitchen_count: number;
   child_prayer_count: number;
@@ -101,12 +110,22 @@ type EvacPin = {
   contact_number: string;
   is_deactivated: boolean;
   is_expired: boolean;
-  expiry: string;
+  expiry: string | null | undefined;
   deactivated_at: string | null;
   last_updated: string | null;
   verified_by: verifiedBy;
   posted_by: postedBy;
   last_confirmed: string | null;
+  media: media[];
+};
+
+type Sensors = {
+  id: number;
+  name: string;
+  location: [number, number];
+  water_level: any | null;
+  last_only: any | null;
+  current_status: string;
 };
 
 interface DrawerProps {
@@ -114,6 +133,7 @@ interface DrawerProps {
   onOpenChange: (open: boolean) => void;
   selectedFloodPin: FloodPath | null;
   selectedEvacPin: EvacPin | null;
+  selectedSensorPin: Sensors | null;
   onFindRoute: (findRoute: boolean) => void;
   newPin: boolean;
   isSensor: boolean;
@@ -125,6 +145,7 @@ function DrawerComp({
   onOpenChange,
   selectedFloodPin,
   selectedEvacPin,
+  selectedSensorPin,
   onFindRoute,
   newPin,
   isSensor,
@@ -261,50 +282,11 @@ function DrawerComp({
       </>
     );
   } else if (isSensor) {
-    // content = (
-    //   <>
-    //     <div className="px-4">
-    //       <div className="w-full flex flex-row justify-between">
-    //         <div className="flex flex-row gap-2">
-    // <SensorIconDetailed width={50} height={50} color={riskInfo.color} />;
-    //           <div>
-    //             <div className="flex flex-row">
-    //               <p className="text-lg font-semibold">{selectedPin?.name}</p>
-    //               {verified ? (
-    //                 <ShieldCheck
-    //                   fill="#20BF55"
-    //                   strokeWidth={1}
-    //                   color="white"
-    //                   size={18}
-    //                 />
-    //               ) : null}
-    //             </div>
-    //             <p className="text-xs text-left font-semibold italic">
-    //               Timestamp: Mar 25, 2026 – 9:42 PM
-    //             </p>
-    //           </div>
-    //         </div>
-    //         <DrawerClose id="DrawerMark_CloseBtn" className="self-start">
-    //           <CircleX size={28} fill="#CECECE" strokeWidth={1} />
-    //         </DrawerClose>
-    //       </div>
-    //       <div className="mt-2">
-    //         <ul className="list-disc pl-8 text-left text-sm flex flex-col gap-1">
-    //           <li>
-    //             <b>Sensor ID</b>: SJ-RIVER-01
-    //           </li>
-    //           <li>
-    //             <b>Water Height in Meters</b>: {height}
-    //           </li>
-    //           <li>
-    //             <b>Risk Level</b>: {risk}
-    //           </li>
-    //           <p>{desc}</p>
-    //         </ul>
-    //       </div>
-    //     </div>
-    //   </>
-    // );
+    content = (
+      <>
+        <SensorDrawer selectedPin={selectedSensorPin} />
+      </>
+    );
   } else if (isHazard) {
     content = (
       <>
