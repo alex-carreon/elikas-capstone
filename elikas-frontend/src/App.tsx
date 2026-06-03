@@ -30,6 +30,7 @@ import UserDetails from "./pages/Admin/Forms/UserDetails";
 import BrgyUsers from "./pages/Admin/BrgyUsers";
 import GovopDetails from "./pages/Admin/Forms/GovOpDetails";
 import BrgyAdd from "./pages/Admin/Forms/GovopAdd";
+import SensorForm from "./pages/Forms/SensorForm";
 
 function App() {
   return (
@@ -50,23 +51,21 @@ function App() {
 
         <Route element={<ProtectedRoute userRole={"indiv"} />}>
           <Route element={<ConstNavbar />}>
-            <Route path="/History" element={<History />} />
+            {/* <Route path="/History" element={<History />} /> */}
             <Route path="/Feedback" element={<Feedback />} />{" "}
           </Route>
 
-          <Route element={<AuthNavbar />}>
+          {/* <Route element={<AuthNavbar />}>
             <Route path="/Map" element={<Map />} />
-          </Route>
+          </Route> */}
         </Route>
 
         <Route element={<ProtectedRoute userRole={"brgy_op"} />}>
-          <Route element={<AuthNavbar />}>
-            <Route path="/Map" element={<Map />} />
-          </Route>
-
           <Route element={<ConstNavbar />}>
             <Route path="/SMS" element={<SMS />} />
             <Route path="/HotlinesForm" element={<HotlinesForm />} />
+            <Route path="/SensorForm" element={<SensorForm />} />
+            <Route path="/SensorForm/:id" element={<SensorForm />} />
           </Route>
         </Route>
 
@@ -82,6 +81,10 @@ function App() {
           <Route path="/admin-brgyAdd" element={<BrgyAdd />} />
         </Route>
 
+        <Route element={<AuthNavbar />}>
+          <Route path="/Map" element={<Map />} />
+        </Route>
+
         <Route element={<ProtectedRoute />}>
           <Route element={<ConstNavbar />}>
             <Route path="/Settings" element={<Settings />} />
@@ -90,6 +93,7 @@ function App() {
             <Route path="/EvacForm/:id" element={<EvacForm />} />
             <Route path="/HazardForm" element={<HazardForm />} />
             <Route path="/HazardForm/:id" element={<HazardForm />} />
+            <Route path="/History" element={<History />} />
           </Route>
         </Route>
 

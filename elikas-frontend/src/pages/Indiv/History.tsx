@@ -11,6 +11,8 @@ import {
 import api from "@/api";
 import { useUserContext } from "@/context/AuthContext";
 import { Skeleton } from "@/components/ui/skeleton";
+import ButtonComp from "@/components/Button";
+import { Link } from "react-router";
 
 type FloodLevel = {
   id: number;
@@ -43,11 +45,30 @@ type myEvacPins = {
   last_confirmed: string | null;
 };
 
+type SensorsDetails = {
+  id: number;
+  sensorCode: string;
+  name: string;
+  waterLevel: any | null;
+  lastOnline: any | null;
+  mountHeight: number;
+  location: [number, number];
+  address: string;
+  yellowLevel: number;
+  redLevel: number;
+  currentStatus: string;
+  mountLocation: string;
+  deactivatedAt: any | null;
+  registeredBy: string;
+};
+
 function History() {
   // const location = useLocation();
-  const { token } = useUserContext();
+  const { role } = useUserContext();
 
   const [isEvac, setIsEvac] = useState(true);
+  const [isSensors, setIsSensors] = useState(false);
+  const [sensors, setSensors] = useState<SensorsDetails[]>([]);
   const [evacPins, setEvacPins] = useState<myEvacPins[]>([]);
   const [activeEvac, setActiveEvac] = useState(true);
   const [activeHaz, setActiveHaz] = useState(true);
@@ -58,10 +79,12 @@ function History() {
     const getMyPins = async () => {
       try {
         setLoading(true);
-        const [floodResponse, evacResponse] = await Promise.all([
-          api.get("/flood-paths/my"),
-          api.get("/evacpins/users?own_pins=true"),
-        ]);
+        const [floodResponse, evacResponse, sensorsResponse] =
+          await Promise.all([
+            api.get("/flood-paths/my"),
+            api.get("/evacpins/users?own_pins=true"),
+            api.get("/sensors?is_active=1"),
+          ]);
 
         console.log(floodResponse);
 
@@ -70,8 +93,10 @@ function History() {
         }
         const myHazards = await floodResponse.data.flood_paths;
         const myEvacs = await evacResponse.data.pins;
+        const mySensors = await sensorsResponse.data.data;
         setFloodPaths(myHazards);
         setEvacPins(myEvacs);
+        setSensors(mySensors);
       } catch (err: string | any) {
         Error(err.message || "An error occurred");
       } finally {
@@ -122,25 +147,43 @@ function History() {
                 <TabsList className="w-full flex justify-between">
                   <TabsTrigger
                     value="Evacuation"
-                    onClick={() => setIsEvac(true)}
+                    onClick={() => {
+                      setIsEvac(true);
+                      setIsSensors(false);
+                    }}
                     id="History_EvacTrigger"
                   >
                     Evacuation Pins
                   </TabsTrigger>
                   <TabsTrigger
                     value="Hazard"
-                    onClick={() => setIsEvac(false)}
+                    onClick={() => {
+                      setIsEvac(false);
+                      setIsSensors(false);
+                    }}
                     id="History_HazardTrigger"
                   >
                     Hazard Pins
                   </TabsTrigger>
+                  {role === "brgy_op" && (
+                    <TabsTrigger
+                      value="Sensors"
+                      onClick={() => {
+                        setIsEvac(false);
+                        setIsSensors(true);
+                      }}
+                      id="History_HazardTrigger"
+                    >
+                      Sensors
+                    </TabsTrigger>
+                  )}
                 </TabsList>
               </Tabs>
               <Tabs
                 defaultValue="overview"
                 className="w-full max-w-md flex items-center"
               >
-                {isEvac ? (
+                {isEvac && !isSensors ? (
                   <TabsList
                     variant="line"
                     className="w-full flex justify-between"
@@ -161,7 +204,7 @@ function History() {
                       Expired Pins
                     </TabsTrigger>
                   </TabsList>
-                ) : (
+                ) : !isEvac && !isSensors ? (
                   <TabsList
                     variant="line"
                     className="w-full flex justify-between"
@@ -182,20 +225,37 @@ function History() {
                       Expired Pins
                     </TabsTrigger>
                   </TabsList>
-                )}
+                ) : null}
               </Tabs>
             </div>
-            <div className="flex justify-end items-center gap-2">
-              <InputGroup className="w-2/3">
-                <InputGroupInput
-                  className="text-sm h-8"
-                  id="History_SearchField"
-                ></InputGroupInput>
-                <InputGroupAddon align="inline-end">
-                  <Search />
-                </InputGroupAddon>
-              </InputGroup>
-              <Filter size={18} id="History_FilterBtn" />
+            <div className="flex justify-between items-center">
+              {isSensors && (
+                <div>
+                  <Link to="/SensorForm">
+                    <ButtonComp
+                      text="Add Sensor"
+                      variant="primary"
+                      id="History_AddSensorBtn"
+                      type="button"
+                    />
+                  </Link>
+                </div>
+              )}
+
+              <div className="w-full flex justify-end items-center gap-2">
+                <InputGroup className="w-2/3">
+                  <InputGroupInput
+                    className="text-sm h-8"
+                    id="History_SearchField"
+                  ></InputGroupInput>
+                  <InputGroupAddon align="inline-end">
+                    <Search />
+                  </InputGroupAddon>
+                </InputGroup>
+                {role === "brgy_op" && (
+                  <Filter size={18} id="History_FilterBtn" />
+                )}
+              </div>
             </div>
             <div className="flex flex-col gap-2 overflow-y-auto max-h-screen">
               {isEvac
@@ -228,35 +288,49 @@ function History() {
                           />
                         );
                     })
-                : activeHaz
-                  ? floodPaths.map((path) => {
-                      if (!path.is_expired)
-                        return (
-                          <Row
-                            postId={String(path.id)}
-                            title="Flood"
-                            address={path.description}
-                            datePosted={path.last_confirmed}
-                            link={`/HazardForm/${path.id}`}
-                            isExpired={path.is_expired}
-                            buttonId="History_ActiveHazardDetailsBtn"
-                          />
-                        );
+                : isSensors
+                  ? sensors.map((pins) => {
+                      return (
+                        <Row
+                          postId={String(pins.id)}
+                          title={pins.name}
+                          address={pins.address}
+                          // datePosted={pins.posted_at}
+                          link={`/SensorForm/${pins.id}`}
+                          isExpired={pins.deactivatedAt}
+                          buttonId="History_ExpiredEvacDetailsBtn"
+                        />
+                      );
                     })
-                  : floodPaths.map((path) => {
-                      if (path.is_expired)
-                        return (
-                          <Row
-                            postId={String(path.id)}
-                            title="Flood"
-                            address={path.description}
-                            datePosted={path.last_confirmed}
-                            link="/HazardForm"
-                            isExpired={path.is_expired}
-                            buttonId="History_ExpHazardDetailsBtn"
-                          />
-                        );
-                    })}
+                  : activeHaz
+                    ? floodPaths.map((path) => {
+                        if (!path.is_expired)
+                          return (
+                            <Row
+                              postId={String(path.id)}
+                              title="Flood"
+                              address={path.description}
+                              datePosted={path.last_confirmed}
+                              link={`/HazardForm/${path.id}`}
+                              isExpired={path.is_expired}
+                              buttonId="History_ActiveHazardDetailsBtn"
+                            />
+                          );
+                      })
+                    : floodPaths.map((path) => {
+                        if (path.is_expired)
+                          return (
+                            <Row
+                              postId={String(path.id)}
+                              title="Flood"
+                              address={path.description}
+                              datePosted={path.last_confirmed}
+                              link="/HazardForm"
+                              isExpired={path.is_expired}
+                              buttonId="History_ExpHazardDetailsBtn"
+                            />
+                          );
+                      })}
             </div>
           </>
         )}
