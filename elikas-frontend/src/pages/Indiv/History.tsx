@@ -292,7 +292,7 @@ function History() {
                   ? sensors.map((pins) => {
                       return (
                         <Row
-                          postId={String(pins.id)}
+                          postId={String(pins.sensorCode)}
                           title={pins.name}
                           address={pins.address}
                           // datePosted={pins.posted_at}
