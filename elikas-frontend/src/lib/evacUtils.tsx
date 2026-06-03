@@ -46,7 +46,7 @@ export const handleSubmit = async ({
   try {
     const response = api.post("/pins", formData, {
       headers: {
-        "Content-Type": undefined, // lets browser set it with boundary
+        "Content-Type": undefined,
       },
     });
 

@@ -167,9 +167,9 @@ function EvacPinDrawer({
   setIsExpanded,
 }: {
   selectedPin: EvacPin;
-  onFindRoute: (findRoute: boolean) => void;
-  isExpanded: boolean;
-  setIsExpanded: (val: boolean) => void;
+  onFindRoute?: (findRoute: boolean) => void;
+  isExpanded?: boolean;
+  setIsExpanded?: (val: boolean) => void;
 }) {
   const [loading, setLoading] = useState(false);
   const [evacPinDetails, setEvacPinDetails] = useState<EvacPin | undefined>();
@@ -296,7 +296,7 @@ function EvacPinDrawer({
             text={isExpanded ? "Press to Collapse" : "Press to Expand"}
             id="DrawerInfo_ExpandCollapse"
             variant="outline"
-            onClick={() => setIsExpanded(!isExpanded)}
+            onClick={() => setIsExpanded?.(!isExpanded)}
             widthSize="40"
           ></ButtonComp>
         </div>
@@ -344,7 +344,7 @@ function EvacPinDrawer({
             className="w-30 h-8 bg-gradient-to-r bg-[#F3C962] rounded-2xl"
             id="Drawer_RouteBtn"
             onClick={() => {
-              (onFindRoute(true), setIsExpanded(false));
+              (onFindRoute?.(true), setIsExpanded?.(false));
             }}
           >
             Show Route

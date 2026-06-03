@@ -313,6 +313,7 @@ function Map({ onLocationFound, showLocation, nearestRouteTrigger }: MapProps) {
         onOpenChange={handleDrawerClose}
         selectedEvacPin={selectedPin}
         selectedFloodPin={selectedPin}
+        selectedSensorPin={selectedPin}
         onFindRoute={handlePressRoute}
         newPin={newPin}
         isSensor={isSensor}
