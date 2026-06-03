@@ -105,8 +105,7 @@ Route::middleware(['firebase.auth', 'role:1,2'])->group(function () {
     Route::patch('/admin/users/{id}', [UserController::class, 'updateUser']); //can update any user
 
     Route::get('/sensors', [SensorController::class, 'index']);
-    Route::get('/sensors/{sensor}', [SensorController::class, 'show']);
-
+    
     Route::apiResource('flood-levels', FloodLevelController::class)->except(['index']);
 
     Route::get('flood-paths/{id}', [FloodPathController::class, 'show']);
@@ -150,4 +149,7 @@ Route::middleware(['firebase.auth', 'role:1,2,3'])->group(function () {
     //COMMENTS
     Route::get('/evac-areas/{evacAreaId}/comments', [EvacComments::class, 'index']);
     Route::post('/evac-areas/{evacAreaId}/comments', [EvacComments::class, 'store']);
+
+    //SENSORS
+    Route::get('/sensors/{sensor}', [SensorController::class, 'show']);
 });
