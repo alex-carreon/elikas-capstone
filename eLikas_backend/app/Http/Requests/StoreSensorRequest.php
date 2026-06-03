@@ -21,6 +21,7 @@ class StoreSensorRequest extends FormRequest
             'location.0'   => ['required', 'numeric', 'between:-90,90'],
             'location.1'   => ['required', 'numeric', 'between:-180,180'],
             'address'      => ['nullable', 'string', 'max:255'],
+            'location_id'  => ['required', 'integer', 'exists:Locations,id'],
             'yellow_level' => ['required', 'numeric', 'min:0'],
             'red_level'    => ['required', 'numeric', 'min:0'],
         ];
@@ -32,6 +33,7 @@ class StoreSensorRequest extends FormRequest
             'mount_height' => $this->mountHeight,
             'yellow_level' => $this->yellowLevel,
             'red_level'    => $this->redLevel,
+            'location_id'  => $this->locationId,
         ]);
     }
 

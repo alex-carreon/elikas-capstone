@@ -26,14 +26,7 @@ class SensorQuery {
         // Exact match for location
         if ($request->filled('location_id')) {
             $locationIds = $this->resolveLocationIds((int) $request->input('location_id'));
-
-            $query->whereHas('social_element.user', function (Builder $userQuery) use ($locationIds) {
-                // 1. Ensure the user actually IS a GovOp first
-                $userQuery->has('govOp')->whereHas('govOp', function (Builder $govOpQuery) use ($locationIds) {
-                    // 2. Then constrain by the location IDs
-                    $govOpQuery->whereIn('location_id', $locationIds);
-                });
-            });
+            $query->whereIn('location_id', $locationIds);
         }
 
         // Search string for address
