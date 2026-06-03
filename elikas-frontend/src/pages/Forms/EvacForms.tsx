@@ -510,6 +510,7 @@ function EvacPin() {
                 label: type.evac_type,
                 value: type.id.toString(),
               }))}
+              isRequired={!id}
             />
           ) : (
             <TextField
@@ -528,6 +529,7 @@ function EvacPin() {
             id={!id || isEditable ? "EvacPin_PinNameField" : ""}
             placeholder={existingPin ? "Gamoras" : "Enter your last name"}
             onSubmit={(e) => setPinName(e.target.value)}
+            isRequired={!id}
             readonly={!id || isEditable ? false : true}
           />
           <Field>
@@ -543,6 +545,7 @@ function EvacPin() {
               value={desc || ""}
               onChange={(e) => setDesc(e.target.value)}
               readOnly={!id || isEditable ? false : true}
+              required={!id}
             />
           </Field>
           <Field>
@@ -622,7 +625,7 @@ function EvacPin() {
                 label: level.capacity_level,
                 value: String(level.id),
               }))}
-              isRequired={id ? false : true}
+              isRequired={!id}
             />
           ) : (
             <TextField
@@ -781,6 +784,7 @@ function EvacPin() {
             onSubmit={(e) => setContactPerson(e.target.value)}
             value={contactPerson}
             readonly={!id || isEditable ? false : true}
+            isRequired={!id}
           ></TextField>
           <TextField
             label="Contact Number*"
@@ -792,6 +796,7 @@ function EvacPin() {
             onSubmit={(e) => setContactNumber(e.target.value)}
             value={contactNumber}
             readonly={!id || isEditable ? false : true}
+            isRequired={!id}
           ></TextField>
           <DatePickerInput
             label="Expiry Date"
