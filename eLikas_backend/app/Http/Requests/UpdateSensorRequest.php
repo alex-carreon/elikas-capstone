@@ -19,8 +19,8 @@ class UpdateSensorRequest extends FormRequest
         return [
             'name'         => ['sometimes', 'string', 'max:255'],
             'mount_height' => ['sometimes', 'numeric', 'min:0'],
-            'location.0'   => ['sometimes', 'numeric', 'between:-90,90'],
-            'location.1'   => ['sometimes', 'numeric', 'between:-180,180'],
+            'location.0'   => ['sometimes', 'numeric', 'between:-90,90', 'required_with:location.1'],
+            'location.1'   => ['sometimes', 'numeric', 'between:-180,180', 'required_with:location.0'],
             'address'      => ['sometimes', 'nullable', 'string', 'max:255'],
             'yellow_level' => ['sometimes', 'numeric', 'min:0'],
             'red_level'    => ['sometimes', 'numeric', 'min:0', 'gt:yellow_level'],
@@ -44,16 +44,6 @@ class UpdateSensorRequest extends FormRequest
         if (!empty($merge)) {
             $this->merge($merge);
         }
-    }
-
-    protected function passedValidation()
-    {
-        $this->merge([
-            'location' => new Point(
-                latitude: $this->input('location.0'),
-                longitude: $this->input('location.1')
-            ),
-        ]);
     }
 
     // Override validated() to inject the Point
