@@ -18,7 +18,7 @@ class SensorController extends Controller
         try {
             $filter = new SensorQuery();
             $sensors = $filter->transform(Sensor::query(), $request)->paginate();
-            $sensors->loadMissing('social_element');
+            $sensors->loadMissing('social_element', 'mountLocation');
             return SensorResource::collection($sensors);
         } catch (\Exception $e) {
             return response()->json([
@@ -32,7 +32,7 @@ class SensorController extends Controller
     public function show(Sensor $sensor)
     {
         try {
-            $sensor->loadMissing('social_element');
+            $sensor->loadMissing('social_element', 'mountLocation');
             return new SensorResource($sensor);
         } catch (\Exception $e) {
             return response()->json([

@@ -61,6 +61,11 @@ class Location extends Model
 		return $this->hasMany(Location::class, 'parent_id');
 	}
 
+    public function sensor()
+    {
+        return $this->hasMany(Sensor::class, 'location_id');
+    }
+
 	// public function fullLocation()
 	// {
 	// 	$parts = [];
