@@ -16,14 +16,14 @@ class StoreSensorRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'name'         => ['required', 'string', 'max:255'],
+            'name'         => ['required', 'string', 'max:50'],
             'mount_height' => ['required', 'numeric', 'min:0'],
             'location.0'   => ['required', 'numeric', 'between:-90,90'],
             'location.1'   => ['required', 'numeric', 'between:-180,180'],
-            'address'      => ['nullable', 'string', 'max:255'],
+            'address'      => ['required', 'string', 'max:255'],
             'location_id'  => ['required', 'integer', 'exists:Locations,id'],
             'yellow_level' => ['required', 'numeric', 'min:0'],
-            'red_level'    => ['required', 'numeric', 'min:0'],
+            'red_level'    => ['sometimes', 'numeric', 'min:0', 'gt:yellow_level']
         ];
     }
 
@@ -37,21 +37,17 @@ class StoreSensorRequest extends FormRequest
         ]);
     }
 
-    protected function passedValidation()
-    {
-        $this->merge([
-            'location' => new Point(
-                latitude: $this->input('location.0'),
-                longitude: $this->input('location.1')
-            ),
-        ]);
-    }
-
-    // Override validated() to inject the Point
     public function validated($key = null, $default = null): array
     {
-        return array_merge(parent::validated($key, $default), [
-            'location' => $this->input('location'),
-        ]);
+        $data = parent::validated($key, $default);
+
+        if (isset($data['location'])) {
+            $data['location'] = new Point(
+                latitude: $data['location'][0],
+                longitude: $data['location'][1]
+            );
+        }
+
+        return $data;
     }
 }
