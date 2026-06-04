@@ -17,11 +17,11 @@ class UpdateSensorRequest extends FormRequest
     {
         return [
             'name'         => ['sometimes', 'string', 'max:50'],
-            'mount_height' => ['sometimes', 'numeric', 'min:0'],
+            'mount_height' => ['sometimes', 'numeric', 'gt:0'],
             'address'      => ['sometimes', 'string', 'max:255'],
-            'yellow_level' => ['sometimes', 'numeric', 'min:0'],
-            'orange_level' => ['sometimes', 'numeric', 'min:0'],
-            'red_level'    => ['sometimes', 'numeric', 'min:0'],
+            'yellow_level' => ['sometimes', 'numeric', 'gt:0'],
+            'orange_level' => ['sometimes', 'numeric', 'gt:0'],
+            'red_level'    => ['sometimes', 'numeric', 'gt:0'],
         ];
     }
 
