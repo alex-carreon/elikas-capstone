@@ -41,7 +41,7 @@ Route::get('/test', function () {
 Route::post('/auth/register', [AuthController::class, 'register']);
 Route::post('/auth/login',    [AuthController::class, 'login']);
 Route::get('/public/sensors', [PublicSensorController::class, 'index']);
-
+Route::get('/public/sensors/{sensor}', [PublicSensorController::class, 'show']);
 Route::get('flood-paths', [FloodPathController::class, 'index']);
 
 Route::get('/locations/cities', [LocationsController::class, 'cities']);
@@ -75,7 +75,7 @@ Route::prefix('admin')->middleware(['firebase.auth', 'role:1'])->group(function 
     Route::get('/pins', [GetEvacAreasController::class, 'getAdminEvacAreas']);
 
     Route::get('flood-paths', [FloodPathAdminController::class, 'index']);
-    
+
     //Comments
     Route::patch('/comments/{id}', [CommentsAdminController::class, 'update']);
     Route::patch('/comments/{id}/deactivate',[CommentsAdminController::class, 'deactivate']);
@@ -106,7 +106,8 @@ Route::middleware(['firebase.auth', 'role:1,2'])->group(function () {
     Route::patch('/admin/users/{id}', [UserController::class, 'updateUser']); //can update any user
 
     Route::get('/sensors', [SensorController::class, 'index']);
-    
+    Route::get('/sensors/{sensor}', [SensorController::class, 'show']);
+
     Route::apiResource('flood-levels', FloodLevelController::class)->except(['index']);
 
     Route::get('flood-paths/{id}', [FloodPathController::class, 'show']);
@@ -153,7 +154,4 @@ Route::middleware(['firebase.auth', 'role:1,2,3'])->group(function () {
     //COMMENTS
     Route::get('/evac-areas/{evacAreaId}/comments', [EvacComments::class, 'index']);
     Route::post('/evac-areas/{evacAreaId}/comments', [EvacComments::class, 'store']);
-
-    //SENSORS
-    Route::get('/sensors/{sensor}', [SensorController::class, 'show']);
 });
