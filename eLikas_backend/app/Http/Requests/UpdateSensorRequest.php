@@ -4,7 +4,6 @@ namespace App\Http\Requests;
 
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
-use MatanYadaev\EloquentSpatial\Objects\Point;
 
 class UpdateSensorRequest extends FormRequest
 {
@@ -55,42 +54,27 @@ class UpdateSensorRequest extends FormRequest
             function ($validator) {
                 $sensor = $this->route('sensor'); // Get the current sensor being updated
 
+                if (!$sensor) {
+                    return; // If no sensor is found, skip this validation
+                }
+
                 // Use the input values if provided, otherwise fall back to the existing sensor values
                 $yellow = $this->input('yellow_level') ?? $sensor->yellow_level;
                 $orange = $this->input('orange_level') ?? $sensor->orange_level;
-                $red    = $this->input('red_level') ?? $sensor->red_level;
+                $red = $this->input('red_level') ?? $sensor->red_level;
                 $mount = $this->input('mount_height') ?? $sensor->mount_height;
-                $data = $this->validated();
 
                 // Validate the logical order of the levels
-                if (isset($data['yellow_level'])) {
-                    if ($data['yellow_level'] >= ($orange)) {
-                        $validator->errors()->add('yellow_level', 'The yellow level must be less than the orange level.');
-                    }
+                if ($yellow >= $orange) {
+                    $validator->errors()->add('yellow_level', 'The yellow level must be less than the orange level.');
                 }
 
-                if (isset($data['orange_level'])) {
-                    if ($data['orange_level'] <= ($yellow)) {
-                        $validator->errors()->add('orange_level', 'The orange level must be greater than the yellow level.');
-                    }
-                    if ($data['orange_level'] >= ($red)) {
-                        $validator->errors()->add('orange_level', 'The orange level must be less than the red level.');
-                    }
+                if ($orange >= $red) {
+                    $validator->errors()->add('orange_level', 'The orange level must be less than the red level.');
                 }
 
-                if (isset($data['red_level'])) {
-                    if ($data['red_level'] <= ($orange)) {
-                        $validator->errors()->add('red_level', 'The red level must be greater than the orange level.');
-                    }
-                    if ($data['red_level'] >= ($mount)) {
-                        $validator->errors()->add('red_level', 'The red level must be less than the mount height.');
-                    }
-                }
-
-                if (isset($data['mount_height'])) {
-                    if ($data['mount_height'] <= ($red)) {
-                        $validator->errors()->add('mount_height', 'The mount height must be greater than the red level.');
-                    }
+                if ($red >= $mount) {
+                    $validator->errors()->add('red_level', 'The red level must be less than the mount height.');
                 }
             }
         ];
