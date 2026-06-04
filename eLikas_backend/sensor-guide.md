@@ -225,26 +225,39 @@ Creates a new sensor. The `sensor_code` and `element_id` are set automatically �
 
 ```json
 {
-    "name": "Ibanez Street Sensor",
-    "mountHeight": 3.5,
-    "location": [14.600140911054979, 121.04148573512468],
-    "address": "V. Ibanez Street",
-    "yellowLevel": 1.5,
-    "redLevel": 2.5,
-    "locationId":11
+    "data": {
+        "id": 19,
+        "sensorCode": "SR-120910",
+        "name": "Ibanez Street Sensor",
+        "waterLevel": null,
+        "lastOnline": null,
+        "mountHeight": 3.5,
+        "location": [
+            14.600140911055,
+            121.04148573512
+        ],
+        "address": "V. Ibanez Street",
+        "yellowLevel": 1.5,
+        "orangeLevel": 2,
+        "redLevel": 2.5,
+        "currentStatus": null,
+        "mountLocation": "Barangay Salapan",
+        "deactivatedAt": null
+    }
 }
 ```
 
 | Field | Type | Required | Notes |
 |---|---|---|---|
 | `name` | string | Yes | Max 50 characters |
-| `mountHeight` | number | Yes | Must be ≥ 0 |
+| `mountHeight` | number | Yes | Must be > 0 |
 | `location` | array | Yes | `[latitude, longitude]` |
-| `location[0]` | number | Yes | Latitude, between -90 and 90, required with location[1]|
-| `location[1]` | number | Yes | Longitude, between -180 and 180, required with location[0]|
+| `location[0]` | number | Yes | Latitude, between -90 and 90|
+| `location[1]` | number | Yes | Longitude, between -180 and 180|
 | `address` | string | Yes | Max 255 characters |
-| `yellowLevel` | number | Yes | Must be ≥ 0 |
-| `redLevel` | number | Yes | Must be ≥ 0; must be > `yellowLevel` |
+| `yellowLevel` | number | Yes | Must be > 0 |
+| `orangeLevel` | number | Yes | Must be > 0; must be > `yellowLevel` & < `redLevel` |
+| `redLevel` | number | Yes | Must be > 0; must be > `orangeLevel` & < `mountHeight` |
 | `locationId` | number | Yes | ID be in `locations` table |
 
 **camelCase input is accepted** in accordance with json convention — `mountHeight`, `yellowLevel`, `redLevel` are automatically mapped to their snake_case DB equivalents before validation.
@@ -284,10 +297,11 @@ Updates an existing sensor. All fields are optional — only include what needs 
 | Field | Type | Required | Notes |
 |---|---|---|---|
 | `name` | string | No | Max 50 characters |
-| `mountHeight` | number | No | Must be ≥ 0 |
+| `mountHeight` | number | No | Must be > 0 |
 | `address` | string | No | Max 255 characters |
-| `yellowLevel` | number | No | Must be ≥ 0 |
-| `redLevel` | number | No | Must be ≥ 0; must be > `yellowLevel` |
+| `yellowLevel` | number | No | Must be > 0 |
+| `orangeLevel` | number | No | Must be > 0; must be > `yellowLevel` & < `redLevel` | 
+| `redLevel` | number | No | Must be > 0; must be > `orangeLevel` & < `mountHeight` |
 
 **camelCase input is accepted** — same mapping as `POST`. Only fields that are actually present in the request body are validated and updated. Omitted fields are left unchanged.
 
