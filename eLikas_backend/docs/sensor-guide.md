@@ -72,7 +72,7 @@ Returns a paginated list of sensors. All query parameters are optional — omitt
 | Parameter | Type | Behavior | Example |
 |---|---|---|---|
 | `name` | string | Partial match anywhere in field | `?name=bridge` |
-| `sensor_code` | string | Partial match anywhere in field | `?sensor_code=SN-01` |
+| `sensor_code` | string | Partial match anywhere in field | `?sensor_code=SR-ABC` |
 | `address` | string | Partial match anywhere in field | `?address=Wilson` |
 
 Special characters `%` and `_` are escaped — they will be treated as literals, not SQL wildcards.
@@ -83,7 +83,7 @@ Special characters `%` and `_` are escaped — they will be treated as literals,
 |---|---|---|---|
 | `current_status[]` | string (multi) | Matches any of the provided values | `?current_status[]=yellow&current_status[]=red` |
 
-Valid values: `normal`, `yellow`, `red`
+Valid values: `normal`, `yellow`, `orange`, `red`
 
 Supports multiple values as an array — useful for checkbox UI where multiple statuses can be selected at once.
 
