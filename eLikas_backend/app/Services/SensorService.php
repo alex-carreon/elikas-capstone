@@ -34,6 +34,7 @@ class SensorService
                 'location' => $validated['location'],
                 'address' => $validated['address'],
                 'yellow_level' => $validated['yellow_level'],
+                'orange_level' => $validated['orange_level'],
                 'red_level' => $validated['red_level'],
                 'location_id' => $validated['location_id'],
             ]);
