@@ -145,24 +145,26 @@ Only parameters in the explicit allowlist are processed. Any unknown query param
 ```json
 {
     "data": [
-        "id": 8,
-            "sensorCode": "SR-159745",
-            "name": "De Jesus Bridge Sensor",
+        {
+            "id": 8,
+            "sensorCode": "SN-12-007",
+            "name": "De Jesus Bridge Sensor - Test Upd",
             "waterLevel": null,
             "lastOnline": null,
-            "mountHeight": 3,
+            "mountHeight": 1,
             "location": [
                 14.603730122015,
                 121.03860592147
             ],
             "address": "General S. De Jesus (Bridge)",
-            "yellowLevel": 1.5,
+            "yellowLevel": 2,
+            "orangeLevel": 0,
             "redLevel": 2.5,
-            "currentStatus": null,
+            "currentStatus": "normal",
             "mountLocation": "Barangay Batis",
-            "deactivatedAt": null,
-            "registeredBy": "Barangay Batis"
-        }
+            "deactivatedAt": "2026-06-03T17:37:12+00:00",
+            "registeredBy": "Barangay Onse"
+        }, ...
   ],
   "links": { "...": "..." },
   "meta": {
