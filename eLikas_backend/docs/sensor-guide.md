@@ -2,9 +2,9 @@
 
 ## Authentication
 
-All endpoints require a valid Firebase ID token passed as a Bearer token.
+Most endpoints require a valid Firebase ID token passed as a Bearer token.
 
-A single get all route with minimal sensor data is available for map view functions to the public.
+A get all and show single resource route with minimal sensor data is available for map view functions to the public.
 
 Routes are protected by `firebase.auth` and `role` middleware — only admins (role 1) and GovOp accounts (role 2) can access these endpoints.
 
@@ -16,36 +16,46 @@ Only `govOp` is capable of creating and editing sensor records, and all other se
 
 ### `GET /api/public/sensors`
 
-Returns a complete list of sensors with minimal data. Currently no available queries.
+Returns a complete list of active sensors with minimal data. Currently no available queries.
+
+#### Response Format
+
+```json
+[
+    {
+        "id": 9,
+        "name": "Ibanez Street Sensor",
+        "location": [
+            14.600140911055,
+            121.04148573512
+        ],
+        "barangay": "Barangay Batis",
+        "lastOnline": null,
+        "currentStatus": null
+    }, ...
+```
+
+---
+
+### `GET /api/public/sensors/{sensor}`
+
+Returns a single sensor (must be active) with basic data and current water level.
 
 #### Response Format
 
 ```json
 {
-    [
-        {
-            "id": 8,
-            "name": "De Jesus Bridge Sensor",
-            "location": [
-                14.603730122015,
-                121.03860592147
-            ],
-            "water_level": null,
-            "last_online": null,
-            "current_status": "normal"
-        },
-        {
-            "id": 9,
-            "name": "Ibanez Street Sensor",
-            "location": [
-                14.600140911055,
-                121.04148573512
-            ],
-            "water_level": null,
-            "last_online": null,
-            "current_status": "normal"
-        }
-    ]
+    "id": 20,
+    "name": "Ibanez Street Sensor",
+    "location": [
+        14.600140911055,
+        121.04148573512
+    ],
+    "address": "V. Ibanez Street",
+    "barangay": "Barangay Salapan",
+    "waterLevel": null,
+    "lastOnline": null,
+    "currentStatus": null
 }
 ```
 
