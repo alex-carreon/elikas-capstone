@@ -40,6 +40,7 @@ type SensorsDetails = {
   location: [number, number];
   address: string;
   yellowLevel: number;
+  orangeLevel: number;
   redLevel: number;
   currentStatus: string;
   mountLocation: string;
@@ -68,6 +69,11 @@ function SensorForm() {
   const [loading, setLoading] = useState(false);
   const [brgyLoad, setBrgyLoad] = useState(false);
   const [willDeac, setWillDeac] = useState(false);
+  const [error, setError] = useState({
+    yellowLevel: "",
+    orangeLevel: "",
+    redLevel: "",
+  });
 
   const { id } = useParams();
   const navigate = useNavigate();
@@ -95,7 +101,7 @@ function SensorForm() {
           setLongitude(details.location[1]);
           setAddress(details.address);
           setYellowLevel(details.yellowLevel);
-          //   setOrangeLevel(details.orangeLevel);
+          setOrangeLevel(details.orangeLevel);
           setRedLevel(details.redLevel);
           setMountLocation(details.mountLocation);
           setRegisteredBy(details.registeredBy);
@@ -108,7 +114,7 @@ function SensorForm() {
 
       getSensorDetails();
     }
-  }, []);
+  }, [isEditable]);
 
   useEffect(() => {
     if (isEditable || !id) {
@@ -163,10 +169,12 @@ function SensorForm() {
       location: [latitude, longitude],
       address: address,
       yellowLevel: yellowLevel,
-      //   orangeLevel: orangeLevel,
+      orangeLevel: orangeLevel,
       redLevel: redLevel,
       brgy: brgy,
       navigate: navigate,
+      setError: setError,
+      error: error,
     });
   };
 
@@ -183,6 +191,7 @@ function SensorForm() {
       orangeLevel: orangeLevel,
       redLevel: redLevel,
       setIsEditable: setIsEditable,
+      setError: setError,
     });
   };
 
@@ -337,33 +346,36 @@ function SensorForm() {
           />
           <TextField
             label="Yellow Level in Meters"
-            description="Set the yellow level of the sensor. This will be the basis of how high the river should be to have a yellow alert"
+            description="Set the yellow level of the sensor. This will be the basis of how high the river should be to have a yellow alert. This must be greater than 0"
             value={String(yellowLevel)}
             inputType="number"
             id="Sensor_YellowField"
             onSubmit={(e) => setYellowLevel(Number(e.target.value))}
             isRequired={!id}
             readonly={!id || isEditable ? false : true}
+            error={error.yellowLevel}
           />
           <TextField
             label="Orange Level in Meters"
-            description="Set the orange level of the sensor. This will be the basis of how high the river should be to have an orange alert"
+            description="Set the orange level of the sensor. This will be the basis of how high the river should be to have an orange alert. This must be greater than yellow level and less than red level"
             value={String(orangeLevel)}
             inputType="number"
             id="Sensor_OrangeField"
             onSubmit={(e) => setOrangeLevel(Number(e.target.value))}
             isRequired={!id}
             readonly={!id || isEditable ? false : true}
+            error={error.orangeLevel}
           />
           <TextField
             label="Red Level in Meters"
-            description="Set the red level of the sensor. This will be the basis of how high the river should be to have a red alert. It must be greater than 2."
+            description="Set the red level of the sensor. This will be the basis of how high the river should be to have a red alert. It must be greater than orange level and less than the mount height."
             value={String(redLevel)}
             inputType="number"
             id="Sensor_RedField"
             onSubmit={(e) => setRedLevel(Number(e.target.value))}
             isRequired={!id}
             readonly={!id || isEditable ? false : true}
+            error={error.redLevel}
           />
           {id && (
             <TextField
