@@ -23,8 +23,8 @@ class StoreSensorRequest extends FormRequest
             'address'      => ['required', 'string', 'max:255'],
             'location_id'  => ['required', 'integer', 'exists:Locations,id'],
             'yellow_level' => ['required', 'numeric', 'min:0'],
-            'orange_level' => ['sometimes', 'numeric', 'min:0', 'gt:yellow_level', 'lt:red_level'],
-            'red_level'    => ['sometimes', 'numeric', 'min:0', 'gt:orange_level']
+            'orange_level' => ['required', 'numeric', 'min:0', 'gt:yellow_level', 'lt:red_level'],
+            'red_level'    => ['required', 'numeric', 'min:0', 'gt:orange_level', 'lt:mount_height']
         ];
     }
 
