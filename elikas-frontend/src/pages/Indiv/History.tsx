@@ -252,8 +252,10 @@ function History() {
                     <Search />
                   </InputGroupAddon>
                 </InputGroup>
-                {role === "brgy_op" && (
-                  <Filter size={18} id="History_FilterBtn" />
+                {isSensors && (
+                  <>
+                    <Filter size={18} id="History_FilterBtn" />
+                  </>
                 )}
               </div>
             </div>

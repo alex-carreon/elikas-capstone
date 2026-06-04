@@ -40,9 +40,9 @@ type Sensors = {
   id: number;
   name: string;
   location: [number, number];
-  water_level: any | null;
-  last_only: any | null;
-  current_status: string;
+  waterLevel: any | null;
+  lastOnline: any | null;
+  currentStatus: string;
 };
 
 export const sensorPins = [
@@ -334,22 +334,19 @@ export function SensorMarking({
     red: "#B22B42",
     purple: "#6E4998",
     green: "#318631",
-    null: "#00000080",
+    inactive: "#C7C7C7",
   };
 
-  const getColor = (height: number | null): string => {
-    if (height === null) return colorSensor.green;
+  const getColor = (status: string | null | undefined): string => {
+    if (status === null) return colorSensor.inactive;
 
-    if (height >= 40) {
-      return colorSensor.purple;
-    } else if (height >= 30) {
+    if (status == "red") {
       return colorSensor.red;
-    } else if (height >= 20) {
+    } else if (status == "orange") {
       return colorSensor.orange;
-    } else if (height >= 10) {
+    } else if (status == "yellow") {
       return colorSensor.yellow;
-    }
-    return colorSensor.green;
+    } else return colorSensor.green;
   };
 
   const sensorIcon = (color: string) =>
@@ -377,7 +374,7 @@ export function SensorMarking({
     <Marker
       key={pin.id}
       position={[pin.location[0], pin.location[1]]}
-      icon={sensorIcon(getColor(pin.water_level))}
+      icon={sensorIcon(getColor(pin.currentStatus))}
       eventHandlers={{ click: () => onPinClick(pin) }}
     />
   ));
