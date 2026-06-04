@@ -15,6 +15,18 @@ interface handleActionProps {
   brgy?: number;
   id?: number;
   setIsEditable?: React.Dispatch<React.SetStateAction<boolean>>;
+  setError?: React.Dispatch<
+    React.SetStateAction<{
+      yellowLevel: string;
+      orangeLevel: string;
+      redLevel: string;
+    }>
+  >;
+  error?: {
+    yellowLevel: string;
+    orangeLevel: string;
+    redLevel: string;
+  };
 }
 
 export const handleCreate = async ({
@@ -28,10 +40,51 @@ export const handleCreate = async ({
   orangeLevel,
   redLevel,
   brgy,
+  setError,
 }: handleActionProps) => {
   e?.preventDefault();
 
   try {
+    if (mountHeight) {
+      if (!yellowLevel || yellowLevel == 0) {
+        setError?.({
+          yellowLevel: "Yellow level must be greater than 0",
+          orangeLevel: "",
+          redLevel: "",
+        });
+        return;
+      }
+      if (
+        !orangeLevel ||
+        !redLevel ||
+        !(yellowLevel < orangeLevel) ||
+        !(orangeLevel < redLevel)
+      ) {
+        setError?.({
+          yellowLevel: "",
+          orangeLevel:
+            "Orange level must be greater than yellow level and less than red level",
+          redLevel: "",
+        });
+        return;
+      }
+      if (!redLevel || !(redLevel > orangeLevel) || !(redLevel < mountHeight)) {
+        setError?.({
+          yellowLevel: "",
+          orangeLevel: "",
+          redLevel:
+            "Red level must be greater than orange level and less than the mount height",
+        });
+        return;
+      } else {
+        setError?.({
+          yellowLevel: "",
+          orangeLevel: "",
+          redLevel: "",
+        });
+      }
+    }
+
     const response = api.post("/sensors", {
       name: name,
       mountHeight: mountHeight,
@@ -51,7 +104,7 @@ export const handleCreate = async ({
     toast.promise(response, {
       loading: "Adding your sensor to the map...",
       success: "Sensor added successfully!",
-      error: (err) => err?.message || "Please try again",
+      error: (err) => err?.response?.data?.message || "Please try again",
       position: "top-center",
     });
 
@@ -59,7 +112,16 @@ export const handleCreate = async ({
       navigate?.("/History");
     });
   } catch (error: any) {
-    console.error(error.response.data);
+    console.error(error?.response?.data);
+    if (error instanceof Error) {
+      setError?.({
+        yellowLevel: "Yellow level must be greater than 0",
+        orangeLevel:
+          "Orange level must be greater than yellow level and less than red level",
+        redLevel:
+          "Red level must be greater than orange level and less than the mount height",
+      });
+    }
   }
 
   return;
@@ -75,16 +137,57 @@ export const handleUpdate = async ({
   orangeLevel,
   redLevel,
   setIsEditable,
+  setError,
 }: handleActionProps) => {
   e?.preventDefault();
 
   try {
+    if (mountHeight) {
+      if (!yellowLevel || yellowLevel == 0) {
+        setError?.({
+          yellowLevel: "Yellow level must be greater than 0",
+          orangeLevel: "",
+          redLevel: "",
+        });
+        return;
+      }
+      if (
+        !orangeLevel ||
+        !redLevel ||
+        !(yellowLevel < orangeLevel) ||
+        !(orangeLevel < redLevel)
+      ) {
+        setError?.({
+          yellowLevel: "",
+          orangeLevel:
+            "Orange level must be greater than yellow level and less than red level",
+          redLevel: "",
+        });
+        return;
+      }
+      if (!redLevel || !(redLevel > orangeLevel) || !(redLevel < mountHeight)) {
+        setError?.({
+          yellowLevel: "",
+          orangeLevel: "",
+          redLevel:
+            "Red level must be greater than orange level and less than the mount height",
+        });
+        return;
+      } else {
+        setError?.({
+          yellowLevel: "",
+          orangeLevel: "",
+          redLevel: "",
+        });
+      }
+    }
+
     const response = api.patch(`/sensors/${id}`, {
       name: name,
       mountHeight: mountHeight,
       address: address,
       yellowLevel: yellowLevel,
-      //   orangeLevel: orangeLevel,
+      orangeLevel: orangeLevel,
       redLevel: redLevel,
     });
 
@@ -101,6 +204,15 @@ export const handleUpdate = async ({
     });
   } catch (err: any) {
     console.log(err.response.data);
+    if (err instanceof Error) {
+      setError?.({
+        yellowLevel: "Yellow level must be greater than 0",
+        orangeLevel:
+          "Orange level must be greater than yellow level and less than red level",
+        redLevel:
+          "Red level must be greater than orange level and less than the mount height",
+      });
+    }
   }
 };
 
