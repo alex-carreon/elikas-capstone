@@ -474,6 +474,7 @@ function History() {
                   <Collapsible className="w-full flex flex-col justify-end rounded-md mt-2">
                     <CollapsibleTrigger
                       onClick={() => setOpenCollapse(!openCollapse)}
+                      id="History_FiltersTrigger"
                     >
                       <div className="w-full flex flex-row justify-end mb-2">
                         Filters
@@ -485,7 +486,7 @@ function History() {
                       </div>{" "}
                     </CollapsibleTrigger>
                     <CollapsibleContent
-                      id="Drawer_FacilitiesContent"
+                      id="History_FiltersContent"
                       className="flex flex-col items-center  px-2.5 pt-0 text-sm"
                     >
                       <div className="w-full gap-2 bg-gray-300/50 p-4 rounded-lg">
@@ -496,7 +497,7 @@ function History() {
                             className="aria-pressed:bg-yellow-500/50 aria-pressed:text-white border-gray-400"
                             onPressedChange={setYellow}
                             pressed={yellow}
-                            id="History_YellowField"
+                            id="History_YellowFilter"
                           >
                             <p className="m-2 group-aria-pressed/toggle:text-black">
                               Yellow
@@ -508,7 +509,7 @@ function History() {
                             className="aria-pressed:bg-orange-500/50 aria-pressed:text-white border-gray-400"
                             onPressedChange={setOrange}
                             pressed={orange}
-                            id="History_OrangeField"
+                            id="History_OrangeFilter"
                           >
                             <p className="m-2 group-aria-pressed/toggle:text-black">
                               Orange
@@ -520,7 +521,7 @@ function History() {
                             className="aria-pressed:bg-red-500/50 aria-pressed:text-white border-gray-400"
                             onPressedChange={setRed}
                             pressed={red}
-                            id="History_RedField"
+                            id="History_RedFilter"
                           >
                             Red
                           </Toggle>
@@ -530,7 +531,7 @@ function History() {
                             className="aria-pressed:bg-gray-500/50 aria-pressed:text-white border-gray-400"
                             onPressedChange={setInactive}
                             pressed={inactive}
-                            id="History_InactiveField"
+                            id="History_InactiveFilter"
                           >
                             <GlobeOff className="group-aria-pressed/toggle:stroke-white" />
                           </Toggle>
@@ -551,7 +552,10 @@ function History() {
                             ]}
                           />
                           {brgyFilter ? (
-                            <button onClick={() => setBrgyFilter(0)}>
+                            <button
+                              onClick={() => setBrgyFilter(0)}
+                              id="History_ClearBrgyFilter"
+                            >
                               <X size={14} />
                             </button>
                           ) : null}
