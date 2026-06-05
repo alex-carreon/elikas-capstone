@@ -55,15 +55,18 @@ export const sensorPins = [
 ];
 
 let evacPinData: EvacPin[] = [];
+let brgyPins: EvacPin[] = [];
 const getEvacPins = async ({
   setEvacPins,
+  setBrgyPins,
 }: {
-  setEvacPins: Dispatch<SetStateAction<EvacPin[]>>;
+  setEvacPins?: Dispatch<SetStateAction<EvacPin[]>>;
+  setBrgyPins?: Dispatch<SetStateAction<EvacPin[]>>;
 }) => {
   try {
-    const response = await api.get("/pins");
-    evacPinData = await response.data.pins;
-    setEvacPins(evacPinData);
+    const BrgyResponse = await api.get("/pins?role=govop");
+    brgyPins = await BrgyResponse.data.pins;
+    setBrgyPins?.(brgyPins);
   } catch (err: string | any) {
     Error(err.message || "An error occurred");
   }
@@ -105,106 +108,6 @@ function getNearestWaypoint(
   console.log("nearest", nearest);
   return nearest;
 }
-
-// Add properties based on the pin info from db
-// export function NearestRouting({
-//   onPinSelected,
-//   userPosition,
-// }: {
-//   onPinSelected: any;
-//   userPosition: LatLng | null; // add this
-// }) {
-//   // const [position, setPosition] = useState<LatLng | null>(null);
-//   const map = useMap();
-//   const routeControlRef = useRef<any>(null);
-
-//   useEffect(() => {
-//     if (!userPosition) return;
-//     console.log("NearestRouting mounted");
-
-//     const nearest = getNearestWaypoint(userPosition, evacPinData);
-//     if (!nearest) return;
-
-//     onPinSelected?.(nearest);
-
-//     let cancelled = false;
-
-//     if (routeControlRef.current) {
-//       try {
-//         if (routeControlRef.current._map) {
-//           console.log("removed successfully");
-//           routeControlRef.current.remove();
-//           console.log("removed successfully");
-//         }
-//       } catch (e) {
-//         console.log("Previous routing cleanup:", e);
-//       }
-//       routeControlRef.current = null;
-//     }
-
-//     const control = leaflet.Routing.control({
-//       waypoints: [
-//         leaflet.latLng(userPosition.lat, userPosition.lng),
-//         leaflet.latLng(nearest.lat, nearest.lng),
-//       ],
-//       router: new leaflet.Routing.OSRMv1({
-//         serviceUrl: "https://router.project-osrm.org/route/v1",
-//       }),
-//       collapsible: true,
-//       addWaypoints: false,
-//       draggableWaypoints: false,
-//       fitSelectedRoutes: true,
-//       lineOptions: {
-//         styles: [
-//           {
-//             color: colors.heading,
-//             weight: 4,
-//           },
-//         ],
-//       },
-//       createMarker: function (i: number, waypoint: any) {
-//         if (i === 0) {
-//           return leaflet.marker(waypoint.latLng);
-//         }
-//         return null;
-//       },
-//     } as any).addTo(map);
-//     // Kulit ni typescript - as any meaning thats my styles dont bother them
-
-//     routeControlRef.current = control;
-
-//     control.on("routesfound", () => {
-//       if (cancelled) return;
-//     });
-
-//     return () => {
-//       cancelled = true;
-//       setTimeout(() => {
-//         try {
-//           if (routeControlRef.current) {
-//             // Remove the route line directly
-//             if (routeControlRef.current._line) {
-//               map.removeLayer(routeControlRef.current._line);
-//             }
-//             // Remove the plan (waypoint markers)
-//             if (routeControlRef.current._plan) {
-//               map.removeLayer(routeControlRef.current._plan);
-//             }
-//             // Remove the container element
-//             if (routeControlRef.current._container) {
-//               routeControlRef.current._container.remove();
-//             }
-//             routeControlRef.current = null;
-//           }
-//         } catch (e) {
-//           console.warn("Routing cleanup:", e);
-//         }
-//       }, 0);
-//     };
-//   }, [userPosition, map]);
-
-//   return null;
-// }
 
 export function NearestRouting({
   onPinSelected,
@@ -321,8 +224,9 @@ export function Routing({
 // Add properties based on the pin info from db
 export function PinMarking({ onPinClick }: { onPinClick: (pin: any) => void }) {
   const [evacPins, setEvacPins] = useState<EvacPin[]>([]);
+  const [brgyPins, setBrgyPins] = useState<EvacPin[]>([]);
   // const [myPins, setMyPins] = useState<EvacPin[]>([]);
-  const { allPins, showGovPins } = useMapFilterContext();
+  const { showGovPins } = useMapFilterContext();
 
   const createClusterCustomIcon = (cluster: any) => {
     return divIcon({
@@ -340,11 +244,7 @@ export function PinMarking({ onPinClick }: { onPinClick: (pin: any) => void }) {
   });
 
   useEffect(() => {
-    if (allPins) {
-      getEvacPins({ setEvacPins });
-    } else {
-      // Only user pins
-    }
+    getEvacPins({ setBrgyPins });
   }, []);
 
   return (
@@ -354,21 +254,22 @@ export function PinMarking({ onPinClick }: { onPinClick: (pin: any) => void }) {
       chunkedLoading
       id="Map_MarkerBubble"
     >
-      {!allPins && showGovPins && <></>}
-      {/* If show all pins -> If showGovPins -> Show pins from govops */}
-      {allPins ? (
-        evacPins.map((pin) => (
+      {showGovPins &&
+        brgyPins.map((pin) => (
           <Marker
             key={pin.id}
             position={[pin.lat, pin.lng]}
             icon={icon}
             eventHandlers={{ click: () => onPinClick(pin) }}
           />
-        ))
+        ))}
+      {/* If show all pins -> If showGovPins -> Show pins from govops */}
+      {/* {allPins ? (
+        
       ) : (
         // Show my pins
         <></>
-      )}
+      )} */}
     </MarkerClusterGroup>
   );
 }
