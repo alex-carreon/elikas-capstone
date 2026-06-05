@@ -2,26 +2,124 @@ import colors from "@/constants/colors";
 import { Field } from "@/components/ui/field";
 import CheckBox from "@/components/CheckBox";
 import TextField from "@/components/TextField";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import ButtonComp from "@/components/Button";
+import api from "@/api";
+import { toast } from "sonner";
+import { useNavigate, useParams } from "react-router";
+import SelectDropdown from "@/components/SelectDropdown";
+
+type Barangays = {
+  id: number;
+  name: string;
+  role: string;
+  location: string;
+};
+
+type Cities = {
+  id: number;
+  name: string;
+  parent_id: number;
+  parent_location: Province;
+};
+
+type Province = {
+  id: number;
+  level_id: number;
+  name: string;
+};
 
 function HotlinesForm() {
   const [title, setTitle] = useState("");
   const [address, setAddress] = useState("");
-  const [ofNumber, setOfNumber] = useState("");
-  const [secNumber, setSecNumber] = useState("");
-  const [landmark, setLandmark] = useState("");
+  const [primaryNo, setPrimaryNo] = useState("");
+  const [secondaryNo, setSecondaryNo] = useState("");
+  const [cityLoad, setCityLoad] = useState(false);
+  const [brgyLoad, setBrgyLoad] = useState(false);
+  const [brgyId, setBrgyId] = useState(0);
+  const [cities, setCities] = useState<Cities[]>([]);
+  const [cityId, setCityId] = useState(0);
+  const [barangays, setBarangays] = useState<Barangays[]>([]);
   const [infoCheck, setInfoCheck] = useState(false);
+
+  const navigate = useNavigate();
+  const { id } = useParams();
+
+  useEffect(() => {
+    if (!id) {
+      const getCity = async () => {
+        try {
+          setCityLoad(true);
+          const cityRes = await api.get("/locations/cities");
+
+          const cities = cityRes.data.Cities;
+          setCities(cities);
+        } catch (err: any) {
+          console.log(err.message);
+        } finally {
+          setCityLoad(false);
+        }
+      };
+
+      getCity();
+    }
+  }, [id]);
+
+  useEffect(() => {
+    if (!cityId) {
+      return;
+    }
+
+    const getBrgy = async () => {
+      try {
+        setBrgyLoad(true);
+        const brgyRes = await api.get(`/locations/barangays?city_id=${cityId}`);
+
+        const barangays = brgyRes.data.Barangays;
+        console.log(barangays);
+        setBarangays(barangays);
+      } catch (err: any) {
+        console.log(err.message);
+      } finally {
+        setBrgyLoad(false);
+      }
+    };
+
+    getBrgy();
+  }, [cityId]);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
 
-    console.log("Title", title);
-    console.log("Address", address);
-    console.log("Official Number", ofNumber);
-    console.log("Second Number", secNumber);
-    console.log("Landmark", landmark);
-    console.log("Checkbox", infoCheck);
+    try {
+      const response = api.post("/emergency-contacts", {
+        name: title,
+        address: address,
+        phone_number: primaryNo,
+        mobile_number: secondaryNo,
+        location_id: brgyId,
+      });
+
+      console.log(response);
+
+      if (!response) {
+        console.log("Create Failed");
+        toast.error("Adding a new contact failed.");
+      }
+
+      toast.promise(response, {
+        loading: "Adding your contact...",
+        success: "Contact successfully added!",
+        error: (err: any) => err.response.data,
+        position: "top-center",
+      });
+
+      response.then(() => {
+        navigate("/Hotlines");
+      });
+    } catch (err: any) {
+      console.log(err.response);
+    }
   };
 
   return (
@@ -56,24 +154,50 @@ function HotlinesForm() {
               onSubmit={(e) => setTitle(e.target.value)}
               isRequired
             />
-            <Field>
-              <TextField
-                label="Address*"
-                description="Enter the hotline's address if applicable."
-                placeholder="Blk # Lot #, Street, Barangay, City"
-                id="Hotline_AddressField"
-                inputType="text"
-                onSubmit={(e) => setAddress(e.target.value)}
-                isRequired
-              ></TextField>
-            </Field>
+            <TextField
+              label="Address*"
+              description="Enter the hotline's address if applicable."
+              placeholder="Blk # Lot #, Street, Barangay, City"
+              id="Hotline_AddressField"
+              inputType="text"
+              onSubmit={(e) => setAddress(e.target.value)}
+              isRequired
+            ></TextField>
+            <SelectDropdown
+              value={String(cityId)}
+              onValueChange={(val) => setCityId(Number(val))}
+              label="City"
+              placeholder="Select the hotline's city"
+              id="Hotline_CityField"
+              onSubmit={(e) => setCityId(Number(e.target.value))}
+              options={cities?.map((city) => ({
+                label: city.name,
+                value: String(city.id),
+              }))}
+              isRequired={!id}
+              loading={cityLoad}
+            />
+            <SelectDropdown
+              value={String(brgyId)}
+              onValueChange={(val) => setBrgyId(Number(val))}
+              label="Barangay"
+              placeholder="Select the hotline's barangay (Please enter a city first)"
+              id="Hotline_BrgyField"
+              onSubmit={(e) => setBrgyId(Number(e.target.value))}
+              options={barangays?.map((brgy) => ({
+                label: brgy.name,
+                value: String(brgy.id),
+              }))}
+              isRequired={!id}
+              loading={brgyLoad}
+            />
             <TextField
               label="Official Contact Number*"
               description="This will be the number the citizens will copy."
               placeholder="Enter official phone number"
               id="Hotline_OfficialNumberField"
               inputType="number"
-              onSubmit={(e) => setOfNumber(e.target.value)}
+              onSubmit={(e) => setPrimaryNo(e.target.value)}
               isRequired
             ></TextField>
             <TextField
@@ -82,15 +206,7 @@ function HotlinesForm() {
               placeholder="Enter second phone number"
               id="Hotline_SecondNumberField"
               inputType="number"
-              onSubmit={(e) => setSecNumber(e.target.value)}
-            ></TextField>
-            <TextField
-              label="Landmark (optional)"
-              description="This can help citizens find this hotline's office."
-              placeholder="Enter the landmark for this hotline"
-              id="Hotline_LandmarkField"
-              inputType="text"
-              onSubmit={(e) => setLandmark(e.target.value)}
+              onSubmit={(e) => setSecondaryNo(e.target.value)}
             ></TextField>
             <div>
               <CheckBox
