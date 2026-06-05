@@ -1,19 +1,36 @@
+import { Separator } from "@base-ui/react";
 import {
-  PinIcon,
+  MapPin,
   Smartphone,
-  Copy,
   Phone,
+  Copy,
   // Edit,
   CopyCheck,
 } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
 
-function HotlineRow() {
+interface HotlineRowProps {
+  lastUpdate: string;
+  name: string;
+  address: string;
+  primary: string;
+  secondary: string;
+  postedBy: string;
+}
+
+function HotlineRow({
+  lastUpdate,
+  name,
+  address,
+  primary,
+  secondary,
+  postedBy,
+}: HotlineRowProps) {
   const [copy, setCopy] = useState(false);
 
   const HandleCopy = () => {
-    navigator.clipboard.writeText("(02) 8854-2211");
+    navigator.clipboard.writeText(primary);
     setCopy(true);
     toast("Copied to clipboard");
     setTimeout(() => setCopy(false), 2000);
@@ -21,32 +38,40 @@ function HotlineRow() {
 
   return (
     <div className="">
-      <p className="italic text-xs">Last Update: Feb 10, 2026</p>
-      <div className="bg-[#FFE6A9] p-4 rounded-xl border-black border-solid border-1 flex flex-col gap-1">
-        <div className="flex flex-row justify-between">
+      <p className="italic text-xs">Last Update: {lastUpdate}</p>
+      <div className="bg-[#FFE6A9] p-4 rounded-xl shadow-xl border-solid border-1 border-amber-300 flex flex-col gap-2">
+        <div className="flex flex-row justify-between gap-2">
           <p>
-            <b>Medical and Health</b>
+            <b>{name}</b>
           </p>
           {copy ? (
-            <CopyCheck id="Hotlines_CopyBtn" size={20} />
+            <CopyCheck id="Hotlines_CopyBtn" className="p-2" size={24} />
           ) : (
-            <Copy id="Hotlines_CopyBtn" onClick={HandleCopy} size={20} />
+            <Copy
+              id="Hotlines_CopyBtn"
+              className="p-2"
+              onClick={HandleCopy}
+              size={38}
+            />
           )}
           {/* <Edit /> */}
         </div>
-        <div className="flex flex-row text-sm items-center">
-          <PinIcon fill="red" strokeWidth={0.5} size={20} />
-          <p>Beside Municipal Hall</p>
+        <div className="flex flex-col gap-1">
+          <div className="flex flex-row text-sm items-center gap-1">
+            <MapPin strokeWidth={2} size={16} />
+            <p className="text-sm">{address}</p>
+          </div>
+          <div className="flex flex-row text-sm items-center gap-1">
+            <Phone strokeWidth={2} size={16} />
+            <p className="text-sm">{primary}</p>
+          </div>
+          <div className="flex flex-row text-sm items-center gap-1">
+            <Smartphone strokeWidth={2} size={16} />
+            <p className="text-sm">{secondary}</p>
+          </div>
         </div>
-        <div className="flex flex-row text-sm items-center">
-          <Phone fill="gray" strokeWidth={0.5} size={20} />
-          <p>(02) 8854-2211</p>
-        </div>
-        <div className="flex flex-row text-sm items-center">
-          <Smartphone strokeWidth={2} size={20} />
-          <p>0917-456-7890</p>
-        </div>
-        <p className="flex italic text-xs justify-end">Posted by Admin</p>
+        <Separator className="border-t border-gray-800/10 mt-2 pt-2" />
+        <p className="flex italic text-xs justify-end">Posted by: {postedBy}</p>
       </div>
     </div>
   );
