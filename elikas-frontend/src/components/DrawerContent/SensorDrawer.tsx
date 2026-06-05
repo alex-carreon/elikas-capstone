@@ -25,13 +25,7 @@ type SensorsDetails = {
   barangay: string;
 };
 
-function SensorDrawer({
-  selectedPin,
-  activeTop,
-}: {
-  selectedPin: Sensors | null;
-  activeTop: boolean;
-}) {
+function SensorDrawer({ selectedPin }: { selectedPin: Sensors | null }) {
   const [sensorDetails, setSensorDetails] = useState<
     SensorsDetails | undefined
   >();
