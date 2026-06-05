@@ -80,10 +80,6 @@ function App() {
         <Route path="/admin-brgyAdd" element={<BrgyAdd />} />
       </Route>
 
-      <Route element={<AuthNavbar />}>
-        <Route path="/Map" element={<Map />} />
-      </Route>
-
       <Route element={<ProtectedRoute />}>
         <Route element={<ConstNavbar />}>
           <Route path="/Settings" element={<Settings />} />
@@ -93,6 +89,10 @@ function App() {
           <Route path="/HazardForm" element={<HazardForm />} />
           <Route path="/HazardForm/:id" element={<HazardForm />} />
           <Route path="/History" element={<History />} />
+        </Route>
+
+        <Route element={<AuthNavbar />}>
+          <Route path="/Map" element={<Map />} />
         </Route>
       </Route>
 

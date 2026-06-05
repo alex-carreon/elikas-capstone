@@ -50,11 +50,6 @@ function SensorDrawer({
   useEffect(() => {
     if (!selectedPin) return;
 
-    const parameters = () => {
-      if (activeTop) {
-      }
-    };
-
     const getSensorDetails = async () => {
       try {
         setLoading(true);

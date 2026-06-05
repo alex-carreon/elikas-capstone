@@ -18,27 +18,14 @@ function Settings() {
     try {
       localStorage.clear();
 
-      const logoutPromise = new Promise(async (resolve, reject) => {
-        const response = await api.post("/auth/logout");
-
-        const userData = await response;
-
-        if (!response) {
-          reject(setError("Logout failed"));
-        } else {
-          resolve(userData);
-          await signOut(auth);
-        }
+      const response = api.post("/auth/logout").then(async () => {
+        await signOut(auth);
       });
 
-      toast.promise(logoutPromise, {
+      toast.promise(response, {
         loading: "Logging you out...",
         success: "You're logged out!",
         position: "top-center",
-      });
-
-      logoutPromise.then(() => {
-        navigate("/");
       });
     } catch (error) {
       console.error("Error during logout:", error);
