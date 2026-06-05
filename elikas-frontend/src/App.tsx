@@ -63,6 +63,7 @@ function App() {
         <Route element={<ConstNavbar />}>
           <Route path="/SMS" element={<SMS />} />
           <Route path="/HotlinesForm" element={<HotlinesForm />} />
+          <Route path="/HotlinesForm/:id" element={<HotlinesForm />} />
           <Route path="/SensorForm" element={<SensorForm />} />
           <Route path="/SensorForm/:id" element={<SensorForm />} />
         </Route>

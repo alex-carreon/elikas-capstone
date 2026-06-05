@@ -1,14 +1,9 @@
+import { useUserContext } from "@/context/AuthContext";
 import { Separator } from "@base-ui/react";
-import {
-  MapPin,
-  Smartphone,
-  Phone,
-  Copy,
-  // Edit,
-  CopyCheck,
-} from "lucide-react";
+import { MapPin, Smartphone, Phone, Copy, Edit, CopyCheck } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
+import { Link } from "react-router";
 
 interface HotlineRowProps {
   lastUpdate: string;
@@ -17,6 +12,7 @@ interface HotlineRowProps {
   primary: string;
   secondary: string;
   postedBy: string;
+  id: number;
 }
 
 function HotlineRow({
@@ -26,8 +22,11 @@ function HotlineRow({
   primary,
   secondary,
   postedBy,
+  id,
 }: HotlineRowProps) {
   const [copy, setCopy] = useState(false);
+
+  const { role } = useUserContext();
 
   const HandleCopy = () => {
     navigator.clipboard.writeText(primary);
@@ -44,7 +43,21 @@ function HotlineRow({
           <p>
             <b>{name}</b>
           </p>
-          {copy ? (
+          {/* {copy ? (
+            <CopyCheck id="Hotlines_CopyBtn" className="p-2" size={24} />
+          ) : (
+            <Copy
+              id="Hotlines_CopyBtn"
+              className="p-2"
+              onClick={HandleCopy}
+              size={38}
+            />
+          )} */}
+          {role === "brgy_op" ? (
+            <Link to={`/HotlinesForm/${id}`}>
+              <Edit className="p-2" size={38} />
+            </Link>
+          ) : copy ? (
             <CopyCheck id="Hotlines_CopyBtn" className="p-2" size={24} />
           ) : (
             <Copy
@@ -54,7 +67,6 @@ function HotlineRow({
               size={38}
             />
           )}
-          {/* <Edit /> */}
         </div>
         <div className="flex flex-col gap-1">
           <div className="flex flex-row text-sm items-center gap-1">

@@ -128,6 +128,7 @@ function Hotlines() {
                 primary={hotline.phone_number}
                 secondary={hotline.mobile_number}
                 postedBy={hotline.posted_by}
+                id={hotline.id}
               />
             );
           })}
