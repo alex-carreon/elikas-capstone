@@ -19,7 +19,7 @@ import { differenceInDays } from "date-fns";
 import FloodIcon from "@/assets/Map/FloodIcon.svg?react";
 import AlertDialogue from "@/components/AlertDialogue";
 import { handleSubmit, handleUpdate, handleDelete } from "@/lib/hazardUtils";
-import FormSkeleton from "../Skeletons/FormSkeleton";
+import FormSkeleton from "../../Skeletons/FormSkeleton";
 
 type FloodLevel = {
   id: number;
