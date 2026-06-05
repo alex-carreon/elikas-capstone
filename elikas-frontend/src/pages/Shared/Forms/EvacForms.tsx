@@ -18,7 +18,7 @@ import { Camera } from "lucide-react";
 import { handleDelete, handleSubmit, handleUpdate } from "@/lib/evacUtils";
 import { useUserContext } from "@/context/AuthContext";
 import api from "@/api";
-import FormSkeleton from "../Skeletons/FormSkeleton";
+import FormSkeleton from "../../Skeletons/FormSkeleton";
 import DatePickerInput from "@/components/DateField";
 import { toZonedTime, format, formatInTimeZone } from "date-fns-tz";
 import { addDays } from "date-fns";

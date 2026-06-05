@@ -56,17 +56,30 @@ export const sensorPins = [
 
 let evacPinData: EvacPin[] = [];
 let brgyPins: EvacPin[] = [];
-const getEvacPins = async ({
-  setEvacPins,
+
+const getBrgyPins = async ({
   setBrgyPins,
 }: {
-  setEvacPins?: Dispatch<SetStateAction<EvacPin[]>>;
   setBrgyPins?: Dispatch<SetStateAction<EvacPin[]>>;
 }) => {
   try {
     const BrgyResponse = await api.get("/pins?role=govop");
     brgyPins = await BrgyResponse.data.pins;
     setBrgyPins?.(brgyPins);
+  } catch (err: string | any) {
+    Error(err.message || "An error occurred");
+  }
+};
+
+const getEvacPins = async ({
+  setEvacPins,
+}: {
+  setEvacPins?: Dispatch<SetStateAction<EvacPin[]>>;
+}) => {
+  try {
+    const GenResponse = await api.get("/pins");
+    evacPinData = await GenResponse.data.pins;
+    setEvacPins?.(evacPinData);
   } catch (err: string | any) {
     Error(err.message || "An error occurred");
   }
@@ -125,19 +138,28 @@ export function NearestRouting({
     getEvacPins({ setEvacPins });
   }, []);
 
+  console.log("Before useEffect");
+
   //   For Routing
   useEffect(() => {
+    console.log("After useEffect");
+    console.log("evacPins", evacPins);
     if (!userPosition || !evacPins) return;
+    console.log("user position", userPosition);
+    console.log("evacPins", evacPins);
 
     const nearest = getNearestWaypoint(userPosition, evacPins);
     if (!nearest) return;
     onPinSelected(nearest);
+    console.log(nearest);
 
     const getRoutes = async () => {
       try {
         const destination = [nearest.lng, nearest.lat];
         const user = [userPosition.lng, userPosition.lat];
 
+        console.log("destination", destination);
+        console.log("user", user);
         const response = await fetch(
           `http://brouter:17777/brouter?lonlats=${user}|${destination}&profile=trekking&format=geojson`,
           { method: "GET" },
@@ -192,8 +214,6 @@ export function Routing({
         const destination = [selectedPin.lng, selectedPin.lat];
         const user = [userPosition.lng, userPosition.lat];
 
-        console.log("destination", destination);
-
         const response = await fetch(
           `http://brouter:17777/brouter?lonlats=${user}|${destination}&profile=trekking&format=geojson`,
           { method: "GET" },
@@ -244,7 +264,8 @@ export function PinMarking({ onPinClick }: { onPinClick: (pin: any) => void }) {
   });
 
   useEffect(() => {
-    getEvacPins({ setBrgyPins });
+    getBrgyPins({ setBrgyPins });
+    getEvacPins({ setEvacPins });
   }, []);
 
   return (
@@ -263,13 +284,14 @@ export function PinMarking({ onPinClick }: { onPinClick: (pin: any) => void }) {
             eventHandlers={{ click: () => onPinClick(pin) }}
           />
         ))}
-      {/* If show all pins -> If showGovPins -> Show pins from govops */}
-      {/* {allPins ? (
-        
-      ) : (
-        // Show my pins
-        <></>
-      )} */}
+      {evacPins.map((pin) => (
+        <Marker
+          key={pin.id}
+          position={[pin.lat, pin.lng]}
+          icon={icon}
+          eventHandlers={{ click: () => onPinClick(pin) }}
+        />
+      ))}
     </MarkerClusterGroup>
   );
 }
@@ -402,6 +424,11 @@ function RouterHazard({
           { method: "GET" },
         );
 
+        if (!response.ok) {
+          console.error("BRouter request failed:", response.status);
+          return null; // or return a fallback
+        }
+
         const data = await response.json();
         const points: [number, number][] =
           data.features[0].geometry.coordinates.map(
@@ -409,12 +436,12 @@ function RouterHazard({
           );
         setPoints(points);
       } catch (err: any) {
-        console.log(err.response.data);
+        console.log(err.response.data.message);
       }
     };
 
     getRoutes();
-  }, [lonlats, points]);
+  }, [lonlats, profile]);
 
   if (!points.length) return null;
 
