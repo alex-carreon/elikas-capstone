@@ -16,22 +16,22 @@ type Sensors = {
 
 type SensorsDetails = {
   id: number;
-  sensorCode: string;
   name: string;
   waterLevel: any | null;
   lastOnline: any | null;
-  mountHeight: number;
   location: [number, number];
   address: string;
-  yellowLevel: number;
-  redLevel: number;
   currentStatus: string;
-  mountLocation: string;
-  deactivatedAt: any | null;
-  registeredBy: string;
+  barangay: string;
 };
 
-function SensorDrawer({ selectedPin }: { selectedPin: Sensors | null }) {
+function SensorDrawer({
+  selectedPin,
+  activeTop,
+}: {
+  selectedPin: Sensors | null;
+  activeTop: boolean;
+}) {
   const [sensorDetails, setSensorDetails] = useState<
     SensorsDetails | undefined
   >();
@@ -44,6 +44,7 @@ function SensorDrawer({ selectedPin }: { selectedPin: Sensors | null }) {
     red: "#B22B42",
     purple: "#6E4998",
     green: "#318631",
+    inactive: "#D3D3D3",
   };
 
   useEffect(() => {
@@ -52,13 +53,12 @@ function SensorDrawer({ selectedPin }: { selectedPin: Sensors | null }) {
     const getSensorDetails = async () => {
       try {
         setLoading(true);
-        const response = await api.get(`/sensors/${selectedPin.id}`);
+        const response = await api.get(`/public/sensors/${selectedPin.id}`);
         if (!response) {
           console.log("Error fetching");
         }
-        console.log("Response", response.data.data);
-        setSensorDetails(response.data.data);
-        setHeight(response.data.data.waterLevel);
+        setSensorDetails(response.data);
+        setHeight(response.data.waterLevel);
       } catch (err: any) {
         console.log(err.response.data);
       } finally {
@@ -69,38 +69,31 @@ function SensorDrawer({ selectedPin }: { selectedPin: Sensors | null }) {
     getSensorDetails();
   }, [selectedPin?.id]);
 
-  const calcRiskInfo = (height: number | null) => {
-    if (height == null)
+  const calcRiskInfo = (status: string | null | undefined) => {
+    if (status == null)
       return {
-        color: colorSensor.green,
-        risk: "Normal",
-        desc: "Water levels are normal",
+        color: colorSensor.inactive,
+        risk: "Inactive",
+        desc: "This sensor is inactive",
       };
-    if (height >= 40)
+    if (status == "red")
       // Overflow
-      return {
-        color: colorSensor.purple,
-        risk: "Overflow",
-        desc: "Water has exceeded safe levels and is overflowing. Avoid flood-prone areas and follow emergency instructions.",
-      };
-    else if (height >= 30) {
-      // Critical
       return {
         color: colorSensor.red,
         risk: "Critical",
         desc: "Flooding is imminent or ongoing. Evacuate immediately to higher ground.",
       };
-    } else if (height >= 20) {
-      // Alarm
+    else if (status == "orange") {
+      // Critical
       return {
         color: colorSensor.orange,
         risk: "Alarm",
         desc: "Water levels are significantly elevated. Prepare for possible evacuation and secure belongings.",
       };
-    } else if (height >= 10) {
-      // Alert
+    } else if (status == "yellow") {
+      // Alarm
       return {
-        color: colorSensor.yellow,
+        color: colorSensor.orange,
         risk: "Alert",
         desc: "Water levels are rising. Monitor the situation closely and stay informed of updates.",
       };
@@ -113,7 +106,7 @@ function SensorDrawer({ selectedPin }: { selectedPin: Sensors | null }) {
   };
 
   //   if (!height) return;
-  const riskInfo = calcRiskInfo(height ? height : null);
+  const riskInfo = calcRiskInfo(sensorDetails?.currentStatus);
 
   return loading ? (
     <>
@@ -153,9 +146,12 @@ function SensorDrawer({ selectedPin }: { selectedPin: Sensors | null }) {
               <div className="flex flex-row">
                 <p className="text-lg font-semibold">{sensorDetails?.name}</p>
               </div>
-              {/* <p className="text-xs text-left font-semibold italic">
-                Timestamp: Mar 25, 2026 – 9:42 PM
-              </p> */}
+              <p className="text-xs text-left font-semibold italic">
+                Last Online:{" "}
+                {sensorDetails?.lastOnline
+                  ? sensorDetails?.lastOnline
+                  : "Inactive"}
+              </p>
             </div>
           </div>
           <DrawerClose id="DrawerMark_CloseBtn" className="self-start">
@@ -165,7 +161,8 @@ function SensorDrawer({ selectedPin }: { selectedPin: Sensors | null }) {
         <div className="mt-2">
           <ul className="list-disc pl-8 text-left text-sm flex flex-col gap-1">
             <li>
-              <b>Sensor Code</b>: {sensorDetails?.sensorCode}
+              <b>Location</b>:{" "}
+              {`${sensorDetails?.address}, ${sensorDetails?.barangay}`}
             </li>
             <li>
               <b>Water Height in Meters</b>: {height}

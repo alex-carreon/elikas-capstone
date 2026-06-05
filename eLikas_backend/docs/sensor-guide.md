@@ -2,9 +2,9 @@
 
 ## Authentication
 
-All endpoints require a valid Firebase ID token passed as a Bearer token.
+Most endpoints require a valid Firebase ID token passed as a Bearer token.
 
-A single get all route with minimal sensor data is available for map view functions to the public.
+A get all and show single resource route with minimal sensor data is available for map view functions to the public.
 
 Routes are protected by `firebase.auth` and `role` middleware — only admins (role 1) and GovOp accounts (role 2) can access these endpoints.
 
@@ -16,36 +16,46 @@ Only `govOp` is capable of creating and editing sensor records, and all other se
 
 ### `GET /api/public/sensors`
 
-Returns a complete list of sensors with minimal data. Currently no available queries.
+Returns a complete list of active sensors with minimal data. Currently no available queries.
+
+#### Response Format
+
+```json
+[
+    {
+        "id": 9,
+        "name": "Ibanez Street Sensor",
+        "location": [
+            14.600140911055,
+            121.04148573512
+        ],
+        "barangay": "Barangay Batis",
+        "lastOnline": null,
+        "currentStatus": null
+    }, ...
+```
+
+---
+
+### `GET /api/public/sensors/{sensor}`
+
+Returns a single sensor (must be active) with basic data and current water level.
 
 #### Response Format
 
 ```json
 {
-    [
-        {
-            "id": 8,
-            "name": "De Jesus Bridge Sensor",
-            "location": [
-                14.603730122015,
-                121.03860592147
-            ],
-            "water_level": null,
-            "last_online": null,
-            "current_status": "normal"
-        },
-        {
-            "id": 9,
-            "name": "Ibanez Street Sensor",
-            "location": [
-                14.600140911055,
-                121.04148573512
-            ],
-            "water_level": null,
-            "last_online": null,
-            "current_status": "normal"
-        }
-    ]
+    "id": 20,
+    "name": "Ibanez Street Sensor",
+    "location": [
+        14.600140911055,
+        121.04148573512
+    ],
+    "address": "V. Ibanez Street",
+    "barangay": "Barangay Salapan",
+    "waterLevel": null,
+    "lastOnline": null,
+    "currentStatus": null
 }
 ```
 
@@ -62,7 +72,7 @@ Returns a paginated list of sensors. All query parameters are optional — omitt
 | Parameter | Type | Behavior | Example |
 |---|---|---|---|
 | `name` | string | Partial match anywhere in field | `?name=bridge` |
-| `sensor_code` | string | Partial match anywhere in field | `?sensor_code=SN-01` |
+| `sensor_code` | string | Partial match anywhere in field | `?sensor_code=SR-ABC` |
 | `address` | string | Partial match anywhere in field | `?address=Wilson` |
 
 Special characters `%` and `_` are escaped — they will be treated as literals, not SQL wildcards.
@@ -73,7 +83,7 @@ Special characters `%` and `_` are escaped — they will be treated as literals,
 |---|---|---|---|
 | `current_status[]` | string (multi) | Matches any of the provided values | `?current_status[]=yellow&current_status[]=red` |
 
-Valid values: `normal`, `yellow`, `red`
+Valid values: `normal`, `yellow`, `orange`, `red`
 
 Supports multiple values as an array — useful for checkbox UI where multiple statuses can be selected at once.
 
@@ -145,24 +155,26 @@ Only parameters in the explicit allowlist are processed. Any unknown query param
 ```json
 {
     "data": [
-        "id": 8,
-            "sensorCode": "SR-159745",
-            "name": "De Jesus Bridge Sensor",
+        {
+            "id": 8,
+            "sensorCode": "SN-12-007",
+            "name": "De Jesus Bridge Sensor - Test Upd",
             "waterLevel": null,
             "lastOnline": null,
-            "mountHeight": 3,
+            "mountHeight": 1,
             "location": [
                 14.603730122015,
                 121.03860592147
             ],
             "address": "General S. De Jesus (Bridge)",
-            "yellowLevel": 1.5,
+            "yellowLevel": 2,
+            "orangeLevel": 0,
             "redLevel": 2.5,
-            "currentStatus": null,
+            "currentStatus": "normal",
             "mountLocation": "Barangay Batis",
-            "deactivatedAt": null,
-            "registeredBy": "Barangay Batis"
-        }
+            "deactivatedAt": "2026-06-03T17:37:12+00:00",
+            "registeredBy": "Barangay Onse"
+        }, ...
   ],
   "links": { "...": "..." },
   "meta": {
@@ -225,26 +237,39 @@ Creates a new sensor. The `sensor_code` and `element_id` are set automatically �
 
 ```json
 {
-    "name": "Ibanez Street Sensor",
-    "mountHeight": 3.5,
-    "location": [14.600140911054979, 121.04148573512468],
-    "address": "V. Ibanez Street",
-    "yellowLevel": 1.5,
-    "redLevel": 2.5,
-    "locationId":11
+    "data": {
+        "id": 19,
+        "sensorCode": "SR-120910",
+        "name": "Ibanez Street Sensor",
+        "waterLevel": null,
+        "lastOnline": null,
+        "mountHeight": 3.5,
+        "location": [
+            14.600140911055,
+            121.04148573512
+        ],
+        "address": "V. Ibanez Street",
+        "yellowLevel": 1.5,
+        "orangeLevel": 2,
+        "redLevel": 2.5,
+        "currentStatus": null,
+        "mountLocation": "Barangay Salapan",
+        "deactivatedAt": null
+    }
 }
 ```
 
 | Field | Type | Required | Notes |
 |---|---|---|---|
 | `name` | string | Yes | Max 50 characters |
-| `mountHeight` | number | Yes | Must be ≥ 0 |
+| `mountHeight` | number | Yes | Must be > 0 |
 | `location` | array | Yes | `[latitude, longitude]` |
-| `location[0]` | number | Yes | Latitude, between -90 and 90, required with location[1]|
-| `location[1]` | number | Yes | Longitude, between -180 and 180, required with location[0]|
+| `location[0]` | number | Yes | Latitude, between -90 and 90|
+| `location[1]` | number | Yes | Longitude, between -180 and 180|
 | `address` | string | Yes | Max 255 characters |
-| `yellowLevel` | number | Yes | Must be ≥ 0 |
-| `redLevel` | number | Yes | Must be ≥ 0; must be > `yellowLevel` |
+| `yellowLevel` | number | Yes | Must be > 0 |
+| `orangeLevel` | number | Yes | Must be > 0; must be > `yellowLevel` & < `redLevel` |
+| `redLevel` | number | Yes | Must be > 0; must be > `orangeLevel` & < `mountHeight` |
 | `locationId` | number | Yes | ID be in `locations` table |
 
 **camelCase input is accepted** in accordance with json convention — `mountHeight`, `yellowLevel`, `redLevel` are automatically mapped to their snake_case DB equivalents before validation.
@@ -284,10 +309,11 @@ Updates an existing sensor. All fields are optional — only include what needs 
 | Field | Type | Required | Notes |
 |---|---|---|---|
 | `name` | string | No | Max 50 characters |
-| `mountHeight` | number | No | Must be ≥ 0 |
+| `mountHeight` | number | No | Must be > 0 |
 | `address` | string | No | Max 255 characters |
-| `yellowLevel` | number | No | Must be ≥ 0 |
-| `redLevel` | number | No | Must be ≥ 0; must be > `yellowLevel` |
+| `yellowLevel` | number | No | Must be > 0 |
+| `orangeLevel` | number | No | Must be > 0; must be > `yellowLevel` & < `redLevel` | 
+| `redLevel` | number | No | Must be > 0; must be > `orangeLevel` & < `mountHeight` |
 
 **camelCase input is accepted** — same mapping as `POST`. Only fields that are actually present in the request body are validated and updated. Omitted fields are left unchanged.
 
