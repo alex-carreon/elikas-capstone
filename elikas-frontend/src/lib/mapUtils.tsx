@@ -54,7 +54,7 @@ export const sensorPins = [
   },
 ];
 
-let evacPinData: EvacPin[];
+let evacPinData: EvacPin[] = [];
 const getEvacPins = async ({
   setEvacPins,
 }: {
@@ -86,123 +86,183 @@ const getSensors = async ({
 
 function getNearestWaypoint(
   userLatLng: LatLng,
-  waypoints: typeof evacPinData,
+  waypoints: EvacPin[],
 ): EvacPin | null {
+  if (!waypoints.length) return null;
   let nearest: EvacPin | null = null;
   let minDist = Infinity;
 
   waypoints.forEach((point: any) => {
-    const dist = userLatLng.distanceTo(leaflet.latLng(point.lat, point.long));
+    console.log(point.lat);
+    console.log(point.long);
+    const dist = userLatLng.distanceTo(leaflet.latLng(point.lat, point.lng));
     if (dist < minDist) {
       minDist = dist;
       nearest = point;
     }
   });
 
+  console.log("nearest", nearest);
   return nearest;
 }
 
 // Add properties based on the pin info from db
+// export function NearestRouting({
+//   onPinSelected,
+//   userPosition,
+// }: {
+//   onPinSelected: any;
+//   userPosition: LatLng | null; // add this
+// }) {
+//   // const [position, setPosition] = useState<LatLng | null>(null);
+//   const map = useMap();
+//   const routeControlRef = useRef<any>(null);
+
+//   useEffect(() => {
+//     if (!userPosition) return;
+//     console.log("NearestRouting mounted");
+
+//     const nearest = getNearestWaypoint(userPosition, evacPinData);
+//     if (!nearest) return;
+
+//     onPinSelected?.(nearest);
+
+//     let cancelled = false;
+
+//     if (routeControlRef.current) {
+//       try {
+//         if (routeControlRef.current._map) {
+//           console.log("removed successfully");
+//           routeControlRef.current.remove();
+//           console.log("removed successfully");
+//         }
+//       } catch (e) {
+//         console.log("Previous routing cleanup:", e);
+//       }
+//       routeControlRef.current = null;
+//     }
+
+//     const control = leaflet.Routing.control({
+//       waypoints: [
+//         leaflet.latLng(userPosition.lat, userPosition.lng),
+//         leaflet.latLng(nearest.lat, nearest.lng),
+//       ],
+//       router: new leaflet.Routing.OSRMv1({
+//         serviceUrl: "https://router.project-osrm.org/route/v1",
+//       }),
+//       collapsible: true,
+//       addWaypoints: false,
+//       draggableWaypoints: false,
+//       fitSelectedRoutes: true,
+//       lineOptions: {
+//         styles: [
+//           {
+//             color: colors.heading,
+//             weight: 4,
+//           },
+//         ],
+//       },
+//       createMarker: function (i: number, waypoint: any) {
+//         if (i === 0) {
+//           return leaflet.marker(waypoint.latLng);
+//         }
+//         return null;
+//       },
+//     } as any).addTo(map);
+//     // Kulit ni typescript - as any meaning thats my styles dont bother them
+
+//     routeControlRef.current = control;
+
+//     control.on("routesfound", () => {
+//       if (cancelled) return;
+//     });
+
+//     return () => {
+//       cancelled = true;
+//       setTimeout(() => {
+//         try {
+//           if (routeControlRef.current) {
+//             // Remove the route line directly
+//             if (routeControlRef.current._line) {
+//               map.removeLayer(routeControlRef.current._line);
+//             }
+//             // Remove the plan (waypoint markers)
+//             if (routeControlRef.current._plan) {
+//               map.removeLayer(routeControlRef.current._plan);
+//             }
+//             // Remove the container element
+//             if (routeControlRef.current._container) {
+//               routeControlRef.current._container.remove();
+//             }
+//             routeControlRef.current = null;
+//           }
+//         } catch (e) {
+//           console.warn("Routing cleanup:", e);
+//         }
+//       }, 0);
+//     };
+//   }, [userPosition, map]);
+
+//   return null;
+// }
+
 export function NearestRouting({
   onPinSelected,
   userPosition,
+  showNearestRoute,
 }: {
   onPinSelected: any;
-  userPosition: LatLng | null; // add this
+  userPosition: LatLng | null;
+  showNearestRoute: boolean;
 }) {
-  // const [position, setPosition] = useState<LatLng | null>(null);
-  const map = useMap();
-  const routeControlRef = useRef<any>(null);
+  const [points, setPoints] = useState<[number, number][]>([]);
+  const [evacPins, setEvacPins] = useState<EvacPin[]>([]);
 
   useEffect(() => {
-    if (!userPosition) return;
-    console.log("NearestRouting mounted");
+    getEvacPins({ setEvacPins });
+  }, []);
 
-    const nearest = getNearestWaypoint(userPosition, evacPinData);
+  //   For Routing
+  useEffect(() => {
+    if (!userPosition || !evacPins) return;
+
+    const nearest = getNearestWaypoint(userPosition, evacPins);
     if (!nearest) return;
+    onPinSelected(nearest);
 
-    onPinSelected?.(nearest);
-
-    let cancelled = false;
-
-    if (routeControlRef.current) {
+    const getRoutes = async () => {
       try {
-        if (routeControlRef.current._map) {
-          console.log("removed successfully");
-          routeControlRef.current.remove();
-          console.log("removed successfully");
-        }
-      } catch (e) {
-        console.log("Previous routing cleanup:", e);
+        const destination = [nearest.lng, nearest.lat];
+        const user = [userPosition.lng, userPosition.lat];
+
+        const response = await fetch(
+          `http://brouter:17777/brouter?lonlats=${user}|${destination}&profile=trekking&format=geojson`,
+          { method: "GET" },
+        );
+
+        if (!response) {
+          console.error("Fetch failed");
+          toast.error("Failed to find route");
+          return;
+        } else toast.success("Found you a route!");
+
+        const data = await response.json();
+        const points: [number, number][] =
+          data.features[0].geometry.coordinates.map(
+            ([lon, lat]: [number, number]) => [lat, lon],
+          );
+        setPoints(points);
+      } catch (err: any) {
+        console.log(err.message);
       }
-      routeControlRef.current = null;
-    }
-
-    const control = leaflet.Routing.control({
-      waypoints: [
-        leaflet.latLng(userPosition.lat, userPosition.lng),
-        leaflet.latLng(nearest.lat, nearest.lng),
-      ],
-      router: new leaflet.Routing.OSRMv1({
-        serviceUrl: "https://router.project-osrm.org/route/v1",
-      }),
-      collapsible: true,
-      addWaypoints: false,
-      draggableWaypoints: false,
-      fitSelectedRoutes: true,
-      lineOptions: {
-        styles: [
-          {
-            color: colors.heading,
-            weight: 4,
-          },
-        ],
-      },
-      createMarker: function (i: number, waypoint: any) {
-        if (i === 0) {
-          return leaflet.marker(waypoint.latLng);
-        }
-        return null;
-      },
-    } as any).addTo(map);
-    // Kulit ni typescript - as any meaning thats my styles dont bother them
-
-    routeControlRef.current = control;
-
-    control.on("routesfound", () => {
-      if (cancelled) return;
-    });
-
-    return () => {
-      cancelled = true;
-      setTimeout(() => {
-        try {
-          if (routeControlRef.current) {
-            // Remove the route line directly
-            if (routeControlRef.current._line) {
-              map.removeLayer(routeControlRef.current._line);
-            }
-            // Remove the plan (waypoint markers)
-            if (routeControlRef.current._plan) {
-              map.removeLayer(routeControlRef.current._plan);
-            }
-            // Remove the container element
-            if (routeControlRef.current._container) {
-              routeControlRef.current._container.remove();
-            }
-            routeControlRef.current = null;
-          }
-        } catch (e) {
-          console.warn("Routing cleanup:", e);
-        }
-      }, 0);
     };
-  }, [userPosition, map]);
 
-  return null;
+    getRoutes();
+  }, [showNearestRoute, evacPins]);
+
+  return <Polyline positions={points} weight={6} color="#5F80AA" />;
 }
 
-// Add properties based on the pin info from db
 export function Routing({
   onPinSelected,
   selectedPin,
@@ -212,20 +272,11 @@ export function Routing({
   selectedPin: any;
   userPosition: LatLng | null; // add this
 }) {
-  // const [position, setPosition] = useState<LatLng | null>(null);
-  const map = useMap();
-  const routeControlRef = useRef<any>(null);
+  const [points, setPoints] = useState<[number, number][]>([]);
 
   //   For Routing
   useEffect(() => {
     if (!userPosition || !selectedPin) return;
-
-    const destination = leaflet.latLng(selectedPin.lat, selectedPin.long);
-
-    if (routeControlRef.current) {
-      (routeControlRef.current as any).remove();
-      routeControlRef.current = null;
-    }
 
     const matchedPin = selectedPin;
 
@@ -233,39 +284,44 @@ export function Routing({
       onPinSelected(matchedPin);
     }
 
-    routeControlRef.current = leaflet.Routing.control({
-      waypoints: [
-        leaflet.latLng(userPosition.lat, userPosition.lng),
-        destination,
-      ],
-      collapsible: true,
-      addWaypoints: false,
-      draggableWaypoints: false,
-      fitSelectedRoutes: true,
-      lineOptions: { styles: [{ color: colors.heading, weight: 4 }] },
-      createMarker: function (i: number, waypoint: any) {
-        if (i === 0) {
-          return leaflet.marker(waypoint.latLng);
-        }
-        return null;
-      },
-    } as any).addTo(map);
+    const getRoutes = async () => {
+      try {
+        const destination = [selectedPin.lng, selectedPin.lat];
+        const user = [userPosition.lng, userPosition.lat];
 
-    return () => {
-      if (routeControlRef.current) {
-        (routeControlRef.current as any).remove();
-        routeControlRef.current = null;
+        console.log("destination", destination);
+
+        const response = await fetch(
+          `http://brouter:17777/brouter?lonlats=${user}|${destination}&profile=trekking&format=geojson`,
+          { method: "GET" },
+        );
+
+        if (!response.ok) {
+          console.error("Fetch failed");
+          return;
+        }
+
+        const data = await response.json();
+        const points: [number, number][] =
+          data.features[0].geometry.coordinates.map(
+            ([lon, lat]: [number, number]) => [lat, lon],
+          );
+        setPoints(points);
+      } catch (err: any) {
+        console.log(err.message);
       }
     };
-  }, [map, userPosition, selectedPin]);
 
-  return null;
+    getRoutes();
+  }, [userPosition, selectedPin]);
+
+  return <Polyline positions={points} weight={6} color="#5F80AA" />;
 }
 
 // Add properties based on the pin info from db
 export function PinMarking({ onPinClick }: { onPinClick: (pin: any) => void }) {
   const [evacPins, setEvacPins] = useState<EvacPin[]>([]);
-  const [myPins, setMyPins] = useState<EvacPin[]>([]);
+  // const [myPins, setMyPins] = useState<EvacPin[]>([]);
   const { allPins, showGovPins } = useMapFilterContext();
 
   const createClusterCustomIcon = (cluster: any) => {
@@ -428,6 +484,42 @@ interface RoadMappingProps {
   onPinClick?: (pin: any, midpoint: [number, number]) => void;
 }
 
+function RouterHazard({
+  lonlats,
+  profile,
+}: {
+  lonlats: string;
+  profile: string;
+}) {
+  const [points, setPoints] = useState<[number, number][]>([]);
+
+  useEffect(() => {
+    const getRoutes = async () => {
+      try {
+        const response = await fetch(
+          `http://brouter:17777/brouter?lonlats=${lonlats}&profile=${profile}&format=geojson`,
+          { method: "GET" },
+        );
+
+        const data = await response.json();
+        const points: [number, number][] =
+          data.features[0].geometry.coordinates.map(
+            ([lon, lat]: [Number, number]) => [lat, lon],
+          );
+        setPoints(points);
+      } catch (err: any) {
+        console.log(err.response.data);
+      }
+    };
+
+    getRoutes();
+  }, [lonlats, points]);
+
+  if (!points.length) return null;
+
+  return <Polyline positions={points} weight={6} color="#5F80AA" />;
+}
+
 export function RoadMapping({ onPinClick }: RoadMappingProps) {
   const [floodPaths, setFloodPaths] = useState<FloodPath[]>([]);
   const { showPaths } = useMapFilterContext();
@@ -452,6 +544,7 @@ export function RoadMapping({ onPinClick }: RoadMappingProps) {
   const getFloodPaths = async () => {
     try {
       const response = await api.get("/flood-paths");
+
       floodData = await response.data.flood_paths;
       setFloodPaths(floodData);
     } catch (err: string | any) {
@@ -474,6 +567,9 @@ export function RoadMapping({ onPinClick }: RoadMappingProps) {
         {showPaths &&
           floodPaths.map((pin) => {
             const midpoint = getMidpoint(pin.path);
+            const lonlats = pin.path
+              .map(([lon, lat]) => `${lat},${lon}`)
+              .join("|");
             return (
               <Fragment key={pin.id}>
                 <Marker
@@ -486,7 +582,7 @@ export function RoadMapping({ onPinClick }: RoadMappingProps) {
                     },
                   }}
                 />
-                <Polyline positions={pin.path} weight={6} color="#5F80AA" />
+                <RouterHazard lonlats={lonlats} profile="all" />
               </Fragment>
             );
           })}

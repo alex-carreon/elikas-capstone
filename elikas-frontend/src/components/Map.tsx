@@ -297,6 +297,7 @@ function Map({ onLocationFound, showLocation, nearestRouteTrigger }: MapProps) {
         <NearestRouting
           onPinSelected={setSelectedPin}
           userPosition={userPosition}
+          showNearestRoute={showNearestRoute}
         />
       )}
       {showRoute && !showNearestRoute && selectedPin && !admin && (
