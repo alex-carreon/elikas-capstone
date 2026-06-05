@@ -15,7 +15,7 @@ class DeleteEvacuationAreaController extends Controller
         try {
             $user = $request->attributes->get('firebase_user');
 
-            $pin = EvacArea::with('social_element')
+            $pin = EvacArea::with('social_element.user.name')
                 ->whereHas('social_element', function ($q) {
                     $q->whereNull('deactivated_at');
                 })
@@ -48,7 +48,10 @@ class DeleteEvacuationAreaController extends Controller
                 'element_id' => $pin->social_element->id,
                 'deactivated_at' => $pin->social_element->deactivated_at
                     ? $pin->social_element->deactivated_at->timezone('Asia/Manila')->toDateTimeString()
-                    : null
+                    : null,
+                'deactivated_by' => [
+                    'name' => $this->displayName($pin->social_element?->user),
+                ],
             ], 200);
 
         } catch (\Exception $e) {
@@ -87,17 +90,31 @@ class DeleteEvacuationAreaController extends Controller
         $pin->social_element->save();
 
         return response()->json([
-            'message' => 'Evacuation area restored successfully',
-            'pin_id' => $pin->id,
-            'element_id' => $pin->social_element->id,
-            'deactivated_at' => null
-        ], 200);
-
+        'message' => 'Evacuation area restored successfully',
+        'pin_id' => $pin->id,
+        'element_id' => $pin->social_element->id,
+        'deactivated_at' => $pin->social_element->deactivated_at
+            ? $pin->social_element->deactivated_at->timezone('Asia/Manila')->toDateTimeString()
+            : null,
+        'restored_by' => [
+            'name' => $this->displayName($pin->social_element?->user),
+        ],
+    ], 200);
     } catch (\Exception $e) {
         return response()->json([
             'error' => 'Failed to restore evacuation area',
             'details' => $e->getMessage()
         ], 500);
     }
+}
+private function displayName($user): ?string
+{
+    if (!$user) {
+        return null;
+    }
+
+    $fullName = trim(($user->name?->first_name ?? '') . ' ' . ($user->name?->last_name ?? ''));
+
+    return $fullName !== '' ? $fullName : $user->username;
 }
 }
