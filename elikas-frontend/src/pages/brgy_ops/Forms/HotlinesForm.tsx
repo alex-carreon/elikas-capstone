@@ -8,6 +8,7 @@ import api from "@/api";
 import { toast } from "sonner";
 import { useNavigate, useParams } from "react-router";
 import SelectDropdown from "@/components/SelectDropdown";
+import { handleSubmit, handleUpdate } from "@/lib/hotlineUtils";
 
 type Barangays = {
   id: number;
@@ -88,38 +89,31 @@ function HotlinesForm() {
     getBrgy();
   }, [cityId]);
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const create = (e: React.FormEvent) => {
     e.preventDefault();
 
-    try {
-      const response = api.post("/emergency-contacts", {
-        name: title,
-        address: address,
-        phone_number: primaryNo,
-        mobile_number: secondaryNo,
-        location_id: brgyId,
-      });
+    handleSubmit({
+      e: e,
+      title: title,
+      address: address,
+      primaryNo: primaryNo,
+      secondaryNo: secondaryNo,
+      brgyId: brgyId,
+      navigate: navigate,
+    });
+  };
 
-      console.log(response);
-
-      if (!response) {
-        console.log("Create Failed");
-        toast.error("Adding a new contact failed.");
-      }
-
-      toast.promise(response, {
-        loading: "Adding your contact...",
-        success: "Contact successfully added!",
-        error: (err: any) => err.response.data,
-        position: "top-center",
-      });
-
-      response.then(() => {
-        navigate("/Hotlines");
-      });
-    } catch (err: any) {
-      console.log(err.response);
-    }
+  const update = (e: React.FormEvent) => {
+    handleUpdate({
+      e: e,
+      title: title,
+      address: address,
+      primaryNo: primaryNo,
+      secondaryNo: secondaryNo,
+      brgyId: brgyId,
+      navigate: navigate,
+      id: id,
+    });
   };
 
   return (
@@ -141,7 +135,7 @@ function HotlinesForm() {
         </div>
         <form
           id="Hotline_Form"
-          onSubmit={handleSubmit}
+          onSubmit={create}
           className="w-full flex flex-col justify-center items-center m-0"
         >
           <div className="w-full max-w-md flex flex-col gap-5">
@@ -219,16 +213,43 @@ evacuation use."
                 }}
               />
             </div>
-            <div className="w-full max-w-md flex justify-center">
-              <ButtonComp
-                text="Create Pin"
-                variant="primary"
-                id="Hotline_SubmitBtn"
-                isDisabled={!infoCheck}
-                heightSize="38px"
-                widthSize="100%"
-              />
-            </div>
+            {id ? (
+              <>
+                <div className="mx-2 flex justify-evenly shrink gap-4">
+                  <ButtonComp
+                    text="Submit"
+                    id="EvacPin_SubmitUpdBtn"
+                    // type="button"
+                    variant="primary"
+                    heightSize="38px"
+                    widthSize="20"
+                    onClick={(e) => update(e)}
+                  ></ButtonComp>
+                  <ButtonComp
+                    text="Cancel"
+                    id="EvacPin_CancelUpdBtn"
+                    variant="outline"
+                    heightSize="38px"
+                    widthSize="20"
+                    onClick={() => {
+                      navigate("/Hotlines");
+                    }}
+                    type="button"
+                  ></ButtonComp>
+                </div>
+              </>
+            ) : (
+              <div className="w-full max-w-md flex justify-center">
+                <ButtonComp
+                  text="Create Pin"
+                  variant="primary"
+                  id="Hotline_SubmitBtn"
+                  isDisabled={!infoCheck}
+                  heightSize="38px"
+                  widthSize="100%"
+                />
+              </div>
+            )}
           </div>
         </form>
       </div>
