@@ -50,6 +50,8 @@ export const handleSubmit = async ({
       },
     });
 
+    console.log(response);
+
     if (!response) {
       console.log("No response from server");
     }
