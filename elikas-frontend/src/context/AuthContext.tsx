@@ -8,6 +8,7 @@ import {
   useEffect,
   type ReactNode,
 } from "react";
+import { useNavigate } from "react-router";
 
 interface AuthContextProps {
   user: User | null;
@@ -33,32 +34,46 @@ export function AuthProvider({ children }: AuthProviderProps) {
   const [role, setRole] = useState<string | null>(null);
   const [token, setToken] = useState<string | null>(null);
 
+  const navigate = useNavigate();
+
   // Find user in firebase while loading, when user is found loading stops
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, async (user) => {
-      setUser(user);
+    const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
+      if (!firebaseUser) {
+        setUser(null);
+        setRole(null);
+        setToken(null);
+        setLoading(false);
+        return;
+      }
 
-      if (user) {
-        try {
-          const t = await user?.getIdToken(true);
-          setToken(t);
+      try {
+        const t = await firebaseUser?.getIdTokenResult(false);
+        const expiry = new Date(t.expirationTime);
 
-          const LoginResponse = await api.post(
+        if (expiry <= new Date()) {
+          await auth.signOut();
+          navigate("/Login");
+          setLoading(false);
+          return;
+        }
+
+        const currentToken = t.token;
+
+        if (!role) {
+          const loginResponse = await api.post(
             "/auth/login",
             {},
-            {
-              headers: {
-                Authorization: `Bearer ${t}`,
-              },
-            },
+            { headers: { Authorization: `Bearer ${currentToken}` } },
           );
-
-          const userData = await LoginResponse;
-          setRole(userData.data.role);
-        } catch (err: any | null) {
-          setRole(null);
+          setRole(loginResponse.data.role);
         }
-      } else {
+
+        setUser(firebaseUser);
+        setToken(currentToken);
+      } catch (err: any) {
+        await auth.signOut;
+        navigate("/Login");
         setRole(null);
         setToken(null);
       }
