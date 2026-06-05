@@ -27,6 +27,7 @@ use App\Http\Controllers\SMSController;
 use App\Http\Controllers\Votes\VoteController;
 use App\Http\Controllers\Votes\VoteCommentController;
 use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\SensorControllers\SensorLogController;
 
 
 Route::get('/test', function () {
@@ -49,6 +50,10 @@ Route::get('/locations/barangays', [LocationsController::class, 'barangays']);
 Route::get('/emergency-contacts', [EmergencyContactController::class, 'index']);
 Route::get('/evac-types', [EvacTypeController::class, 'index']);
 Route::get('/capacity-levels', [CapacityLevelController::class, 'index']);
+
+
+Route::get('/sensor-logs', [SensorLogController::class, 'index']);
+Route::post('/sensor-logs', [SensorLogController::class, 'store']);
 
 // ---------------------------------------------------------------
 // PIN PUBLIC ROUTES — no token required

@@ -29,14 +29,13 @@ class SensorLog extends Model
 	public $timestamps = false;
 
 	protected $casts = [
-		'sensor_id' => 'int',
 		'sensor_timestamp' => 'datetime',
 		'log_time' => 'datetime',
 		'water_level' => 'float',
 	];
 
 	protected $fillable = [
-		'sensor_id',
+		'sensor_code',
 		'sensor_timestamp',
 		'log_time',
 		'water_level',
