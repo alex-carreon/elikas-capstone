@@ -49,17 +49,14 @@ Route::get('/locations/barangays', [LocationsController::class, 'barangays']);
 Route::get('/emergency-contacts', [EmergencyContactController::class, 'index']);
 Route::get('/evac-types', [EvacTypeController::class, 'index']);
 Route::get('/capacity-levels', [CapacityLevelController::class, 'index']);
-
-// ---------------------------------------------------------------
-// PIN PUBLIC ROUTES — no token required
-// ---------------------------------------------------------------
-Route::get('/pins', [GetEvacAreasController::class, 'getEvacAreas']);
-Route::get('/evacpins/users', [GetEvacAreasController::class, 'getMyEvacAreas'])->middleware('firebase.auth');
-Route::get('/pins/nearby', [GetNearbyEvacuationAreasController::class, 'getNearbyEvacuationAreas']);
-Route::get('/pins/routes', [GetEvacuationRoutesController::class, 'getEvacuationRoutes']);
 Route::get('/pins/{id}', [GetEvacAreaDetailsController::class, 'getEvacAreaDetails']);
 
-
+// ---------------------------------------------------------------
+// PIN ROUTES
+// ---------------------------------------------------------------
+Route::get('/pins', [GetEvacAreasController::class, 'getEvacAreas']);
+Route::get('/pins/nearby', [GetNearbyEvacuationAreasController::class, 'getNearbyEvacuationAreas']);
+Route::get('/pins/routes', [GetEvacuationRoutesController::class, 'getEvacuationRoutes']);
 
 // ---------------------------------------------------------------
 // ONLY ADMIN ROUTES
@@ -72,7 +69,7 @@ Route::prefix('admin')->middleware(['firebase.auth', 'role:1'])->group(function 
 
     Route::post('/create-govop', [AdminController::class, 'createGovOp']);
 
-    Route::get('/pins', [GetEvacAreasController::class, 'getAdminEvacAreas']);
+    Route::get('/pins', [GetEvacAreasController::class, 'getAdminEvacAreas']); //Admin pins showing all pins regardless of status
 
     Route::get('flood-paths', [FloodPathAdminController::class, 'index']);
 
@@ -91,8 +88,14 @@ Route::prefix('admin')->middleware(['firebase.auth', 'role:1'])->group(function 
 Route::middleware(['firebase.auth', 'role:2'])->group(function () {
     Route::apiResource('sensors', SensorController::class)->except(['destroy']);
     Route::patch('/sensors/{sensor}/deactivate', [SensorController::class, 'deactivate']);
-    Route::post('/sms/broadcasts', [SMSController::class, 'sendBroadcast']);
+    //sms related routes
+
     Route::get('/sms/recipients', [SMSController::class, 'recipients']);
+    Route::post('/sms/broadcasts', [SMSController::class, 'store']);
+    Route::get('/sms/broadcasts', [SMSController::class, 'history']);
+    Route::post('/sms/broadcasts/send-now', [SMSController::class, 'sendImmediate']);
+    Route::get('/sms/broadcasts/{broadcastId}/status', [SMSController::class, 'status'])
+        ->whereNumber('broadcastId');
 });
 
 
@@ -154,4 +157,20 @@ Route::middleware(['firebase.auth', 'role:1,2,3'])->group(function () {
     //COMMENTS
     Route::get('/evac-areas/{evacAreaId}/comments', [EvacComments::class, 'index']);
     Route::post('/evac-areas/{evacAreaId}/comments', [EvacComments::class, 'store']);
+
+    //SENSORS
+    Route::get('/sensors/{sensor}', [SensorController::class, 'show']);
+
+    //pins
+    Route::get('/pins/my-coords', [GetEvacAreasController::class, 'getMyCoords']);
+    Route::get('/evacpins/users/coords', [GetEvacAreasController::class, 'getMyCoords']);
+
+    Route::get('/evacpins/users', [GetEvacAreasController::class, 'getMyEvacHistory']);
+    Route::get('/evacpins/users/history', [GetEvacAreasController::class, 'getMyEvacHistory']);
+
+    Route::patch('/pins/{id}/restore', [DeleteEvacuationAreaController::class, 'restoreEvacuationArea']);
+
+    //Emergency contact
+    Route::get('/emergency-contacts/location/{location_id}', [EmergencyContactController::class, 'getByLocationId']);
+
 });
