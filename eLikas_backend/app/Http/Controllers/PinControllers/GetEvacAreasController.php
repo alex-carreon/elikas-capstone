@@ -19,7 +19,8 @@ class GetEvacAreasController extends Controller
             $user = $request->attributes->get('firebase_user');
 
             $query = EvacArea::query()
-                ->select(['id', 'location']);
+                ->select(['id', 'location'])
+                ->with(['social_element:id,user_id,deactivated_at']);
 
             if (!$request->filled('active') || $request->boolean('active')) {
                 $query
@@ -62,8 +63,8 @@ class GetEvacAreasController extends Controller
 
             return response()->json([
                 'count' => $pins->count(),
-                'pins' => $pins->map(function ($pin) {
-                    return $this->formatEvacArea($pin);
+                'pins' => $pins->map(function ($pin) use ($user) {
+                    return $this->formatEvacArea($pin, $user);
                 })
             ], 200);
 
@@ -102,8 +103,8 @@ class GetEvacAreasController extends Controller
 
             return response()->json([
                 'count' => $pins->count(),
-                'pins' => $pins->map(function ($pin) {
-                    return $this->formatCoordsOnly($pin);
+                'pins' => $pins->map(function ($pin) use ($user) {
+                    return $this->formatCoordsOnly($pin, $user);
                 })
             ], 200);
 
@@ -141,8 +142,8 @@ class GetEvacAreasController extends Controller
 
             return response()->json([
                 'count' => $pins->count(),
-                'pins' => $pins->map(function ($pin) {
-                    return $this->formatHistoryEvacArea($pin);
+                'pins' => $pins->map(function ($pin) use ($user) {
+                    return $this->formatHistoryEvacArea($pin, $user);
                 })
             ], 200);
 
@@ -174,11 +175,12 @@ class GetEvacAreasController extends Controller
             $this->applySearchFilter($query, $request);
 
             $pins = $query->get();
+            $user = $request->attributes->get('firebase_user');
 
             return response()->json([
                 'count' => $pins->count(),
-                'pins' => $pins->map(function ($pin) {
-                    return $this->formatEvacArea($pin);
+                'pins' => $pins->map(function ($pin) use ($user) {
+                    return $this->formatEvacArea($pin, $user);
                 })
             ], 200);
 
@@ -192,16 +194,17 @@ class GetEvacAreasController extends Controller
 
     // ==================== PRIVATE FORMATTING METHODS ====================
 
-    private function formatEvacArea(EvacArea $pin)
+    private function formatEvacArea(EvacArea $pin, $user = null)
     {
         return [
             'id' => $pin->id,
             'lat' => $pin->location?->latitude,
             'lng' => $pin->location?->longitude,
+            'own_pins' => $user && $pin->social_element?->user_id === $user->id,
         ];
     }
 
-    private function formatCoordsOnly(EvacArea $pin)
+    private function formatCoordsOnly(EvacArea $pin, $user = null)
     {
         $isActive = $pin->social_element?->deactivated_at === null
             && (
@@ -216,10 +219,11 @@ class GetEvacAreasController extends Controller
             'location_id' => $pin->location_id,
             'location_name' => $pin->location_info?->name,
             'status' => $isActive ? 'active' : 'inactive',
+            'own_pins' => $user && $pin->social_element?->user_id === $user->id,
         ];
     }
 
-    private function formatHistoryEvacArea(EvacArea $pin)
+    private function formatHistoryEvacArea(EvacArea $pin, $user = null)
     {
         return [
             'id' => $pin->id,
@@ -239,6 +243,7 @@ class GetEvacAreasController extends Controller
             'last_confirmed' => $pin->verified_at
                 ? $pin->verified_at->timezone('Asia/Manila')->toDateTimeString()
                 : null,
+            'own_pins' => $user && $pin->social_element?->user_id === $user->id,
         ];
     }
 
