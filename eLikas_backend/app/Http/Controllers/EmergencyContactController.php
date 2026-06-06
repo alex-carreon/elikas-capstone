@@ -48,6 +48,33 @@ class EmergencyContactController extends Controller
         }
     }
 
+    public function show(int $id)
+    {
+        try {
+            $contact = EmergencyContact::with(['social_element.user', 'location:id,name'])
+                ->whereHas('social_element', function ($q) {
+                    $q->whereNull('deactivated_at');
+                })
+                ->find($id);
+
+            if (!$contact) {
+                return response()->json([
+                    'error' => 'Emergency contact not found',
+                ], 404);
+            }
+
+            return response()->json([
+                'emergency_contact' => $this->formatContact($contact),
+            ], 200);
+
+        } catch (\Exception $e) {
+            return response()->json([
+                'error' => 'Failed to fetch emergency contact',
+                'details' => $e->getMessage(),
+            ], 500);
+        }
+    }
+
     public function getByLocationId(int $location_id)
     {
         try {
@@ -273,6 +300,7 @@ class EmergencyContactController extends Controller
     {
         return [
             'id' => $contact->id,
+            'location_id' => $contact->location_id,
             'location_name' => $contact->location?->name,
             'name' => $contact->name,
             'address' => $contact->address,
