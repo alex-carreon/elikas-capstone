@@ -27,6 +27,7 @@ use App\Http\Controllers\SMSController;
 use App\Http\Controllers\Votes\VoteController;
 use App\Http\Controllers\Votes\VoteCommentController;
 use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\FeedbackController;
 
 
 Route::get('/test', function () {
@@ -47,6 +48,8 @@ Route::get('flood-paths', [FloodPathController::class, 'index']);
 Route::get('/locations/cities', [LocationsController::class, 'cities']);
 Route::get('/locations/barangays', [LocationsController::class, 'barangays']);
 Route::get('/emergency-contacts', [EmergencyContactController::class, 'index']);
+Route::get('/emergency-contacts/{id}', [EmergencyContactController::class, 'show'])
+    ->whereNumber('id');
 Route::get('/evac-types', [EvacTypeController::class, 'index']);
 Route::get('/capacity-levels', [CapacityLevelController::class, 'index']);
 Route::get('/pins/{id}', [GetEvacAreaDetailsController::class, 'getEvacAreaDetails']);
@@ -79,6 +82,13 @@ Route::prefix('admin')->middleware(['firebase.auth', 'role:1'])->group(function 
 
     Route::get('/evac-areas/{evacAreaId}/comments',[CommentsAdminController::class, 'index']);
     Route::get('/comments/{id}',[CommentsAdminController::class, 'show']);
+
+    Route::get('/feedback', [FeedbackController::class, 'index']);
+    Route::get('/feedback/{id}', [FeedbackController::class, 'show'])->whereNumber('id');
+    // Use PATCH to deactivate feedback instead of hard delete
+    Route::patch('/feedback/{id}/deactivate', [FeedbackController::class, 'destroy'])->whereNumber('id');
+
+    Route::post('/create-admin', [AdminController::class, 'createUser']);
 
 });
 
@@ -117,6 +127,7 @@ Route::middleware(['firebase.auth', 'role:1,2'])->group(function () {
     Route::patch('/pins/{id}/verify', [VerifyEvacuationAreaController::class, 'verifyEvacuationArea']);
 
     Route::post('/emergency-contacts', [EmergencyContactController::class, 'store']);
+    Route::patch('/emergency-contacts/{id}', [EmergencyContactController::class, 'update']);
     Route::patch('/emergency-contacts/{id}/deactivate', [EmergencyContactController::class, 'destroy']);
     Route::patch('/emergency-contacts/{id}/restore', [EmergencyContactController::class, 'restore']);
 });
@@ -125,6 +136,8 @@ Route::middleware(['firebase.auth', 'role:1,2'])->group(function () {
 Route::middleware(['firebase.auth', 'role:1,2,3'])->group(function () {
 
     Route::post('/auth/logout', [AuthController::class, 'logout']);
+
+    Route::post('/feedback', [FeedbackController::class, 'store']);
 
     Route::patch('/profile/email-sync', [ProfileController::class, 'syncEmail']);
     //PROFILE
