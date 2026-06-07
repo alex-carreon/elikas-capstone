@@ -111,8 +111,11 @@ function Map({ onLocationFound, showLocation, nearestRouteTrigger }: MapProps) {
 
     setShowNearestRoute(true);
     setShowRoute(false);
-    setSelectedPin(null);
-    setOpenFromRoute(true);
+    // setSelectedPin(null);
+    setOpenFromRoute(false);
+    setIsSensor(false);
+    setIsHazard(false);
+    setNewPin(false);
   }, [nearestRouteTrigger]);
 
   // Have pin's type to be needed information from db
@@ -295,9 +298,13 @@ function Map({ onLocationFound, showLocation, nearestRouteTrigger }: MapProps) {
       {/* <Routing /> */}
       {showNearestRoute && (
         <NearestRouting
-          onPinSelected={setSelectedPin}
+          onPinSelected={(pin: any) => {
+            setSelectedPin(pin);
+            setOpen(true);
+          }}
           userPosition={userPosition}
           showNearestRoute={showNearestRoute}
+          nearestRouteTrigger={nearestRouteTrigger}
         />
       )}
       {showRoute && !showNearestRoute && selectedPin && !admin && (
