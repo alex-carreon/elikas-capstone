@@ -18,7 +18,7 @@ interface SelectDropdownProps {
   placeholder: string;
   onSubmit?: (e: React.ChangeEvent<HTMLInputElement>) => void;
   error?: string;
-  options: { label: string; value: string }[];
+  options: { label: string; value: string; description?: string }[];
   isRequired?: boolean;
   disabled?: boolean;
   loading?: boolean;
@@ -59,7 +59,9 @@ function SelectDropdown({
           <SelectGroup>
             {options.map((option) => (
               <SelectItem key={option.value} value={option.value}>
-                {option.label}
+                <span>
+                  {option.label} - {option.description}
+                </span>
               </SelectItem>
             ))}
           </SelectGroup>
