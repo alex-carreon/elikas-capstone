@@ -60,7 +60,8 @@ function SelectDropdown({
             {options.map((option) => (
               <SelectItem key={option.value} value={option.value}>
                 <span>
-                  {option.label} - {option.description}
+                  {option.label}{" "}
+                  {option.description && `- ${option.description}`}
                 </span>
               </SelectItem>
             ))}
