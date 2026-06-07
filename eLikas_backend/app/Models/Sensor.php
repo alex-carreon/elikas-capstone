@@ -66,10 +66,16 @@ class Sensor extends Model
 
 	public function sensor_logs()
 	{
-		return $this->hasMany(SensorLog::class, 'sensor_id');
+		return $this->hasMany(SensorLog::class, 'sensor_code', 'sensor_code')
+            ->orderBy('sensor_timestamp', 'desc');
 	}
 
-    public function mountLocation()
+    public function latest_log()
+    {
+        return $this->hasOne(SensorLog::class, 'sensor_code', 'sensor_code')->latestOfMany();
+    }
+
+    public function mount_location()
     {
         return $this->belongsTo(Location::class, 'location_id');
     }
