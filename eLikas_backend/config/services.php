@@ -35,6 +35,10 @@ return [
         ],
     ],
 
+    'openai' => [
+        'api_key' => env('OPENAI_API_KEY'),
+    ],
+
     'iprogsms' => [
     'base_url' => env('IPROGSMS_BASE_URL', 'https://www.iprogsms.com/api/v1'),
     'api_token' => env('IPROGSMS_API_TOKEN'),
