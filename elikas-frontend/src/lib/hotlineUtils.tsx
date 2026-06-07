@@ -98,3 +98,29 @@ export const handleUpdate = ({
     console.log(err.response);
   }
 };
+
+export const handleDeac = ({ id, navigate }: handleActionProps) => {
+  try {
+    const response = api.patch(`/emergency-contacts/${id}/deactivate`);
+
+    if (!response.catch) {
+      toast.error("Deleting this hotline failed.");
+      console.log(response);
+    }
+
+    toast.promise(response, {
+      loading: "Deleting this hotline...",
+      success: "Hotline deleted!",
+      error: (err: any) => {
+        return err.response.data.message || "Please try again.";
+      },
+      position: "top-center",
+    });
+
+    response.then(() => {
+      navigate?.("/Hotlines");
+    });
+  } catch (err: any) {
+    console.log(err.response.data);
+  }
+};
