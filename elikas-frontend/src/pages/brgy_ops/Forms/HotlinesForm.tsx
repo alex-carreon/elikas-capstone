@@ -8,7 +8,7 @@ import api from "@/api";
 import { toast } from "sonner";
 import { useNavigate, useParams } from "react-router";
 import SelectDropdown from "@/components/SelectDropdown";
-import { handleSubmit, handleUpdate } from "@/lib/hotlineUtils";
+import { handleDeac, handleSubmit, handleUpdate } from "@/lib/hotlineUtils";
 import FormSkeleton from "@/pages/Skeletons/FormSkeleton";
 
 type Barangays = {
@@ -155,6 +155,13 @@ function HotlinesForm() {
     });
   };
 
+  const deac = () => {
+    handleDeac({
+      id: id,
+      navigate: navigate,
+    });
+  };
+
   return loading ? (
     <div className="w-full h-full flex flex-col items-center p-12 mt-8 mb-2 gap-4">
       <FormSkeleton />
@@ -187,7 +194,7 @@ function HotlinesForm() {
                 label="Hotline Id"
                 description="Enter where the hotline belongs to."
                 inputType="text"
-                id="Hotline_NameField"
+                id="Hotline_Id"
                 placeholder="i.e. Medical and Health"
                 value={String(hotlines?.id)}
                 readonly
@@ -285,7 +292,7 @@ function HotlinesForm() {
                   <div className="mx-2 flex justify-evenly shrink gap-4">
                     <ButtonComp
                       text="Submit"
-                      id="Hotlines_SubmitUpdBtn"
+                      id="Hotline_SubmitUpdBtn"
                       // type="button"
                       variant="primary"
                       heightSize="38px"
@@ -294,7 +301,7 @@ function HotlinesForm() {
                     ></ButtonComp>
                     <ButtonComp
                       text="Cancel"
-                      id="Hotlines_CancelUpdBtn"
+                      id="Hotline_CancelUpdBtn"
                       variant="outline"
                       heightSize="38px"
                       widthSize="20"
@@ -309,7 +316,7 @@ function HotlinesForm() {
                 <div className="mx-2 flex justify-evenly shrink gap-4">
                   <ButtonComp
                     text="Update"
-                    id="Hotlines_UpdateBtn"
+                    id="Hotline_UpdateBtn"
                     // type="button"
                     variant="primary"
                     heightSize="38px"
@@ -318,13 +325,13 @@ function HotlinesForm() {
                   ></ButtonComp>
                   <ButtonComp
                     text="Delete"
-                    id="Hotlines_DeleteBtn"
+                    id="Hotline_DeleteBtn"
                     variant="important"
                     heightSize="38px"
                     widthSize="20"
-                    // onClick={() => {
-                    //   delete
-                    // }}
+                    onClick={() => {
+                      deac();
+                    }}
                     type="button"
                   ></ButtonComp>
                 </div>
