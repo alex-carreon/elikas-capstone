@@ -104,107 +104,97 @@ function History() {
   const [barangays, setBarangays] = useState<Barangays[]>([]);
   const [openCollapse, setOpenCollapse] = useState(false);
 
+  let message: string;
+  const params = new URLSearchParams();
+
+  if (inactive) {
+    params.set("is_active", "0");
+    message = "Inactive Sensors are shown";
+  } else {
+    message = "";
+  }
+
+  if (yellow) {
+    params.append("current_status[]", "yellow");
+    message = "Sensors filtered to yellow alerts";
+  } else {
+    message = "";
+  }
+
+  if (orange) {
+    params.append("current_status[]", "orange");
+    message = "Sensors filtered to orange alerts";
+  } else {
+    message = "";
+  }
+
+  if (red) {
+    params.append("current_status[]", "red");
+    message = "Sensors filtered to red alerts";
+  } else {
+    message = "";
+  }
+
+  if (brgyFilter || brgyFilter != 0) {
+    params.set("location_id", String(brgyFilter));
+    message = "Filtered to chosen barangay";
+  } else {
+    message = "";
+  }
+
+  const getSensors = async () => {
+    try {
+      setLoading(true);
+      const parameters = params.toString();
+      const endpoint = `/sensors${parameters ? `?${parameters}` : ""}`;
+      console.log(endpoint);
+      const sensorsResponse = await api.get(endpoint);
+
+      if (!sensorsResponse) {
+        console.log("Failed to retrieve data");
+      }
+
+      const mySensors = sensorsResponse.data.data;
+      setSensors(mySensors);
+      toast.success(message);
+    } catch (err: string | any) {
+      console.error(err.message || "An error occurred");
+      toast.error(err?.response?.data?.message || "An error occurred");
+    } finally {
+      setLoading(false);
+    }
+  };
+
   useEffect(() => {
-    let message: string;
-    const params = new URLSearchParams();
-
-    if (inactive) {
-      params.set("is_active", "0");
-      message = "Inactive Sensors are shown";
-    } else {
-      message = "";
-    }
-
-    if (yellow) {
-      params.append("current_status[]", "yellow");
-      message = "Sensors filtered to yellow alerts";
-    } else {
-      message = "";
-    }
-
-    if (orange) {
-      params.append("current_status[]", "orange");
-      message = "Sensors filtered to orange alerts";
-    } else {
-      message = "";
-    }
-
-    if (red) {
-      params.append("current_status[]", "red");
-      message = "Sensors filtered to red alerts";
-    } else {
-      message = "";
-    }
-
-    if (brgyFilter || brgyFilter != 0) {
-      params.set("location_id", String(brgyFilter));
-      message = "Sensors filtered to chosen barangay";
-    } else {
-      message = "";
-    }
-
-    if (!isSensors) return;
-
     if (isSensors) {
-      const getSensors = async () => {
-        try {
-          setLoading(true);
-          const parameters = params.toString();
-          const endpoint = `/sensors${parameters ? `?${parameters}` : ""}`;
-          console.log(endpoint);
-          const sensorsResponse = await api.get(
-            `/sensors?${parameters ? `?${parameters}` : ""}`,
-          );
-
-          if (!sensorsResponse) {
-            console.log("Failed to retrieve data");
-          }
-
-          const mySensors = sensorsResponse.data.data;
-          setSensors(mySensors);
-          toast.success(message);
-        } catch (err: string | any) {
-          console.error(err.message || "An error occurred");
-          toast.error(err?.response?.data?.message || "An error occurred");
-        } finally {
-          setLoading(false);
-        }
-      };
-
       getSensors();
-    }
-  }, [inactive, red, orange, yellow, brgyFilter]);
+    } else return;
+  }, [inactive, red, orange, yellow, brgyFilter, isSensors]);
 
   useEffect(() => {
     const getMyPins = async () => {
       try {
         setInitialLoad(true);
-        const [floodResponse, evacResponse, sensorResponse, brgyResponse] =
-          await Promise.all([
-            api.get("/flood-paths/my"),
-            api.get("/evacpins/users?own_pins=true"),
-            api.get("/sensors?sort_by=last_online_null&sort_order=asc"),
-            api.get("/locations/barangays?city_id=10"),
-          ]);
+        const parameters = params.toString();
+        const endpointEvac = `/evacpins/users?own_pins=true${parameters ? `&${parameters}` : ""}`;
+
+        const [floodResponse, evacResponse, brgyResponse] = await Promise.all([
+          api.get("/flood-paths/my"),
+          api.get(endpointEvac),
+          api.get("/locations/barangays?city_id=10"),
+        ]);
 
         console.log(floodResponse);
 
-        if (
-          !floodResponse ||
-          !evacResponse ||
-          !sensorResponse ||
-          brgyResponse
-        ) {
+        if (!floodResponse || !evacResponse || brgyResponse) {
           console.log("Failed to retrieve data");
         }
         const myHazards = await floodResponse.data.flood_paths;
         const myEvacs = await evacResponse.data.pins;
-        const mySensors = await sensorResponse.data.data;
         const barangays = await brgyResponse.data.Barangays;
 
         setFloodPaths(myHazards);
         setEvacPins(myEvacs);
-        setSensors(mySensors);
         setBarangays(barangays);
       } catch (err: string | any) {
         Error(err.message || "An error occurred");
@@ -469,26 +459,26 @@ function History() {
                   </InputGroup>
                 </div>
               </div>
-              {isSensors && (
-                <>
-                  <Collapsible className="w-full flex flex-col justify-end rounded-md mt-2">
-                    <CollapsibleTrigger
-                      onClick={() => setOpenCollapse(!openCollapse)}
-                      id="History_FiltersTrigger"
-                    >
-                      <div className="w-full flex flex-row justify-end mb-2">
-                        Filters
-                        {openCollapse ? (
-                          <ChevronUpIcon className="ml-2 group-data-[state=open]:rotate-180" />
-                        ) : (
-                          <ChevronDownIcon className="ml-2 group-data-[state=open]:rotate-180" />
-                        )}
-                      </div>{" "}
-                    </CollapsibleTrigger>
-                    <CollapsibleContent
-                      id="History_FiltersContent"
-                      className="flex flex-col items-center  px-2.5 pt-0 text-sm"
-                    >
+              <>
+                <Collapsible className="w-full flex flex-col justify-end rounded-md mt-2">
+                  <CollapsibleTrigger
+                    onClick={() => setOpenCollapse(!openCollapse)}
+                    id="History_FiltersTrigger"
+                  >
+                    <div className="w-full flex flex-row justify-end mb-2">
+                      Filters
+                      {openCollapse ? (
+                        <ChevronUpIcon className="ml-2 group-data-[state=open]:rotate-180" />
+                      ) : (
+                        <ChevronDownIcon className="ml-2 group-data-[state=open]:rotate-180" />
+                      )}
+                    </div>{" "}
+                  </CollapsibleTrigger>
+                  <CollapsibleContent
+                    id="History_FiltersContent"
+                    className="flex flex-col items-center  px-2.5 pt-0 text-sm"
+                  >
+                    {isSensors && (
                       <div className="w-full gap-2 bg-gray-300/50 p-4 rounded-lg">
                         <div className="flex flex-row items-center gap-2">
                           <Toggle
@@ -561,16 +551,44 @@ function History() {
                           ) : null}
                         </div>
                       </div>
-                    </CollapsibleContent>
-                  </Collapsible>
-                </>
-              )}
+                    )}
+                    {isEvac ? (
+                      <div className="w-full gap-2 bg-gray-300/50 p-4 rounded-lg flex">
+                        <SelectDropdown
+                          value={String(brgyFilter)}
+                          onValueChange={(val) => setBrgyFilter(Number(val))}
+                          placeholder="barangay"
+                          id="History_BrgyFilter"
+                          options={[
+                            { label: "All", value: "0" },
+                            ...(barangays?.map((barangays) => ({
+                              label: barangays.name,
+                              value: String(barangays.id),
+                            })) ?? []),
+                          ]}
+                        />
+                        {brgyFilter ? (
+                          <button
+                            onClick={() => setBrgyFilter(0)}
+                            id="History_ClearBrgyFilter"
+                          >
+                            <X size={14} />
+                          </button>
+                        ) : null}
+                      </div>
+                    ) : (
+                      <></>
+                    )}
+                  </CollapsibleContent>
+                </Collapsible>
+              </>
             </div>
             <div className="flex flex-col gap-2 overflow-y-auto max-h-screen">
               {isEvac
                 ? activeEvac
                   ? evacPins.map((pins) => {
-                      if (!pins.is_expired)
+                      if (!pins.is_expired) {
+                        console.log("EvacPins Active", evacPins);
                         return (
                           <Row
                             postId={String(pins.id)}
@@ -582,9 +600,11 @@ function History() {
                             buttonId="History_ActiveEvacDetailsBtn"
                           />
                         );
+                      }
                     })
                   : evacPins.map((pins) => {
-                      if (pins.is_expired)
+                      if (pins.is_expired) {
+                        console.log("EvacPins expired", evacPins);
                         return (
                           <Row
                             postId={String(pins.id)}
@@ -596,6 +616,7 @@ function History() {
                             buttonId="History_ExpiredEvacDetailsBtn"
                           />
                         );
+                      }
                     })
                 : isSensors
                   ? sensors.map((pins) => {
