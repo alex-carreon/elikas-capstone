@@ -74,6 +74,7 @@ Returns a paginated list of sensors. All query parameters are optional — omitt
 | `name` | string | Partial match anywhere in field | `?name=bridge` |
 | `sensor_code` | string | Partial match anywhere in field | `?sensor_code=SR-ABC` |
 | `address` | string | Partial match anywhere in field | `?address=Wilson` |
+| `search` | string | Partial match anywhere in `name`, `sensor_code`, `address` | `?search=bridge` |
 
 Special characters `%` and `_` are escaped — they will be treated as literals, not SQL wildcards.
 

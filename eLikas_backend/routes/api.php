@@ -27,6 +27,7 @@ use App\Http\Controllers\SMSController;
 use App\Http\Controllers\Votes\VoteController;
 use App\Http\Controllers\Votes\VoteCommentController;
 use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\FeedbackController;
 use App\Http\Controllers\SensorControllers\SensorLogController;
 
 
@@ -48,23 +49,25 @@ Route::get('flood-paths', [FloodPathController::class, 'index']);
 Route::get('/locations/cities', [LocationsController::class, 'cities']);
 Route::get('/locations/barangays', [LocationsController::class, 'barangays']);
 Route::get('/emergency-contacts', [EmergencyContactController::class, 'index']);
+Route::get('/emergency-contacts/{id}', [EmergencyContactController::class, 'show'])
+    ->whereNumber('id');
 Route::get('/evac-types', [EvacTypeController::class, 'index']);
 Route::get('/capacity-levels', [CapacityLevelController::class, 'index']);
+Route::get('/pins/{id}', [GetEvacAreaDetailsController::class, 'getEvacAreaDetails']);
+Route::get('/pins', [GetEvacAreasController::class, 'getEvacAreas']);
+Route::get('/evacpins/users/coords', [GetEvacAreasController::class, 'getMyCoords']);
+
+
 
 
 Route::get('/sensor-logs', [SensorLogController::class, 'index']);
 Route::post('/sensor-logs', [SensorLogController::class, 'store']);
 
 // ---------------------------------------------------------------
-// PIN PUBLIC ROUTES — no token required
+// PIN ROUTES
 // ---------------------------------------------------------------
-Route::get('/pins', [GetEvacAreasController::class, 'getEvacAreas']);
-Route::get('/evacpins/users', [GetEvacAreasController::class, 'getMyEvacAreas'])->middleware('firebase.auth');
 Route::get('/pins/nearby', [GetNearbyEvacuationAreasController::class, 'getNearbyEvacuationAreas']);
 Route::get('/pins/routes', [GetEvacuationRoutesController::class, 'getEvacuationRoutes']);
-Route::get('/pins/{id}', [GetEvacAreaDetailsController::class, 'getEvacAreaDetails']);
-
-
 
 // ---------------------------------------------------------------
 // ONLY ADMIN ROUTES
@@ -77,7 +80,7 @@ Route::prefix('admin')->middleware(['firebase.auth', 'role:1'])->group(function 
 
     Route::post('/create-govop', [AdminController::class, 'createGovOp']);
 
-    Route::get('/pins', [GetEvacAreasController::class, 'getAdminEvacAreas']);
+    Route::get('/pins', [GetEvacAreasController::class, 'getAdminEvacAreas']); //Admin pins showing all pins regardless of status
 
     Route::get('flood-paths', [FloodPathAdminController::class, 'index']);
 
@@ -88,6 +91,12 @@ Route::prefix('admin')->middleware(['firebase.auth', 'role:1'])->group(function 
     Route::get('/evac-areas/{evacAreaId}/comments',[CommentsAdminController::class, 'index']);
     Route::get('/comments/{id}',[CommentsAdminController::class, 'show']);
 
+    Route::get('/feedback', [FeedbackController::class, 'index']);
+    Route::get('/feedback/{id}', [FeedbackController::class, 'show'])->whereNumber('id');
+    Route::delete('/feedback/{id}', [FeedbackController::class, 'destroy'])->whereNumber('id');
+
+    Route::post('/create-admin', [AdminController::class, 'createUser']);
+
 });
 
 // ---------------------------------------------------------------
@@ -96,8 +105,14 @@ Route::prefix('admin')->middleware(['firebase.auth', 'role:1'])->group(function 
 Route::middleware(['firebase.auth', 'role:2'])->group(function () {
     Route::apiResource('sensors', SensorController::class)->except(['destroy']);
     Route::patch('/sensors/{sensor}/deactivate', [SensorController::class, 'deactivate']);
-    Route::post('/sms/broadcasts', [SMSController::class, 'sendBroadcast']);
+    //sms related routes
+
     Route::get('/sms/recipients', [SMSController::class, 'recipients']);
+    Route::post('/sms/broadcasts', [SMSController::class, 'store']);
+    Route::get('/sms/broadcasts', [SMSController::class, 'history']);
+    Route::post('/sms/broadcasts/send-now', [SMSController::class, 'sendImmediate']);
+    Route::get('/sms/broadcasts/{broadcastId}/status', [SMSController::class, 'status'])
+        ->whereNumber('broadcastId');
 });
 
 
@@ -119,6 +134,7 @@ Route::middleware(['firebase.auth', 'role:1,2'])->group(function () {
     Route::patch('/pins/{id}/verify', [VerifyEvacuationAreaController::class, 'verifyEvacuationArea']);
 
     Route::post('/emergency-contacts', [EmergencyContactController::class, 'store']);
+    Route::patch('/emergency-contacts/{id}', [EmergencyContactController::class, 'update']);
     Route::patch('/emergency-contacts/{id}/deactivate', [EmergencyContactController::class, 'destroy']);
     Route::patch('/emergency-contacts/{id}/restore', [EmergencyContactController::class, 'restore']);
 });
@@ -127,6 +143,8 @@ Route::middleware(['firebase.auth', 'role:1,2'])->group(function () {
 Route::middleware(['firebase.auth', 'role:1,2,3'])->group(function () {
 
     Route::post('/auth/logout', [AuthController::class, 'logout']);
+
+    Route::post('/feedback', [FeedbackController::class, 'store']);
 
     Route::patch('/profile/email-sync', [ProfileController::class, 'syncEmail']);
     //PROFILE
@@ -159,4 +177,18 @@ Route::middleware(['firebase.auth', 'role:1,2,3'])->group(function () {
     //COMMENTS
     Route::get('/evac-areas/{evacAreaId}/comments', [EvacComments::class, 'index']);
     Route::post('/evac-areas/{evacAreaId}/comments', [EvacComments::class, 'store']);
+
+    //SENSORS
+    Route::get('/sensors/{sensor}', [SensorController::class, 'show']);
+
+    //pins
+    Route::get('/pins/my-coords', [GetEvacAreasController::class, 'getMyCoords']);
+    Route::get('/evacpins/users', [GetEvacAreasController::class, 'getMyEvacHistory']);
+    Route::get('/evacpins/users/history', [GetEvacAreasController::class, 'getMyEvacHistory']);
+
+    Route::patch('/pins/{id}/restore', [DeleteEvacuationAreaController::class, 'restoreEvacuationArea']);
+
+    //Emergency contact
+    Route::get('/emergency-contacts/location/{location_id}', [EmergencyContactController::class, 'getByLocationId']);
+
 });

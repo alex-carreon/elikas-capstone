@@ -18,6 +18,21 @@ class SensorQuery {
             $query->where('sensor_code', 'LIKE', '%' . $this->escapeLike($request->sensor_code) . '%');
         }
 
+        // LIKE search for address
+        if ($request->filled('address')) {
+            $query->where('address', 'LIKE', '%' . $this->escapeLike($request->address) . '%');
+        }
+
+        // omni-search across name, sensor_code, and address
+        if ($request->filled('search')) {
+            $term = $this->escapeLike($request->input('search'));
+            $query->where(function (Builder $q) use ($term) {
+                $q->where('sensor_code', 'LIKE', '%' . $term . '%')
+                ->orWhere('name', 'LIKE', '%' . $term . '%')
+                ->orWhere('address', 'LIKE', '%' . $term . '%');
+            });
+        }
+
         // Handles ?current_status[]=yellow&current_status[]=red
         if ($request->filled('current_status')) {
             $query->whereIn('current_status', $request->input('current_status'));
@@ -27,11 +42,6 @@ class SensorQuery {
         if ($request->filled('location_id')) {
             $locationIds = $this->resolveLocationIds((int) $request->input('location_id'));
             $query->whereIn('location_id', $locationIds);
-        }
-
-        // Search string for address
-        if ($request->filled('address')) {
-            $query->where('address', 'LIKE', '%' . $this->escapeLike($request->address) . '%');
         }
 
         // Last online comparisons

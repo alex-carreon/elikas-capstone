@@ -1,6 +1,6 @@
 import api from "@/api";
 import { toast } from "sonner";
-import { useNavigate, type NavigateFunction } from "react-router-dom";
+import { type NavigateFunction } from "react-router-dom";
 
 interface handleActionProps {
   e?: React.FormEvent<Element>;
@@ -50,6 +50,8 @@ export const handleSubmit = async ({
       },
     });
 
+    console.log(response);
+
     if (!response) {
       console.log("No response from server");
     }
@@ -86,9 +88,7 @@ export const handleUpdate = async ({
   name,
   address,
   description,
-  location_id,
   area_type,
-  capacity_level,
   is_persistent,
   for_reg_flood,
   for_heavy_flood,

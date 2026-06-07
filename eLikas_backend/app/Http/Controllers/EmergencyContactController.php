@@ -11,10 +11,75 @@ use Carbon\Carbon;
 
 class EmergencyContactController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
         try {
-            $contacts = EmergencyContact::with(['social_element.user'])
+            $query = EmergencyContact::with(['social_element.user', 'location:id,name'])
+                ->whereHas('social_element', function ($q) {
+                    $q->whereNull('deactivated_at');
+                });
+
+            if ($request->has('location_id')) {
+                $query->where('location_id', $request->query('location_id'));
+            }
+
+            if ($request->has('location_name')) {
+                $locationName = '%' . $this->escapeLike($request->query('location_name')) . '%';
+                $query->whereHas('location', function ($q) use ($locationName) {
+                    $q->where('name', 'LIKE', $locationName);
+                });
+            }
+
+            $contacts = $query->orderByDesc('updated_at')
+                ->get()
+                ->map(function ($contact) {
+                    return $this->formatContact($contact);
+                });
+
+            return response()->json([
+                'emergency_contacts' => $contacts,
+            ], 200);
+
+        } catch (\Exception $e) {
+            return response()->json([
+                'error' => 'Failed to fetch emergency contacts',
+                'details' => $e->getMessage(),
+            ], 500);
+        }
+    }
+
+    public function show(int $id)
+    {
+        try {
+            $contact = EmergencyContact::with(['social_element.user', 'location:id,name'])
+                ->whereHas('social_element', function ($q) {
+                    $q->whereNull('deactivated_at');
+                })
+                ->find($id);
+
+            if (!$contact) {
+                return response()->json([
+                    'error' => 'Emergency contact not found',
+                ], 404);
+            }
+
+            return response()->json([
+                'emergency_contact' => $this->formatContact($contact),
+            ], 200);
+
+        } catch (\Exception $e) {
+            return response()->json([
+                'error' => 'Failed to fetch emergency contact',
+                'details' => $e->getMessage(),
+            ], 500);
+        }
+    }
+
+    public function getByLocationId(int $location_id)
+    {
+        try {
+            $contacts = EmergencyContact::with(['social_element.user', 'location:id,name'])
+                ->where('location_id', $location_id)
                 ->whereHas('social_element', function ($q) {
                     $q->whereNull('deactivated_at');
                 })
@@ -30,7 +95,7 @@ class EmergencyContactController extends Controller
 
         } catch (\Exception $e) {
             return response()->json([
-                'error' => 'Failed to fetch emergency contacts',
+                'error' => 'Failed to fetch emergency contacts by location',
                 'details' => $e->getMessage(),
             ], 500);
         }
@@ -82,7 +147,7 @@ class EmergencyContactController extends Controller
 
             DB::commit();
 
-            $contact->load(['social_element.user']);
+            $contact->load(['social_element.user', 'location:id,name']);
 
             return response()->json([
                 'message' => 'Emergency contact created successfully',
@@ -116,7 +181,7 @@ class EmergencyContactController extends Controller
                 ], 422);
             }
 
-            $contact = EmergencyContact::with(['social_element.user'])
+            $contact = EmergencyContact::with(['social_element.user', 'location:id,name'])
                 ->whereHas('social_element', function ($q) {
                     $q->whereNull('deactivated_at');
                 })
@@ -132,7 +197,7 @@ class EmergencyContactController extends Controller
             $contact->updated_at = now();
             $contact->save();
 
-            $contact->load(['social_element.user']);
+            $contact->load(['social_element.user', 'location:id,name']);
 
             return response()->json([
                 'message' => 'Emergency contact updated successfully',
@@ -216,7 +281,7 @@ class EmergencyContactController extends Controller
         $contact->updated_at = now();
         $contact->save();
 
-        $contact->load(['social_element.user']);
+        $contact->load(['social_element.user', 'location:id,name']);
 
         return response()->json([
             'message' => 'Emergency contact restored successfully',
@@ -235,6 +300,8 @@ class EmergencyContactController extends Controller
     {
         return [
             'id' => $contact->id,
+            'location_id' => $contact->location_id,
+            'location_name' => $contact->location?->name,
             'name' => $contact->name,
             'address' => $contact->address,
             'phone_number' => $contact->phone_number,
@@ -246,5 +313,10 @@ class EmergencyContactController extends Controller
                 ? 'Admin'
                 : 'GovOp',
         ];
+    }
+
+    private function escapeLike(string $value): string
+    {
+        return str_replace(['\\', '%', '_'], ['\\\\', '\\%', '\\_'], $value);
     }
 }

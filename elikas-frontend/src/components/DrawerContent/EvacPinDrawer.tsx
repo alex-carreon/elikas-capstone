@@ -44,6 +44,8 @@ import { createAvatar } from "@dicebear/core";
 import { Skeleton } from "@/components/ui/skeleton";
 import PostRow from "@/components/PostRow";
 import sample from "@/assets/Map/SamplePhoto.png";
+import { useUserContext } from "@/context/AuthContext";
+import { toast } from "sonner";
 
 type verifiedBy = {
   gov_op_id: number | null;
@@ -181,9 +183,13 @@ function EvacPinDrawer({
   const [unavailable, setUnavailable] = useState<typeof facilities>([]);
   const [openCollapse, setOpenCollapse] = useState(false);
   const [openImageCollapse, setOpenImageCollapse] = useState(false);
+  const [verifiedBy, setVerifiedBy] = useState(0);
+  const [verified, setVerified] = useState(false);
 
   const cameraInputRef = useRef<HTMLInputElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const { role } = useUserContext();
 
   const avatar = createAvatar(bigSmile, {
     seed: "Felix",
@@ -232,6 +238,7 @@ function EvacPinDrawer({
         const response = await api.get(`/pins/${selectedPin.id}`);
         const evacPinDetails = await response.data;
         setEvacPinDetails(evacPinDetails);
+        setVerifiedBy(evacPinDetails.verified_by.gov_op_id);
         console.log("response:", response.data.media?.[0]?.url);
         console.log("evacPinDetails:", evacPinDetails.media?.[0]?.url);
         console.log("evacPinDetailsALL:", evacPinDetails);
@@ -240,6 +247,10 @@ function EvacPinDrawer({
         const expDate = new Date(evacPinDetails.expiry);
 
         setDaysleft(differenceInDays(expDate, today));
+
+        if (verifiedBy != null) {
+          setVerified(true);
+        } else setVerified(false);
 
         const available = facilities.filter((facilities) =>
           facilities.type === "count"
@@ -262,7 +273,27 @@ function EvacPinDrawer({
     };
     getEvacPinDetails();
     console.log(evacPinDetails);
-  }, [selectedPin?.id]);
+  }, [selectedPin?.id, verified]);
+
+  const verifyPin = async (e: React.FormEvent<Element>) => {
+    e.preventDefault();
+
+    try {
+      const response = api.patch(`/pins/${evacPinDetails?.id}/verify`, {
+        verified: !verified,
+      });
+
+      if (!response) {
+        toast.error("Failed to verify pin. Please try again.");
+        console.log(response);
+      }
+
+      setVerified(!verified);
+      toast.success("Pin Verified!");
+    } catch (err: any) {
+      console.log(err.response);
+    }
+  };
 
   return loading ? (
     <>
@@ -300,9 +331,30 @@ function EvacPinDrawer({
             widthSize="40"
           ></ButtonComp>
         </div>
-        <DrawerClose id="DrawerInfo_Close">
-          <CircleX size={28} fill="#CECECE" strokeWidth={1} />
-        </DrawerClose>
+        <div className="flex items-center gap-2">
+          {role === "brgy_op" ? (
+            verified ? (
+              <ButtonComp
+                text="Un-verify"
+                variant="outline"
+                id="Drawer_UnverifyBtn"
+                heightSize="34px"
+                onClick={(e) => verifyPin(e)}
+              />
+            ) : (
+              <ButtonComp
+                text="Verify"
+                variant="primary"
+                id="Drawer_VerifyBtn"
+                heightSize="34px"
+                onClick={(e) => verifyPin(e)}
+              />
+            )
+          ) : null}
+          <DrawerClose id="DrawerInfo_Close">
+            <CircleX size={28} fill="#CECECE" strokeWidth={1} />
+          </DrawerClose>
+        </div>
       </div>
       <DrawerHeader>
         <DrawerTitle>

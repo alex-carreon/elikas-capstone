@@ -7,6 +7,8 @@ type MapFilterContextType = {
   setAllPins: (val: boolean) => void;
   showGovPins: boolean;
   setShowGovPins: (val: boolean) => void;
+  showOtherPins: boolean;
+  setShowOtherPins: (val: boolean) => void;
 };
 
 const MapFilterContext = createContext<MapFilterContextType | null>(null);
@@ -15,6 +17,7 @@ export function MapFilterProvider({ children }: { children: React.ReactNode }) {
   const [showPaths, setShowPaths] = useState(true);
   const [allPins, setAllPins] = useState(true);
   const [showGovPins, setShowGovPins] = useState(true);
+  const [showOtherPins, setShowOtherPins] = useState(true);
 
   return (
     <MapFilterContext.Provider
@@ -25,6 +28,8 @@ export function MapFilterProvider({ children }: { children: React.ReactNode }) {
         setAllPins,
         showGovPins,
         setShowGovPins,
+        showOtherPins,
+        setShowOtherPins,
       }}
     >
       {children}
