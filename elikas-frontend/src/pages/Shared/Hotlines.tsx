@@ -28,7 +28,6 @@ function Hotlines() {
   const [loading, setLoading] = useState(false);
   const [hotlines, setHotlines] = useState<Hotline[]>([]);
   const [searchFor, setSearchFor] = useState("");
-  const [clearSearch, setClearSearch] = useState(false);
   const { role } = useUserContext();
 
   let message: string;
