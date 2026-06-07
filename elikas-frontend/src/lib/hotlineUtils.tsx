@@ -69,7 +69,7 @@ export const handleUpdate = ({
   e?.preventDefault();
 
   try {
-    const response = api.put(`/emergency-contacts/${id}`, {
+    const response = api.patch(`/emergency-contacts/${id}`, {
       name: title,
       address: address,
       phone_number: primaryNo,
