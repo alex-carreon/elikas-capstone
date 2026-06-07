@@ -52,7 +52,7 @@ type media = {
 
 type EvacPin = {
   id: number;
-  media: media;
+  media: media[];
   name: string;
   address: string;
   description: string;
@@ -163,7 +163,6 @@ function EvacPin() {
     setFileName(undefined);
 
     if (inputRef.current) {
-      console.log(inputRef.current);
       inputRef.current.value = "";
     }
   };
@@ -189,7 +188,6 @@ function EvacPin() {
           setHasUpdated(false);
           const response = await api.get(`/pins/${id}`);
           const evacDetails = await response.data;
-          console.log(response);
 
           setRegFlood(evacDetails.for_reg_flood);
           setHeavyFlood(evacDetails.for_heavy_flood);
@@ -236,7 +234,6 @@ function EvacPin() {
         try {
           const response = await api.get("/evac-types");
           setEvacTypes(response.data);
-          console.log("evac types", response);
 
           if (!response) {
             console.log("Failed to fetch evac types");
@@ -267,7 +264,6 @@ function EvacPin() {
         try {
           const response = await api.get("/evac-types");
           setEvacTypes(response.data);
-          console.log("evac types", response);
 
           if (!response) {
             console.log("Failed to fetch evac types");
@@ -293,7 +289,6 @@ function EvacPin() {
   }, [isEditable]);
 
   useEffect(() => {
-    console.log("evacPins:", evacPins);
     if (isEditable && evacPins) {
       setRegFlood(evacPins.for_reg_flood);
       setDesc(evacPins.description);
@@ -309,19 +304,8 @@ function EvacPin() {
       setHasHealth(evacPins.has_health);
       setPWDFriendly(evacPins.pwd_friendly);
       setHasCatchment(evacPins.has_catchment);
-      console.log(evacPins.for_reg_flood);
     }
   }, [isEditable, evacPins]);
-
-  useEffect(() => {
-    if (!expiry) return;
-    console.log(
-      "expiry data",
-      format(toZonedTime(expiry!, "Asia/Manila"), "yyyy-MM-dd HH:mm:ss", {
-        timeZone: "Asia/Manila",
-      }),
-    );
-  }, [expiry]);
 
   const submit = (e: React.FormEvent) => {
     // const dateTime = formatInTimeZone(new Date(), "Asia/Manila", "yyyy-MM-dd");
@@ -503,7 +487,9 @@ function EvacPin() {
               </>
             ) : (
               <>
-                <img src={String(evacPins?.media.url)} />
+                {evacPins?.media[0]?.url && (
+                  <img src={String(evacPins?.media[0].url)} />
+                )}
               </>
             )}
           </div>

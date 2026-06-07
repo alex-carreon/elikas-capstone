@@ -6,6 +6,8 @@ use App\Http\Controllers\Controller;
 use App\Models\Comment;
 use App\Models\EvacArea;
 use Illuminate\Http\Request;
+use App\Models\Flag;
+
 
 class CommentsAdminController extends Controller
 {
@@ -35,15 +37,20 @@ class CommentsAdminController extends Controller
         ->orderByDesc('id')
         ->get();
 
+
         return response()->json([
             'count' => $comments->count(),
 
             'comments' => $comments->map(function ($comment) {
+        
+                $isFlagged = Flag::where('element_id', $comment->element_id)->exists();
 
                 return [
                     'id' => $comment->id,
 
                     'content' => $comment->content,
+                    
+                    'is_flagged' => $isFlagged,
 
                     'commented_by' => [
                         'id' => $comment->element?->user?->id,

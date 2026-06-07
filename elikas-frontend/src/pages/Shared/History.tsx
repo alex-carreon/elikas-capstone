@@ -102,48 +102,54 @@ function History() {
   const [orange, setOrange] = useState(false);
   const [brgyFilter, setBrgyFilter] = useState(0);
   const [barangays, setBarangays] = useState<Barangays[]>([]);
+  const [levels, setLevels] = useState<FloodLevel[]>([]);
+  const [levelFilter, setLevelFilter] = useState(0);
+  const [searchFor, setSearchFor] = useState("");
   const [openCollapse, setOpenCollapse] = useState(false);
 
   let message: string;
   const params = new URLSearchParams();
 
-  if (inactive) {
-    params.set("is_active", "0");
-    message = "Inactive Sensors are shown";
-  } else {
-    message = "";
-  }
-
-  if (yellow) {
-    params.append("current_status[]", "yellow");
-    message = "Sensors filtered to yellow alerts";
-  } else {
-    message = "";
-  }
-
-  if (orange) {
-    params.append("current_status[]", "orange");
-    message = "Sensors filtered to orange alerts";
-  } else {
-    message = "";
-  }
-
-  if (red) {
-    params.append("current_status[]", "red");
-    message = "Sensors filtered to red alerts";
-  } else {
-    message = "";
-  }
-
-  if (brgyFilter || brgyFilter != 0) {
-    params.set("location_id", String(brgyFilter));
-    message = "Filtered to chosen barangay";
-  } else {
-    message = "";
-  }
-
-  const getSensors = async () => {
+  const getSensors = async (search = searchFor) => {
     try {
+      if (inactive) {
+        params.set("is_active", "0");
+        message = "Inactive Sensors are shown";
+      } else {
+        message = "";
+      }
+
+      if (yellow) {
+        params.append("current_status[]", "yellow");
+        message = "Sensors filtered to yellow alerts";
+      } else {
+        message = "";
+      }
+
+      if (orange) {
+        params.append("current_status[]", "orange");
+        message = "Sensors filtered to orange alerts";
+      } else {
+        message = "";
+      }
+
+      if (red) {
+        params.append("current_status[]", "red");
+        message = "Sensors filtered to red alerts";
+      } else {
+        message = "";
+      }
+
+      if (brgyFilter || brgyFilter != 0) {
+        params.set("location_id", String(brgyFilter));
+        message = "Filtered to chosen barangay";
+      }
+
+      if (searchFor) {
+        params.set("search", search);
+        message = "Search results";
+      }
+
       setLoading(true);
       const parameters = params.toString();
       const endpoint = `/sensors${parameters ? `?${parameters}` : ""}`;
@@ -172,38 +178,64 @@ function History() {
   }, [inactive, red, orange, yellow, brgyFilter, isSensors]);
 
   useEffect(() => {
-    const getMyPins = async () => {
-      try {
-        setInitialLoad(true);
-        const parameters = params.toString();
-        const endpointEvac = `/evacpins/users?own_pins=true${parameters ? `&${parameters}` : ""}`;
+    getMyPins();
+  }, [levelFilter]);
 
-        const [floodResponse, evacResponse, brgyResponse] = await Promise.all([
-          api.get("/flood-paths/my"),
-          api.get(endpointEvac),
-          api.get("/locations/barangays?city_id=10"),
-        ]);
-
-        console.log(floodResponse);
-
-        if (!floodResponse || !evacResponse || brgyResponse) {
-          console.log("Failed to retrieve data");
-        }
-        const myHazards = await floodResponse.data.flood_paths;
-        const myEvacs = await evacResponse.data.pins;
-        const barangays = await brgyResponse.data.Barangays;
-
-        setFloodPaths(myHazards);
-        setEvacPins(myEvacs);
-        setBarangays(barangays);
-      } catch (err: string | any) {
-        Error(err.message || "An error occurred");
-      } finally {
-        setInitialLoad(false);
-      }
-    };
+  useEffect(() => {
     getMyPins();
   }, []);
+
+  const getMyPins = async (search = searchFor) => {
+    try {
+      if (search) {
+        if (isEvac) {
+          params.set("search", search);
+          message = "Search Results";
+        } else {
+          message = "";
+        }
+        if (!isEvac && !isSensors) {
+          params.set("flood_level_id", String(levelFilter));
+        }
+      }
+
+      if (levelFilter || levelFilter != 0) {
+        params.set("flood_level_id", String(levelFilter));
+        message = "Hazards filtered!";
+      }
+
+      setInitialLoad(true);
+      const parameters = params.toString();
+      const endpointEvac = `/evacpins/users?own_pins=true${parameters ? `&${parameters}` : ""}`;
+      const endpointHazard = `/flood-paths/my${parameters ? `?${parameters}` : ""}`;
+      console.log(endpointEvac);
+      const [floodResponse, evacResponse, brgyResponse, levelsResponse] =
+        await Promise.all([
+          api.get(endpointHazard),
+          api.get(endpointEvac),
+          api.get("/locations/barangays?city_id=10"),
+          api.get("/flood-levels"),
+        ]);
+
+      if (!floodResponse || !evacResponse || !brgyResponse || !levelsResponse) {
+        console.log("Failed to retrieve data");
+      }
+      const myHazards = await floodResponse.data.flood_paths;
+      const myEvacs = await evacResponse.data.pins;
+      const barangays = await brgyResponse.data.Barangays;
+      const levels = await levelsResponse.data.flood_levels;
+      console.log(levels);
+
+      setFloodPaths(myHazards);
+      setEvacPins(myEvacs);
+      setBarangays(barangays);
+      setLevels(levels);
+    } catch (err: string | any) {
+      Error(err.message || "An error occurred");
+    } finally {
+      setInitialLoad(false);
+    }
+  };
 
   return (
     <div className=" overflow-hidden h-screen flex justify-center pt-20 p-5">
@@ -447,17 +479,36 @@ function History() {
                     </Link>
                   </div>
                 )}
-                <div className="w-full flex flex-col justify-end items-end gap-2">
-                  <InputGroup className="w-2/3">
-                    <InputGroupInput
-                      className="text-sm h-8"
-                      id="History_SearchField"
-                    ></InputGroupInput>
-                    <InputGroupAddon align="inline-end">
-                      <Search />
-                    </InputGroupAddon>
-                  </InputGroup>
-                </div>
+                {(isEvac || isSensors) && (
+                  <div className="w-full flex justify-end items-center gap-2">
+                    <InputGroup className="w-2/3">
+                      <InputGroupInput
+                        className="text-sm h-8"
+                        id="History_SearchField"
+                        onChange={(e) => setSearchFor(e.target.value)}
+                        value={searchFor}
+                      ></InputGroupInput>
+                      <InputGroupAddon align="inline-end">
+                        <Search
+                          onClick={() => {
+                            isSensors ? getSensors() : getMyPins();
+                          }}
+                        />
+                      </InputGroupAddon>
+                    </InputGroup>
+                    {searchFor ? (
+                      <button
+                        onClick={() => {
+                          setSearchFor("");
+                          isSensors ? getSensors("") : getMyPins("");
+                        }}
+                        id="Hotline_SearchField"
+                      >
+                        <X size={14} />
+                      </button>
+                    ) : null}
+                  </div>
+                )}
               </div>
               <>
                 <Collapsible className="w-full flex flex-col justify-end rounded-md mt-2">
@@ -552,32 +603,30 @@ function History() {
                         </div>
                       </div>
                     )}
-                    {isEvac ? (
+                    {!isEvac && !isSensors && (
                       <div className="w-full gap-2 bg-gray-300/50 p-4 rounded-lg flex">
                         <SelectDropdown
-                          value={String(brgyFilter)}
-                          onValueChange={(val) => setBrgyFilter(Number(val))}
-                          placeholder="barangay"
-                          id="History_BrgyFilter"
+                          value={String(levelFilter)}
+                          onValueChange={(val) => setLevelFilter(Number(val))}
+                          placeholder="Flood Level"
+                          id="History_LevelFilter"
                           options={[
                             { label: "All", value: "0" },
-                            ...(barangays?.map((barangays) => ({
-                              label: barangays.name,
-                              value: String(barangays.id),
+                            ...(levels?.map((level) => ({
+                              label: level.level_name,
+                              value: String(level.id),
                             })) ?? []),
                           ]}
                         />
-                        {brgyFilter ? (
+                        {levelFilter ? (
                           <button
-                            onClick={() => setBrgyFilter(0)}
+                            onClick={() => setLevelFilter(0)}
                             id="History_ClearBrgyFilter"
                           >
                             <X size={14} />
                           </button>
                         ) : null}
                       </div>
-                    ) : (
-                      <></>
                     )}
                   </CollapsibleContent>
                 </Collapsible>
@@ -587,8 +636,7 @@ function History() {
               {isEvac
                 ? activeEvac
                   ? evacPins.map((pins) => {
-                      if (!pins.is_expired) {
-                        console.log("EvacPins Active", evacPins);
+                      if (!pins.is_expired && !pins.deactivated_at) {
                         return (
                           <Row
                             postId={String(pins.id)}
@@ -604,7 +652,6 @@ function History() {
                     })
                   : evacPins.map((pins) => {
                       if (pins.is_expired) {
-                        console.log("EvacPins expired", evacPins);
                         return (
                           <Row
                             postId={String(pins.id)}

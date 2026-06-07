@@ -152,20 +152,10 @@ function DrawerComp({
   isHazard,
 }: DrawerProps) {
   const [expanded, setExpanded] = useState(false);
-  const [verified, setVerified] = useState(false);
-  const [color, setColor] = useState("");
   const [height, setHeight] = useState(0);
-  const [risk, setRisk] = useState("");
-  const [desc, setDesc] = useState("");
   const [seed, setSeed] = useState("Felix");
   const [comment, setComment] = useState("");
   const [image, setImage] = useState("");
-  const [imagePreview, setImagePreview] = useState("");
-  const [openDialog, setOpenDialog] = useState(false);
-  const [report, setReport] = useState(false);
-  const [floodDetails, setFloodDetails] = useState<FloodDetails | undefined>();
-  const [daysLeft, setDaysleft] = useState(0);
-  const [loading, setLoading] = useState(true);
 
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -230,7 +220,7 @@ function DrawerComp({
   }, [open]);
 
   if (!selectedFloodPin) return null;
-  if (!selectedEvacPin) return null;
+  // if (!selectedEvacPin) return null;
 
   const avatar = createAvatar(bigSmile, {
     seed: seed,
@@ -297,7 +287,7 @@ function DrawerComp({
     content = (
       <>
         <EvacPinDrawer
-          selectedPin={selectedEvacPin}
+          selectedPin={selectedEvacPin!}
           onFindRoute={onFindRoute}
           setIsExpanded={setExpanded}
           isExpanded={expanded}
