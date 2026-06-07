@@ -467,9 +467,11 @@ interface RoadMappingProps {
 function RouterHazard({
   lonlats,
   profile,
+  color,
 }: {
   lonlats: string;
   profile: string;
+  color: string;
 }) {
   const [points, setPoints] = useState<[number, number][]>([]);
 
@@ -502,12 +504,29 @@ function RouterHazard({
 
   if (!points.length) return null;
 
-  return <Polyline positions={points} weight={6} color="#5F80AA" />;
+  return <Polyline positions={points} weight={6} color={color} />;
 }
 
 export function RoadMapping({ onPinClick }: RoadMappingProps) {
   const [floodPaths, setFloodPaths] = useState<FloodPath[]>([]);
   const { showPaths } = useMapFilterContext();
+
+  const colorHazard = {
+    lightBlue: "#52B2DA",
+    darkBlue: "#578EC2",
+    red: "#B22B42",
+    fallback: "#C7C7C7",
+  };
+
+  const getColor = (level: number | null | undefined): string => {
+    if (level === 1 || level === 2) {
+      return colorHazard.lightBlue;
+    } else if (level === 3 || level === 4) {
+      return colorHazard.darkBlue;
+    } else if (level === 5 || level === 6 || level === 7) {
+      return colorHazard.red;
+    } else return colorHazard.fallback;
+  };
 
   const createClusterCustomIcon = (cluster: any) => {
     return divIcon({
@@ -567,7 +586,11 @@ export function RoadMapping({ onPinClick }: RoadMappingProps) {
                     },
                   }}
                 />
-                <RouterHazard lonlats={lonlats} profile="all" />
+                <RouterHazard
+                  lonlats={lonlats}
+                  profile="all"
+                  color={getColor(pin.level.id)}
+                />
               </Fragment>
             );
           })}
