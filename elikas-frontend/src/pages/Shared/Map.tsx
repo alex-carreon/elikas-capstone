@@ -3,7 +3,7 @@ import "leaflet/dist/leaflet.css";
 import Filter from "@/components/Filter";
 import { MapContainer } from "react-leaflet";
 import { type LatLngBoundsExpression } from "leaflet";
-import { useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Map as LeafletMap } from "leaflet";
 import { useUserContext } from "@/context/AuthContext";
 import ButtonComp from "@/components/Button";
@@ -11,6 +11,7 @@ import CurrentLocation from "@/assets/Map/currentLocation.svg?react";
 
 function Map() {
   const [locationFound, setLocationFound] = useState(false);
+  const [nearestPoint, setNearestPoint] = useState(0);
   const [showLocation, setShowLocation] = useState(false);
   const [showNearestRouteTrigger, setShowNearestRouteTrigger] = useState(0);
 
@@ -30,6 +31,10 @@ function Map() {
       setShowNearestRouteTrigger((prev) => prev + 1);
     } else console.log("Location not found");
   };
+
+  useEffect(() => {
+    console.log("trigger", showNearestRouteTrigger);
+  }, [showNearestRouteTrigger]);
 
   let authorized = false;
   let admin = false;

@@ -587,7 +587,7 @@ function History() {
               {isEvac
                 ? activeEvac
                   ? evacPins.map((pins) => {
-                      if (!pins.is_expired) {
+                      if (!pins.is_expired && !pins.deactivated_at) {
                         console.log("EvacPins Active", evacPins);
                         return (
                           <Row
