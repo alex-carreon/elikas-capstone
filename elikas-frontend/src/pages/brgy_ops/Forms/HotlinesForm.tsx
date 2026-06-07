@@ -8,7 +8,7 @@ import api from "@/api";
 import { toast } from "sonner";
 import { useNavigate, useParams } from "react-router";
 import SelectDropdown from "@/components/SelectDropdown";
-import { handleSubmit, handleUpdate } from "@/lib/hotlineUtils";
+import { handleDeac, handleSubmit, handleUpdate } from "@/lib/hotlineUtils";
 import FormSkeleton from "@/pages/Skeletons/FormSkeleton";
 
 type Barangays = {
@@ -152,6 +152,13 @@ function HotlinesForm() {
       brgyId: brgyId,
       navigate: navigate,
       id: id,
+    });
+  };
+
+  const deac = () => {
+    handleDeac({
+      id: id,
+      navigate: navigate,
     });
   };
 
@@ -322,9 +329,9 @@ function HotlinesForm() {
                     variant="important"
                     heightSize="38px"
                     widthSize="20"
-                    // onClick={() => {
-                    //   delete
-                    // }}
+                    onClick={() => {
+                      deac();
+                    }}
                     type="button"
                   ></ButtonComp>
                 </div>
