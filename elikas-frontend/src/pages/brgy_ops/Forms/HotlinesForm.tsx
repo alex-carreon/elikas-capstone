@@ -194,7 +194,7 @@ function HotlinesForm() {
                 label="Hotline Id"
                 description="Enter where the hotline belongs to."
                 inputType="text"
-                id="Hotline_NameField"
+                id="Hotline_Id"
                 placeholder="i.e. Medical and Health"
                 value={String(hotlines?.id)}
                 readonly
@@ -292,7 +292,7 @@ function HotlinesForm() {
                   <div className="mx-2 flex justify-evenly shrink gap-4">
                     <ButtonComp
                       text="Submit"
-                      id="Hotlines_SubmitUpdBtn"
+                      id="Hotline_SubmitUpdBtn"
                       // type="button"
                       variant="primary"
                       heightSize="38px"
@@ -301,7 +301,7 @@ function HotlinesForm() {
                     ></ButtonComp>
                     <ButtonComp
                       text="Cancel"
-                      id="Hotlines_CancelUpdBtn"
+                      id="Hotline_CancelUpdBtn"
                       variant="outline"
                       heightSize="38px"
                       widthSize="20"
@@ -316,7 +316,7 @@ function HotlinesForm() {
                 <div className="mx-2 flex justify-evenly shrink gap-4">
                   <ButtonComp
                     text="Update"
-                    id="Hotlines_UpdateBtn"
+                    id="Hotline_UpdateBtn"
                     // type="button"
                     variant="primary"
                     heightSize="38px"
@@ -325,7 +325,7 @@ function HotlinesForm() {
                   ></ButtonComp>
                   <ButtonComp
                     text="Delete"
-                    id="Hotlines_DeleteBtn"
+                    id="Hotline_DeleteBtn"
                     variant="important"
                     heightSize="38px"
                     widthSize="20"
