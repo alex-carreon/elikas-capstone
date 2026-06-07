@@ -12,7 +12,7 @@ class FloodPathAdminController extends Controller
 {
     public function index(Request $request)
     {
-        $floodLevel = $request->query('flood_level');
+        $floodLevelId = $request->query('flood_level_id');
         $isExpired = $request->query('is_expired');
         $isDeactivated = $request->query('is_deactivated');
 
@@ -22,10 +22,8 @@ class FloodPathAdminController extends Controller
         ]);
 
         // Filter by flood level
-        if ($floodLevel) {
-            $query->whereHas('floodLevel', function ($q) use ($floodLevel) {
-                $q->where('level_name', $floodLevel);
-            });
+        if (!is_null($floodLevelId)) {
+            $query->where('level_id', $floodLevelId);
         }
 
         // Filter by expiration status
