@@ -53,11 +53,14 @@ Route::get('/emergency-contacts/{id}', [EmergencyContactController::class, 'show
 Route::get('/evac-types', [EvacTypeController::class, 'index']);
 Route::get('/capacity-levels', [CapacityLevelController::class, 'index']);
 Route::get('/pins/{id}', [GetEvacAreaDetailsController::class, 'getEvacAreaDetails']);
+Route::get('/pins', [GetEvacAreasController::class, 'getEvacAreas']);
+Route::get('/evacpins/users/coords', [GetEvacAreasController::class, 'getMyCoords']);
+
+
 
 // ---------------------------------------------------------------
 // PIN ROUTES
 // ---------------------------------------------------------------
-Route::get('/pins', [GetEvacAreasController::class, 'getEvacAreas']);
 Route::get('/pins/nearby', [GetNearbyEvacuationAreasController::class, 'getNearbyEvacuationAreas']);
 Route::get('/pins/routes', [GetEvacuationRoutesController::class, 'getEvacuationRoutes']);
 
@@ -85,8 +88,7 @@ Route::prefix('admin')->middleware(['firebase.auth', 'role:1'])->group(function 
 
     Route::get('/feedback', [FeedbackController::class, 'index']);
     Route::get('/feedback/{id}', [FeedbackController::class, 'show'])->whereNumber('id');
-    // Use PATCH to deactivate feedback instead of hard delete
-    Route::patch('/feedback/{id}/deactivate', [FeedbackController::class, 'destroy'])->whereNumber('id');
+    Route::delete('/feedback/{id}', [FeedbackController::class, 'destroy'])->whereNumber('id');
 
     Route::post('/create-admin', [AdminController::class, 'createUser']);
 
@@ -176,8 +178,6 @@ Route::middleware(['firebase.auth', 'role:1,2,3'])->group(function () {
 
     //pins
     Route::get('/pins/my-coords', [GetEvacAreasController::class, 'getMyCoords']);
-    Route::get('/evacpins/users/coords', [GetEvacAreasController::class, 'getMyCoords']);
-
     Route::get('/evacpins/users', [GetEvacAreasController::class, 'getMyEvacHistory']);
     Route::get('/evacpins/users/history', [GetEvacAreasController::class, 'getMyEvacHistory']);
 
