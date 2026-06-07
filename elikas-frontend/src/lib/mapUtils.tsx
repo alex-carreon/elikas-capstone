@@ -158,10 +158,12 @@ export function NearestRouting({
   onPinSelected,
   userPosition,
   showNearestRoute,
+  nearestRouteTrigger,
 }: {
   onPinSelected: any;
   userPosition: LatLng | null;
   showNearestRoute: boolean;
+  nearestRouteTrigger: number;
 }) {
   const [points, setPoints] = useState<[number, number][]>([]);
   const [evacPins, setEvacPins] = useState<EvacPin[]>([]);
@@ -174,6 +176,9 @@ export function NearestRouting({
 
   //   For Routing
   useEffect(() => {
+    if (nearestRouteTrigger === 0) return;
+    if (!userPosition || !evacPins) return;
+
     console.log("After useEffect");
     console.log("evacPins", evacPins);
     if (!userPosition || !evacPins) return;
@@ -215,7 +220,7 @@ export function NearestRouting({
     };
 
     getRoutes();
-  }, [showNearestRoute, evacPins]);
+  }, [nearestRouteTrigger, evacPins]);
 
   return <Polyline positions={points} weight={6} color="#5F80AA" />;
 }

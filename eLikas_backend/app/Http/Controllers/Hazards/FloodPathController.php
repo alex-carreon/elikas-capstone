@@ -58,7 +58,7 @@ class FloodPathController extends Controller
     {
         $user = $request->attributes->get('firebase_user');
 
-        $floodLevel = $request->query('flood_level');
+        $floodLevelId = $request->query('flood_level_id');
 
         $query = FloodPath::with([
             'floodLevel:id,level_name',
@@ -67,10 +67,8 @@ class FloodPathController extends Controller
         ->ownedBy($user->id)
         ->notDeactivated();
 
-        if ($floodLevel) {
-            $query->whereHas('floodLevel', function ($q) use ($floodLevel) {
-                $q->where('level_name', $floodLevel);
-            });
+        if (!is_null($floodLevelId)) {
+            $query->where('level_id', $floodLevelId);
         }
 
         $floodPaths = $query

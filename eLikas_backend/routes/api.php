@@ -29,7 +29,8 @@ use App\Http\Controllers\Votes\VoteCommentController;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\FeedbackController;
 use App\Http\Controllers\SensorControllers\SensorLogController;
-
+use App\Http\Controllers\Moderation\ModerationCommentsController;
+use App\Http\Controllers\Moderation\ModerationCommnetsController;
 
 Route::get('/test', function () {
     return response()->json([
@@ -188,3 +189,8 @@ Route::middleware(['firebase.auth', 'role:1,2,3'])->group(function () {
     //Emergency contact
     Route::get('/emergency-contacts/location/{location_id}', [EmergencyContactController::class, 'getByLocationId']);
 });
+
+Route::post(
+    '/moderation/comments/test',
+    [ModerationCommentsController::class, 'test']
+);
