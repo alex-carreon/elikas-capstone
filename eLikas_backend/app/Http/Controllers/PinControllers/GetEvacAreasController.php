@@ -12,15 +12,18 @@ class GetEvacAreasController extends Controller
 
     // GET /api/pins
     // Map view with optional query filters:
-    // ?created_by=me, ?role=govop|indiv|admin, ?active=true
+    // ?created_by=me, ?role=govop|indiv|admin, ?active=true, ?search={name-or-address}
     public function getEvacAreas(Request $request)
     {
         try {
             $user = $request->attributes->get('firebase_user');
 
             $query = EvacArea::query()
-                ->select(['id', 'location'])
+                ->select(['id', 'location', 'name', 'address'])
                 ->with(['social_element:id,user_id,deactivated_at']);
+
+            // Apply search parameter globally for name/address matches
+            $this->applySearchFilter($query, $request);
 
             if (!$request->filled('active') || $request->boolean('active')) {
                 $query
@@ -77,46 +80,46 @@ class GetEvacAreasController extends Controller
     }
 
     // GET /api/my-coords?search={name-or-address}
-    // Logged-in user's pins: active and inactive, coordinates only.
+    // Logged-in user's pins: active and inactive, coordinates only. changed to include guests too
     public function getMyCoords(Request $request)
-    {
-        try {
-            $user = $request->attributes->get('firebase_user');
+{
+    try {
+        // Safe check: can be null for guests
+        $user = $request->attributes->get('firebase_user');
 
-            $query = EvacArea::query()
-                ->select(['id', 'element_id', 'location_id', 'location', 'expiry'])
-                ->with([
-                    'social_element:id,user_id,deactivated_at',
-                    'location_info:id,name',
-                ])
-                ->whereHas('social_element', function ($q) use ($user) {
-                    $q->where('user_id', $user->id);
-                });
+        $query = EvacArea::query()
+            ->select(['id', 'element_id', 'location_id', 'location', 'expiry'])
+            ->with([
+                'social_element:id,user_id,deactivated_at',
+                'location_info:id,name',
+            ]);
 
-            $this->applySearchFilter($query, $request);
+        if ($user) {
+            $query->whereHas('social_element', function ($q) use ($user) {
+                $q->where('user_id', $user->id);
+            });
+        }
 
-            if ($request->filled('location_id')) {
-                $query->where('location_id', $request->integer('location_id'));
-            }
+        $this->applySearchFilter($query, $request);
 
-            $pins = $query->get();
+        $pins = $query->get();
 
-            return response()->json([
-                'count' => $pins->count(),
-                'pins' => $pins->map(function ($pin) use ($user) {
-                    return $this->formatCoordsOnly($pin, $user);
-                })
-            ], 200);
+        return response()->json([
+            'count' => $pins->count(),
+            'pins' => $pins->map(function ($pin) use ($user) {
+                return $this->formatCoordsOnly($pin, $user);
+            })
+        ], 200);
 
         } catch (\Exception $e) {
             return response()->json([
-                'error' => 'Failed to fetch user pin coordinates',
-                'details' => $e->getMessage()
+            'error' => 'Failed to fetch user pin coordinates',
+            'details' => $e->getMessage()
             ], 500);
         }
     }
 
-    // GET /api/my-evac-history?search={name-or-address}&location_id={id}
+    // GET /api/my-evac-history?search={name-or-address}
     // User's evacuation area history with details
     public function getMyEvacHistory(Request $request)
     {
@@ -130,13 +133,7 @@ class GetEvacAreasController extends Controller
                     $q->where('user_id', $user->id);
                 });
 
-            if ($request->filled('search')) {
-                $this->applySearchFilter($query, $request);
-            }
-
-            if ($request->filled('location_id')) {
-                $query->where('location_id', $request->integer('location_id'));
-            }
+            $this->applySearchFilter($query, $request);
 
             $pins = $query->get();
 
@@ -155,7 +152,7 @@ class GetEvacAreasController extends Controller
         }
     }
 
-    // GET /api/admin/pins
+    // GET /api/admin/pins?search={name-or-address}
     // Admin dashboard: show expired and deactivated
     public function getAdminEvacAreas(Request $request)
     {
@@ -165,12 +162,6 @@ class GetEvacAreasController extends Controller
                 'evac_type',
                 'capacity_level_info',
             ]);
-
-            $this->applySearchFilter($query, $request);
-
-            if ($request->filled('location_id')) {
-                $query->where('location_id', $request->integer('location_id'));
-            }
 
             $this->applySearchFilter($query, $request);
 
@@ -278,4 +269,3 @@ class GetEvacAreasController extends Controller
         };
     }
 }
-
