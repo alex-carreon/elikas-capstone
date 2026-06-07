@@ -4,6 +4,7 @@ namespace App\Http\Controllers\SensorControllers;
 
 use Illuminate\Http\Request;
 use App\Http\Resources\SensorLogResource;
+use App\Http\Resources\SensorLogShowResource;
 use App\Models\SensorLog;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\StoreSensorLogRequest;
@@ -21,7 +22,7 @@ class SensorLogController extends Controller
             if ($sensorlogs->isEmpty() && !\App\Models\Sensor::where('sensor_code', $sensor_code)->exists()) {
                 return response()->json(['error' => 'Sensor not found'], 404);
             }
-            return SensorLogResource::collection($sensorlogs);
+            return SensorLogShowResource::collection($sensorlogs);
         } catch (\Exception $e) {
             return response()->json([
                 'error'   => 'Failed to fetch sensor logs',
