@@ -15,7 +15,7 @@ class StoreSensorLogRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'sensor_code' => ['required', 'string', 'exists:Sensors,sensor_code'],
+            'sensor_code' => ['required', 'string', 'exists:Sensors,sensor_code', 'max:20'],
             'water_level' => ['required', 'numeric', 'gt:0'],
             'sensor_timestamp' => ['required', 'date']
         ];
