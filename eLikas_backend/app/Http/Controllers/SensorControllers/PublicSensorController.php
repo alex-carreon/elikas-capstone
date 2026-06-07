@@ -13,7 +13,7 @@ class PublicSensorController extends Controller
         // Only return active sensors for public endpoint
         $sensors = Sensor::whereHas('social_element', function ($q) {
             $q->whereNull('deactivated_at');
-        })->with('mountLocation')->get();
+        })->with('mount_location')->get();
 
         return response()->json($sensors->map(function ($sensor) {
             return [
@@ -22,7 +22,7 @@ class PublicSensorController extends Controller
                 'location' => $sensor->location
                     ? [$sensor->location->latitude, $sensor->location->longitude]
                     : null,
-                'barangay' => $sensor->mountLocation?->name,
+                'barangay' => $sensor->mount_location?->name,
                 'lastOnline' => $sensor->last_online,
                 'currentStatus' => $sensor->current_status
             ];
@@ -32,13 +32,14 @@ class PublicSensorController extends Controller
     public function show(Sensor $sensor)
     {
         try {
+            $sensor->loadMissing('social_element', 'mount_location', 'latest_log');
+
             if ($sensor->social_element?->deactivated_at) {
                 return response()->json([
                     'error' => 'Sensor is deactivated'
                 ], 404);
             }
 
-            $sensor->loadMissing('mountLocation');
             return [
                 'id' => $sensor->id,
                 'name' => $sensor->name,
@@ -46,8 +47,8 @@ class PublicSensorController extends Controller
                     ? [$sensor->location->latitude, $sensor->location->longitude]
                     : null,
                 'address' => $sensor->address,
-                'barangay' => $sensor->mountLocation?->name,
-                'waterLevel' => null, //Will display last reading,
+                'barangay' => $sensor->mount_location?->name,
+                'waterLevel' => $sensor->latest_log?->water_level,
                 'lastOnline' => $sensor->last_online,
                 'currentStatus' => $sensor->current_status
             ];

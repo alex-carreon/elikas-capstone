@@ -18,7 +18,6 @@ class SensorResource extends JsonResource
             'id'             => $this->id,
             'sensorCode'    => $this->sensor_code,
             'name'           => $this->name,
-            'waterLevel'    => null, // Should display last reading
             'lastOnline'    => $this->last_online,
             'mountHeight'  => $this->mount_height,
             'location'       => $this->location
@@ -28,20 +27,17 @@ class SensorResource extends JsonResource
             'yellowLevel'  => $this->yellow_level,
             'orangeLevel'  => $this->orange_level,
             'redLevel'     => $this->red_level,
+            'waterLevel'   => $this->latest_log?->water_level,
             'currentStatus' => $this->current_status,
-            'mountLocation'   => $this->whenLoaded('mountLocation')
-                ? $this->mountLocation->name
+            'mountLocation'   => $this->whenLoaded('mount_location')
+                ? $this->mount_location->name
                 : null,
-
             'deactivatedAt' => $this->relationLoaded('social_element')
                 ? $this->social_element?->deactivated_at?->toIso8601String()
                 : null,
-
             'registeredBy' => $this->whenLoaded('social_element', function() {
                 return $this->social_element->user?->govOp?->location?->name ?? null;
             }),
-
-            // include sensor logs when loaded in show method here
         ];
     }
 }

@@ -12,9 +12,9 @@ Only `govOp` is capable of creating and editing sensor records, and all other se
 
 ---
 
-## Endpoints
+## Sensor Endpoints
 
-### `GET /api/public/sensors`
+### `GET /public/sensors`
 
 Returns a complete list of active sensors with minimal data. Currently no available queries.
 
@@ -53,9 +53,9 @@ Returns a single sensor (must be active) with basic data and current water level
     ],
     "address": "V. Ibanez Street",
     "barangay": "Barangay Salapan",
-    "waterLevel": null,
-    "lastOnline": null,
-    "currentStatus": null
+    "waterLevel": 1,
+    "lastOnline": "2026-06-05T05:04:10.000000Z",
+    "currentStatus": "normal"
 }
 ```
 
@@ -157,23 +157,23 @@ Only parameters in the explicit allowlist are processed. Any unknown query param
 {
     "data": [
         {
-            "id": 8,
-            "sensorCode": "SN-12-007",
-            "name": "De Jesus Bridge Sensor - Test Upd",
-            "waterLevel": null,
-            "lastOnline": null,
-            "mountHeight": 1,
+            "id": 20,
+            "sensorCode": "SR-4D4C63",
+            "name": "Ibanez Street Sensor",
+            "lastOnline": "2026-06-05T05:04:10.000000Z",
+            "mountHeight": 3,
             "location": [
-                14.603730122015,
-                121.03860592147
+                14.600140911055,
+                121.04148573512
             ],
-            "address": "General S. De Jesus (Bridge)",
-            "yellowLevel": 2,
-            "orangeLevel": 0,
+            "address": "V. Ibanez Street",
+            "yellowLevel": 1.5,
+            "orangeLevel": 2,
             "redLevel": 2.5,
+            "waterLevel": 1,
             "currentStatus": "normal",
-            "mountLocation": "Barangay Batis",
-            "deactivatedAt": "2026-06-03T17:37:12+00:00",
+            "mountLocation": "Barangay Salapan",
+            "deactivatedAt": null,
             "registeredBy": "Barangay Onse"
         }, ...
   ],
@@ -340,6 +340,113 @@ No request body required.
 ```
 
 Note: this does not delete the sensor or its logs. The sensor will appear in `?is_active=0` queries and be excluded from `?is_active=1` queries after deactivation.
+
+---
+
+## Sensor Log Endpoints
+
+### `GET /sensors/{sensor_code}/logs`
+
+Returns a page of logs starting with most recent for a single sensor using the sensor code. Append with the `?page=` parameter to navigate through pages. 
+
+#### Response
+
+```json
+{
+    "data": [
+        {
+            "waterLevel": 5,
+            "statusLevel": "normal",
+            "sensorTimestamp": "2026-06-05T05:04:10.000000Z",
+            "logTime": "2026-06-05T05:04:10.000000Z"
+        },
+        {
+            "waterLevel": 1,
+            "statusLevel": "normal",
+            "sensorTimestamp": "2026-06-05T05:04:10.000000Z",
+            "logTime": "2026-06-07T19:04:11.000000Z"
+        }, ...
+    ],
+    "links": {
+        "first": "http://127.0.0.1:8000/api/sensors/SR-4D4C63/logs?page=1",
+        "last": "http://127.0.0.1:8000/api/sensors/SR-4D4C63/logs?page=1",
+        "prev": null,
+        "next": null
+    },
+    "meta": {
+        "current_page": 1,
+        "from": 1,
+        "last_page": 1,
+        "links": [
+            {
+                "url": null,
+                "label": "&laquo; Previous",
+                "page": null,
+                "active": false
+            },
+            {
+                "url": "http://127.0.0.1:8000/api/sensors/SR-4D4C63/logs?page=1",
+                "label": "1",
+                "page": 1,
+                "active": true
+            },
+            {
+                "url": null,
+                "label": "Next &raquo;",
+                "page": null,
+                "active": false
+            }
+        ],
+        "path": "http://127.0.0.1:8000/api/sensors/SR-4D4C63/logs",
+        "per_page": 15,
+        "to": 12,
+        "total": 12
+    }
+}
+```
+
+### `POST /sensor-logs`
+
+Creates a new sensor log. Do not pass in `statusLevel` or `logTime` as both fields are handled by the appliction. 
+
+Currently unprotected but will implement a static key authentication to allow access only to registered sensors.
+
+#### Request Body
+
+```json
+{
+    "sensorCode": "SR-4D4C63",
+    "waterLevel": 2,
+    "sensorTimestamp": "2026-06-05T05:04:10.000000Z",
+}
+```
+
+| Field | Type | Required | Notes |
+|---|---|---|---|
+| `sensorCode` | string | Yes | Max 20 characters; must be registered in `Sensors` table |
+| `waterLevel` | numeric | Yes | Must be > 0 |
+| `sensorTimestamp` | date | Yes | |
+
+#### Automatic fields (do not pass)
+
+| Field | Set by |
+|---|---|
+| `status_level` | Automatically determined upon comparison with stored `yellow`, `orange`, and `red_level`s |
+| `log_time` | Uses current datetime of storage into the database |
+
+#### Response
+
+```json
+{
+    "data": {
+        "sensorCode": "SR-4D4C63",
+        "waterLevel": 2,
+        "statusLevel": "orange",
+        "sensorTimestamp": "2026-06-05T05:04:10.000000Z",
+        "logTime": "2026-06-07T22:17:50.000000Z"
+    }
+}
+```
 
 ---
 
