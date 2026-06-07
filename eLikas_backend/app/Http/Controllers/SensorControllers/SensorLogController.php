@@ -11,11 +11,17 @@ use App\Services\SensorLogService;
 
 class SensorLogController extends Controller
 {
-    public function index(Request $request)
+    public function index(Request $request, String $sensor_code)
     {
         try {
-            $sensorlogs = SensorLogResource::collection(SensorLog::all());
-            return $sensorlogs;
+            $sensorlogs = SensorLog::where('sensor_code', $sensor_code)
+                ->orderBy('sensor_timestamp', 'desc')
+                ->paginate(15);
+
+            if ($sensorlogs->isEmpty() && !\App\Models\Sensor::where('sensor_code', $sensor_code)->exists()) {
+                return response()->json(['error' => 'Sensor not found'], 404);
+            }
+            return SensorLogResource::collection($sensorlogs);
         } catch (\Exception $e) {
             return response()->json([
                 'error'   => 'Failed to fetch sensor logs',

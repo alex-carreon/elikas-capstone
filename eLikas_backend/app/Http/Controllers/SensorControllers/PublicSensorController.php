@@ -32,13 +32,14 @@ class PublicSensorController extends Controller
     public function show(Sensor $sensor)
     {
         try {
+            $sensor->loadMissing('social_element', 'mount_location', 'latest_log');
+
             if ($sensor->social_element?->deactivated_at) {
                 return response()->json([
                     'error' => 'Sensor is deactivated'
                 ], 404);
             }
 
-            $sensor->loadMissing('mount_location', 'latest_log');
             return [
                 'id' => $sensor->id,
                 'name' => $sensor->name,

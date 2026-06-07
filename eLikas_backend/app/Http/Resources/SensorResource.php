@@ -27,6 +27,7 @@ class SensorResource extends JsonResource
             'yellowLevel'  => $this->yellow_level,
             'orangeLevel'  => $this->orange_level,
             'redLevel'     => $this->red_level,
+            'waterLevel'   => $this->latest_log?->water_level,
             'currentStatus' => $this->current_status,
             'mountLocation'   => $this->whenLoaded('mount_location')
                 ? $this->mount_location->name
@@ -37,9 +38,6 @@ class SensorResource extends JsonResource
             'registeredBy' => $this->whenLoaded('social_element', function() {
                 return $this->social_element->user?->govOp?->location?->name ?? null;
             }),
-            'latestLog' => $this->whenLoaded('latest_log')
-                ? new SensorLogResource($this->latest_log)
-                : null,
         ];
     }
 }

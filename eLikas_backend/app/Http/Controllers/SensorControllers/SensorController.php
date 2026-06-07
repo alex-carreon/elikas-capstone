@@ -18,7 +18,7 @@ class SensorController extends Controller
         try {
             $filter = new SensorQuery();
             $sensors = $filter->transform(Sensor::query(), $request)->paginate();
-            $sensors->loadMissing('social_element', 'mountLocation');
+            $sensors->loadMissing('social_element', 'mount_location', 'latest_log');
             return SensorResource::collection($sensors);
         } catch (\Exception $e) {
             return response()->json([
@@ -32,7 +32,7 @@ class SensorController extends Controller
     public function show(Sensor $sensor)
     {
         try {
-            $sensor->loadMissing('social_element', 'mountLocation');
+            $sensor->loadMissing('social_element', 'mount_location');
             return new SensorResource($sensor);
         } catch (\Exception $e) {
             return response()->json([
@@ -71,9 +71,7 @@ class SensorController extends Controller
         }
     }
 
-    // ---------------------------------------------------------------
     // DEACTIVATE — sets deactivated_at on the parent social element
-    // ---------------------------------------------------------------
     public function deactivate(Request $request, int $id)
     {
         try {

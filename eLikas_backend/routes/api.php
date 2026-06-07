@@ -57,10 +57,7 @@ Route::get('/pins/{id}', [GetEvacAreaDetailsController::class, 'getEvacAreaDetai
 Route::get('/pins', [GetEvacAreasController::class, 'getEvacAreas']);
 Route::get('/evacpins/users/coords', [GetEvacAreasController::class, 'getMyCoords']);
 
-
-
-
-Route::get('/sensor-logs', [SensorLogController::class, 'index']);
+Route::get('sensors/{sensor_code}/logs', [SensorLogController::class, 'index']);
 Route::post('/sensor-logs', [SensorLogController::class, 'store']);
 
 // ---------------------------------------------------------------
@@ -190,5 +187,4 @@ Route::middleware(['firebase.auth', 'role:1,2,3'])->group(function () {
 
     //Emergency contact
     Route::get('/emergency-contacts/location/{location_id}', [EmergencyContactController::class, 'getByLocationId']);
-
 });
