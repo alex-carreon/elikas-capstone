@@ -6,11 +6,15 @@ use App\Enums\MediaCollection;
 use App\Http\Controllers\Controller;
 use App\Models\Comment;
 use App\Models\EvacArea;
+use App\Models\Flag;
+use App\Models\FlagReason;
 use App\Models\MediaFile;
+use App\Models\ModerationLog;
 use App\Models\SocialElement;
 use App\Models\TargetTable;
 use App\Models\Vote;
 use App\Services\MediaUploadService;
+use App\Services\ModerationService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
@@ -18,7 +22,11 @@ use Illuminate\Support\Facades\Storage;
 
 class EvacComments extends Controller
 {
-    public function __construct(protected MediaUploadService $mediaUploadService) {}
+    public function __construct(
+        protected MediaUploadService $mediaUploadService,
+        protected ModerationService $moderationService
+        ) {}
+    
 
     /**
      * GET /evac-areas/{evacAreaId}/comments
@@ -181,10 +189,14 @@ class EvacComments extends Controller
 
             DB::commit();
 
+            // ── Moderation (outside transaction — comment is already saved)
+            $moderationResult = $this->moderateComment($socialElement->id, $user->id, $validated['content'] ?? null);
+
             return response()->json([
-                'message' => 'Comment created successfully.',
+                'message'    => 'Comment created successfully.',
                 'comment_id' => $comment->id,
                 'element_id' => $socialElement->id,
+                'moderation' => $moderationResult, 
             ], 201);
 
         } catch (\Throwable $e) {
@@ -201,4 +213,61 @@ class EvacComments extends Controller
             ], 500);
         }
     }
+
+   
+    private function moderateComment(int $elementId, int $userId, ?string $content): array
+    {
+        if (empty(trim($content ?? ''))) {
+            return ['skipped' => true, 'reason' => 'No text content'];
+        }
+
+        try {
+            $result = $this->moderationService->moderate($content);
+
+            if (!($result['flagged'] ?? false)) {
+                return [
+                    'flagged' => false,
+                    'raw' => $result,
+                ];
+            }
+
+            ModerationLog::create([
+                'element_id'  => $elementId,
+                'created_at'  => now(),
+                'is_approved' => null,
+            ]);
+
+            $reason = FlagReason::where('reason_label', 'AI Moderation')->first()
+                ?? FlagReason::first();
+
+            $flagCreated = false;
+
+            if ($reason) {
+                Flag::create([
+                    'user_id'     => $userId,
+                    'element_id'  => $elementId,
+                    'reason_id'   => $reason->id,
+                    'flagged_at'  => now(),
+                    'is_approved' => null,
+                ]);
+                $flagCreated = true;
+            }
+
+            return [
+                'flagged'      => true,
+                'flag_created' => $flagCreated,
+                'reason_found' => $reason?->reason_label,
+                'raw'          => $result,
+            ];
+
+        } catch (\Throwable $e) {
+            Log::warning('Moderation check failed for element ' . $elementId . ': ' . $e->getMessage());
+
+            return [
+                'flagged' => false,
+                'error'   => $e->getMessage(),
+            ];
+        }
+    }
 }
+

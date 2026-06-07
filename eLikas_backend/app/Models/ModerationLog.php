@@ -43,7 +43,7 @@ class ModerationLog extends Model
 		'reviewed_at'
 	];
 
-	public function social_element()
+	public function socialElement()
 	{
 		return $this->belongsTo(SocialElement::class, 'element_id');
 	}
