@@ -66,7 +66,8 @@ class Sensor extends Model
 
 	public function sensor_logs()
 	{
-		return $this->hasMany(SensorLog::class, 'sensor_code');
+		return $this->hasMany(SensorLog::class, 'sensor_code', 'sensor_code')
+            ->orderBy('sensor_timestamp', 'desc');
 	}
 
     public function latest_log()
