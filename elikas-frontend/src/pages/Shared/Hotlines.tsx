@@ -1,4 +1,4 @@
-import { Phone, Search, Filter } from "lucide-react";
+import { Phone, Search, X } from "lucide-react";
 import { useEffect, useState } from "react";
 import {
   InputGroup,
@@ -27,31 +27,47 @@ type Hotline = {
 function Hotlines() {
   const [loading, setLoading] = useState(false);
   const [hotlines, setHotlines] = useState<Hotline[]>([]);
+  const [searchFor, setSearchFor] = useState("");
+  const [clearSearch, setClearSearch] = useState(false);
   const { role } = useUserContext();
 
-  useEffect(() => {
-    const getHotlines = async () => {
-      try {
-        setLoading(true);
-        const response = await api.get("/emergency-contacts");
+  let message: string;
+  const params = new URLSearchParams();
 
-        console.log(response);
-
-        if (!response) {
-          toast.error("Failed to fetch hotlines");
-          console.log(response);
-          return;
-        }
-
-        const contacts = response.data.emergency_contacts;
-        setHotlines(contacts);
-      } catch (err: any) {
-        console.log(err.response.data);
-      } finally {
-        setLoading(false);
+  const getHotlines = async (search = searchFor) => {
+    try {
+      if (search) {
+        params.set("location_name", search);
       }
-    };
+      setLoading(true);
+      console.log(searchFor);
+      const parameters = params.toString();
+      const endpoint = `/emergency-contacts${parameters ? `?${parameters}` : ""}`;
+      console.log("endpoint", endpoint);
+      const response = await api.get(
+        `/emergency-contacts${parameters ? `?${parameters}` : ""}`,
+      );
 
+      console.log(response);
+
+      if (!response) {
+        toast.error("Failed to fetch hotlines");
+        console.log(response);
+        return;
+      }
+
+      toast.success("Hotlines fetched successfully!");
+
+      const contacts = response.data.emergency_contacts;
+      setHotlines(contacts);
+    } catch (err: any) {
+      console.log(err.response.data);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
     getHotlines();
   }, []);
 
@@ -110,11 +126,24 @@ function Hotlines() {
               <InputGroupInput
                 className="text-sm h-8"
                 id="Hotlines_Search"
+                onChange={(e) => setSearchFor(e.target.value)}
+                value={searchFor}
               ></InputGroupInput>
               <InputGroupAddon align="inline-end">
-                <Search />
+                <Search onClick={() => getHotlines()} />
               </InputGroupAddon>
             </InputGroup>
+            {searchFor ? (
+              <button
+                onClick={() => {
+                  setSearchFor("");
+                  getHotlines("");
+                }}
+                id="Hotline_SearchField"
+              >
+                <X size={14} />
+              </button>
+            ) : null}
           </div>
         </div>
 
