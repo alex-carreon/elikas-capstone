@@ -24,6 +24,7 @@ import FormSkeleton from "../../Skeletons/FormSkeleton";
 type FloodLevel = {
   id: number;
   level_name: string;
+  description: string;
 };
 
 type FloodDetails = {
@@ -442,6 +443,7 @@ function HazardForm() {
                 options={levels?.map((level) => ({
                   label: level.level_name,
                   value: String(level.id),
+                  description: level.description,
                 }))}
                 isRequired={!id ? true : false}
               />
