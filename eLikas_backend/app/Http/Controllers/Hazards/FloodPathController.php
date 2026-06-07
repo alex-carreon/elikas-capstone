@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Hazards;
 
 use App\Enums\MediaCollection;
 use App\Http\Controllers\Controller;
+use App\Models\FloodLevel;
 use App\Models\FloodPath;
 use App\Models\MediaFile;
 use App\Models\SocialElement;
@@ -56,40 +57,45 @@ class FloodPathController extends Controller
     public function my(Request $request)
     {
         $user = $request->attributes->get('firebase_user');
- 
-        $floodPaths = FloodPath::with([
+
+        $floodLevel = $request->query('flood_level');
+
+        $query = FloodPath::with([
             'floodLevel:id,level_name',
             'socialElement:id,user_id,posted_at,deactivated_at',
         ])
         ->ownedBy($user->id)
-        ->orderByDesc('last_confirmed')
-        ->notDeactivated()
-        ->get();
- 
+        ->notDeactivated();
+
+        if ($floodLevel) {
+            $query->whereHas('floodLevel', function ($q) use ($floodLevel) {
+                $q->where('level_name', $floodLevel);
+            });
+        }
+
+        $floodPaths = $query
+            ->orderByDesc('last_confirmed')
+            ->get();
+
         return response()->json([
             'count' => $floodPaths->count(),
             'flood_paths' => $floodPaths->map(fn($fp) => [
-                'id'             => $fp->id, 
-                // 'level'          => $fp->floodLevel,
-                'description'    => $fp->description, 
+                'id'             => $fp->id,
+                'level'          => $fp->floodLevel->level_name,
+                'description'    => $fp->description,
                 'last_confirmed' => $fp->last_confirmed
-                    ? $fp->last_confirmed->timezone('Asia/Manila')->toDateTimeString()
+                    ? $fp->last_confirmed
+                        ->timezone('Asia/Manila')
+                        ->toDateTimeString()
                     : null,
-                // 'posted_at' => $fp->socialElement->posted_at
-                //     ? $fp->socialElement->posted_at->timezone('Asia/Manila')->toDateTimeString()
-                //     : null,
                 'is_expired' => $fp->expiry < now(),
                 'is_deactivated' => !is_null(
                     $fp->socialElement->deactivated_at
                 ),
-                // 'posted_by' => [
-                //         'id' => $fp->socialElement->user?->id,
-                //         'username' => $fp->socialElement->user?->username,
-                // ],
             ]),
         ], 200);
     }
- 
+        
     /**
      * GET /flood-paths/{id}
      *

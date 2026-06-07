@@ -5,7 +5,7 @@ import {
   InputGroupAddon,
   InputGroupInput,
 } from "@/components/ui/input-group";
-import HotlineRow from "../components/HotlineRow";
+import HotlineRow from "@/components/HotlineRow";
 import { useUserContext } from "@/context/AuthContext";
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router";

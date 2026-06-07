@@ -15,7 +15,14 @@ function Filter() {
   const [barangayFilter, setBarangayFilter] = useState(true);
   const [userFilter, setUserFilter] = useState(true);
 
-  const { showPaths, setShowPaths } = useMapFilterContext();
+  const {
+    showPaths,
+    setShowPaths,
+    showGovPins,
+    setShowGovPins,
+    setShowOtherPins,
+    showOtherPins,
+  } = useMapFilterContext();
 
   const handleBarangayToggle = () => {
     //Filter endpoint
@@ -50,8 +57,8 @@ function Filter() {
             <Switch
               id="MapFilter_Barangay"
               size="sm"
-              checked={barangayFilter}
-              onCheckedChange={handleBarangayToggle}
+              checked={showGovPins}
+              onCheckedChange={setShowGovPins}
             />
             <p className="">By Barangay</p>
           </div>
@@ -59,8 +66,8 @@ function Filter() {
             <Switch
               id="MapFilter_User"
               size="sm"
-              checked={userFilter}
-              onCheckedChange={setUserFilter}
+              checked={showOtherPins}
+              onCheckedChange={setShowOtherPins}
             />
             <p className="">By Other Users</p>
           </div>

@@ -8,7 +8,7 @@ import ButtonComp from "@/components/Button";
 import { handleCreate, handleDeac, handleUpdate } from "@/lib/sensorUtils";
 import { Field, FieldLabel } from "@/components/ui/field";
 import AlertDialogue from "@/components/AlertDialogue";
-import FormSkeleton from "../Skeletons/FormSkeleton";
+import FormSkeleton from "../../Skeletons/FormSkeleton";
 
 type Barangays = {
   id: number;

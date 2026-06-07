@@ -6,6 +6,7 @@ interface rowProps {
   postId: string;
   title: string;
   address?: string;
+  desc?: string;
   datePosted?: string;
   isAvailable?: boolean;
   availability?: boolean;
@@ -24,6 +25,7 @@ function Row({
   isExpired,
   link,
   buttonId,
+  desc,
 }: rowProps) {
   return (
     <div className="border border-#9E9898 rounded-md p-2 flex flex-row items-center justify-between">
@@ -40,6 +42,9 @@ function Row({
           </p>
           <p className="text-sm" style={{ color: colors.heading }}>
             {address}
+          </p>
+          <p className="text-sm" style={{ color: colors.heading }}>
+            {desc}
           </p>
           <p className="text-sm font-bold" style={{ color: colors.heading }}>
             {availability ? (isAvailable ? "AVAILABLE" : "CLOSED") : null}

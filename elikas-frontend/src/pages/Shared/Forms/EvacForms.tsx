@@ -18,7 +18,7 @@ import { Camera } from "lucide-react";
 import { handleDelete, handleSubmit, handleUpdate } from "@/lib/evacUtils";
 import { useUserContext } from "@/context/AuthContext";
 import api from "@/api";
-import FormSkeleton from "../Skeletons/FormSkeleton";
+import FormSkeleton from "../../Skeletons/FormSkeleton";
 import DatePickerInput from "@/components/DateField";
 import { toZonedTime, format, formatInTimeZone } from "date-fns-tz";
 import { addDays } from "date-fns";
@@ -349,7 +349,7 @@ function EvacPin() {
     formData.append("capacity_level", String(capacityCount));
     formData.append(
       "is_persistent",
-      String(role === "indiv" ? 0 : isPersistent),
+      String(role === "indiv" ? 0 : isPersistent ? 1 : 0),
     );
     formData.append("for_reg_flood", regFlood ? "1" : "0");
     formData.append("for_heavy_flood", heavyFlood ? "1" : "0");
@@ -450,6 +450,15 @@ function EvacPin() {
             >
               Check what applies
             </FieldLabel>
+            {role === "brgy_op" && (
+              <CheckBox
+                text="Is this evacuation center persistent?"
+                id="EvacPin_isPersistentChckbox"
+                checked={isPersistent}
+                onCheckedChange={setIsPersistent}
+                readOnly={!id || isEditable ? false : true}
+              />
+            )}
             <div className="flex gap-4">
               <CheckBox
                 text="for Regular Flooding"

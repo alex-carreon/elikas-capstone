@@ -8,7 +8,7 @@ import { useState, useEffect } from "react";
 import { useNavigate } from "react-router";
 import { toast } from "sonner";
 import SelectDropdown from "@/components/SelectDropdown";
-import FormSkeleton from "./Skeletons/FormSkeleton";
+import FormSkeleton from "@/pages/Skeletons/FormSkeleton";
 
 type Barangays = {
   id: number;
