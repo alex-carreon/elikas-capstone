@@ -142,11 +142,11 @@ function BrgyDetails() {
     getBrgy();
   }, [cityId]);
 
-  const updateGovop = async (e: React.FormEvent) => {
+  const updateGovop = (e: React.FormEvent) => {
     e.preventDefault();
 
     try {
-      const response = await api.patch(
+      const response = api.patch(
         `/admin/users/${id}`,
         {
           username: username,
@@ -162,13 +162,24 @@ function BrgyDetails() {
           },
         },
       );
+
+      console.log(response);
+
       if (!response) {
-        new Error(response || "Update failed");
+        console.log(response);
         return;
-      } else {
-        setIsEditable(false);
-        getGovopDetails();
       }
+
+      toast.promise(response, {
+        loading: "Updating this barangay user...",
+        success: "Barangay user updated!",
+        error: (err: any) => {
+          return err.response.data;
+        },
+        position: "top-center",
+      });
+      setIsEditable(false);
+      getGovopDetails();
     } catch (err: string | any) {
       console.log(err.response?.data);
     }

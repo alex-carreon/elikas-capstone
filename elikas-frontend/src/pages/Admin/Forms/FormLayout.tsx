@@ -115,7 +115,7 @@ function FormLayout({
 
                   <ButtonComp
                     text="Delete"
-                    variant="outline"
+                    variant="important"
                     id={deleteId}
                     heightSize="38px"
                     type="button"
@@ -138,7 +138,7 @@ function FormLayout({
                   {deleteId && (
                     <ButtonComp
                       text="Delete"
-                      variant="outline"
+                      variant="important"
                       id={deleteId}
                       heightSize="38px"
                       type="button"
