@@ -66,6 +66,7 @@ function SensorForm() {
   const [barangays, setBarangays] = useState<Barangays[]>([]);
   const [mountLocation, setMountLocation] = useState("");
   const [registeredBy, setRegisteredBy] = useState("");
+  const [deactivatedAt, setDeactivatedAt] = useState("");
   const [loading, setLoading] = useState(false);
   const [brgyLoad, setBrgyLoad] = useState(false);
   const [willDeac, setWillDeac] = useState(false);
@@ -105,6 +106,7 @@ function SensorForm() {
           setRedLevel(details.redLevel);
           setMountLocation(details.mountLocation);
           setRegisteredBy(details.registeredBy);
+          setDeactivatedAt(details.deactivatedAt);
         } catch (err: any) {
           console.log(err.response.data);
         } finally {
@@ -378,13 +380,24 @@ function SensorForm() {
             error={error.redLevel}
           />
           {id && (
-            <TextField
-              label="Registered By"
-              value={registeredBy}
-              inputType="text"
-              id="Sensor_RegisteredBy"
-              readonly
-            />
+            <>
+              <TextField
+                label="Registered By"
+                value={registeredBy}
+                inputType="text"
+                id="Sensor_RegisteredBy"
+                readonly
+              />
+              {deactivatedAt && (
+                <TextField
+                  label="Registered By"
+                  value={deactivatedAt}
+                  inputType="text"
+                  id="Sensor_RegisteredBy"
+                  readonly
+                />
+              )}
+            </>
           )}
         </div>
         {id ? (
