@@ -9,6 +9,7 @@ import {
 import { Field, FieldLabel } from "./ui/field";
 import colors from "@/constants/colors";
 import { Spinner } from "./ui/spinner";
+import { X } from "lucide-react";
 
 interface SelectDropdownProps {
   value: string;
@@ -22,6 +23,9 @@ interface SelectDropdownProps {
   isRequired?: boolean;
   disabled?: boolean;
   loading?: boolean;
+  clearClick?: () => void;
+  clearId?: string;
+  showClear?: boolean;
 }
 
 function SelectDropdown({
@@ -36,6 +40,9 @@ function SelectDropdown({
   isRequired,
   disabled,
   loading,
+  clearClick,
+  clearId,
+  showClear,
 }: SelectDropdownProps) {
   return (
     <Field>
@@ -45,29 +52,37 @@ function SelectDropdown({
         </FieldLabel>
         {loading && <Spinner />}
       </div>
-      <Select
-        onValueChange={(val: string | null) => onValueChange(val ?? "")}
-        required={isRequired}
-        disabled={disabled}
-      >
-        <SelectTrigger id={id}>
-          {options.find((option) => option.value === value)?.label ||
-            placeholder}
-          {/* <SelectValue placeholder={placeholder} /> */}
-        </SelectTrigger>
-        <SelectContent>
-          <SelectGroup>
-            {options.map((option) => (
-              <SelectItem key={option.value} value={option.value}>
-                <span>
-                  {option.label}{" "}
-                  {option.description && `- ${option.description}`}
-                </span>
-              </SelectItem>
-            ))}
-          </SelectGroup>
-        </SelectContent>
-      </Select>
+      <div className="w-full flex flex-row gap-2">
+        <Select
+          onValueChange={(val: string | null) => onValueChange(val ?? "")}
+          required={isRequired}
+          disabled={disabled}
+        >
+          <SelectTrigger id={id}>
+            {options.find((option) => option.value === value)?.label ||
+              placeholder}
+            {/* <SelectValue placeholder={placeholder} /> */}
+          </SelectTrigger>
+          <SelectContent>
+            <SelectGroup>
+              {options.map((option) => (
+                <SelectItem key={option.value} value={option.value}>
+                  <span>
+                    {option.label}{" "}
+                    {option.description && `- ${option.description}`}
+                  </span>
+                </SelectItem>
+              ))}
+            </SelectGroup>
+          </SelectContent>
+        </Select>
+        {showClear && (
+          <button onClick={clearClick} id={clearId}>
+            <X size={14} />
+          </button>
+        )}
+      </div>
+
       {error && <p className="text-red-500 text-sm mt-1">{error}</p>}
     </Field>
   );
