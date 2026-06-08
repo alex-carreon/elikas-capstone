@@ -13,6 +13,7 @@ interface rowProps {
   isExpired?: boolean;
   link: string;
   buttonId: string;
+  children?: React.ReactNode;
 }
 
 function Row({
@@ -26,6 +27,7 @@ function Row({
   link,
   buttonId,
   desc,
+  children,
 }: rowProps) {
   return (
     <div className="border border-#9E9898 rounded-md p-2 flex flex-row items-center justify-between">
@@ -50,6 +52,7 @@ function Row({
             {availability ? (isAvailable ? "AVAILABLE" : "CLOSED") : null}
             {isExpired ? "EXPIRED" : null}
           </p>
+          {children}
         </div>
         <p className="text-xs" style={{ color: colors.heading }}>
           {datePosted}
