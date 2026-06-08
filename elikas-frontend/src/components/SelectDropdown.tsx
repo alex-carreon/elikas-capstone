@@ -52,15 +52,18 @@ function SelectDropdown({
         </FieldLabel>
         {loading && <Spinner />}
       </div>
-      <div className="w-full flex flex-row gap-2">
+      <div className="w-full flex flex-row gap-2 overflow-hidden">
         <Select
           onValueChange={(val: string | null) => onValueChange(val ?? "")}
           required={isRequired}
           disabled={disabled}
         >
-          <SelectTrigger id={id}>
-            {options.find((option) => option.value === value)?.label ||
-              placeholder}
+          <SelectTrigger id={id} className="overflow-hidden">
+            <span className="truncate block">
+              {options.find((option) => option.value === value)?.label ||
+                placeholder}
+            </span>
+
             {/* <SelectValue placeholder={placeholder} /> */}
           </SelectTrigger>
           <SelectContent>
