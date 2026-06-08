@@ -31,6 +31,7 @@ import BrgyUsers from "./pages/Admin/BrgyUsers";
 import GovopDetails from "./pages/Admin/Forms/GovOpDetails";
 import BrgyAdd from "./pages/Admin/Forms/GovopAdd";
 import SensorForm from "./pages/brgy_ops/Forms/SensorForm";
+import SMSHistory from "./pages/brgy_ops/SMSHistory";
 
 function App() {
   return (
@@ -62,6 +63,7 @@ function App() {
       <Route element={<ProtectedRoute userRole={"brgy_op"} />}>
         <Route element={<ConstNavbar />}>
           <Route path="/SMS" element={<SMS />} />
+          <Route path="/SMSHistory" element={<SMSHistory />} />
           <Route path="/HotlinesForm" element={<HotlinesForm />} />
           <Route path="/HotlinesForm/:id" element={<HotlinesForm />} />
           <Route path="/SensorForm" element={<SensorForm />} />
