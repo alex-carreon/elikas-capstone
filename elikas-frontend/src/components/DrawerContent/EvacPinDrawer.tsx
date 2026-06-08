@@ -10,6 +10,8 @@ import {
   File,
   Camera,
   ChevronUpIcon,
+  Form,
+  X,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -35,7 +37,7 @@ import {
 } from "@/components/ui/input-group";
 import ButtonComp from "@/components/Button";
 import CSIcon from "@/assets/Map/CrowdsourceIcon.svg";
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useState, useRef, Fragment, type FormEvent } from "react";
 import { differenceInDays } from "date-fns";
 import api from "@/api";
 import { DrawerTitle } from "@/components/ui/drawer";
@@ -198,6 +200,7 @@ function EvacPinDrawer({
   const [openImageCollapse, setOpenImageCollapse] = useState(false);
   const [verifiedBy, setVerifiedBy] = useState(0);
   const [verified, setVerified] = useState(false);
+  const [newComment, setNewComment] = useState<string | null>();
 
   const cameraInputRef = useRef<HTMLInputElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -237,7 +240,6 @@ function EvacPinDrawer({
     setImage("");
 
     if (fileInputRef.current) {
-      console.log(fileInputRef.current);
       fileInputRef.current.value = "";
     }
   };
@@ -247,24 +249,62 @@ function EvacPinDrawer({
     return format(zoned, "MMM d, yyyy h:mm a");
   };
 
+  const getComments = async () => {
+    try {
+      setCommentsLoad(true);
+      const response = await api.get(`/evac-areas/${selectedPin.id}/comments`);
+      setComments(response.data.comments);
+    } catch (err: any) {
+      console.log(err.response.data);
+    } finally {
+      setCommentsLoad(false);
+    }
+  };
+
+  const submitComment = (e: FormEvent) => {
+    e.preventDefault();
+
+    const formData = new FormData();
+
+    if (newComment) {
+      formData.append("content", newComment);
+    }
+
+    if (image) {
+      formData.append("file", image);
+    }
+
+    try {
+      const response = api.post(
+        `/evac-areas/${selectedPin.id}/comments`,
+        formData,
+        {
+          headers: {
+            "Content-Type": undefined,
+          },
+        },
+      );
+
+      toast.promise(response, {
+        loading: "Adding your comment...",
+        success: "Comment successfully added!",
+        error: (err) => err?.message || "Please try again.",
+        position: "top-center",
+      });
+
+      response.then(() => {
+        setNewComment(null);
+        setImage("");
+        getComments();
+      });
+    } catch (err: any) {
+      console.log(err.response.data);
+    }
+  };
+
   useEffect(() => {
     if (!selectedPin) return;
     if (!isExpanded) return;
-    const getComments = async () => {
-      try {
-        setCommentsLoad(true);
-        const response = await api.get(
-          `/evac-areas/${selectedPin.id}/comments`,
-        );
-
-        console.log("comment", response);
-        setComments(response.data.comments);
-      } catch (err: any) {
-        console.log(err.response.data);
-      } finally {
-        setCommentsLoad(false);
-      }
-    };
 
     getComments();
   }, [isExpanded]);
@@ -279,9 +319,6 @@ function EvacPinDrawer({
         const evacPinDetails = await response.data;
         setEvacPinDetails(evacPinDetails);
         setVerifiedBy(evacPinDetails.verified_by.gov_op_id);
-        console.log("response:", response.data.media?.[0]?.url);
-        console.log("evacPinDetails:", evacPinDetails.media?.[0]?.url);
-        console.log("evacPinDetailsALL:", evacPinDetails);
 
         const today = new Date();
         const expDate = new Date(evacPinDetails.expiry);
@@ -312,7 +349,6 @@ function EvacPinDrawer({
       }
     };
     getEvacPinDetails();
-    console.log(evacPinDetails);
   }, [selectedPin?.id, verified]);
 
   const verifyPin = async (e: React.FormEvent<Element>) => {
@@ -565,78 +601,92 @@ function EvacPinDrawer({
                 </div>
               ) : (
                 comments.map((comment) => (
-                  <PostRow
-                    id={comment.id}
-                    username={comment.posted_by.username}
-                    timePosted={convertDateTime(comment.posted_at)}
-                    description={comment.content}
-                    locationVerified
-                    isEvacComments={true}
-                    isHazardPost={false}
-                    // upVotesCount={comment.upvotes}
-                    // downVotesCount={12}
-                    // flagCount={1}
-                    image={comment.media}
-                  />
+                  <Fragment key={comment.id}>
+                    <PostRow
+                      id={comment.id}
+                      username={comment.posted_by.username}
+                      timePosted={convertDateTime(comment.posted_at)}
+                      description={comment.content}
+                      locationVerified
+                      isEvacComments={true}
+                      isHazardPost={false}
+                      image={comment.media}
+                    />
+                  </Fragment>
                 ))
               )}
             </div>
-
             <div className="fixed bottom-0 z-100 bg-white w-full h-content">
-              <div className="h-full flex flex-row items-center p-2 gap-2">
-                <img src={dataUri} className="w-11" />
-                <InputGroup>
-                  <InputGroupInput
-                    placeholder="Add a Comment"
-                    id="Drawer_CommentField"
-                  ></InputGroupInput>
-                  <InputGroupAddon
-                    align="inline-end"
-                    onClick={handleFileClick}
-                    id="Drawer_FileBtn"
-                    style={{ cursor: "pointer" }}
-                  >
-                    <File />
-                  </InputGroupAddon>
-                  <InputGroupAddon
-                    align="inline-end"
-                    id="Drawer_CameraBtn"
-                    onClick={handleCameraClick}
-                    style={{ cursor: "pointer" }}
-                  >
-                    <Camera />
-                  </InputGroupAddon>
-                  <input
-                    style={{ display: "none" }}
-                    type="file"
-                    onChange={fileOnChange}
-                    ref={fileInputRef}
-                    accept="image/png, image/jpeg, image/heic"
-                    id="Drawer_FileInput"
-                  />
-                  {/* To test when PWA is done  */}
-                  <input
-                    style={{ display: "none" }}
-                    type="file"
-                    onChange={fileOnChange}
-                    ref={cameraInputRef}
-                    capture
-                    accept="image/png, image/jpeg, image/heic"
-                    id="Drawer_CameraTrigger"
-                  />
-                </InputGroup>
-              </div>
-              {image && (
-                <div className="p-4 flex flex-col gap-3">
-                  <img src={imagePreview} />
-                  <ButtonComp
-                    text="Clear"
-                    variant="outline"
-                    id="Drawer_ImageClearBtn"
-                    onClick={handleClearImage}
-                  ></ButtonComp>
+              <div className="flex flex-col h-fit justify-center">
+                <div className="h-full flex flex-row items-center p-2 gap-2">
+                  <img src={dataUri} className="w-11" />
+                  <InputGroup>
+                    <InputGroupInput
+                      placeholder="Add a Comment"
+                      id="Drawer_CommentField"
+                      onChange={(e) => setNewComment(e.target.value)}
+                      value={!newComment ? "" : newComment}
+                    ></InputGroupInput>
+                    <InputGroupAddon
+                      align="inline-end"
+                      onClick={handleFileClick}
+                      id="Drawer_FileBtn"
+                      style={{ cursor: "pointer" }}
+                    >
+                      <File />
+                    </InputGroupAddon>
+                    <InputGroupAddon
+                      align="inline-end"
+                      id="Drawer_CameraBtn"
+                      onClick={handleCameraClick}
+                      style={{ cursor: "pointer" }}
+                    >
+                      <Camera />
+                    </InputGroupAddon>
+                    <input
+                      style={{ display: "none" }}
+                      type="file"
+                      onChange={fileOnChange}
+                      ref={fileInputRef}
+                      accept="image/png, image/jpeg, image/heic"
+                      id="Drawer_FileInput"
+                    />
+                    {/* To test when PWA is done  */}
+                    <input
+                      style={{ display: "none" }}
+                      type="file"
+                      onChange={fileOnChange}
+                      ref={cameraInputRef}
+                      capture
+                      accept="image/png, image/jpeg, image/heic"
+                      id="Drawer_CameraTrigger"
+                    />
+                  </InputGroup>
                 </div>
-              )}
+                {image && (
+                  <div className="flex flex-col gap-1 p-2">
+                    <button
+                      onClick={handleClearImage}
+                      id="Drawer_ClearImageBtn"
+                      className="flex self-end"
+                    >
+                      <X size={14} />
+                    </button>
+                    <img src={imagePreview} />
+                  </div>
+                )}
+                {(newComment || image) && (
+                  <div className="mx-2 mb-2 flex justify-center">
+                    <ButtonComp
+                      text="Post"
+                      variant="primary"
+                      id="Drawer_PostCommentBtn"
+                      widthSize="100%"
+                      onClick={(e) => submitComment(e)}
+                    />
+                  </div>
+                )}
+              </div>
             </div>
           </div>
         </div>
