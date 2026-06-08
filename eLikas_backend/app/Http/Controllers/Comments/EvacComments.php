@@ -62,10 +62,13 @@ class EvacComments extends Controller
                 ->pluck('vote', 'element_id');
         }
 
+        $user = $request->attributes->get('firebase_user');
+        $currentUserId = $user?->id;
+
         return response()->json([
             'count' => $comments->count(),
             
-            'comments' => $comments->map(function ($comment) use ($votes){
+            'comments' => $comments->map(function ($comment) use ($votes, $currentUserId){
                 return [
                     'id' => $comment->id,
                     'content' => $comment->content,
@@ -78,6 +81,8 @@ class EvacComments extends Controller
                         'id' => $comment->element?->user?->id,
                         'username' => $comment->element?->user?->username,
                     ],
+
+                    'is_mine' => $comment->element?->user?->id === $currentUserId,
 
                     'posted_at' => $comment->element?->posted_at
                         ? $comment->element->posted_at
