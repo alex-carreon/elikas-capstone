@@ -46,6 +46,18 @@ import PostRow from "@/components/PostRow";
 import sample from "@/assets/Map/SamplePhoto.png";
 import { useUserContext } from "@/context/AuthContext";
 import { toast } from "sonner";
+import { toZonedTime } from "date-fns-tz";
+import { format } from "date-fns";
+
+type CommentType = {
+  id: number;
+  content: string;
+  upvotes: number;
+  downvotes: number;
+  media: string;
+  posted_at: string;
+  posted_by: postedBy;
+};
 
 type verifiedBy = {
   gov_op_id: number | null;
@@ -174,9 +186,10 @@ function EvacPinDrawer({
   setIsExpanded?: (val: boolean) => void;
 }) {
   const [loading, setLoading] = useState(false);
+  const [commentsLoad, setCommentsLoad] = useState(false);
+  const [comments, setComments] = useState<CommentType[]>([]);
   const [evacPinDetails, setEvacPinDetails] = useState<EvacPin | undefined>();
   const [daysLeft, setDaysleft] = useState(0);
-  //   const [expanded, setExpanded] = useState(false);
   const [image, setImage] = useState("");
   const [imagePreview, setImagePreview] = useState("");
   const [available, setAvailable] = useState<typeof facilities>([]);
@@ -228,6 +241,33 @@ function EvacPinDrawer({
       fileInputRef.current.value = "";
     }
   };
+
+  const convertDateTime = (utcString: string) => {
+    const zoned = toZonedTime(new Date(utcString), "Asia/Manila");
+    return format(zoned, "MMM d, yyyy h:mm a");
+  };
+
+  useEffect(() => {
+    if (!selectedPin) return;
+    if (!isExpanded) return;
+    const getComments = async () => {
+      try {
+        setCommentsLoad(true);
+        const response = await api.get(
+          `/evac-areas/${selectedPin.id}/comments`,
+        );
+
+        console.log("comment", response);
+        setComments(response.data.comments);
+      } catch (err: any) {
+        console.log(err.response.data);
+      } finally {
+        setCommentsLoad(false);
+      }
+    };
+
+    getComments();
+  }, [isExpanded]);
 
   useEffect(() => {
     if (!selectedPin) return;
@@ -427,7 +467,9 @@ function EvacPinDrawer({
             <CollapsibleTrigger
               id="Drawer_FacilitiesTrigger"
               className="group w-full flex flex-col items-start"
-              onClick={() => setOpenCollapse(!openCollapse)}
+              onClick={() => {
+                setOpenCollapse(!openCollapse);
+              }}
             >
               <div className="flex flex-row items-center">
                 Facilities Available
@@ -513,28 +555,31 @@ function EvacPinDrawer({
               </p>
             </div>
             <div className="flex flex-col gap-2 mb-4 mt-4 pb-16 px-4">
-              <PostRow
-                username="Kurt Hacinas"
-                timePosted="3:30pm"
-                description="Bring your own water"
-                locationVerified
-                // upVotesCount={20}
-                // downVotesCount={12}
-                flagCount={1}
-                expiryDays={30}
-                image={sample}
-              />
-              <PostRow
-                username="Kurt Hacinas"
-                timePosted="3:30pm"
-                description="Bring your own water"
-                locationVerified
-                // upVotesCount={20}
-                // downVotesCount={12}
-                flagCount={1}
-                expiryDays={30}
-                image={sample}
-              />
+              {commentsLoad ? (
+                <div className="h-full w-full flex items-center gap-4">
+                  <Skeleton className="h-12 w-12 rounded-full bg-[#59260B]/30" />
+                  <div className="w-full space-y-2 items-start justify-center">
+                    <Skeleton className="h-4 w-full bg-[#59260B]/30" />
+                    <Skeleton className="h-4 w-[200px] bg-[#59260B]/30" />
+                  </div>
+                </div>
+              ) : (
+                comments.map((comment) => (
+                  <PostRow
+                    id={comment.id}
+                    username={comment.posted_by.username}
+                    timePosted={convertDateTime(comment.posted_at)}
+                    description={comment.content}
+                    locationVerified
+                    isEvacComments={true}
+                    isHazardPost={false}
+                    // upVotesCount={comment.upvotes}
+                    // downVotesCount={12}
+                    // flagCount={1}
+                    image={comment.media}
+                  />
+                ))
+              )}
             </div>
 
             <div className="fixed bottom-0 z-100 bg-white w-full h-content">
