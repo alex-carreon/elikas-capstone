@@ -126,7 +126,7 @@ function SMSHistory() {
                     title={`Sent to: ${broadcast.total_recipients} recipient/s`}
                     desc={`Send/t on: ${convertDateTime(broadcast.scheduled_for)}`}
                     link=""
-                    buttonId=""
+                    buttonId="SMSHistory_CancelSend"
                     btnText="Cancel Send"
                     showBtn
                     showCollapsible
