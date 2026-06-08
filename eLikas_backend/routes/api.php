@@ -100,14 +100,23 @@ Route::prefix('admin')->middleware(['firebase.auth', 'role:1'])->group(function 
 Route::middleware(['firebase.auth', 'role:2'])->group(function () {
     Route::apiResource('sensors', SensorController::class)->except(['destroy']);
     Route::patch('/sensors/{sensor}/deactivate', [SensorController::class, 'deactivate']);
-    //sms related routes
 
+    // ---------------------------------------------------------------
+    // SMS SYSTEM UPDATES
+    // ---------------------------------------------------------------
     Route::get('/sms/recipients', [SMSController::class, 'recipients']);
+
+    // SMS — Broadcasts / Direct Messages
     Route::post('/sms/broadcasts', [SMSController::class, 'store']);
     Route::get('/sms/broadcasts', [SMSController::class, 'history']);
     Route::post('/sms/broadcasts/send-now', [SMSController::class, 'sendImmediate']);
-    Route::get('/sms/broadcasts/{broadcastId}/status', [SMSController::class, 'status'])
-        ->whereNumber('broadcastId');
+    Route::get('/sms/broadcasts/{broadcastId}/status', [SMSController::class, 'status'])->whereNumber('broadcastId');
+    Route::delete('/sms/broadcasts/{broadcastId}', [SMSController::class, 'destroy'])->whereNumber('broadcastId');
+
+    // SMS — Templates
+    Route::post('/sms/templates', [SMSController::class, 'storeTemplate']);
+    Route::get('/sms/templates', [SMSController::class, 'indexTemplates']);
+    Route::delete('/sms/templates/{templateId}', [SMSController::class, 'destroyTemplate'])->whereNumber('templateId');
 });
 
 
@@ -148,6 +157,12 @@ Route::middleware(['firebase.auth', 'role:1,2,3'])->group(function () {
     Route::put('/profile', [ProfileController::class, 'updateProfile']);
     Route::patch('/profile/deactivate', [ProfileController::class, 'deactivateSelf']);
     Route::patch('/profile/email-sync', [ProfileController::class, 'syncEmail']); // wala pa talaga
+
+    //PROFILE
+    Route::get('/profile', [ProfileController::class, 'profile']);
+    Route::put('/profile', [ProfileController::class, 'updateProfile']);
+    Route::patch('/profile/deactivate', [ProfileController::class, 'deactivateSelf']);
+    Route::patch('/profile/email-sync', [ProfileController::class, 'syncEmail']);
 
     //FLOOD LEVELS
     Route::get('flood-levels', [FloodLevelController::class, 'index']);
