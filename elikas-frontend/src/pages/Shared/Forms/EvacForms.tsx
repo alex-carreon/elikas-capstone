@@ -8,20 +8,17 @@ import { MapClickHandler } from "@/lib/mapUtils";
 import { useState, useEffect, useRef } from "react";
 import { MapContainer, TileLayer } from "react-leaflet";
 import { useLocation, useNavigate, useParams } from "react-router";
-import MultiSelect from "@/components/MultiSelect";
 import CheckBox from "@/components/CheckBox";
-import {
-  InputGroupInput,
-  InputGroupTextarea,
-} from "@/components/ui/input-group";
+import { InputGroupTextarea } from "@/components/ui/input-group";
 import { Camera } from "lucide-react";
 import { handleDelete, handleSubmit, handleUpdate } from "@/lib/evacUtils";
 import { useUserContext } from "@/context/AuthContext";
 import api from "@/api";
 import FormSkeleton from "../../Skeletons/FormSkeleton";
 import DatePickerInput from "@/components/DateField";
-import { toZonedTime, format, formatInTimeZone } from "date-fns-tz";
+import { toZonedTime, format } from "date-fns-tz";
 import { addDays } from "date-fns";
+import AlertDialogue from "@/components/AlertDialogue";
 
 type EvacType = {
   id: number;
@@ -129,7 +126,7 @@ function EvacPin() {
   const [loading, setLoading] = useState(false);
   const [evacPins, setEvacPins] = useState<EvacPin | undefined>();
   const [expiry, setExpiry] = useState<Date | undefined>();
-  const [expireDefault, setExpireDefault] = useState<Date>();
+  const [willDelete, setWillDelete] = useState(false);
 
   const location = useLocation();
   const navigate = useNavigate();
@@ -314,8 +311,6 @@ function EvacPin() {
 
     const expDate = expiry ?? addDays(new Date(), 7);
 
-    let imageFormData;
-
     if (fileName) {
       formData.append("file", fileName);
     }
@@ -403,501 +398,519 @@ function EvacPin() {
       <FormSkeleton />
     </div>
   ) : (
-    <div className="w-full h-full flex flex-col items-center p-12 mt-8 mb-2 gap-4">
-      <div>
-        <p
-          className="font-bold text-lg text-center"
-          style={{ color: colors.heading }}
-        >
-          {existingPin
-            ? "Evacuation Pin Details"
-            : "Register an Evacuation Location"}
-        </p>
-        {existingPin ? null : (
+    <>
+      {willDelete && (
+        <AlertDialogue
+          contentId="EvacPin_DeacContent"
+          closeId="EvacPin_DeacClose"
+          actionId="EvacPin_DeacBtn"
+          open={willDelete}
+          title="You are about to delete this pin"
+          description="Deleting this pin will remove it to the map permanently."
+          buttonText="Delete"
+          onClose={() => {
+            setWillDelete(false);
+          }}
+          onClick={() => deac()}
+        />
+      )}
+      <div className="w-full h-full flex flex-col items-center p-12 mt-8 mb-2 gap-4">
+        <div>
           <p
-            className="text-align italic text-sm"
-            style={{ color: colors.label }}
+            className="font-bold text-lg text-center"
+            style={{ color: colors.heading }}
           >
-            Help others find safe temporary shelter.
+            {existingPin
+              ? "Evacuation Pin Details"
+              : "Register an Evacuation Location"}
           </p>
-        )}
-      </div>
-      <div
-        id="EvacPin_Form"
-        className="w-full flex flex-col justify-center items-center m-0"
-      >
-        <div className="w-full max-w-md flex flex-col gap-5">
-          <Field>
-            <FieldLabel
-              className={"text-sm w-s"}
+          {existingPin ? null : (
+            <p
+              className="text-align italic text-sm"
               style={{ color: colors.label }}
             >
-              Check what applies
-            </FieldLabel>
-            {role === "brgy_op" && (
-              <CheckBox
-                text="Is this evacuation center persistent?"
-                id="EvacPin_isPersistentChckbox"
-                checked={isPersistent}
-                onCheckedChange={setIsPersistent}
-                readOnly={!id || isEditable ? false : true}
+              Help others find safe temporary shelter.
+            </p>
+          )}
+        </div>
+        <div
+          id="EvacPin_Form"
+          className="w-full flex flex-col justify-center items-center m-0"
+        >
+          <div className="w-full max-w-md flex flex-col gap-5">
+            <Field>
+              <FieldLabel
+                className={"text-sm w-s"}
+                style={{ color: colors.label }}
+              >
+                Check what applies
+              </FieldLabel>
+              {role === "brgy_op" && (
+                <CheckBox
+                  text="Is this evacuation center persistent?"
+                  id="EvacPin_isPersistentChckbox"
+                  checked={isPersistent}
+                  onCheckedChange={setIsPersistent}
+                  readOnly={!id || isEditable ? false : true}
+                />
+              )}
+              <div className="flex gap-4">
+                <CheckBox
+                  text="for Regular Flooding"
+                  id="EvacPin_isRegChckbox"
+                  checked={regFlood}
+                  onCheckedChange={setRegFlood}
+                  readOnly={!id || isEditable ? false : true}
+                />
+                <CheckBox
+                  text="for Heavy Flooding"
+                  id="EvacPin_isHeavyChckbox"
+                  checked={heavyFlood}
+                  onCheckedChange={setHeavyFlood}
+                  readOnly={!id || isEditable ? false : true}
+                />
+              </div>
+            </Field>
+            <div className="flex flex-col gap-3">
+              {/* To test when PWA is done */}
+              {!id ? (
+                <>
+                  <TextField
+                    label="Location Image*"
+                    inputType="file"
+                    id="EvacPin_PhotoField"
+                    onSubmit={fileOnChange}
+                    ref={inputRef}
+                    accept="image/png, image/jpeg, image/heic"
+                    endIcon={Camera}
+                  />
+                  {fileName && (
+                    <>
+                      <img src={imagePreview} />{" "}
+                      <ButtonComp
+                        text="Clear"
+                        variant="outline"
+                        id="EvacPin_ImageClearBtn"
+                        onClick={handleClearImage}
+                      ></ButtonComp>
+                    </>
+                  )}
+                </>
+              ) : (
+                <>
+                  {evacPins?.media[0]?.url && (
+                    <img src={String(evacPins?.media[0].url)} />
+                  )}
+                </>
+              )}
+            </div>
+            {isEditable || !id ? (
+              <SelectDropdown
+                value={String(areaType)}
+                onValueChange={(val) => setAreaType(Number(val))}
+                label="Location Type*"
+                placeholder="Select the location type"
+                id="EvacPin_LocTypeField"
+                onSubmit={(e) => setAreaType(Number(e.target.value))}
+                options={evacTypes.map((type) => ({
+                  label: type.evac_type,
+                  value: type.id.toString(),
+                }))}
+                isRequired={!id}
+              />
+            ) : (
+              <TextField
+                label="Location Type"
+                value={evacPins?.area_type}
+                inputType="text"
+                id="EvacPin_LocType"
+                readonly
               />
             )}
-            <div className="flex gap-4">
-              <CheckBox
-                text="for Regular Flooding"
-                id="EvacPin_isRegChckbox"
-                checked={regFlood}
-                onCheckedChange={setRegFlood}
+
+            <TextField
+              label="Pin Name*"
+              value={pinName}
+              inputType="text"
+              id={!id || isEditable ? "EvacPin_PinNameField" : ""}
+              placeholder={existingPin ? "Gamoras" : "Enter your last name"}
+              onSubmit={(e) => setPinName(e.target.value)}
+              isRequired={!id}
+              readonly={!id || isEditable ? false : true}
+            />
+            <Field>
+              <FieldLabel
+                className={"text-sm w-s"}
+                style={{ color: colors.label }}
+              >
+                Description (Optional)
+              </FieldLabel>
+              <InputGroupTextarea
+                className="h-10 border rounded-lg text-xs"
+                id="EvacPin_DescField"
+                value={desc || ""}
+                onChange={(e) => setDesc(e.target.value)}
                 readOnly={!id || isEditable ? false : true}
+                required={!id}
               />
-              <CheckBox
-                text="for Heavy Flooding"
-                id="EvacPin_isHeavyChckbox"
-                checked={heavyFlood}
-                onCheckedChange={setHeavyFlood}
-                readOnly={!id || isEditable ? false : true}
-              />
-            </div>
-          </Field>
-          <div className="flex flex-col gap-3">
-            {/* To test when PWA is done */}
-            {!id ? (
-              <>
-                <TextField
-                  label="Location Image*"
-                  inputType="file"
-                  id="EvacPin_PhotoField"
-                  onSubmit={fileOnChange}
-                  ref={inputRef}
-                  accept="image/png, image/jpeg, image/heic"
-                  endIcon={Camera}
+            </Field>
+            <Field>
+              <FieldLabel
+                className={"text-sm w-s"}
+                style={{ color: colors.label }}
+              >
+                Chosen Location
+              </FieldLabel>
+              <FieldDescription>
+                If you change your mind, please go back to the map and try
+                again.
+              </FieldDescription>
+              {/* {localStorage.getItem("LocDescription")} */}
+              <FieldLabel
+                className={"text-sm w-s"}
+                style={{ color: colors.label }}
+              >
+                Map Location
+              </FieldLabel>
+              <MapContainer
+                center={center}
+                zoom={17}
+                scrollWheelZoom={false}
+                style={{ height: "30vh", width: "100%" }}
+                id="EvacPin_MapContainer"
+              >
+                <TileLayer
+                  attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+                  url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
                 />
-                {fileName && (
-                  <>
-                    <img src={imagePreview} />{" "}
+                <MapClickHandler
+                  onPinClick={null}
+                  setClickedLoc={center}
+                  clickedLoc={center}
+                />
+              </MapContainer>
+              {id && <p className="text-sm">{address}</p>}
+              {!id || isEditable ? (
+                <>
+                  <TextField
+                    label="Block and Lot"
+                    placeholder="Blk # Lot #"
+                    id="EvacPin_BlkLotField"
+                    inputType="text"
+                    onSubmit={(e) => setBlkLot(e.target.value)}
+                  ></TextField>
+                  <TextField
+                    label="House Number"
+                    placeholder="i.e. 111"
+                    id="EvacPin_HouseNumberField"
+                    inputType="text"
+                    onSubmit={(e) => setHouseNo(e.target.value)}
+                  ></TextField>
+                  <FieldLabel
+                    className={"text-sm w-s"}
+                    style={{ color: colors.label }}
+                  >
+                    Street
+                  </FieldLabel>
+                  <Textarea
+                    readOnly
+                    placeholder={description}
+                    id="EvacPin_StreetField"
+                  ></Textarea>
+                </>
+              ) : null}
+            </Field>
+            {isEditable || !id ? (
+              <SelectDropdown
+                value={capacity}
+                onValueChange={setCapacity}
+                label="Capacity Level*"
+                placeholder="Select the capacity level"
+                id="EvacPin_CapacityField"
+                onSubmit={(e) => setLocationType(e.target.value)}
+                options={capacityLevels?.map((level) => ({
+                  label: level.capacity_level,
+                  value: String(level.id),
+                }))}
+                isRequired={!id}
+              />
+            ) : (
+              <TextField
+                label="Capacity Level"
+                id="EvacPin_Capacity"
+                inputType="text"
+                value={evacPins?.capacity_name}
+                readonly
+              ></TextField>
+            )}
+
+            <Field>
+              <FieldLabel
+                className={"text-sm w-s"}
+                style={{ color: colors.label }}
+              >
+                Facilities Available{" "}
+              </FieldLabel>
+              <FieldDescription>Check what applies</FieldDescription>
+              <div className="flex flex-col gap-4">
+                <div className="flex flex-col gap-4">
+                  <div className="flex gap-6">
+                    <CheckBox
+                      text="Accomodation"
+                      id="EvacPin_AccomodationChckbox"
+                      checked={hasAccom}
+                      onCheckedChange={() => setHasAccom(!hasAccom)}
+                      readOnly={!id || isEditable ? false : true}
+                    />
+                    <CheckBox
+                      text="DRRMO Office"
+                      id="EvacPin_DRRMOChckbox"
+                      checked={hasDRRMO}
+                      onCheckedChange={() => setHasDRRMO(!hasDRRMO)}
+                      readOnly={!id || isEditable ? false : true}
+                    />
+                  </div>
+                  <div className="flex gap-6">
+                    <CheckBox
+                      text="Health Station"
+                      id="EvacPin_HealthChckbox"
+                      checked={hasHealth}
+                      onCheckedChange={() => setHasHealth(!hasHealth)}
+                      readOnly={!id || isEditable ? false : true}
+                    />
+                    <CheckBox
+                      text="PWD Friendly"
+                      id="EvacPin_PWDChckbox"
+                      checked={pwdFriendly}
+                      onCheckedChange={() => setPWDFriendly(!pwdFriendly)}
+                      readOnly={!id || isEditable ? false : true}
+                    />
+                  </div>
+                  <div className="flex gap-6">
+                    <CheckBox
+                      text="Toilet"
+                      id="EvacPin_ToiletChckbox"
+                      checked={hasToilet}
+                      onCheckedChange={() => setHasToilet(!hasToilet)}
+                      readOnly={!id || isEditable ? false : true}
+                    />
+                    <CheckBox
+                      text="Kitchen"
+                      id="EvacPin_KitchenChckbox"
+                      checked={hasKitchen}
+                      onCheckedChange={() => setHasKitchen(!hasKitchen)}
+                      readOnly={!id || isEditable ? false : true}
+                    />
+                  </div>
+                  <div className="flex gap-6">
+                    <CheckBox
+                      text="Child/Prayer Area"
+                      id="EvacPin_ChildPrayerChckbox"
+                      checked={hasChildPrayer}
+                      onCheckedChange={() => setHasChildPrayer(!hasChildPrayer)}
+                      readOnly={!id || isEditable ? false : true}
+                    />
+                    <CheckBox
+                      text="Breastfeeding Area"
+                      id="EvacPin_BreastfeedChckbox"
+                      checked={hasBreastfeed}
+                      onCheckedChange={() => setHasBreastfeed(!hasBreastfeed)}
+                      readOnly={!id || isEditable ? false : true}
+                    />
+                  </div>
+                  <div className="flex gap-4">
+                    <CheckBox
+                      text="Rainwater Catchment Facility"
+                      id="EvacPin_RainCatchChckbox"
+                      checked={hasCatchment}
+                      onCheckedChange={() => setHasCatchment(!hasCatchment)}
+                      readOnly={!id || isEditable ? false : true}
+                    />
+                  </div>
+                </div>
+                <div className="flex gap-4 flex-col">
+                  {hasToilet && (
+                    <TextField
+                      label="Number of Toilets (optional)"
+                      placeholder={!id || isEditable ? "i.e. 2" : ""}
+                      id="EvacPin_ToiletField"
+                      inputType="number"
+                      onSubmit={(e) => setToilet(e.target.value)}
+                      value={toilet}
+                    />
+                  )}
+                  {hasKitchen && (
+                    <TextField
+                      label="Number of Kitchens (optional)"
+                      placeholder={!id || isEditable ? "i.e. 2" : ""}
+                      id="EvacPin_KitchenField"
+                      inputType="number"
+                      onSubmit={(e) => setKicthen(e.target.value)}
+                      value={kitchen}
+                    />
+                  )}
+                  {hasChildPrayer && (
+                    <TextField
+                      label="Number of Prayer Areas/Child-friendly areas (optional)"
+                      placeholder={!id || isEditable ? "i.e. 2" : ""}
+                      id="EvacPin_PrayerChildField"
+                      inputType="number"
+                      onSubmit={(e) => setChildPrayer(e.target.value)}
+                      value={childPrayer}
+                    />
+                  )}
+                  {hasBreastfeed && (
+                    <TextField
+                      label="Number of Breastfeeding areas (optional)"
+                      placeholder={!id || isEditable ? "i.e. 2" : ""}
+                      id="EvacPin_BreastfeedField"
+                      inputType="number"
+                      onSubmit={(e) => setBreastfeed(e.target.value)}
+                      value={breastfeed}
+                    />
+                  )}
+                </div>
+              </div>
+            </Field>
+            <TextField
+              label="Other Facilities (optional)"
+              placeholder={
+                !id || isEditable ? "Enter other facilities available" : ""
+              }
+              id="EvacPin_OtherFacilitiesField"
+              inputType="text"
+              onSubmit={(e) => setOther(e.target.value)}
+              value={other || ""}
+              readonly={!id || isEditable ? false : true}
+            ></TextField>
+            <TextField
+              label="Contact Person*"
+              placeholder="Enter the person to contact for this pin"
+              id="EvacPin_ContactPersonField"
+              inputType="text"
+              onSubmit={(e) => setContactPerson(e.target.value)}
+              value={contactPerson}
+              readonly={!id || isEditable ? false : true}
+              isRequired={!id}
+            ></TextField>
+            <TextField
+              label="Contact Number*"
+              placeholder={
+                !id || isEditable ? "Enter the contact number for this pin" : ""
+              }
+              id="EvacPin_ContactNumberField"
+              inputType="text"
+              onSubmit={(e) => setContactNumber(e.target.value)}
+              value={contactNumber}
+              readonly={!id || isEditable ? false : true}
+              isRequired={!id}
+            ></TextField>
+            <DatePickerInput
+              label="Expiry Date"
+              idField="EvacPin_ExpiryField"
+              idBtn="EvacPin_CalendarBtn"
+              placeholder={
+                !id || isEditable
+                  ? "Enter other facilities available"
+                  : String(expiry)
+              }
+              value={expiry}
+              onChange={setExpiry}
+              readonly={!id || isEditable ? false : true}
+              edit={isEditable || !id}
+              showTime
+            />
+            {id ? (
+              !isEditable ? (
+                <>
+                  <div className="mx-2 flex justify-evenly shrink gap-4">
                     <ButtonComp
-                      text="Clear"
-                      variant="outline"
-                      id="EvacPin_ImageClearBtn"
-                      onClick={handleClearImage}
+                      text="Update"
+                      id="EvacPin_UpdatePinBtn"
+                      variant="primary"
+                      heightSize="38px"
+                      widthSize="20"
+                      onClick={() => setIsEditable(true)}
+                      type="button"
                     ></ButtonComp>
-                  </>
-                )}
-              </>
+                    <ButtonComp
+                      text="Delete"
+                      id="EvacPin_ClosePinBtn"
+                      variant="important"
+                      heightSize="38px"
+                      widthSize="20"
+                      type="button"
+                      onClick={() => setWillDelete(true)}
+                    ></ButtonComp>
+                  </div>
+                </>
+              ) : (
+                <>
+                  <div className="mx-2 flex justify-evenly shrink gap-4">
+                    <ButtonComp
+                      text="Submit"
+                      id="EvacPin_SubmitUpdBtn"
+                      // type="button"
+                      variant="primary"
+                      heightSize="38px"
+                      widthSize="20"
+                      onClick={(e) => update(e)}
+                    ></ButtonComp>
+                    <ButtonComp
+                      text="Cancel"
+                      id="EvacPin_CancelUpdBtn"
+                      variant="outline"
+                      heightSize="38px"
+                      widthSize="20"
+                      onClick={() => {
+                        setIsEditable(false);
+                      }}
+                      type="button"
+                    ></ButtonComp>
+                  </div>
+                </>
+              )
             ) : (
               <>
-                {evacPins?.media[0]?.url && (
-                  <img src={String(evacPins?.media[0].url)} />
-                )}
+                <div>
+                  <CheckBox
+                    text="I confirm that this location is safe for temporary 
+evacuation use."
+                    id="EvacPin_SafetyCheck"
+                    checked={safetyCheck}
+                    onCheckedChange={(val) => {
+                      setSafetyCheck(!!val);
+                    }}
+                  />
+                </div>
+                <div>
+                  <CheckBox
+                    text="I understand that false information may result in removal 
+or account restriction."
+                    id="EvacPin_InfoCheck"
+                    checked={infoCheck}
+                    onCheckedChange={(val) => {
+                      setInfoCheck(!!val);
+                    }}
+                  />
+                </div>
+                <div className="w-full max-w-md flex justify-center">
+                  <ButtonComp
+                    text="Create Pin"
+                    variant="primary"
+                    id="EvacPin_SubmitBtn"
+                    isDisabled={!safetyCheck || !infoCheck}
+                    heightSize="38px"
+                    widthSize="100%"
+                    onClick={(e) => submit(e)}
+                  />
+                </div>
               </>
             )}
           </div>
-          {isEditable || !id ? (
-            <SelectDropdown
-              value={String(areaType)}
-              onValueChange={(val) => setAreaType(Number(val))}
-              label="Location Type*"
-              placeholder="Select the location type"
-              id="EvacPin_LocTypeField"
-              onSubmit={(e) => setAreaType(Number(e.target.value))}
-              options={evacTypes.map((type) => ({
-                label: type.evac_type,
-                value: type.id.toString(),
-              }))}
-              isRequired={!id}
-            />
-          ) : (
-            <TextField
-              label="Location Type"
-              value={evacPins?.area_type}
-              inputType="text"
-              id="EvacPin_LocType"
-              readonly
-            />
-          )}
-
-          <TextField
-            label="Pin Name*"
-            value={pinName}
-            inputType="text"
-            id={!id || isEditable ? "EvacPin_PinNameField" : ""}
-            placeholder={existingPin ? "Gamoras" : "Enter your last name"}
-            onSubmit={(e) => setPinName(e.target.value)}
-            isRequired={!id}
-            readonly={!id || isEditable ? false : true}
-          />
-          <Field>
-            <FieldLabel
-              className={"text-sm w-s"}
-              style={{ color: colors.label }}
-            >
-              Description (Optional)
-            </FieldLabel>
-            <InputGroupTextarea
-              className="h-10 border rounded-lg text-xs"
-              id="EvacPin_DescField"
-              value={desc || ""}
-              onChange={(e) => setDesc(e.target.value)}
-              readOnly={!id || isEditable ? false : true}
-              required={!id}
-            />
-          </Field>
-          <Field>
-            <FieldLabel
-              className={"text-sm w-s"}
-              style={{ color: colors.label }}
-            >
-              Chosen Location
-            </FieldLabel>
-            <FieldDescription>
-              If you change your mind, please go back to the map and try again.
-            </FieldDescription>
-            {/* {localStorage.getItem("LocDescription")} */}
-            <FieldLabel
-              className={"text-sm w-s"}
-              style={{ color: colors.label }}
-            >
-              Map Location
-            </FieldLabel>
-            <MapContainer
-              center={center}
-              zoom={17}
-              scrollWheelZoom={false}
-              style={{ height: "30vh", width: "100%" }}
-              id="EvacPin_MapContainer"
-            >
-              <TileLayer
-                attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-                url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-              />
-              <MapClickHandler
-                onPinClick={null}
-                setClickedLoc={center}
-                clickedLoc={center}
-              />
-            </MapContainer>
-            {id && <p className="text-sm">{address}</p>}
-            {!id || isEditable ? (
-              <>
-                <TextField
-                  label="Block and Lot"
-                  placeholder="Blk # Lot #"
-                  id="EvacPin_BlkLotField"
-                  inputType="text"
-                  onSubmit={(e) => setBlkLot(e.target.value)}
-                ></TextField>
-                <TextField
-                  label="House Number"
-                  placeholder="i.e. 111"
-                  id="EvacPin_HouseNumberField"
-                  inputType="text"
-                  onSubmit={(e) => setHouseNo(e.target.value)}
-                ></TextField>
-                <FieldLabel
-                  className={"text-sm w-s"}
-                  style={{ color: colors.label }}
-                >
-                  Street
-                </FieldLabel>
-                <Textarea
-                  readOnly
-                  placeholder={description}
-                  id="EvacPin_StreetField"
-                ></Textarea>
-              </>
-            ) : null}
-          </Field>
-          {isEditable || !id ? (
-            <SelectDropdown
-              value={capacity}
-              onValueChange={setCapacity}
-              label="Capacity Level*"
-              placeholder="Select the capacity level"
-              id="EvacPin_CapacityField"
-              onSubmit={(e) => setLocationType(e.target.value)}
-              options={capacityLevels?.map((level) => ({
-                label: level.capacity_level,
-                value: String(level.id),
-              }))}
-              isRequired={!id}
-            />
-          ) : (
-            <TextField
-              label="Capacity Level"
-              id="EvacPin_Capacity"
-              inputType="text"
-              value={evacPins?.capacity_name}
-              readonly
-            ></TextField>
-          )}
-
-          <Field>
-            <FieldLabel
-              className={"text-sm w-s"}
-              style={{ color: colors.label }}
-            >
-              Facilities Available{" "}
-            </FieldLabel>
-            <FieldDescription>Check what applies</FieldDescription>
-            <div className="flex flex-col gap-4">
-              <div className="flex flex-col gap-4">
-                <div className="flex gap-6">
-                  <CheckBox
-                    text="Accomodation"
-                    id="EvacPin_AccomodationChckbox"
-                    checked={hasAccom}
-                    onCheckedChange={() => setHasAccom(!hasAccom)}
-                    readOnly={!id || isEditable ? false : true}
-                  />
-                  <CheckBox
-                    text="DRRMO Office"
-                    id="EvacPin_DRRMOChckbox"
-                    checked={hasDRRMO}
-                    onCheckedChange={() => setHasDRRMO(!hasDRRMO)}
-                    readOnly={!id || isEditable ? false : true}
-                  />
-                </div>
-                <div className="flex gap-6">
-                  <CheckBox
-                    text="Health Station"
-                    id="EvacPin_HealthChckbox"
-                    checked={hasHealth}
-                    onCheckedChange={() => setHasHealth(!hasHealth)}
-                    readOnly={!id || isEditable ? false : true}
-                  />
-                  <CheckBox
-                    text="PWD Friendly"
-                    id="EvacPin_PWDChckbox"
-                    checked={pwdFriendly}
-                    onCheckedChange={() => setPWDFriendly(!pwdFriendly)}
-                    readOnly={!id || isEditable ? false : true}
-                  />
-                </div>
-                <div className="flex gap-6">
-                  <CheckBox
-                    text="Toilet"
-                    id="EvacPin_ToiletChckbox"
-                    checked={hasToilet}
-                    onCheckedChange={() => setHasToilet(!hasToilet)}
-                    readOnly={!id || isEditable ? false : true}
-                  />
-                  <CheckBox
-                    text="Kitchen"
-                    id="EvacPin_KitchenChckbox"
-                    checked={hasKitchen}
-                    onCheckedChange={() => setHasKitchen(!hasKitchen)}
-                    readOnly={!id || isEditable ? false : true}
-                  />
-                </div>
-                <div className="flex gap-6">
-                  <CheckBox
-                    text="Child/Prayer Area"
-                    id="EvacPin_ChildPrayerChckbox"
-                    checked={hasChildPrayer}
-                    onCheckedChange={() => setHasChildPrayer(!hasChildPrayer)}
-                    readOnly={!id || isEditable ? false : true}
-                  />
-                  <CheckBox
-                    text="Breastfeeding Area"
-                    id="EvacPin_BreastfeedChckbox"
-                    checked={hasBreastfeed}
-                    onCheckedChange={() => setHasBreastfeed(!hasBreastfeed)}
-                    readOnly={!id || isEditable ? false : true}
-                  />
-                </div>
-                <div className="flex gap-4">
-                  <CheckBox
-                    text="Rainwater Catchment Facility"
-                    id="EvacPin_RainCatchChckbox"
-                    checked={hasCatchment}
-                    onCheckedChange={() => setHasCatchment(!hasCatchment)}
-                    readOnly={!id || isEditable ? false : true}
-                  />
-                </div>
-              </div>
-              <div className="flex gap-4 flex-col">
-                {hasToilet && (
-                  <TextField
-                    label="Number of Toilets (optional)"
-                    placeholder={!id || isEditable ? "i.e. 2" : ""}
-                    id="EvacPin_ToiletField"
-                    inputType="number"
-                    onSubmit={(e) => setToilet(e.target.value)}
-                    value={toilet}
-                  />
-                )}
-                {hasKitchen && (
-                  <TextField
-                    label="Number of Kitchens (optional)"
-                    placeholder={!id || isEditable ? "i.e. 2" : ""}
-                    id="EvacPin_KitchenField"
-                    inputType="number"
-                    onSubmit={(e) => setKicthen(e.target.value)}
-                    value={kitchen}
-                  />
-                )}
-                {hasChildPrayer && (
-                  <TextField
-                    label="Number of Prayer Areas/Child-friendly areas (optional)"
-                    placeholder={!id || isEditable ? "i.e. 2" : ""}
-                    id="EvacPin_PrayerChildField"
-                    inputType="number"
-                    onSubmit={(e) => setChildPrayer(e.target.value)}
-                    value={childPrayer}
-                  />
-                )}
-                {hasBreastfeed && (
-                  <TextField
-                    label="Number of Breastfeeding areas (optional)"
-                    placeholder={!id || isEditable ? "i.e. 2" : ""}
-                    id="EvacPin_BreastfeedField"
-                    inputType="number"
-                    onSubmit={(e) => setBreastfeed(e.target.value)}
-                    value={breastfeed}
-                  />
-                )}
-              </div>
-            </div>
-          </Field>
-          <TextField
-            label="Other Facilities (optional)"
-            placeholder={
-              !id || isEditable ? "Enter other facilities available" : ""
-            }
-            id="EvacPin_OtherFacilitiesField"
-            inputType="text"
-            onSubmit={(e) => setOther(e.target.value)}
-            value={other || ""}
-            readonly={!id || isEditable ? false : true}
-          ></TextField>
-          <TextField
-            label="Contact Person*"
-            placeholder="Enter the person to contact for this pin"
-            id="EvacPin_ContactPersonField"
-            inputType="text"
-            onSubmit={(e) => setContactPerson(e.target.value)}
-            value={contactPerson}
-            readonly={!id || isEditable ? false : true}
-            isRequired={!id}
-          ></TextField>
-          <TextField
-            label="Contact Number*"
-            placeholder={
-              !id || isEditable ? "Enter the contact number for this pin" : ""
-            }
-            id="EvacPin_ContactNumberField"
-            inputType="text"
-            onSubmit={(e) => setContactNumber(e.target.value)}
-            value={contactNumber}
-            readonly={!id || isEditable ? false : true}
-            isRequired={!id}
-          ></TextField>
-          <DatePickerInput
-            label="Expiry Date"
-            idField="EvacPin_ExpiryField"
-            idBtn="EvacPin_CalendarBtn"
-            placeholder={
-              !id || isEditable
-                ? "Enter other facilities available"
-                : String(expiry)
-            }
-            value={expiry}
-            onChange={setExpiry}
-            readonly={!id || isEditable ? false : true}
-            edit={isEditable || !id}
-            showTime
-          />
-          {id ? (
-            !isEditable ? (
-              <>
-                <div className="mx-2 flex justify-evenly shrink gap-4">
-                  <ButtonComp
-                    text="Update"
-                    id="EvacPin_UpdatePinBtn"
-                    variant="primary"
-                    heightSize="38px"
-                    widthSize="20"
-                    onClick={() => setIsEditable(true)}
-                    type="button"
-                  ></ButtonComp>
-                  <ButtonComp
-                    text="Close"
-                    id="EvacPin_ClosePinBtn"
-                    variant="important"
-                    heightSize="38px"
-                    widthSize="20"
-                    type="button"
-                    onClick={() => deac()}
-                  ></ButtonComp>
-                </div>
-              </>
-            ) : (
-              <>
-                <div className="mx-2 flex justify-evenly shrink gap-4">
-                  <ButtonComp
-                    text="Submit"
-                    id="EvacPin_SubmitUpdBtn"
-                    // type="button"
-                    variant="primary"
-                    heightSize="38px"
-                    widthSize="20"
-                    onClick={(e) => update(e)}
-                  ></ButtonComp>
-                  <ButtonComp
-                    text="Cancel"
-                    id="EvacPin_CancelUpdBtn"
-                    variant="outline"
-                    heightSize="38px"
-                    widthSize="20"
-                    onClick={() => {
-                      setIsEditable(false);
-                    }}
-                    type="button"
-                  ></ButtonComp>
-                </div>
-              </>
-            )
-          ) : (
-            <>
-              <div>
-                <CheckBox
-                  text="I confirm that this location is safe for temporary 
-evacuation use."
-                  id="EvacPin_SafetyCheck"
-                  checked={safetyCheck}
-                  onCheckedChange={(val) => {
-                    setSafetyCheck(!!val);
-                  }}
-                />
-              </div>
-              <div>
-                <CheckBox
-                  text="I understand that false information may result in removal 
-or account restriction."
-                  id="EvacPin_InfoCheck"
-                  checked={infoCheck}
-                  onCheckedChange={(val) => {
-                    setInfoCheck(!!val);
-                  }}
-                />
-              </div>
-              <div className="w-full max-w-md flex justify-center">
-                <ButtonComp
-                  text="Create Pin"
-                  variant="primary"
-                  id="EvacPin_SubmitBtn"
-                  isDisabled={!safetyCheck || !infoCheck}
-                  heightSize="38px"
-                  widthSize="100%"
-                  onClick={(e) => submit(e)}
-                />
-              </div>
-            </>
-          )}
         </div>
       </div>
-    </div>
+    </>
   );
 }
 
