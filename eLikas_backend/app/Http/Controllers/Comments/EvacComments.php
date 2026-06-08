@@ -264,26 +264,9 @@ class EvacComments extends Controller
                 'is_approved' => null,
             ]);
 
-            $reason = FlagReason::where('reason_label', 'AI Moderation')->first()
-                ?? FlagReason::first();
-
-            $flagCreated = false;
-
-            if ($reason) {
-                Flag::create([
-                    'user_id'     => $userId,
-                    'element_id'  => $elementId,
-                    'reason_id'   => $reason->id,
-                    'flagged_at'  => now(),
-                    'is_approved' => null,
-                ]);
-                $flagCreated = true;
-            }
-
             return [
                 'flagged'      => true,
-                'flag_created' => $flagCreated,
-                'reason_found' => $reason?->reason_label,
+                'log_created'  => true,
                 'raw'          => $result,
             ];
 
