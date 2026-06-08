@@ -102,6 +102,33 @@ class EvacComments extends Controller
         ]);
     }
 
+    public function show(Request $request, int $id)
+    {
+        $comment = Comment::find($id);
+
+        if (!$comment) {
+            return response()->json([
+                'message' => 'Comment not found.',
+            ], 404);
+        }
+
+        $user = $request->attributes->get('firebase_user');
+
+        $userVote = null;
+
+        if ($user) {
+            $userVote = Vote::where('user_id', $user->id)
+                ->where('element_id', $comment->element_id)
+                ->value('vote');
+        }
+
+        return response()->json([
+            'vote' => $comment->upvotes,
+            'downvote' => $comment->downvotes,
+            'user_vote' => $userVote,
+        ]);
+    }
+
     /**
      * POST /evac-areas/{evacAreaId}/comments
      */

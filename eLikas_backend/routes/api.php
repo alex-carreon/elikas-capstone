@@ -173,6 +173,8 @@ Route::middleware(['firebase.auth', 'role:1,2,3'])->group(function () {
     //COMMENTS
     Route::get('/evac-areas/{evacAreaId}/comments', [EvacComments::class, 'index']);
     Route::post('/evac-areas/{evacAreaId}/comments', [EvacComments::class, 'store']);
+    Route::get('/comments/{id}',[EvacComments::class, 'show']);
+
 
     //SENSORS
     Route::get('/sensors/{sensor}', [SensorController::class, 'show']);
