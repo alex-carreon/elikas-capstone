@@ -178,6 +178,7 @@ function SMS() {
                   ? undefined
                   : "Enter your message first before adding a template"
               }
+              id="SMS_TemplateMessageField"
               readOnly
             />
             <p className="text-xs text-red-500">{error.message}</p>
@@ -260,6 +261,7 @@ function SMS() {
                 placeholder="Place your text message here"
                 onChange={(e) => setMessage(e.target.value)}
                 value={message}
+                id="SMS_MessageField"
               />
               <p className="text-xs text-red-500">{error.message}</p>
             </div>
