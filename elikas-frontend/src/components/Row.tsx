@@ -14,6 +14,8 @@ interface rowProps {
   link: string;
   buttonId: string;
   children?: React.ReactNode;
+  btnText?: string;
+  showBtn?: boolean;
 }
 
 function Row({
@@ -28,6 +30,8 @@ function Row({
   buttonId,
   desc,
   children,
+  btnText,
+  showBtn,
 }: rowProps) {
   return (
     <div className="border border-#9E9898 rounded-md p-2 flex flex-row items-center justify-between">
@@ -58,15 +62,17 @@ function Row({
           {datePosted}
         </p>
       </div>
-      <Link to={link} state={{ from: location.pathname }} className="ml-2">
-        <ButtonComp
-          variant="important"
-          text="Details"
-          id={buttonId}
-          heightSize="45px"
-          widthSize="100%"
-        ></ButtonComp>
-      </Link>
+      {showBtn && (
+        <Link to={link} state={{ from: location.pathname }} className="ml-2">
+          <ButtonComp
+            variant="important"
+            text={btnText ? btnText : "Details"}
+            id={buttonId}
+            heightSize="45px"
+            widthSize="100%"
+          ></ButtonComp>
+        </Link>
+      )}
     </div>
   );
 }
