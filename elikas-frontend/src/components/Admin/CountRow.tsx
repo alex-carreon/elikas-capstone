@@ -3,7 +3,7 @@ import { Spinner } from "@/components/ui/spinner";
 
 interface CountRowProps {
   title: string;
-  lastUpdated: string;
+  lastUpdated?: string;
   count: number | null;
   loading: boolean;
 }

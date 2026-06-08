@@ -29,9 +29,10 @@ function BrgyUsers() {
   const [deacUsers, setDeacUsers] = useState<BrgyUser[]>([]);
   const [isActiveUsers, setIsActiveUsers] = useState(true);
   const [isSMS, setIsSMS] = useState(false);
+  const [sentMessages, setSentMessages] = useState(true);
 
   useEffect(() => {
-    const getIndivData = async () => {
+    const getBrgyData = async () => {
       try {
         setLoading(true);
         const [activeResponse, deacResponse] = await Promise.all([
@@ -53,7 +54,7 @@ function BrgyUsers() {
       }
     };
 
-    getIndivData();
+    getBrgyData();
   }, []);
 
   return (
@@ -101,17 +102,44 @@ function BrgyUsers() {
                   Deactivated
                 </TabsTrigger>
                 <TabsTrigger
-                  value="Feedback"
+                  value="SMS"
                   onClick={() => {
                     setIsActiveUsers(false);
                     setIsSMS(true);
                   }}
                   id="Admin_BrgyFeedbackTrigger"
                 >
-                  Feedback
+                  SMS
                 </TabsTrigger>
               </TabsList>
             </Tabs>
+            {isSMS && (
+              <Tabs
+                defaultValue="overview"
+                className="w-full max-w-md flex items-center"
+              >
+                <TabsList
+                  variant="line"
+                  className="w-full flex justify-between"
+                  id="Admin_BrgySMSTabs"
+                >
+                  <TabsTrigger
+                    value="ActiveEvac"
+                    id="Admin_BrgySMSSent"
+                    onClick={() => setSentMessages(true)}
+                  >
+                    SMS Messages
+                  </TabsTrigger>
+                  <TabsTrigger
+                    value="ExpiredEvac"
+                    id="Admin_BrgySMSTemplates"
+                    onClick={() => setSentMessages(false)}
+                  >
+                    Templates
+                  </TabsTrigger>
+                </TabsList>
+              </Tabs>
+            )}
             <div className="flex flex-row">
               <div className="w-2/3 flex justify-start items-center gap-2">
                 <InputGroup className="w-2/3">
@@ -125,17 +153,19 @@ function BrgyUsers() {
                 </InputGroup>
                 <Filter size={18} id="Admin_BrgyFilterBtn" />
               </div>
-              <div className="w-30">
-                <Link to="/admin-brgyAdd">
-                  <ButtonComp
-                    variant="primary"
-                    text="Add"
-                    id="Admin_BrgyAddBtn"
-                    heightSize="30px"
-                    widthSize="100%"
-                  />
-                </Link>
-              </div>
+              {!isSMS && (
+                <div className="w-30">
+                  <Link to="/admin-brgyAdd">
+                    <ButtonComp
+                      variant="primary"
+                      text="Add"
+                      id="Admin_BrgyAddBtn"
+                      heightSize="30px"
+                      widthSize="100%"
+                    />
+                  </Link>
+                </div>
+              )}
             </div>
 
             <div className="flex flex-col gap-2">
@@ -165,6 +195,7 @@ function BrgyUsers() {
                       address="San Juan city, Manila"
                       link={`/admin-brgyDetails/${user.id}`}
                       buttonId="Admin_ActiveIndivDetailsBtn"
+                      showBtn
                     />
                   );
                 })
@@ -180,6 +211,7 @@ function BrgyUsers() {
                       address="San Juan city, Manila"
                       link={`/admin-brgyDetails/${user.id}`}
                       buttonId="Admin_ActiveIndivDetailsBtn"
+                      showBtn
                     />
                   );
                 })
