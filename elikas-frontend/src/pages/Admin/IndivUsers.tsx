@@ -8,9 +8,15 @@ import {
   InputGroupInput,
   InputGroupAddon,
 } from "@/components/ui/input-group";
-import { Filter, Search } from "lucide-react";
+import { ChevronDownIcon, ChevronUpIcon, Search } from "lucide-react";
 import Row from "@/components/Row";
 import { Skeleton } from "@/components/ui/skeleton";
+import {
+  Collapsible,
+  CollapsibleTrigger,
+  CollapsibleContent,
+} from "@/components/ui/collapsible";
+import SelectDropdown from "@/components/SelectDropdown";
 
 type Users = {
   id: number;
@@ -19,28 +25,58 @@ type Users = {
   role: string;
 };
 
+type submittedBy = {
+  id: number;
+  username: string;
+  role: string;
+};
+
+type Feedback = {
+  id: number;
+  rating: number;
+  message: string;
+  sent_at: string;
+  submitted_by: submittedBy;
+};
+
 function IndivUsers() {
   const [activeCount, setActiveCount] = useState(0);
   const [deacCount, setDeacCount] = useState(0);
+  const [feedbackAve, setFeedbackAve] = useState(0);
   const [isActiveUsers, setIsActiveUsers] = useState(true);
   const [isFeedback, setIsFeedback] = useState(false);
   const [activeUsers, setActiveUsers] = useState<Users[]>([]);
   const [deacUsers, setDeacUsers] = useState<Users[]>([]);
+  const [feedback, setFeedback] = useState<Feedback[]>([]);
   const [loading, setLoading] = useState(false);
+  const [openCollapse, setOpenCollapse] = useState(false);
 
   useEffect(() => {
     const getIndivData = async () => {
       try {
         setLoading(true);
-        const [activeResponse, deacResponse] = await Promise.all([
-          api.get("/admin/users?role=indiv&active=true"),
-          api.get("/admin/users?role=indiv&active=false"),
-        ]);
+        const [activeResponse, deacResponse, feedbackResponse] =
+          await Promise.all([
+            api.get("/admin/users?role=indiv&active=true"),
+            api.get("/admin/users?role=indiv&active=false"),
+            api.get("/admin/feedback"),
+          ]);
+
+        const ratings = feedbackResponse.data.feedback.map(
+          (item: Feedback) => item.rating,
+        );
+
+        const aveRating = ratings.length
+          ? ratings.reduce((sum: number, n: number) => sum + n, 0) /
+            ratings.length
+          : 0;
 
         setActiveCount(activeResponse.data.count);
         setActiveUsers(activeResponse.data.users);
         setDeacCount(deacResponse.data.count);
         setDeacUsers(deacResponse.data.users);
+        setFeedback(feedbackResponse.data.feedback);
+        setFeedbackAve(aveRating);
       } catch (err: string | any) {
         new Error(err.message || "An error occurred during registration");
       } finally {
@@ -58,20 +94,17 @@ function IndivUsers() {
           <DashboardHeader title="Indiv Users">
             <CountRow
               title="Active Users"
-              lastUpdated="Last updated 3 minutes ago"
               count={activeCount}
               loading={loading}
             />
             <CountRow
               title="Deactivated Users"
-              lastUpdated="Last updated 3 minutes ago"
               count={deacCount}
               loading={loading}
             />
             <CountRow
-              title="Active Users"
-              lastUpdated="Last updated 3 minutes ago"
-              count={0}
+              title="Feedback Average"
+              count={feedbackAve}
               loading={loading}
             />
           </DashboardHeader>
@@ -113,18 +146,62 @@ function IndivUsers() {
                 </TabsTrigger>
               </TabsList>
             </Tabs>
-            <div className="w-2/3 flex justify-start items-center gap-2">
-              <InputGroup className="w-2/3">
-                <InputGroupInput
-                  className="text-sm h-8"
-                  id="Admin_IndivSearchField"
-                ></InputGroupInput>
-                <InputGroupAddon align="inline-end">
-                  <Search />
-                </InputGroupAddon>
-              </InputGroup>
-              <Filter size={18} id="Admin_IndivFilterBtn" />
-            </div>
+            <Collapsible className="w-full flex-col items-center gap-2">
+              <div className="w-full flex justify-between">
+                <InputGroup className="w-2/3">
+                  <InputGroupInput
+                    className="text-sm h-8"
+                    id="Admin_IndivSearchField"
+                  ></InputGroupInput>
+                  <InputGroupAddon align="inline-end">
+                    <Search />
+                  </InputGroupAddon>
+                </InputGroup>
+                <CollapsibleTrigger
+                  onClick={() => setOpenCollapse(!openCollapse)}
+                  id="History_FiltersTrigger"
+                >
+                  <div className="w-full flex flex-row justify-end mb-2">
+                    Filters
+                    {openCollapse ? (
+                      <ChevronUpIcon className="ml-2 group-data-[state=open]:rotate-180" />
+                    ) : (
+                      <ChevronDownIcon className="ml-2 group-data-[state=open]:rotate-180" />
+                    )}
+                  </div>
+                </CollapsibleTrigger>
+              </div>
+
+              <CollapsibleContent
+                id="History_FiltersContent"
+                className="flex flex-col items-center px-2.5 mt-2 text-sm"
+              >
+                <div className="w-full gap-2 bg-gray-300/50 p-4 rounded-lg flex">
+                  {/* <SelectDropdown
+                      value={String(levelFilter)}
+                      onValueChange={(val) => setLevelFilter(Number(val))}
+                      placeholder="Flood Level"
+                      id="History_LevelFilter"
+                      options={[
+                        { label: "All", value: "0" },
+                        ...(levels?.map((level) => ({
+                          label: level.level_name,
+                          value: String(level.id),
+                        })) ?? []),
+                      ]}
+                    /> */}
+                  {/* {levelFilter ? (
+                      <button
+                        onClick={() => setLevelFilter(0)}
+                        id="History_ClearBrgyFilter"
+                      >
+                        <X size={14} />
+                      </button>
+                    ) : null} */}
+                </div>
+              </CollapsibleContent>
+            </Collapsible>
+
             <div className="flex flex-col gap-2">
               {loading ? (
                 <>
@@ -152,11 +229,24 @@ function IndivUsers() {
                       address={user.location}
                       link={`/admin-userDetails/${user.id}`}
                       buttonId="Admin_ActiveIndivDetailsBtn"
+                      showBtn
                     />
                   );
                 })
               ) : isFeedback ? (
-                <></>
+                feedback.map((feedback, index) => {
+                  return (
+                    <Row
+                      key={index}
+                      postId={String(feedback.id)}
+                      title={`Rating: ${String(feedback.rating)}`}
+                      address={`User: ${feedback.submitted_by.username} - ${feedback.submitted_by.role}`}
+                      datePosted={feedback.sent_at}
+                      link=""
+                      buttonId="Admin_DeacIndivDetailsBtn"
+                    />
+                  );
+                })
               ) : (
                 deacUsers.map((user, index) => {
                   return (
@@ -167,6 +257,7 @@ function IndivUsers() {
                       address={user.location}
                       link={`/admin-userDetails/${user.id}`}
                       buttonId="Admin_DeacIndivDetailsBtn"
+                      showBtn
                     />
                   );
                 })
