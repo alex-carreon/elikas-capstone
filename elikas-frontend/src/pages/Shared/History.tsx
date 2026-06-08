@@ -8,6 +8,7 @@ import {
   Search,
   X,
   GlobeOff,
+  Globe,
 } from "lucide-react";
 import {
   InputGroup,
@@ -96,7 +97,7 @@ function History() {
   const [floodPaths, setFloodPaths] = useState<myFloodPaths[]>([]);
   const [initialLoad, setInitialLoad] = useState(false);
   const [loading, setLoading] = useState(false);
-  const [inactive, setInactive] = useState(false);
+  const [status, setStatus] = useState<"Inactive" | "Active" | null>();
   const [red, setRed] = useState(false);
   const [yellow, setYellow] = useState(false);
   const [orange, setOrange] = useState(false);
@@ -112,11 +113,14 @@ function History() {
 
   const getSensors = async (search = searchFor) => {
     try {
-      if (inactive) {
+      if (status == "Inactive") {
         params.set("is_active", "0");
         message = "Inactive Sensors are shown";
-      } else {
-        message = "";
+      }
+
+      if (status == "Active") {
+        params.set("is_active", "1");
+        message = "Active Sensors are shown";
       }
 
       if (yellow) {
@@ -175,7 +179,7 @@ function History() {
     if (isSensors) {
       getSensors();
     } else return;
-  }, [inactive, red, orange, yellow, brgyFilter, isSensors]);
+  }, [status, red, orange, yellow, brgyFilter, isSensors]);
 
   useEffect(() => {
     getMyPins();
@@ -570,11 +574,25 @@ function History() {
                             size="sm"
                             variant="outline"
                             className="aria-pressed:bg-gray-500/50 aria-pressed:text-white border-gray-400"
-                            onPressedChange={setInactive}
-                            pressed={inactive}
+                            onPressedChange={(pressed) =>
+                              setStatus(pressed ? "Inactive" : null)
+                            }
+                            pressed={status == "Inactive"}
                             id="History_InactiveFilter"
                           >
                             <GlobeOff className="group-aria-pressed/toggle:stroke-white" />
+                          </Toggle>
+                          <Toggle
+                            size="sm"
+                            variant="outline"
+                            className="aria-pressed:bg-gray-500/50 aria-pressed:text-white border-gray-400"
+                            onPressedChange={(pressed) =>
+                              setStatus(pressed ? "Active" : null)
+                            }
+                            pressed={status == "Active"}
+                            id="History_InactiveFilter"
+                          >
+                            <Globe className="group-aria-pressed/toggle:stroke-white" />
                           </Toggle>
                         </div>
 
@@ -677,7 +695,24 @@ function History() {
                           link={`/SensorForm/${pins.id}`}
                           // isExpired={pins.deactivatedAt}
                           buttonId="History_ExpiredEvacDetailsBtn"
-                        />
+                        >
+                          <div className="flex flex-row gap-2">
+                            <div
+                              className={`mt-2 px-2 py-1 rounded-3xl ${pins.deactivatedAt ? "bg-gray-500/30" : "bg-green-700/60"} w-fit text-sm`}
+                            >
+                              {pins.deactivatedAt ? "Inactive" : "Active"}
+                            </div>
+                            {!pins.deactivatedAt && (
+                              <div
+                                className={`mt-2 px-2 py-1 rounded-3xl ${pins.currentStatus == "normal" ? "bg-green-700/60" : pins.currentStatus == "yellow" ? "bg-yellow-700/60" : pins.currentStatus == "orange" ? "bg-amber-700/60" : pins.currentStatus == "red" ? "bg-red-700/60" : "bg-gray-500/30"} w-fit text-sm`}
+                              >
+                                {pins.currentStatus
+                                  ? pins.currentStatus
+                                  : "No Level Detected"}
+                              </div>
+                            )}
+                          </div>
+                        </Row>
                       );
                     })
                   : activeHaz
