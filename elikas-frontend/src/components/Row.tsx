@@ -1,6 +1,14 @@
 import colors from "@/constants/colors";
 import { Link } from "react-router";
 import ButtonComp from "./Button";
+import {
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger,
+} from "@/components/ui/collapsible";
+import { useState } from "react";
+import { ChevronDownIcon, ChevronUpIcon, Clock, Send } from "lucide-react";
+import { collapseClasses } from "@mui/material/Collapse";
 
 interface rowProps {
   postId: string;
@@ -16,6 +24,8 @@ interface rowProps {
   children?: React.ReactNode;
   btnText?: string;
   showBtn?: boolean;
+  showCollapsible?: boolean;
+  collapseContent?: any;
 }
 
 function Row({
@@ -32,7 +42,11 @@ function Row({
   children,
   btnText,
   showBtn,
+  showCollapsible,
+  collapseContent,
 }: rowProps) {
+  const [openCollapse, setOpenCollapse] = useState(false);
+
   return (
     <div className="border border-#9E9898 rounded-md p-2 flex flex-row items-center justify-between">
       <div className="flex flex-col gap-4">
@@ -56,6 +70,35 @@ function Row({
             {availability ? (isAvailable ? "AVAILABLE" : "CLOSED") : null}
             {isExpired ? "EXPIRED" : null}
           </p>
+          {showCollapsible && (
+            <Collapsible className="w-full flex flex-col rounded-md mt-2">
+              <CollapsibleTrigger
+                onClick={() => setOpenCollapse(!openCollapse)}
+                id="History_FiltersTrigger"
+              >
+                <div className="w-full flex flex-row mb-2 text-sm">
+                  Message
+                  {openCollapse ? (
+                    <ChevronUpIcon
+                      size={20}
+                      className="ml-2 group-data-[state=open]:rotate-180"
+                    />
+                  ) : (
+                    <ChevronDownIcon
+                      size={20}
+                      className="ml-2 group-data-[state=open]:rotate-180"
+                    />
+                  )}
+                </div>{" "}
+              </CollapsibleTrigger>
+              <CollapsibleContent
+                id="History_FiltersContent"
+                className="flex flex-col items-center pr-2.5 pt-0 text-xs"
+              >
+                {collapseContent}
+              </CollapsibleContent>
+            </Collapsible>
+          )}
           {children}
         </div>
         <p className="text-xs" style={{ color: colors.heading }}>
