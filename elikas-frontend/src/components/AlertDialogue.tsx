@@ -13,7 +13,7 @@ import { CircleX } from "lucide-react";
 interface AlertDialogueProps {
   title: string;
   description: string;
-  onClick?: () => void;
+  onClick?: (e?: any) => void;
   onClose?: () => void;
   children?: React.ReactNode;
   buttonText: string;
