@@ -6,6 +6,8 @@ import colors from "@/constants/colors";
 import { useState, useEffect } from "react";
 import { Field, FieldLabel } from "@/components/ui/field";
 import SelectDropdown from "@/components/SelectDropdown";
+import { X } from "lucide-react";
+import { useNavigate } from "react-router";
 
 function SMS() {
   const [addTemplate, setAddTemplate] = useState(false);
@@ -14,6 +16,9 @@ function SMS() {
   const [message, setMessage] = useState<string | undefined>("");
   const [schedSend, setSchedSend] = useState("");
   const [error, setError] = useState({ title: "", message: "" });
+  const [willDelete, setWillDelete] = useState(false);
+
+  const navigate = useNavigate();
 
   const tempalates = [
     {
@@ -74,6 +79,21 @@ function SMS() {
 
   return (
     <>
+      {willDelete && (
+        <AlertDialogue
+          contentId="SMS_DeacContent"
+          closeId="SMS_DeacClose"
+          actionId="SMS_DeacBtn"
+          open={willDelete}
+          title="You are about to delete this SMS template"
+          description="Deleting this will remove it your templates permanently."
+          buttonText="Delete"
+          onClose={() => {
+            setWillDelete(false);
+          }}
+          // onClick={deleteHazard}
+        />
+      )}
       {addTemplate && (
         <AlertDialogue
           contentId="SMS_TemplateContent"
@@ -126,7 +146,7 @@ function SMS() {
               className="text-align text-center italic text-sm"
               style={{ color: colors.label }}
             >
-              Send verified announcements to registered contacts instantly.{" "}
+              Send verified announcements to registered contacts instantly.
             </p>
           </div>
           {/* No Transaction */}
@@ -145,18 +165,30 @@ function SMS() {
           </div> */}
           {/* With Transaction */}
           <div className="w-full max-w-sm flex flex-col gap-4">
-            <SelectDropdown
-              value={templateId}
-              onValueChange={setTemplateId}
-              label="Templates"
-              placeholder="Choose a template to use"
-              id="SMS_SelectTemplateField"
-              onSubmit={(e) => setTemplateId(e.target.value)}
-              options={tempalates.map((item) => ({
-                label: item.templateTitle,
-                value: item.id,
-              }))}
-            />
+            <div className="flex h-fit items-center">
+              <SelectDropdown
+                value={templateId}
+                onValueChange={setTemplateId}
+                label="Templates"
+                placeholder="Choose a template to use"
+                id="SMS_SelectTemplateField"
+                onSubmit={(e) => setTemplateId(e.target.value)}
+                options={tempalates.map((item) => ({
+                  label: item.templateTitle,
+                  value: item.id,
+                }))}
+                clearClick={() => setTemplateId("")}
+                clearId="SMS_TemplateClear"
+                showClear={!!templateId}
+              />
+              <ButtonComp
+                text="SMS History"
+                variant="primary"
+                id="SMS_SMSHistoryBtn"
+                onClick={() => navigate("/SMSHistory")}
+              />
+            </div>
+
             <div>
               <p className="font-semibold text-xs">Message (Max Words: 1000)</p>
               <div>
@@ -171,13 +203,13 @@ function SMS() {
                 className="mt-2 h-100 text-xs"
                 placeholder="Place your text message here"
                 onChange={(e) => setMessage(e.target.value)}
-                value={templateId && templateMessage?.message}
+                value={message}
               />
               <p className="text-xs text-red-500">{error.message}</p>
             </div>
           </div>
           <div className="w-full">
-            <div className="flex justify-between">
+            <div className="flex gap-2">
               <ButtonComp
                 id="SMS_ClearBtn"
                 text="Clear"
@@ -188,12 +220,11 @@ function SMS() {
               />
               <ButtonComp
                 id="SMS_AddTemplateBtn"
-                text="Add to Templates"
+                text={templateId ? "Save Changes" : "Add to Templates"}
                 variant="outline"
                 heightSize="30px"
                 widthSize="140px"
                 onClick={() => setAddTemplate(!addTemplate)}
-                isDisabled={!!templateId}
               />
             </div>
           </div>
@@ -209,14 +240,24 @@ function SMS() {
               { label: "in 10 Minutes", value: "2" },
             ]}
           />
-          <ButtonComp
-            id="SMS_SendBtn"
-            text="Send Text"
-            variant="primary"
-            heightSize="38px"
-            widthSize="100%"
-            onClick={handleSend}
-          />
+          <div className="w-full flex flex-col items-center gap-2">
+            <ButtonComp
+              id="SMS_SendBtn"
+              text="Send Text"
+              variant="primary"
+              heightSize="38px"
+              widthSize="100%"
+              onClick={handleSend}
+            />
+            <ButtonComp
+              id="SMS_DeleteTemplate"
+              text="Delete Template"
+              variant="important"
+              heightSize="38px"
+              widthSize="100%"
+              onClick={() => setWillDelete(true)}
+            />
+          </div>
         </div>
       </div>
     </>
