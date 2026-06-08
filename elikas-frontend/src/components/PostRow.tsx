@@ -55,8 +55,6 @@ function PostRow({
   const [voteLoad, setVoteLoad] = useState(false);
   const [hasVoted, setHasVoted] = useState(false);
 
-  console.log("openDialog", openDialog);
-
   const avatar = createAvatar(bigSmile, {
     seed: seed,
     backgroundColor: ["b6e3f4", "c0aede", "d1d4f9"],
@@ -88,7 +86,6 @@ function PostRow({
 
       if (isEvacComments) {
         const response = await api.get(`/comments/${id}`);
-        console.log("commend Id", response);
 
         setUpvote(response.data.vote);
         setDownvote(response.data.downvote);
@@ -135,8 +132,6 @@ function PostRow({
   };
 
   const handleSubmit = () => {
-    console.log("reason", reason);
-
     setOpenDialog(false);
   };
 
@@ -157,7 +152,6 @@ function PostRow({
             onClose={() => {
               setOpenDialog(false);
               setReport(false);
-              console.log("onClose called");
             }}
             onClick={handleSubmit}
             contentId="Drawer_ReportDialogContent"
