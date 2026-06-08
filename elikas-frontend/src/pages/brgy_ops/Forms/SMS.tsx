@@ -8,6 +8,14 @@ import { Field, FieldLabel } from "@/components/ui/field";
 import SelectDropdown from "@/components/SelectDropdown";
 import { X } from "lucide-react";
 import { useNavigate } from "react-router";
+import api from "@/api";
+import { toast } from "sonner";
+
+type templateType = {
+  id: number;
+  template_name: string;
+  message_content: string;
+};
 
 function SMS() {
   const [addTemplate, setAddTemplate] = useState(false);
@@ -17,23 +25,31 @@ function SMS() {
   const [schedSend, setSchedSend] = useState("");
   const [error, setError] = useState({ title: "", message: "" });
   const [willDelete, setWillDelete] = useState(false);
+  const [templateLoad, setTemplateLoad] = useState(false);
+  const [templates, setTemplates] = useState<templateType[]>([]);
 
   const navigate = useNavigate();
 
-  const tempalates = [
-    {
-      id: "1",
-      templateTitle: "sample title 1",
-      message: "Mga trends na di ko inadapt",
-    },
-    {
-      id: "2",
-      templateTitle: "sample title 2",
-      message: "Sample title two whattf is burikak",
-    },
-  ];
+  useEffect(() => {
+    getTemplates();
+    console.log(templates);
+  }, []);
 
-  const handleTemplateAdd = () => {
+  const getTemplates = async () => {
+    try {
+      setTemplateLoad(true);
+      const response = await api.get("/sms/templates");
+      setTemplates(response.data.templates);
+    } catch (err: any) {
+      console.log(err.response.data);
+    } finally {
+      setTemplateLoad(false);
+    }
+  };
+
+  const handleTemplateAdd = (e: React.FormEvent) => {
+    e.preventDefault();
+
     if (!templateTitle) {
       setError({
         title: "Please enter a title for your template",
@@ -50,21 +66,60 @@ function SMS() {
       return;
     }
 
-    console.log(templateTitle);
-    console.log(message);
+    try {
+      const response = api.post("/sms/templates", {
+        message_content: message,
+        template_name: templateTitle,
+      });
+
+      toast.promise(response, {
+        loading: "Adding to your templates...",
+        success: "Template added!",
+        error: (err: any) => {
+          return err.response.data;
+        },
+        position: "top-center",
+      });
+    } catch (err: any) {
+      console.log(err.response.data);
+    }
   };
+
+  const templateMessage = templates.find(
+    (message) => String(message.id) === String(templateId),
+  );
 
   useEffect(() => {
     if (templateId) {
-      setMessage(templateMessage?.message);
+      setMessage(templateMessage?.message_content);
     }
   }, [templateId]);
 
-  const handleSend = () => {
+  const handleSendNow = (e: React.FormEvent) => {
+    e.preventDefault();
+
     if (!message) {
       setError({ title: "", message: "This field is required" });
     }
-    console.log(message);
+
+    try {
+      const response = api.post("/sms/broadcasts/send-now", {
+        message_content: message,
+      });
+
+      console.log(response);
+
+      toast.promise(response, {
+        loading: "Sending your message now...",
+        success: "Message sent!",
+        error: (err: any) => {
+          return err.response.data;
+        },
+        position: "top-center",
+      });
+    } catch (err: any) {
+      console.log(err.response.data);
+    }
   };
 
   const handleClear = () => {
@@ -72,10 +127,6 @@ function SMS() {
     setTemplateTitle("");
     setTemplateId("");
   };
-
-  const templateMessage = tempalates.find(
-    (message) => String(message.id) === String(templateId),
-  );
 
   return (
     <>
@@ -107,7 +158,7 @@ function SMS() {
             setAddTemplate(false);
             setError({ title: "", message: "" });
           }}
-          onClick={handleTemplateAdd}
+          onClick={(e: any) => handleTemplateAdd(e)}
         >
           <TextField
             label="Template Title*"
@@ -165,28 +216,33 @@ function SMS() {
           </div> */}
           {/* With Transaction */}
           <div className="w-full max-w-sm flex flex-col gap-4">
-            <div className="flex h-fit items-center">
-              <SelectDropdown
-                value={templateId}
-                onValueChange={setTemplateId}
-                label="Templates"
-                placeholder="Choose a template to use"
-                id="SMS_SelectTemplateField"
-                onSubmit={(e) => setTemplateId(e.target.value)}
-                options={tempalates.map((item) => ({
-                  label: item.templateTitle,
-                  value: item.id,
-                }))}
-                clearClick={() => setTemplateId("")}
-                clearId="SMS_TemplateClear"
-                showClear={!!templateId}
-              />
-              <ButtonComp
-                text="SMS History"
-                variant="primary"
-                id="SMS_SMSHistoryBtn"
-                onClick={() => navigate("/SMSHistory")}
-              />
+            <div className="flex w-full h-fit items-center justify-between">
+              <div className="w-58 min-w-0 mr-2">
+                <SelectDropdown
+                  value={templateId}
+                  onValueChange={setTemplateId}
+                  label="Templates"
+                  placeholder="Choose a template to use"
+                  id="SMS_SelectTemplateField"
+                  onSubmit={(e) => setTemplateId(e.target.value)}
+                  options={templates.map((item) => ({
+                    label: item.template_name,
+                    value: item.id.toString(),
+                  }))}
+                  clearClick={() => setTemplateId("")}
+                  clearId="SMS_TemplateClear"
+                  showClear={!!templateId}
+                  loading={templateLoad}
+                />
+              </div>
+              <div className="shrink-0">
+                <ButtonComp
+                  text="SMS History"
+                  variant="primary"
+                  id="SMS_SMSHistoryBtn"
+                  onClick={() => navigate("/SMSHistory")}
+                />
+              </div>
             </div>
 
             <div>
@@ -247,7 +303,7 @@ function SMS() {
               variant="primary"
               heightSize="38px"
               widthSize="100%"
-              onClick={handleSend}
+              onClick={(e) => handleSendNow(e)}
             />
             <ButtonComp
               id="SMS_DeleteTemplate"
