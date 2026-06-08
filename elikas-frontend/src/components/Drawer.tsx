@@ -3,34 +3,14 @@ import {
   DrawerClose,
   DrawerContent,
   DrawerDescription,
-  DrawerHeader,
   DrawerTitle,
 } from "@/components/ui/drawer";
-import {
-  ChevronDownIcon,
-  ShieldCheck,
-  CircleX,
-  File,
-  Camera,
-} from "lucide-react";
-import { Button } from "@/components/ui/button";
-import {
-  Collapsible,
-  CollapsibleContent,
-  CollapsibleTrigger,
-} from "@/components/ui/collapsible";
-import { useEffect, useState, useRef } from "react";
+import { CircleX } from "lucide-react";
+import { useEffect, useState } from "react";
 import { cn } from "@/lib/utils";
 import ButtonComp from "./Button";
-import DrawerIcon from "@/assets/Map/Drawer.svg";
-import CSIcon from "@/assets/Map/CrowdsourceIcon.svg";
-import PostRow from "./PostRow";
 import colors from "@/constants/colors";
 import { Link } from "react-router";
-import SensorIconDetailed from "./SensorIconDetailed";
-import { bigSmile } from "@dicebear/collection";
-import { createAvatar } from "@dicebear/core";
-import { InputGroup, InputGroupAddon, InputGroupInput } from "./ui/input-group";
 import HazardDrawer from "./DrawerContent/HazardDrawer";
 import EvacPinDrawer from "./DrawerContent/EvacPinDrawer";
 import SensorDrawer from "./DrawerContent/SensorDrawer";
@@ -152,87 +132,12 @@ function DrawerComp({
   isHazard,
 }: DrawerProps) {
   const [expanded, setExpanded] = useState(false);
-  const [height, setHeight] = useState(0);
-  const [seed, setSeed] = useState("Felix");
-  const [comment, setComment] = useState("");
-  const [image, setImage] = useState("");
-
-  const fileInputRef = useRef<HTMLInputElement>(null);
-
-  const handleSubmit = () => {
-    console.log(comment);
-    console.log(image);
-  };
-
-  const colorSensor = {
-    yellow: "#F3C217",
-    orange: "#E6793B",
-    red: "#B22B42",
-    purple: "#6E4998",
-    green: "#318631",
-  };
-
-  // useEffect(() => {
-  //   setHeight(40);
-  // }, []);
-
-  const calcRiskInfo = (height: number) => {
-    if (height >= 40)
-      // Overflow
-      return {
-        color: colorSensor.purple,
-        risk: "Overflow",
-        desc: "Water has exceeded safe levels and is overflowing. Avoid flood-prone areas and follow emergency instructions.",
-      };
-    else if (height >= 30) {
-      // Critical
-      return {
-        color: colorSensor.red,
-        risk: "Critical",
-        desc: "Flooding is imminent or ongoing. Evacuate immediately to higher ground.",
-      };
-    } else if (height >= 20) {
-      // Alarm
-      return {
-        color: colorSensor.orange,
-        risk: "Alarm",
-        desc: "Water levels are significantly elevated. Prepare for possible evacuation and secure belongings.",
-      };
-    } else if (height >= 10) {
-      // Alert
-      return {
-        color: colorSensor.yellow,
-        risk: "Alert",
-        desc: "Water levels are rising. Monitor the situation closely and stay informed of updates.",
-      };
-    } else
-      return {
-        color: colorSensor.green,
-        risk: "Normal",
-        desc: "Water levels are normal.",
-      };
-  };
-
-  const riskInfo = calcRiskInfo(height);
 
   useEffect(() => {
     if (!open) setExpanded(false);
   }, [open]);
 
   if (!selectedFloodPin) return null;
-  // if (!selectedEvacPin) return null;
-
-  const avatar = createAvatar(bigSmile, {
-    seed: seed,
-    backgroundColor: ["b6e3f4", "c0aede", "d1d4f9"],
-    radius: 50,
-    scale: 90,
-    accessoriesProbability: 50,
-    eyes: ["cheery", "normal", "starstruck", "winking"],
-    mouth: ["braces", "gapSmile", "kawaii", "openedSmile", "teethSmile"],
-  });
-
-  const dataUri = avatar.toDataUri();
 
   let content;
   if (newPin) {
