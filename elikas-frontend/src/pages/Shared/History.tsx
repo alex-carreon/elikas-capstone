@@ -40,7 +40,7 @@ type myFloodPaths = {
   is_deactivated: boolean;
   is_expired: boolean;
   last_confirmed: string;
-  level: FloodLevel;
+  level: string;
   posted_at: string;
   posted_by: string;
 };
@@ -111,6 +111,13 @@ function History() {
   let message: string;
   const params = new URLSearchParams();
 
+  const colorHazard = {
+    lightBlue: "#52B2DA",
+    darkBlue: "#578EC2",
+    red: "#B22B42",
+    fallback: "#C7C7C7",
+  };
+
   const getSensors = async (search = searchFor) => {
     try {
       if (status == "Inactive") {
@@ -157,7 +164,6 @@ function History() {
       setLoading(true);
       const parameters = params.toString();
       const endpoint = `/sensors${parameters ? `?${parameters}` : ""}`;
-      console.log(endpoint);
       const sensorsResponse = await api.get(endpoint);
 
       if (!sensorsResponse) {
@@ -212,7 +218,6 @@ function History() {
       const parameters = params.toString();
       const endpointEvac = `/evacpins/users?own_pins=true${parameters ? `&${parameters}` : ""}`;
       const endpointHazard = `/flood-paths/my${parameters ? `?${parameters}` : ""}`;
-      console.log(endpointEvac);
       const [floodResponse, evacResponse, brgyResponse, levelsResponse] =
         await Promise.all([
           api.get(endpointHazard),
@@ -228,7 +233,6 @@ function History() {
       const myEvacs = await evacResponse.data.pins;
       const barangays = await brgyResponse.data.Barangays;
       const levels = await levelsResponse.data.flood_levels;
-      console.log(levels);
 
       setFloodPaths(myHazards);
       setEvacPins(myEvacs);
@@ -664,6 +668,7 @@ function History() {
                             link={`/EvacForm/${pins.id}`}
                             isExpired={pins.is_expired}
                             buttonId="History_ActiveEvacDetailsBtn"
+                            showBtn
                           />
                         );
                       }
@@ -679,6 +684,7 @@ function History() {
                             link={`/EvacForm/${pins.id}`}
                             isExpired={pins.is_expired}
                             buttonId="History_ExpiredEvacDetailsBtn"
+                            showBtn
                           />
                         );
                       }
@@ -695,6 +701,7 @@ function History() {
                           link={`/SensorForm/${pins.id}`}
                           // isExpired={pins.deactivatedAt}
                           buttonId="History_ExpiredEvacDetailsBtn"
+                          showBtn
                         >
                           <div className="flex flex-row gap-2">
                             <div
@@ -722,12 +729,33 @@ function History() {
                             <Row
                               postId={String(path.id)}
                               title="Flood"
+                              desc={path.level}
                               address={path.description}
                               datePosted={path.last_confirmed}
                               link={`/HazardForm/${path.id}`}
                               isExpired={path.is_expired}
                               buttonId="History_ActiveHazardDetailsBtn"
-                            />
+                            >
+                              <div
+                                className={`mt-2 px-2 py-1 rounded-3xl w-fit text-sm`}
+                                style={{
+                                  backgroundColor:
+                                    path.level === "Gutter" ||
+                                    path.level === "Half Knee"
+                                      ? colorHazard.lightBlue
+                                      : path.level === "Half Tire" ||
+                                          path.level === "Knee"
+                                        ? colorHazard.darkBlue
+                                        : path.level === "Tire" ||
+                                            path.level === "Waist" ||
+                                            path.level === "chest"
+                                          ? colorHazard.red
+                                          : colorHazard.fallback,
+                                }}
+                              >
+                                {path.level}
+                              </div>
+                            </Row>
                           );
                       })
                     : floodPaths.map((path) => {
@@ -736,6 +764,7 @@ function History() {
                             <Row
                               postId={String(path.id)}
                               title="Flood"
+                              desc={path.level}
                               address={path.description}
                               datePosted={path.last_confirmed}
                               link="/HazardForm"
