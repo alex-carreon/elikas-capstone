@@ -147,21 +147,19 @@ function Hotlines() {
         </div>
 
         {/* Hotline rows */}
-        <div className="w-full max-w-md flex flex-col justify-start gap-4">
-          {hotlines.map((hotline) => {
-            return (
-              <HotlineRow
-                lastUpdate={hotline.last_updated}
-                name={hotline.name}
-                address={`${hotline.address}, ${hotline.location_name}`}
-                primary={hotline.phone_number}
-                secondary={hotline.mobile_number}
-                postedBy={hotline.posted_by}
-                id={hotline.id}
-              />
-            );
-          })}
-        </div>
+        {hotlines.map((hotline) => {
+          return (
+            <HotlineRow
+              lastUpdate={hotline.last_updated}
+              name={hotline.name}
+              address={`${hotline.address}, ${hotline.location_name}`}
+              primary={hotline.phone_number}
+              secondary={hotline.mobile_number}
+              postedBy={hotline.posted_by}
+              id={hotline.id}
+            />
+          );
+        })}
       </div>
     </>
   );
