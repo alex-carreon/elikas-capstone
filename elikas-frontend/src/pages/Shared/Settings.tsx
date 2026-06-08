@@ -60,7 +60,7 @@ function Settings() {
               <Separator className="bg-gray-200" />
             </div>
           </Link>
-          <Link to="">
+          <Link to="/Feedback">
             <div className="flex flex-col gap-3">
               <div
                 id="Settings_FeedbackBtn"

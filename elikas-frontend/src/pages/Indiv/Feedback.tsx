@@ -7,6 +7,8 @@ import Stack from "@mui/material/Stack";
 import { FieldLabel, Field } from "@/components/ui/field";
 import { Textarea } from "@/components/ui/textarea";
 import ButtonComp from "@/components/Button";
+import api from "@/api";
+import { toast } from "sonner";
 
 function Feedback() {
   const [rating, setRating] = useState(0);
@@ -14,8 +16,24 @@ function Feedback() {
   // Catch Rating value
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    console.log("rating:", rating);
-    console.log("description:", desc);
+
+    try {
+      const response = api.post("/feedback", {
+        rating: rating,
+        message: desc,
+      });
+
+      toast.promise(response, {
+        loading: "Submitting your feedback...",
+        success: "Feedback sent. Thank you for helping us improve!",
+        error: (err: any) => {
+          return err.response.data;
+        },
+        position: "top-center",
+      });
+    } catch (err: any) {
+      console.log(err.response.data);
+    }
   };
 
   return (
