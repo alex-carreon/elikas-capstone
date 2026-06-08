@@ -29,7 +29,24 @@ function HotlineRow({
   const { role } = useUserContext();
 
   const HandleCopy = () => {
-    navigator.clipboard.writeText(primary);
+    const fallback = () => {
+      const el = document.createElement("textarea");
+      el.value = primary;
+      el.style.position = "fixed";
+      el.style.opacity = "0";
+      document.body.appendChild(el);
+      el.focus();
+      el.select();
+      document.execCommand("copy");
+      document.body.removeChild(el);
+    };
+
+    if (navigator.clipboard && window.isSecureContext) {
+      navigator.clipboard.writeText(primary).catch(fallback);
+    } else {
+      fallback();
+    }
+
     setCopy(true);
     toast("Copied to clipboard");
     setTimeout(() => setCopy(false), 2000);
@@ -44,29 +61,27 @@ function HotlineRow({
             <p>
               <b>{name}</b>
             </p>
-            {/* {copy ? (
-            <CopyCheck id="Hotlines_CopyBtn" className="p-2" size={24} />
-          ) : (
-            <Copy
-              id="Hotlines_CopyBtn"
-              className="p-2"
-              onClick={HandleCopy}
-              size={38}
-            />
-          )} */}
             {role === "brgy_op" ? (
               <Link to={`/HotlinesForm/${id}`}>
                 <Edit className="p-2" size={38} />
               </Link>
             ) : copy ? (
-              <CopyCheck id="Hotlines_CopyBtn" className="p-2" size={24} />
+              <button
+                id="Hotlines_CopyCheckBtn"
+                className="p-2 cursor-default"
+                disabled
+              >
+                <CopyCheck size={24} />
+              </button>
             ) : (
-              <Copy
+              <button
                 id="Hotlines_CopyBtn"
-                className="p-2"
+                className="p-2 cursor-default"
                 onClick={HandleCopy}
-                size={38}
-              />
+                type="button"
+              >
+                <Copy size={24} />
+              </button>
             )}
           </div>
           <div className="flex flex-col gap-1">
