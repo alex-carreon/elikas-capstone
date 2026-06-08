@@ -21,11 +21,13 @@ interface PostRowProps {
   level?: string;
   locationVerified?: boolean;
   flagCount?: number;
-  expiryDays: number;
+  expiryDays?: number;
   image?: string;
   isSimple?: boolean;
   children?: React.ReactNode;
   id?: number;
+  isHazardPost: boolean;
+  isEvacComments: boolean;
 }
 
 function PostRow({
@@ -40,6 +42,8 @@ function PostRow({
   isSimple,
   children,
   id,
+  isHazardPost,
+  isEvacComments,
 }: PostRowProps) {
   const [report, setReport] = useState(false);
   const [upvote, setUpvote] = useState(0);
@@ -68,15 +72,34 @@ function PostRow({
   const getVotes = async () => {
     try {
       setVoteLoad(true);
-      const response = await api.get(`/flood-paths/${id}`);
-      setUpvote(response.data.flood_path.upvotes);
-      setDownvote(response.data.flood_path.downvotes);
-      const voted = response.data.user_vote;
-      if (voted === 1) {
-        setVote(1);
-      } else if (voted === -1) {
-        setVote(-1);
-      } else setVote(0);
+
+      if (isHazardPost) {
+        const response = await api.get(`/flood-paths/${id}`);
+        setUpvote(response.data.flood_path.upvotes);
+        setDownvote(response.data.flood_path.downvotes);
+
+        const voted = response.data.user_vote;
+        if (voted === 1) {
+          setVote(1);
+        } else if (voted === -1) {
+          setVote(-1);
+        } else setVote(0);
+      }
+
+      if (isEvacComments) {
+        const response = await api.get(`/comments/${id}`);
+        console.log("commend Id", response);
+
+        setUpvote(response.data.vote);
+        setDownvote(response.data.downvote);
+
+        const voted = response.data.user_vote;
+        if (voted === 1) {
+          setVote(1);
+        } else if (voted === -1) {
+          setVote(-1);
+        } else setVote(0);
+      }
     } catch (err: string | any) {
       console.log(err.message || "An error occurred");
     } finally {
@@ -91,9 +114,19 @@ function PostRow({
   const handleVote = async (voteValue: number) => {
     try {
       setVoteLoad(true);
-      const response = await api.post(`/flood-paths/${id}/vote`, {
-        vote: voteValue,
-      });
+
+      if (isHazardPost) {
+        const response = await api.post(`/flood-paths/${id}/vote`, {
+          vote: voteValue,
+        });
+      }
+
+      if (isEvacComments) {
+        const response = await api.post(`/comments/${id}/vote`, {
+          vote: voteValue,
+        });
+      }
+
       getVotes();
     } catch (error) {
       console.log("Error submitting vote:", error);
@@ -196,7 +229,7 @@ function PostRow({
                     {timePosted}
                   </p>
                 </div>
-                <p className="text-xs">Flood Level: {level}</p>
+                {level && <p className="text-xs">Flood Level: {level}</p>}
                 <p className="text-xs">{description}</p>
               </div>
             </div>
@@ -260,7 +293,7 @@ function PostRow({
                 {voteLoad ? <Spinner className="w-6" /> : `(${downvote})`}
               </p>
             </div>
-            {isSimple ? null : (
+            {isSimple || image?.length === 0 ? null : (
               <CollapsibleTrigger
                 id="Drawer_PostDetailsTrigger"
                 className="text-xs underline italic flex ml-auto"
@@ -270,11 +303,7 @@ function PostRow({
             )}
           </div>
           <CollapsibleContent id="Drawer_PostDetailsContent">
-            <div className="border-2 border-solid rounded-lg p-4 m-2 flex flex-col gap-1">
-              <p className="flex flex-row text-xs">
-                <b>Location Verified</b>:{" "}
-                {locationVerified ? <p>Yes</p> : <p>No</p>}
-              </p>
+            {/* <div className="border-2 border-solid rounded-lg p-4 m-2 flex flex-col gap-1">
               <div className="flex flex-row gap-2 text-xs">
                 <ThumbsUp size={16} strokeWidth={1.5} fill="#FFA215" />
                 {upvote}
@@ -285,14 +314,16 @@ function PostRow({
               </div>
               <div className="flex flex-row gap-2 text-xs">
                 <Flag size={16} strokeWidth={1.5} fill="#C43E3E" /> {flagCount}
-                <p
-                  className="italic text-xs flex ml-auto"
-                  style={{ color: colors.label }}
-                >
-                  Expires in {expiryDays} days
-                </p>
+                {expiryDays && (
+                  <p
+                    className="italic text-xs flex ml-auto"
+                    style={{ color: colors.label }}
+                  >
+                    Expires in {expiryDays} days
+                  </p>
+                )}
               </div>
-            </div>
+            </div> */}
             <img src={image} className="m-2" />
           </CollapsibleContent>
         </Collapsible>
