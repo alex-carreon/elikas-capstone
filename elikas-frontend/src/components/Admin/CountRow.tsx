@@ -5,7 +5,7 @@ interface CountRowProps {
   title: string;
   lastUpdated?: string;
   count: number | null;
-  loading: boolean;
+  loading?: boolean;
 }
 
 function CountRow({ title, lastUpdated, count, loading }: CountRowProps) {
