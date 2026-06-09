@@ -8,7 +8,7 @@ import {
   InputGroupInput,
   InputGroupAddon,
 } from "@/components/ui/input-group";
-import { ChevronDownIcon, ChevronUpIcon, Search } from "lucide-react";
+import { ChevronDownIcon, ChevronUpIcon, Search, X } from "lucide-react";
 import Row from "@/components/Row";
 import { Skeleton } from "@/components/ui/skeleton";
 import {
@@ -58,7 +58,7 @@ function IndivUsers() {
   const [loading, setLoading] = useState(false);
   const [countLoad, setCountLoad] = useState(false);
   const [openCollapse, setOpenCollapse] = useState(false);
-  const [barangays, setBarangays] = useState(false);
+  const [barangays, setBarangays] = useState<Barangays[]>([]);
   const [brgyFilter, setBrgyFilter] = useState(0);
 
   const params = new URLSearchParams();
@@ -71,13 +71,16 @@ function IndivUsers() {
       }
 
       const parameter = params.toString();
-
+      const activeEndpoint = `/admin/users?role=indiv&active=true${parameter ? `&${parameter}` : ""}`;
+      console.log(activeEndpoint);
       const [activeResponse, deacResponse, feedbackResponse] =
         await Promise.all([
           api.get(
             `/admin/users?role=indiv&active=true${parameter ? `&${parameter}` : ""}`,
           ),
-          api.get("/admin/users?role=indiv&active=false"),
+          api.get(
+            `/admin/users?role=indiv&active=false${parameter ? `&${parameter}` : ""}`,
+          ),
           api.get("/admin/feedback"),
         ]);
 
@@ -124,7 +127,7 @@ function IndivUsers() {
     const getBrgy = async () => {
       try {
         setLoading(true);
-        const brgyRes = await api.get(`/locations/barangays?city_id=10`);
+        const brgyRes = await api.get(`/locations/barangays?city_id=2`);
 
         const barangays = brgyRes.data.Barangays;
         console.log(barangays);
@@ -234,27 +237,27 @@ function IndivUsers() {
                 className="flex flex-col items-center px-2.5 mt-2 text-sm"
               >
                 <div className="w-full gap-2 bg-gray-300/50 p-4 rounded-lg flex">
-                  {/* <SelectDropdown
-                      value={String(levelFilter)}
-                      onValueChange={(val) => setLevelFilter(Number(val))}
-                      placeholder="Flood Level"
-                      id="History_LevelFilter"
-                      options={[
-                        { label: "All", value: "0" },
-                        ...(levels?.map((level) => ({
-                          label: level.level_name,
-                          value: String(level.id),
-                        })) ?? []),
-                      ]}
-                    /> */}
-                  {/* {levelFilter ? (
-                      <button
-                        onClick={() => setLevelFilter(0)}
-                        id="History_ClearBrgyFilter"
-                      >
-                        <X size={14} />
-                      </button>
-                    ) : null} */}
+                  <SelectDropdown
+                    value={String(brgyFilter)}
+                    onValueChange={(val) => setBrgyFilter(Number(val))}
+                    placeholder="Flood Level"
+                    id="History_LevelFilter"
+                    options={[
+                      { label: "All", value: "0" },
+                      ...(barangays?.map((barangay) => ({
+                        label: barangay.name,
+                        value: String(barangay.id),
+                      })) ?? []),
+                    ]}
+                  />
+                  {brgyFilter ? (
+                    <button
+                      onClick={() => setBrgyFilter(0)}
+                      id="History_ClearBrgyFilter"
+                    >
+                      <X size={14} />
+                    </button>
+                  ) : null}
                 </div>
               </CollapsibleContent>
             </Collapsible>
