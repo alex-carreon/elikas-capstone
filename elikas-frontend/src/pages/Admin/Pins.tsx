@@ -11,9 +11,6 @@ import {
 import { Filter, Search } from "lucide-react";
 import Row from "@/components/Row";
 import { Skeleton } from "@/components/ui/skeleton";
-import ButtonComp from "@/components/Button";
-import { Link } from "react-router";
-import { useUserContext } from "@/context/AuthContext";
 
 type BrgyUser = {
   id: number;
