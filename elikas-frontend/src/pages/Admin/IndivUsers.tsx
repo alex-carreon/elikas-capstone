@@ -39,6 +39,13 @@ type Feedback = {
   submitted_by: submittedBy;
 };
 
+type Barangays = {
+  id: number;
+  name: string;
+  role: string;
+  location: string;
+};
+
 function IndivUsers() {
   const [activeCount, setActiveCount] = useState(0);
   const [deacCount, setDeacCount] = useState(0);
@@ -49,43 +56,93 @@ function IndivUsers() {
   const [deacUsers, setDeacUsers] = useState<Users[]>([]);
   const [feedback, setFeedback] = useState<Feedback[]>([]);
   const [loading, setLoading] = useState(false);
+  const [countLoad, setCountLoad] = useState(false);
   const [openCollapse, setOpenCollapse] = useState(false);
+  const [barangays, setBarangays] = useState(false);
+  const [brgyFilter, setBrgyFilter] = useState(0);
+
+  const params = new URLSearchParams();
+
+  const getIndivData = async () => {
+    try {
+      setLoading(true);
+      if (brgyFilter || brgyFilter !== 0) {
+        params.set("barangay_id", String(brgyFilter));
+      }
+
+      const parameter = params.toString();
+
+      const [activeResponse, deacResponse, feedbackResponse] =
+        await Promise.all([
+          api.get(
+            `/admin/users?role=indiv&active=true${parameter ? `&${parameter}` : ""}`,
+          ),
+          api.get("/admin/users?role=indiv&active=false"),
+          api.get("/admin/feedback"),
+        ]);
+
+      setActiveUsers(activeResponse.data.users);
+      setDeacUsers(deacResponse.data.users);
+      setFeedback(feedbackResponse.data.feedback);
+    } catch (err: string | any) {
+      new Error(err.message || "An error occurred during registration");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const getIndivCount = async () => {
+    try {
+      setCountLoad(true);
+      const [activeResponse, deacResponse, feedbackResponse] =
+        await Promise.all([
+          api.get("/admin/users?role=indiv&active=true"),
+          api.get("/admin/users?role=indiv&active=false"),
+          api.get("/admin/feedback"),
+        ]);
+
+      const ratings = feedbackResponse.data.feedback.map(
+        (item: Feedback) => item.rating,
+      );
+
+      const aveRating = ratings.length
+        ? ratings.reduce((sum: number, n: number) => sum + n, 0) /
+          ratings.length
+        : 0;
+
+      setActiveCount(activeResponse.data.count);
+      setDeacCount(deacResponse.data.count);
+      setFeedbackAve(aveRating);
+    } catch (err: string | any) {
+      new Error(err.message || "An error occurred during registration");
+    } finally {
+      setCountLoad(false);
+    }
+  };
 
   useEffect(() => {
-    const getIndivData = async () => {
+    const getBrgy = async () => {
       try {
         setLoading(true);
-        const [activeResponse, deacResponse, feedbackResponse] =
-          await Promise.all([
-            api.get("/admin/users?role=indiv&active=true"),
-            api.get("/admin/users?role=indiv&active=false"),
-            api.get("/admin/feedback"),
-          ]);
+        const brgyRes = await api.get(`/locations/barangays?city_id=10`);
 
-        const ratings = feedbackResponse.data.feedback.map(
-          (item: Feedback) => item.rating,
-        );
-
-        const aveRating = ratings.length
-          ? ratings.reduce((sum: number, n: number) => sum + n, 0) /
-            ratings.length
-          : 0;
-
-        setActiveCount(activeResponse.data.count);
-        setActiveUsers(activeResponse.data.users);
-        setDeacCount(deacResponse.data.count);
-        setDeacUsers(deacResponse.data.users);
-        setFeedback(feedbackResponse.data.feedback);
-        setFeedbackAve(aveRating);
-      } catch (err: string | any) {
-        new Error(err.message || "An error occurred during registration");
+        const barangays = brgyRes.data.Barangays;
+        console.log(barangays);
+        setBarangays(barangays);
+      } catch (err: any) {
+        console.log(err.message);
       } finally {
         setLoading(false);
       }
     };
-
     getIndivData();
+    getIndivCount();
+    getBrgy();
   }, []);
+
+  useEffect(() => {
+    getIndivData();
+  }, [brgyFilter]);
 
   return (
     <>
@@ -95,17 +152,17 @@ function IndivUsers() {
             <CountRow
               title="Active Users"
               count={activeCount}
-              loading={loading}
+              loading={countLoad}
             />
             <CountRow
               title="Deactivated Users"
               count={deacCount}
-              loading={loading}
+              loading={countLoad}
             />
             <CountRow
               title="Feedback Average"
               count={feedbackAve}
-              loading={loading}
+              loading={countLoad}
             />
           </DashboardHeader>
           <div className="bg-white -mt-8 rounded-4xl p-4 flex flex-col gap-2">

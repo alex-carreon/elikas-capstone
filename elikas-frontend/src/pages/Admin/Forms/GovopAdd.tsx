@@ -76,6 +76,8 @@ function BrgyAdd() {
   const [firebaseUser, setFirebaseUser] = useState<User>();
   const [adminIn, setAdminIn] = useState(false);
 
+  const { skipAuthContext } = useUserContext();
+
   useEffect(() => {
     if (!adminPw) {
       setEnterPw(true);
@@ -94,10 +96,11 @@ function BrgyAdd() {
       });
       return;
     }
+    const adminEmail = auth.currentUser?.email ?? "";
+
+    skipAuthContext.current = true;
 
     try {
-      const adminEmail = auth.currentUser?.email ?? "";
-
       const userCredential = await createUserWithEmailAndPassword(
         auth,
         email,
@@ -106,45 +109,68 @@ function BrgyAdd() {
       const firebaseUser = userCredential.user;
       const firebaseUid = firebaseUser.uid;
 
-      await signInWithEmailAndPassword(auth, adminEmail, adminPw);
+      try {
+        console.log(adminEmail, adminPw);
+        const adminToken = await signInWithEmailAndPassword(
+          auth,
+          adminEmail,
+          adminPw,
+        );
+        await new Promise((resolve) => setTimeout(resolve, 1500));
 
-      // Get token immediately after signing back in
-      const freshToken = (await auth.currentUser?.getIdToken(true)) ?? "";
+        const freshToken = await adminToken.user.getIdToken(true);
 
-      console.log("freshToken:", freshToken); // check this
-
-      const createPromise = api.post(
-        "/admin/create-govop",
-        {
-          username: username,
-          email: email,
-          firebase_uid: String(firebaseUid),
-          level_id: levelId,
-          location_id: brgyId ? brgyId : cityId,
-          point_person: pointPerson,
-          point_position: pointPosition,
-        },
-        {
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${freshToken}`,
+        const createPromise = api.post(
+          "/admin/create-govop",
+          {
+            username: username,
+            email: email,
+            firebase_uid: String(firebaseUid),
+            level_id: levelId,
+            location_id: brgyId ? brgyId : cityId,
+            point_person: pointPerson,
+            point_position: pointPosition,
           },
-        },
-      );
+          {
+            headers: {
+              "Content-Type": "application/json",
+              Authorization: `Bearer ${freshToken}`,
+            },
+          },
+        );
 
-      createPromise.catch((err) =>
-        console.log("API error:", err.response?.data),
-      );
+        createPromise.catch((err) => console.log(err.response?.data));
 
-      toast.promise(createPromise, {
-        loading: "Creating Govop User...",
-        success: () => {
-          navigate(-1);
-          return "Govop user has been created!";
-        },
-        error: "Govop creation failed",
-        position: "top-center",
-      });
+        toast.promise(createPromise, {
+          loading: "Creating Govop User...",
+          success: () => {
+            navigate(-1);
+            return "Govop user has been created!";
+          },
+          error: "Govop creation failed",
+          position: "top-center",
+        });
+      } catch (reAuthErr: any) {
+        await firebaseUser.delete();
+
+        if (
+          reAuthErr.code === "auth/invalid-credential" ||
+          reAuthErr.code === "auth/wrong-password"
+        ) {
+          toast.error("Incorrect admin password. User was not created.", {
+            position: "top-center",
+          });
+        } else {
+          toast.error("Failed to re-authenticate admin.", {
+            position: "top-center",
+          });
+          console.log(reAuthErr);
+        }
+        return;
+      } finally {
+        skipAuthContext.current = false;
+      }
+      // Get token immediately after signing back in
     } catch (err: any) {
       console.log(err.response?.data);
       if (err.code === "auth/email-already-in-use") {

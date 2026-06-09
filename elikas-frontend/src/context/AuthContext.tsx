@@ -1,12 +1,13 @@
 import api from "@/api";
 import { auth } from "@/firebase";
 import { onAuthStateChanged, type User } from "firebase/auth";
-import {
+import React, {
   createContext,
   useContext,
   useState,
   useEffect,
   type ReactNode,
+  useRef,
 } from "react";
 import { useNavigate } from "react-router";
 
@@ -15,17 +16,22 @@ interface AuthContextProps {
   loading: boolean;
   role: string | null;
   token: string | null;
+  skipAuthContext: React.MutableRefObject<boolean>;
 }
+
+const skipAuthRef = { current: false } as React.MutableRefObject<boolean>;
 
 const AuthContext = createContext<AuthContextProps>({
   user: null,
   loading: true,
   role: null,
   token: null,
+  skipAuthContext: skipAuthRef,
 });
 
 interface AuthProviderProps {
   children: ReactNode;
+  skipAuthContext: React.MutableRefObject<boolean>;
 }
 
 export function AuthProvider({ children }: AuthProviderProps) {
@@ -34,11 +40,28 @@ export function AuthProvider({ children }: AuthProviderProps) {
   const [role, setRole] = useState<string | null>(null);
   const [token, setToken] = useState<string | null>(null);
 
+  const skipAuthContext = useRef(false);
+
+  const publicRoutes = [
+    "/Login",
+    "/Registration",
+    "/ResetPassword",
+    "/Loading",
+    "/Hotlines",
+    "/TermsConditions",
+  ];
+
+  const isPublicRoute = publicRoutes.some((path) =>
+    location.pathname.startsWith(path),
+  );
+
   const navigate = useNavigate();
 
   // Find user in firebase while loading, when user is found loading stops
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
+      if (skipAuthContext.current) return;
+
       if (!firebaseUser) {
         setUser(null);
         setRole(null);
@@ -60,7 +83,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
 
         const currentToken = t.token;
 
-        if (!role) {
+        if (!role && !isPublicRoute) {
           const loginResponse = await api.post(
             "/auth/login",
             {},
@@ -72,7 +95,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
         setUser(firebaseUser);
         setToken(currentToken);
       } catch (err: any) {
-        await auth.signOut;
+        await auth.signOut();
         navigate("/Login");
         setRole(null);
         setToken(null);
@@ -84,7 +107,9 @@ export function AuthProvider({ children }: AuthProviderProps) {
   }, []);
 
   return (
-    <AuthContext.Provider value={{ user, loading, role, token }}>
+    <AuthContext.Provider
+      value={{ user, loading, role, token, skipAuthContext }}
+    >
       {children}
     </AuthContext.Provider>
   );
