@@ -116,8 +116,8 @@ class FloodPathController extends Controller
             ], 404);
         }
 
-        $isOwner = $floodPath->socialElement->user_id === $user->id;
-        $isAdmin = in_array($user->role_id, [1, 2]);
+        $isOwner = $user && $floodPath->socialElement->user_id === $user->id;
+        $isAdmin = $user && in_array($user->role_id, [1, 2]);
 
         // IMPORTANT: only block access for public deactivated view
         if (
@@ -137,7 +137,7 @@ class FloodPathController extends Controller
         return response()->json([
             'flood_path' => $this->formatFloodPath($floodPath),
             'user_vote' => $userVote,
-
+            'is_mine' => $isOwner,
         ]);
     }
  
