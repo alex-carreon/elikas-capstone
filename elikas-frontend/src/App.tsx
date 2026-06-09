@@ -40,10 +40,6 @@ function App() {
     <>
       <AuthProvider>
         <Routes>
-          <Route element={<Layout />}>
-            <Route path="/admin-pins" element={<Pins />} />
-          </Route>
-
           <Route path="/Loading" element={<Loading />} />
           <Route path="/Login" element={<LogIn />} />
           <Route path="/ResetPassword" element={<ForgotPW />} />
@@ -87,6 +83,7 @@ function App() {
               <Route path="/admin-map" element={<Map />} />
               <Route path="/admin-indiv" element={<IndivUsers />} />
               <Route path="/admin-brgy" element={<BrgyUsers />} />
+              <Route path="/admin-pins" element={<Pins />} />
             </Route>
 
             <Route path="/admin-userDetails/:id" element={<UserDetails />} />
