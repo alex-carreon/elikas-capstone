@@ -21,25 +21,25 @@ export default function ProtectedRoute({ userRole }: ProtectedRouteProps) {
   const { user, loading, role } = useUserContext();
   const navigate = useNavigate();
 
-  useEffect(() => {
-    // if (loading) {
-    //   navigate("/");
-    // }
+  // useEffect(() => {
+  //   // if (loading) {
+  //   //   navigate("/");
+  //   // }
 
-    if (loading) return;
+  //   if (loading) return;
 
-    if (!loading) {
-      if (!user) {
-        navigate("/");
-      }
-    }
-    if (userRole && role) {
-      if (userRole && role !== userRole) {
-        const fallback = roleDefault[role] ?? "/";
-        navigate(fallback);
-      }
-    }
-  }, [loading, role, user]);
+  //   if (!loading) {
+  //     if (!user) {
+  //       navigate("/");
+  //     }
+  //   }
+  //   if (userRole && role) {
+  //     if (userRole && role !== userRole) {
+  //       const fallback = roleDefault[role] ?? "/";
+  //       navigate(fallback);
+  //     }
+  //   }
+  // }, [loading, role, user]);
 
   if (loading) {
     return (
@@ -57,7 +57,16 @@ export default function ProtectedRoute({ userRole }: ProtectedRouteProps) {
           <Spinner className="size-8 text-gray-400" />
         </div>
       </div>
-    ); // or a spinner component
+    );
+  }
+
+  if (!user) {
+    return <Navigate to="/Login" replace />;
+  }
+
+  if (userRole && role !== userRole) {
+    const fallback = roleDefault[role ?? ""] ?? "/Login";
+    return <Navigate to={fallback} replace />;
   }
 
   if (!user) {
