@@ -3,12 +3,15 @@
 use App\Http\Controllers\AdminController;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\CapacityLevelController;
-use App\Http\Controllers\Dashboards\CommentsAdminController;
 use App\Http\Controllers\Comments\EvacComments;
+use App\Http\Controllers\Dashboards\CommentsAdminController;
 use App\Http\Controllers\Dashboards\FloodPathAdminController;
 use App\Http\Controllers\Dashboards\UserController;
 use App\Http\Controllers\EmergencyContactController;
 use App\Http\Controllers\EvacTypeController;
+use App\Http\Controllers\FeedbackController;
+use App\Http\Controllers\Flags\FlagCommentController;
+use App\Http\Controllers\Flags\FlagFloodController;
 use App\Http\Controllers\Hazards\FloodLevelController;
 use App\Http\Controllers\Hazards\FloodPathController;
 use App\Http\Controllers\LocationsController;
@@ -23,13 +26,11 @@ use App\Http\Controllers\PinControllers\VerifyEvacuationAreaController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\SensorControllers\PublicSensorController;
 use App\Http\Controllers\SensorControllers\SensorController;
-use App\Http\Controllers\SMSController;
-use App\Http\Controllers\Votes\VoteController;
-use App\Http\Controllers\Votes\VoteCommentController;
-use Illuminate\Support\Facades\Route;
-use App\Http\Controllers\FeedbackController;
-use App\Http\Controllers\Flags\FlagCommentController;
 use App\Http\Controllers\SensorControllers\SensorLogController;
+use App\Http\Controllers\SMSController;
+use App\Http\Controllers\Votes\VoteCommentController;
+use App\Http\Controllers\Votes\VoteController;
+use Illuminate\Support\Facades\Route;
 
 Route::get('/test', function () {
     return response()->json([
@@ -207,6 +208,7 @@ Route::middleware(['firebase.auth', 'role:1,2,3'])->group(function () {
 
     //FLAGS
     Route::post('/comments/{commentId}/flag', [FlagCommentController::class, 'store']);
+    Route::post('/flood-paths/{floodPathId}/flag', [FlagFloodController::class, 'store']);
     Route::get('/flag-reasons', [FlagCommentController::class, 'reasons']);
 });
 

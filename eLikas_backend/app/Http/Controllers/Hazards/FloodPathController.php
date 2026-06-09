@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Hazards;
 
 use App\Enums\MediaCollection;
 use App\Http\Controllers\Controller;
+use App\Models\Flag;
 use App\Models\FloodLevel;
 use App\Models\FloodPath;
 use App\Models\MediaFile;
@@ -26,7 +27,7 @@ class FloodPathController extends Controller
      * GET /flood-paths
      */
     public function index()
-    {
+    {        
         $floodPaths = FloodPath::with([
             'floodLevel:id,level_name',
             'socialElement:id,user_id,posted_at,deactivated_at',
@@ -134,10 +135,15 @@ class FloodPathController extends Controller
             ->where('element_id', $floodPath->element_id)
             ->value('vote');
 
+        $userFlagged = Flag::where('user_id', $user->id)
+            ->where('element_id', $floodPath->element_id)
+            ->exists();
+
         return response()->json([
             'flood_path' => $this->formatFloodPath($floodPath),
             'user_vote' => $userVote,
             'is_mine' => $isOwner,
+            'user_flagged' => $userFlagged,
         ]);
     }
  
