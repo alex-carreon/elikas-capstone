@@ -54,6 +54,11 @@ class User extends Model
 		'deactivated_at'
 	];
 
+    public function getAuthIdentifier(): int
+    {
+        return $this->id;
+    }
+
 	public function role()
 	{
 		return $this->belongsTo(Role::class, 'role_id');
