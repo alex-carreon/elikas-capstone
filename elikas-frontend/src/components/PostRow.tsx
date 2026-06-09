@@ -13,6 +13,8 @@ import { createPortal } from "react-dom";
 import Radio from "./Radio";
 import api from "@/api";
 import { Spinner } from "@/components/ui/spinner";
+import ButtonComp from "./Button";
+import { Link } from "react-router";
 
 interface PostRowProps {
   username: string;
@@ -28,6 +30,7 @@ interface PostRowProps {
   id?: number;
   isHazardPost: boolean;
   isEvacComments: boolean;
+  isMyHazard?: boolean;
 }
 
 function PostRow({
@@ -44,6 +47,7 @@ function PostRow({
   id,
   isHazardPost,
   isEvacComments,
+  isMyHazard,
 }: PostRowProps) {
   const [report, setReport] = useState(false);
   const [upvote, setUpvote] = useState(0);
@@ -223,8 +227,24 @@ function PostRow({
                     {timePosted}
                   </p>
                 </div>
-                {level && <p className="text-xs">Flood Level: {level}</p>}
-                <p className="text-xs">{description}</p>
+                <div className="flex flex-row justify-between">
+                  <div>
+                    {level && <p className="text-xs">Flood Level: {level}</p>}
+                    <p className="text-xs">{description}</p>
+                  </div>
+                  {isMyHazard && (
+                    <div>
+                      <Link to={`/HazardForm/${id}`}>
+                        <ButtonComp
+                          text="Edit"
+                          variant="outline"
+                          id="Drawer_HazardEdit"
+                          heightSize="28px"
+                        />
+                      </Link>
+                    </div>
+                  )}
+                </div>
               </div>
             </div>
           </div>
