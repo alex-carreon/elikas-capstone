@@ -69,7 +69,7 @@ Route::get('/pins/routes', [GetEvacuationRoutesController::class, 'getEvacuation
 // ONLY ADMIN ROUTES
 // ---------------------------------------------------------------
 Route::prefix('admin')->middleware(['firebase.auth', 'role:1'])->group(function () {
-    Route::post('/create-admin', [AdminController::class, 'createUser']);
+   
 
     // Changed from deleteUser to match your controller naming preference
     Route::patch('/users/{id}/deactivate', [UserController::class, 'deactivateUser']);
@@ -121,7 +121,7 @@ Route::middleware(['firebase.auth', 'role:2'])->group(function () {
 });
 
 
-// 1 = admin; 2 = brgy_op; 3 = indiv; city_op = 3
+// 1 = admin; 2 = brgy_op; 3 = indiv;
 
 // BARANGAY OR ADMIN ROUTES
 Route::middleware(['firebase.auth', 'role:1,2'])->group(function () {
