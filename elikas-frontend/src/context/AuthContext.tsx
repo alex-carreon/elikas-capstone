@@ -1,13 +1,12 @@
 import api from "@/api";
 import { auth } from "@/firebase";
 import { onAuthStateChanged, type User } from "firebase/auth";
-import React, {
+import {
   createContext,
   useContext,
   useState,
   useEffect,
   type ReactNode,
-  useRef,
 } from "react";
 import { useNavigate } from "react-router";
 
@@ -18,8 +17,6 @@ interface AuthContextProps {
   token: string | null;
   // skipAuthContext: React.MutableRefObject<boolean>;
 }
-
-const skipAuthRef = { current: false } as React.MutableRefObject<boolean>;
 
 const AuthContext = createContext<AuthContextProps>({
   user: null,
@@ -38,8 +35,6 @@ export function AuthProvider({ children }: AuthProviderProps) {
   const [loading, setLoading] = useState(true);
   const [role, setRole] = useState<string | null>(null);
   const [token, setToken] = useState<string | null>(null);
-
-  const skipAuthContext = useRef(false);
 
   const publicRoutes = [
     "/Login",
