@@ -11,6 +11,7 @@ use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Model;
 use MatanYadaev\EloquentSpatial\Objects\Point;
 use MatanYadaev\EloquentSpatial\Traits\HasSpatial;
+use OwenIt\Auditing\Contracts\Auditable;
 
 /**
  * Class Sensor
@@ -29,9 +30,10 @@ use MatanYadaev\EloquentSpatial\Traits\HasSpatial;
  *
  * @package App\Models
  */
-class Sensor extends Model
+class Sensor extends Model implements Auditable
 {
     use HasSpatial;
+    use \OwenIt\Auditing\Auditable;
 
 	protected $table = 'Sensors';
 	public $timestamps = false;
