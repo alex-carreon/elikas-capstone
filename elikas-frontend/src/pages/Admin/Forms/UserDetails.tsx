@@ -232,8 +232,8 @@ function UserDetails() {
           closeId="Admin_IndivDeacClose"
           actionId="Admin_IndivDeacBtn"
           open={willDeac}
-          title="You are about to delete this pin"
-          description="Deleting this pin will remove it from the map and your history permanently."
+          title="You are about to deactivate this user"
+          description="Deactivating this user will remove them from the active users list."
           buttonText="Delete"
           onClose={() => {
             setWillDeac(false);

@@ -3,30 +3,8 @@ import FormLayout from "./FormLayout";
 import TextField from "@/components/TextField";
 import { useNavigate } from "react-router";
 import React, { useEffect, useState } from "react";
-import { useUserContext } from "@/context/AuthContext";
 import { toast } from "sonner";
-import AlertDialogue from "@/components/AlertDialogue";
 import SelectDropdown from "@/components/SelectDropdown";
-import {
-  createUserWithEmailAndPassword,
-  signInWithEmailAndPassword,
-  sendEmailVerification,
-} from "firebase/auth";
-import { auth } from "@/firebase";
-
-type UserData = {
-  created_at: string;
-  deactivated_at: string;
-  email: string;
-  username: string;
-  govop_level: string;
-  id: number;
-  govop_location: string;
-  govop_location_id: number;
-  point_person: string;
-  point_position: string;
-  role: string | null;
-};
 
 type Barangays = {
   id: number;
@@ -53,7 +31,6 @@ function BrgyAdd() {
 
   const [username, setUsername] = useState("");
   const [email, setEmail] = useState("");
-  const [location, setLocation] = useState("");
   const [pointPerson, setPointPerson] = useState("");
   const [pointPosition, setPointPosition] = useState("");
   const [loading, setLoading] = useState(false);
@@ -67,9 +44,6 @@ function BrgyAdd() {
   const [pw, setPw] = useState("");
   const [confirmPw, setConfirmPw] = useState("");
   const [errors, setErrors] = useState({ email: "", pw: "", confirmPw: "" });
-  const [adminPw, setAdminPw] = useState("");
-  const [adminEmail, setAdminEmail] = useState("");
-  const [enterPw, setEnterPw] = useState(false);
 
   // useEffect(() => {
   //   if (!adminPw) {
@@ -181,48 +155,12 @@ function BrgyAdd() {
 
   return (
     <>
-      {/* {enterPw && (
-        <AlertDialogue
-          contentId="Admin_GovopAuthContent"
-          closeId="Admin_GovopAuthClose"
-          actionId="Admin_GovopAuthBtn"
-          open={enterPw}
-          title="Enter your Admin Password"
-          description="You need to enter your password to proceed with this action."
-          buttonText="Submit"
-          onClose={() => {
-            setEnterPw(false);
-          }}
-          onClick={() => setEnterPw(false)}
-        >
-          <TextField
-            label="Email"
-            inputType="text"
-            id="Admin_NewBrgyAdminEmail"
-            placeholder="Enter your email"
-            onSubmit={(e) => setAdminEmail(e.target.value)}
-            isRequired
-            isPassword
-          />
-          <TextField
-            label="Password"
-            inputType="password"
-            id="Admin_NewBrgyAdminPw"
-            placeholder="********"
-            onSubmit={(e) => setAdminPw(e.target.value)}
-            isRequired
-            isPassword
-          />
-        </AlertDialogue>
-      )} */}
       <FormLayout
         // isAvatar
         updateId="Admin_NewSubmitBtn"
         updBtnLabel="Create"
         btnType="submit"
-        // Add handleSubmit
         formId="Admin_BrgyAddForm"
-        // updateClick={() => setShowDialog(true)}
       >
         <>
           <form
@@ -272,6 +210,7 @@ function BrgyAdd() {
                 value: String(city.id),
               }))}
               isRequired
+              loading={loading}
             />
             <SelectDropdown
               value={String(brgyId)}
@@ -279,7 +218,7 @@ function BrgyAdd() {
               label="Barangay"
               placeholder="Select a Barangay (Please select a city first)"
               id="Admin_GovopBrgyField"
-              onSubmit={(e) => setLocation(e.target.value)}
+              onSubmit={(e) => setBrgyId(Number(e.target.value))}
               options={barangays?.map((brgy) => ({
                 label: brgy.name,
                 value: String(brgy.id),
