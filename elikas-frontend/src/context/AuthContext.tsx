@@ -64,6 +64,8 @@ export function AuthProvider({ children }: AuthProviderProps) {
         return;
       }
 
+      if (isPublicRoute) return;
+
       try {
         const t = await firebaseUser?.getIdTokenResult(false);
         const expiry = new Date(t.expirationTime);
