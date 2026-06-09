@@ -2,9 +2,6 @@
 
 namespace App\AuditResolvers;
 
-use OwenIt\Auditing\Contracts\Auditable;
-use OwenIt\Auditing\Contracts\Resolver;
-
 class UserResolver implements \OwenIt\Auditing\Contracts\UserResolver
 {
     public static function resolve()
