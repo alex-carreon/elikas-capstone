@@ -1,17 +1,16 @@
 import api from "@/api";
 import FormLayout from "./FormLayout";
 import TextField from "@/components/TextField";
-import { useNavigate, useParams } from "react-router";
+import { useNavigate } from "react-router";
 import React, { useEffect, useState } from "react";
 import { useUserContext } from "@/context/AuthContext";
-import FormSkeleton from "@/pages/Skeletons/FormSkeleton";
 import { toast } from "sonner";
 import AlertDialogue from "@/components/AlertDialogue";
 import SelectDropdown from "@/components/SelectDropdown";
 import {
   createUserWithEmailAndPassword,
   signInWithEmailAndPassword,
-  type User,
+  sendEmailVerification,
 } from "firebase/auth";
 import { auth } from "@/firebase";
 
@@ -50,7 +49,6 @@ type Province = {
 };
 
 function BrgyAdd() {
-  const { token } = useUserContext();
   const navigate = useNavigate();
 
   const [username, setUsername] = useState("");
@@ -70,20 +68,15 @@ function BrgyAdd() {
   const [confirmPw, setConfirmPw] = useState("");
   const [errors, setErrors] = useState({ email: "", pw: "", confirmPw: "" });
   const [adminPw, setAdminPw] = useState("");
-  const [adminToken, setAdminToken] = useState("");
   const [adminEmail, setAdminEmail] = useState("");
   const [enterPw, setEnterPw] = useState(false);
-  const [firebaseUser, setFirebaseUser] = useState<User>();
-  const [adminIn, setAdminIn] = useState(false);
 
-  const { skipAuthContext } = useUserContext();
-
-  useEffect(() => {
-    if (!adminPw) {
-      setEnterPw(true);
-      return;
-    }
-  }, []);
+  // useEffect(() => {
+  //   if (!adminPw) {
+  //     setEnterPw(true);
+  //     return;
+  //   }
+  // }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -96,81 +89,32 @@ function BrgyAdd() {
       });
       return;
     }
-    const adminEmail = auth.currentUser?.email ?? "";
-
-    skipAuthContext.current = true;
-
     try {
-      const userCredential = await createUserWithEmailAndPassword(
-        auth,
-        email,
-        pw,
-      );
-      const firebaseUser = userCredential.user;
-      const firebaseUid = firebaseUser.uid;
+      const createPromise = api.post("/admin/create-govop", {
+        username: username,
+        email: email,
+        password: pw,
+        level_id: levelId,
+        location_id: brgyId ? brgyId : cityId,
+        point_person: pointPerson,
+        point_position: pointPosition,
+      });
 
-      try {
-        console.log(adminEmail, adminPw);
-        const adminToken = await signInWithEmailAndPassword(
-          auth,
-          adminEmail,
-          adminPw,
-        );
-        await new Promise((resolve) => setTimeout(resolve, 1500));
+      createPromise.catch((err) => console.log(err.response?.data));
 
-        const freshToken = await adminToken.user.getIdToken(true);
+      toast.promise(createPromise, {
+        loading: "Creating Govop User...",
+        success: () => {
+          navigate(-1);
+          return "Govop user has been created!";
+        },
+        error: "Govop creation failed",
+        position: "top-center",
+      });
 
-        const createPromise = api.post(
-          "/admin/create-govop",
-          {
-            username: username,
-            email: email,
-            firebase_uid: String(firebaseUid),
-            level_id: levelId,
-            location_id: brgyId ? brgyId : cityId,
-            point_person: pointPerson,
-            point_position: pointPosition,
-          },
-          {
-            headers: {
-              "Content-Type": "application/json",
-              Authorization: `Bearer ${freshToken}`,
-            },
-          },
-        );
-
-        createPromise.catch((err) => console.log(err.response?.data));
-
-        toast.promise(createPromise, {
-          loading: "Creating Govop User...",
-          success: () => {
-            navigate(-1);
-            return "Govop user has been created!";
-          },
-          error: "Govop creation failed",
-          position: "top-center",
-        });
-      } catch (reAuthErr: any) {
-        await firebaseUser.delete();
-
-        if (
-          reAuthErr.code === "auth/invalid-credential" ||
-          reAuthErr.code === "auth/wrong-password"
-        ) {
-          toast.error("Incorrect admin password. User was not created.", {
-            position: "top-center",
-          });
-        } else {
-          toast.error("Failed to re-authenticate admin.", {
-            position: "top-center",
-          });
-          console.log(reAuthErr);
-        }
-        return;
-      } finally {
-        skipAuthContext.current = false;
-      }
-      // Get token immediately after signing back in
+      createPromise.then(() => {
+        navigate("/admin-brgy");
+      });
     } catch (err: any) {
       console.log(err.response?.data);
       if (err.code === "auth/email-already-in-use") {
@@ -187,6 +131,7 @@ function BrgyAdd() {
         });
       }
     }
+    // Get token immediately after signing back in
   };
 
   useEffect(() => {
@@ -236,7 +181,7 @@ function BrgyAdd() {
 
   return (
     <>
-      {enterPw && (
+      {/* {enterPw && (
         <AlertDialogue
           contentId="Admin_GovopAuthContent"
           closeId="Admin_GovopAuthClose"
@@ -269,7 +214,7 @@ function BrgyAdd() {
             isPassword
           />
         </AlertDialogue>
-      )}
+      )} */}
       <FormLayout
         // isAvatar
         updateId="Admin_NewSubmitBtn"
@@ -281,7 +226,7 @@ function BrgyAdd() {
       >
         <>
           <form
-            onSubmit={adminPw ? handleSubmit : () => {}}
+            onSubmit={handleSubmit}
             className="flex flex-col gap-4"
             id="Admin_BrgyAddForm"
           >
