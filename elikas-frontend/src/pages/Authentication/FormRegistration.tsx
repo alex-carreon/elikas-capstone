@@ -77,7 +77,6 @@ function FormRegistration() {
         const brgyRes = await api.get(`/locations/barangays?city_id=${cityId}`);
 
         const barangays = brgyRes.data.Barangays;
-        console.log(barangays);
         setBarangays(barangays);
       } catch (err: any) {
         console.log(err.message);
