@@ -16,7 +16,7 @@ interface AuthContextProps {
   loading: boolean;
   role: string | null;
   token: string | null;
-  skipAuthContext: React.MutableRefObject<boolean>;
+  // skipAuthContext: React.MutableRefObject<boolean>;
 }
 
 const skipAuthRef = { current: false } as React.MutableRefObject<boolean>;
@@ -26,7 +26,7 @@ const AuthContext = createContext<AuthContextProps>({
   loading: true,
   role: null,
   token: null,
-  skipAuthContext: skipAuthRef,
+  // skipAuthContext: skipAuthRef,
 });
 
 interface AuthProviderProps {
@@ -59,7 +59,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
   // Find user in firebase while loading, when user is found loading stops
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
-      if (skipAuthContext.current) return;
+      // if (skipAuthContext.current) return;
 
       if (!firebaseUser) {
         setUser(null);
@@ -106,9 +106,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
   }, []);
 
   return (
-    <AuthContext.Provider
-      value={{ user, loading, role, token, skipAuthContext }}
-    >
+    <AuthContext.Provider value={{ user, loading, role, token }}>
       {children}
     </AuthContext.Provider>
   );
