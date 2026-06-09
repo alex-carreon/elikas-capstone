@@ -48,6 +48,16 @@ class UserController extends Controller
                 }
             }
 
+            // Filter by barangay
+            if ($request->filled('barangay_id')) {
+            
+            $query->whereHas('indivAcc', function ($q) use ($request) {
+
+                $q->where('location_id', $request->barangay_id);
+
+                });
+            }
+
             $users = $query->get();
 
             $formattedUsers = $users->map(function ($user) {
