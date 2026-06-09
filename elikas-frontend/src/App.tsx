@@ -64,9 +64,10 @@ function App() {
             <Route path="/Hotlines" element={<Hotlines />} />
             <Route path="/TermsConditions" element={<TermsConditions />} />
           </Route>
+
           <Route element={<ProtectedRoute userRole={"indiv"} />}>
             <Route element={<ConstNavbar />}>
-              <Route path="/Feedback" element={<Feedback />} />{" "}
+              <Route path="/Feedback" element={<Feedback />} />
             </Route>
           </Route>
 
