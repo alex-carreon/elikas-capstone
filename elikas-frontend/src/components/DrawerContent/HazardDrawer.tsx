@@ -8,6 +8,8 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { useEffect, useState } from "react";
 import { differenceInDays } from "date-fns";
 import api from "@/api";
+import { toZonedTime } from "date-fns-tz";
+import { format } from "date-fns";
 
 type FloodLevel = {
   id: number;
@@ -45,6 +47,12 @@ function HazardDrawer({ selectedPin }: { selectedPin: FloodPath }) {
   const [daysLeft, setDaysleft] = useState(0);
   const [upVote, setUpvote] = useState(0);
   const [downVote, setDownvote] = useState(0);
+  const [isMine, setIsMine] = useState(false);
+
+  const convertDateTime = (utcString: string) => {
+    const zoned = toZonedTime(new Date(utcString), "Asia/Manila");
+    return format(zoned, "MMM d, yyyy h:mm a");
+  };
 
   useEffect(() => {
     if (!selectedPin) return;
@@ -57,6 +65,7 @@ function HazardDrawer({ selectedPin }: { selectedPin: FloodPath }) {
         setFloodDetails(floodDetails);
         setUpvote(floodDetails.upvotes);
         setDownvote(floodDetails.downvotes);
+        setIsMine(response.data.is_mine);
 
         const today = new Date();
         const expDate = new Date(floodDetails.expiry);
@@ -117,7 +126,7 @@ function HazardDrawer({ selectedPin }: { selectedPin: FloodPath }) {
         {floodDetails ? (
           <PostRow
             username={floodDetails.posted_by}
-            timePosted={floodDetails.posted_at}
+            timePosted={convertDateTime(floodDetails.last_confirmed)}
             description={floodDetails.description}
             isEvacComments={false}
             isHazardPost={true}
@@ -127,6 +136,7 @@ function HazardDrawer({ selectedPin }: { selectedPin: FloodPath }) {
             expiryDays={daysLeft}
             id={floodDetails.id}
             isSimple
+            isMyHazard={isMine}
           >
             <img src={floodDetails.media} />
           </PostRow>
