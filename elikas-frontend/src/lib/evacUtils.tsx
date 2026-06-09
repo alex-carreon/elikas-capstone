@@ -193,3 +193,31 @@ export const handleDelete = async ({ id, navigate }: handleActionProps) => {
     }
   }
 };
+
+export const handleReOpen = ({
+  e,
+  id,
+  expiry,
+  navigate,
+}: handleActionProps) => {
+  e?.preventDefault();
+
+  try {
+    const response = api.put(`/pins/${id}`, { expiry: expiry });
+
+    toast.promise(response, {
+      loading: "Re-opening your pin...",
+      success: "Pin Re-opened!",
+      error: (err: any) => {
+        return err.response.data;
+      },
+      position: "top-center",
+    });
+
+    response.then(() => {
+      navigate?.("/History");
+    });
+  } catch (err: any) {
+    console.log(err.response.data);
+  }
+};

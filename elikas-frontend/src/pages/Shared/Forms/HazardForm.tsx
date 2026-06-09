@@ -433,20 +433,22 @@ function HazardForm() {
               <p className="text-xs text-red-500">{error}</p>
             </Field>
             {(!id || isEditable) && levels ? (
-              <SelectDropdown
-                value={floodLevel}
-                onValueChange={setFloodLevel}
-                label="Flood Level*"
-                placeholder="Select the Flood Level"
-                id="HazardPin_FloodLevelField"
-                onSubmit={(e) => setFloodLevel(e.target.value)}
-                options={levels?.map((level) => ({
-                  label: level.level_name,
-                  value: String(level.id),
-                  description: level.description,
-                }))}
-                isRequired={!id ? true : false}
-              />
+              <div className="w-full">
+                <SelectDropdown
+                  value={floodLevel}
+                  onValueChange={setFloodLevel}
+                  label="Flood Level*"
+                  placeholder="Select the Flood Level"
+                  id="HazardPin_FloodLevelField"
+                  onSubmit={(e) => setFloodLevel(e.target.value)}
+                  options={levels?.map((level) => ({
+                    label: level.level_name,
+                    value: String(level.id),
+                    description: level.description,
+                  }))}
+                  isRequired={!id ? true : false}
+                />
+              </div>
             ) : (
               <TextField
                 label="Flood Level"

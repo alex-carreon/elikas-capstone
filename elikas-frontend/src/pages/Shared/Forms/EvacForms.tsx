@@ -11,7 +11,12 @@ import { useLocation, useNavigate, useParams } from "react-router";
 import CheckBox from "@/components/CheckBox";
 import { InputGroupTextarea } from "@/components/ui/input-group";
 import { Camera } from "lucide-react";
-import { handleDelete, handleSubmit, handleUpdate } from "@/lib/evacUtils";
+import {
+  handleDelete,
+  handleReOpen,
+  handleSubmit,
+  handleUpdate,
+} from "@/lib/evacUtils";
 import { useUserContext } from "@/context/AuthContext";
 import api from "@/api";
 import FormSkeleton from "../../Skeletons/FormSkeleton";
@@ -126,7 +131,9 @@ function EvacPin() {
   const [loading, setLoading] = useState(false);
   const [evacPins, setEvacPins] = useState<EvacPin | undefined>();
   const [expiry, setExpiry] = useState<Date | undefined>();
+  const [isExpired, setIsExpired] = useState(false);
   const [willDelete, setWillDelete] = useState(false);
+  const [willReopen, setWillReopen] = useState(false);
 
   const location = useLocation();
   const navigate = useNavigate();
@@ -140,6 +147,8 @@ function EvacPin() {
 
   const { role } = useUserContext();
   const { id } = useParams();
+
+  const defaultExpiry = addDays(new Date(), 7);
 
   useEffect(() => {
     if (location.state?.from === "/History") {
@@ -175,7 +184,11 @@ function EvacPin() {
 
   useEffect(() => {
     setStreet(description);
-  });
+
+    if (!id) {
+      setExpiry(defaultExpiry);
+    }
+  }, []);
 
   useEffect(() => {
     if (id) {
@@ -199,6 +212,7 @@ function EvacPin() {
           setPWDFriendly(evacDetails.pwd_friendly);
           setHasCatchment(evacDetails.has_catchment);
           setExpiry(evacDetails.expiry);
+          setIsExpired(evacDetails.is_expired);
           if (evacDetails.toilet_count) {
             setHasToilet(true);
           }
@@ -218,6 +232,7 @@ function EvacPin() {
           setOther(evacDetails.other_facilities);
           setContactPerson(evacDetails.contact_person);
           setContactNumber(evacDetails.contact_number);
+          setIsPersistent(evacDetails.is_persistent);
           setEvacPins(evacDetails);
         } catch (err: string | any) {
           console.log(err.response.data);
@@ -304,6 +319,9 @@ function EvacPin() {
     }
   }, [isEditable, evacPins]);
 
+  useEffect(() => {
+    setExpiry(defaultExpiry);
+  }, [willReopen]);
   const submit = (e: React.FormEvent) => {
     // const dateTime = formatInTimeZone(new Date(), "Asia/Manila", "yyyy-MM-dd");
     e.preventDefault();
@@ -393,12 +411,55 @@ function EvacPin() {
     handleDelete({ id: id, navigate: navigate });
   };
 
+  const reOpen = (e: React.FormEvent) => {
+    const expDate = expiry ?? addDays(new Date(), 7);
+
+    handleReOpen({
+      e: e,
+      expiry: format(
+        toZonedTime(expDate!, "Asia/Manila"),
+        "yyyy-MM-dd HH:mm:ss",
+        {
+          timeZone: "Asia/Manila",
+        },
+      ),
+      id: id,
+      navigate: navigate,
+    });
+  };
+
   return loading ? (
     <div className="w-full h-full flex flex-col items-center p-12 mt-8 mb-2 gap-4">
       <FormSkeleton />
     </div>
   ) : (
     <>
+      {willReopen && (
+        <AlertDialogue
+          contentId="EvacPin_ReopenContent"
+          closeId="EvacPin_ReopenClose"
+          actionId="EvacPin_ReopenBtn"
+          open={willReopen}
+          title="You are about to re-open this pin"
+          description="Re-opening this pin add it to the map. The expiration date will default to 7 days unless specified."
+          buttonText="Re-open"
+          onClose={() => {
+            setWillReopen(false);
+          }}
+          onClick={(e) => reOpen(e)}
+        >
+          <DatePickerInput
+            label="Expiry Date"
+            idField="EvacPin_ExpiryField"
+            idBtn="EvacPin_CalendarBtn"
+            placeholder="Enter Expiration Date"
+            value={expiry}
+            onChange={setExpiry}
+            edit
+            showTime
+          />
+        </AlertDialogue>
+      )}
       {willDelete && (
         <AlertDialogue
           contentId="EvacPin_DeacContent"
@@ -810,9 +871,7 @@ function EvacPin() {
               idField="EvacPin_ExpiryField"
               idBtn="EvacPin_CalendarBtn"
               placeholder={
-                !id || isEditable
-                  ? "Enter other facilities available"
-                  : String(expiry)
+                !id || isEditable ? "Enter Expiration Date" : String(expiry)
               }
               value={expiry}
               onChange={setExpiry}
@@ -906,6 +965,18 @@ or account restriction."
                   />
                 </div>
               </>
+            )}
+            {isExpired && isPersistent && (
+              <div className="w-full max-w-md flex justify-center">
+                <ButtonComp
+                  text="Re-Open Pin"
+                  variant="primary"
+                  id="EvacPin_ReOpenPin"
+                  heightSize="38px"
+                  widthSize="100%"
+                  onClick={() => setWillReopen(true)}
+                />
+              </div>
             )}
           </div>
         </div>
