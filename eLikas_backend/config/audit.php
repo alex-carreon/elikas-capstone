@@ -30,7 +30,7 @@ return [
             'web',
             'api',
         ],
-        'resolver' => OwenIt\Auditing\Resolvers\UserResolver::class,
+        'resolver' => App\AuditResolvers\UserResolver::class,
     ],
 
     /*
