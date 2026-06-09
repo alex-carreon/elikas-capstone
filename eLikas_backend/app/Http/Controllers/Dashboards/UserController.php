@@ -58,6 +58,13 @@ class UserController extends Controller
                 });
             }
 
+             // Filter by city
+            if ($request->filled('city_id')) {
+                $query->whereHas('indivAcc.location', function ($q) use ($request) {
+                    $q->where('parent_id', $request->city_id);
+                });
+            }
+
             $users = $query->get();
 
             $formattedUsers = $users->map(function ($user) {
