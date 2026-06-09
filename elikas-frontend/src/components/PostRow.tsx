@@ -15,6 +15,14 @@ import api from "@/api";
 import { Spinner } from "@/components/ui/spinner";
 import ButtonComp from "./Button";
 import { Link } from "react-router";
+import { set } from "date-fns";
+import { toast } from "sonner";
+import { Skeleton } from "./ui/skeleton";
+
+type Reasons = {
+  id: number;
+  reason_label: string;
+};
 
 interface PostRowProps {
   username: string;
@@ -57,7 +65,10 @@ function PostRow({
   const [openDialog, setOpenDialog] = useState(false);
   const [reason, setReason] = useState("");
   const [voteLoad, setVoteLoad] = useState(false);
+  const [reasonId, setReasonId] = useState(0);
   const [hasVoted, setHasVoted] = useState(false);
+  const [reasons, setReasons] = useState<Reasons[]>([]);
+  const [reasonLoad, setReasonLoad] = useState(false);
 
   const avatar = createAvatar(bigSmile, {
     seed: seed,
@@ -71,6 +82,17 @@ function PostRow({
 
   const dataUri = avatar.toDataUri();
 
+  const getFlagged = async () => {
+    try {
+      const response = await api.get(`/flood-paths/${id}`);
+
+      const flagged = response.data.user_flagged;
+      setReport(flagged);
+    } catch (err: any) {
+      console.log(err.response.data);
+    }
+  };
+
   const getVotes = async () => {
     try {
       setVoteLoad(true);
@@ -81,6 +103,7 @@ function PostRow({
         setDownvote(response.data.flood_path.downvotes);
 
         const voted = response.data.user_vote;
+
         if (voted === 1) {
           setVote(1);
         } else if (voted === -1) {
@@ -108,8 +131,22 @@ function PostRow({
     }
   };
 
+  const getFlags = async () => {
+    try {
+      setReasonLoad(true);
+      const response = await api.get("/flag-reasons");
+      setReasons(response.data.reasons);
+    } catch (err: any) {
+      console.log(err.response.data);
+    } finally {
+      setReasonLoad(false);
+    }
+  };
+
   useEffect(() => {
     getVotes();
+    getFlags();
+    getFlagged();
   }, []);
 
   const handleVote = async (voteValue: number) => {
@@ -135,8 +172,31 @@ function PostRow({
     }
   };
 
-  const handleSubmit = () => {
-    setOpenDialog(false);
+  const handleFlag = (e: React.FormEvent) => {
+    e.preventDefault();
+
+    try {
+      const response = api.post(`/flood-paths/${id}/flag`, {
+        reason_id: reason,
+      });
+
+      toast.promise(response, {
+        loading: "Flagging this comment...",
+        success:
+          "Comment has been flagged! Thank you for making this community safer for everyone.",
+        error: (err: any) => {
+          return err.response.data;
+        },
+        position: "top-center",
+      });
+
+      response.then(() => {
+        setOpenDialog(false);
+        getFlagged();
+      });
+    } catch (err: any) {
+      console.log(err.response.data);
+    }
   };
 
   const handleRemove = () => {
@@ -145,8 +205,7 @@ function PostRow({
 
   return (
     <>
-      {report &&
-        openDialog &&
+      {openDialog &&
         createPortal(
           <AlertDialogue
             open={openDialog}
@@ -155,40 +214,45 @@ function PostRow({
             buttonText="Report"
             onClose={() => {
               setOpenDialog(false);
-              setReport(false);
             }}
-            onClick={handleSubmit}
+            onClick={(e) => handleFlag(e)}
             contentId="Drawer_ReportDialogContent"
             closeId="Drawer_ReportDialogClose"
             actionId="Drawer_ReportDialogSubmit"
           >
-            <Radio
-              isRequired
-              onValueChange={setReason}
-              onSubmit={(e) => setReason(e.target.value)}
-              options={[
-                {
-                  label: "False Information",
-                  value: "1",
-                  id: "Drawer_ReportReason1",
-                },
-                {
-                  label: "Spam / Irrelevant",
-                  value: "2",
-                  id: "Drawer_ReportReason2",
-                },
-                {
-                  label: "Offensive Language",
-                  value: "3",
-                  id: "Drawer_ReportReason3",
-                },
-                {
-                  label: "Dangerous or Misleading",
-                  value: "4",
-                  id: "Drawer_ReportReason4",
-                },
-              ]}
-            />
+            {reasonLoad ? (
+              <div className="flex flex-col gap-4">
+                <div className="flex gap-2">
+                  <Skeleton className="w-4 h-4 rounded-lg bg-[#59260B]/30" />
+                  <Skeleton className="w-1/2 h-4 rounded-lg bg-[#59260B]/30" />
+                </div>
+                <div className="flex gap-2">
+                  <Skeleton className="w-4 h-4 rounded-lg bg-[#59260B]/30" />
+                  <Skeleton className="w-1/2 h-4 rounded-lg bg-[#59260B]/30" />
+                </div>
+                <div className="flex gap-2">
+                  <Skeleton className="w-4 h-4 rounded-lg bg-[#59260B]/30" />
+                  <Skeleton className="w-1/2 h-4 rounded-lg bg-[#59260B]/30" />
+                </div>
+                <div className="flex gap-2">
+                  <Skeleton className="w-4 h-4 rounded-lg bg-[#59260B]/30" />
+                  <Skeleton className="w-1/2 h-4 rounded-lg bg-[#59260B]/30" />
+                </div>
+              </div>
+            ) : report ? (
+              <p className="text-center">You have already flagged this post</p>
+            ) : (
+              <Radio
+                isRequired
+                onValueChange={setReason}
+                onSubmit={(e) => setReason(e.target.value)}
+                options={reasons.map((reason) => ({
+                  id: `FlagReason_${reason.id}`,
+                  value: String(reason.id),
+                  label: reason.reason_label,
+                }))}
+              />
+            )}
           </AlertDialogue>,
           // </div>,
           document.body,
@@ -197,7 +261,6 @@ function PostRow({
         <div
           className="flex flex-row items-center text-xs gap-0.5 justify-end mx-2"
           onClick={() => {
-            setReport(!report);
             setOpenDialog(true);
           }}
         >
