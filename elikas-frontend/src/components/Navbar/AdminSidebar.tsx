@@ -60,7 +60,7 @@ function AdminSidebar() {
       label: "Pins",
       description: "Evacuation and Hazard Pins",
       icon: MapPin,
-      link: "",
+      link: "/admin-pins",
       testId: "Admin_BurgerNavPins",
     },
     {
