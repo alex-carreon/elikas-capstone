@@ -50,18 +50,44 @@ class UserController extends Controller
 
             // Filter by barangay
             if ($request->filled('barangay_id')) {
-            
-            $query->whereHas('indivAcc', function ($q) use ($request) {
 
-                $q->where('location_id', $request->barangay_id);
+                $query->where(function ($q) use ($request) {
 
+                    $q->whereHas('indivAcc', function ($subQ) use ($request) {
+
+                        $subQ->where('location_id', $request->barangay_id);
+
+                    })
+
+                    ->orWhereHas('govOp', function ($subQ) use ($request) {
+
+                        $subQ->where('location_id', $request->barangay_id);
+
+                    });
                 });
             }
 
-             // Filter by city
+            // Filter by city
             if ($request->filled('city_id')) {
-                $query->whereHas('indivAcc.location', function ($q) use ($request) {
-                    $q->where('parent_id', $request->city_id);
+
+                $query->where(function ($q) use ($request) {
+
+                    // Individual users assigned to a barangay
+                    $q->whereHas('indivAcc.location', function ($subQ) use ($request) {
+
+                        $subQ->where('parent_id', $request->city_id);
+
+                    })
+
+                    // GovOps assigned to a barangay
+                    ->orWhereHas('govOp.location', function ($subQ) use ($request) {
+
+                        $subQ->where('parent_id', $request->city_id)
+
+                            // GovOps assigned directly to the city
+                            ->orWhere('id', $request->city_id);
+
+                    });
                 });
             }
 
