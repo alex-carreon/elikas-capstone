@@ -94,6 +94,7 @@ function FormRegistration() {
       if (pw != confirmPw) {
         throw new Error("Passwords do not match");
       }
+
       const userCredential = await createUserWithEmailAndPassword(
         auth,
         email,
@@ -119,9 +120,9 @@ function FormRegistration() {
           pw: "",
           confirmPw: "",
         });
-      } else if (err.code === "auth/weak-password") {
+      } else if (err.code === "auth/password-does-not-meet-requirements") {
         setErrors({
-          pw: "Password must be at least 6 characters.",
+          pw: "Password must be at least 8 characters, and have an uppercase, lowercase, a number, and a special character.",
           confirmPw: "",
           email: "",
         });
@@ -130,12 +131,6 @@ function FormRegistration() {
           email: " ",
           pw: "Password do not match",
           confirmPw: "Password do not match",
-        });
-      } else {
-        setErrors({
-          pw: "",
-          confirmPw: "",
-          email: " ",
         });
       }
     }
