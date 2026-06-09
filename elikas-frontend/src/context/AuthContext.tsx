@@ -31,7 +31,6 @@ const AuthContext = createContext<AuthContextProps>({
 
 interface AuthProviderProps {
   children: ReactNode;
-  skipAuthContext: React.MutableRefObject<boolean>;
 }
 
 export function AuthProvider({ children }: AuthProviderProps) {
