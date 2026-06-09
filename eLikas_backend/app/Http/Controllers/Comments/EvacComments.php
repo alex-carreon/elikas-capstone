@@ -55,11 +55,18 @@ class EvacComments extends Controller
         $user = $request->attributes->get('firebase_user');
 
         $votes = collect();
+        $flags = collect();
 
         if ($user) {
+            $elementIds = $comments->pluck('element_id');
+
             $votes = Vote::where('user_id', $user->id)
-                 ->whereIn('element_id', $comments->pluck('element_id'))
+                ->whereIn('element_id', $elementIds)
                 ->pluck('vote', 'element_id');
+
+            $flags = Flag::where('user_id', $user->id)
+                ->whereIn('element_id', $elementIds)
+                ->pluck('reason_id', 'element_id');
         }
 
         $user = $request->attributes->get('firebase_user');
@@ -68,7 +75,7 @@ class EvacComments extends Controller
         return response()->json([
             'count' => $comments->count(),
             
-            'comments' => $comments->map(function ($comment) use ($votes, $currentUserId){
+            'comments' => $comments->map(function ($comment) use ($votes, $flags, $currentUserId){
                 return [
                     'id' => $comment->id,
                     'content' => $comment->content,
@@ -76,6 +83,7 @@ class EvacComments extends Controller
                     'upvotes' => $comment->upvotes,
                     'downvotes' => $comment->downvotes,
                     'user_vote' => $votes->get($comment->element_id),
+                    'user_flag' => $flags->get($comment->element_id),
 
                     'posted_by' => [
                         'id' => $comment->element?->user?->id,
@@ -120,17 +128,23 @@ class EvacComments extends Controller
         $user = $request->attributes->get('firebase_user');
 
         $userVote = null;
+        $userFlagged = false;
 
         if ($user) {
-            $userVote = Vote::where('user_id', $user->id)
-                ->where('element_id', $comment->element_id)
-                ->value('vote');
-        }
+        $userVote = Vote::where('user_id', $user->id)
+            ->where('element_id', $comment->element_id)
+            ->value('vote');
+
+        $userFlagged = Flag::where('user_id', $user->id)
+            ->where('element_id', $comment->element_id)
+            ->exists();
+    }
 
         return response()->json([
             'vote' => $comment->upvotes,
             'downvote' => $comment->downvotes,
             'user_vote' => $userVote,
+            'user_flagged' => $userFlagged,
         ]);
     }
 

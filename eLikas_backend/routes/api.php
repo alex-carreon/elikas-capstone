@@ -28,6 +28,7 @@ use App\Http\Controllers\Votes\VoteController;
 use App\Http\Controllers\Votes\VoteCommentController;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\FeedbackController;
+use App\Http\Controllers\Flags\FlagCommentController;
 use App\Http\Controllers\SensorControllers\SensorLogController;
 
 Route::get('/test', function () {
@@ -203,5 +204,10 @@ Route::middleware(['firebase.auth', 'role:1,2,3'])->group(function () {
 
     //Emergency contact
     Route::get('/emergency-contacts/location/{location_id}', [EmergencyContactController::class, 'getByLocationId']);
+
+    //FLAGS
+    Route::post('/comments/{commentId}/flag', [FlagCommentController::class, 'store']);
+    Route::get('/flag-reasons', [FlagCommentController::class, 'reasons']);
 });
 
+ 
