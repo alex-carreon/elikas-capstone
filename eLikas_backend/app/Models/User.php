@@ -59,6 +59,11 @@ class User extends Model
         return $this->id;
     }
 
+    public function getMorphClass(): string
+    {
+        return $this->role->role_name;
+    }
+
 	public function role()
 	{
 		return $this->belongsTo(Role::class, 'role_id');
