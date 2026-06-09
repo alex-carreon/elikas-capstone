@@ -240,7 +240,7 @@ function IndivUsers() {
                   <SelectDropdown
                     value={String(brgyFilter)}
                     onValueChange={(val) => setBrgyFilter(Number(val))}
-                    placeholder="Flood Level"
+                    placeholder="Barangay"
                     id="History_LevelFilter"
                     options={[
                       { label: "All", value: "0" },
