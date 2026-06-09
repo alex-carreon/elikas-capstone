@@ -450,8 +450,8 @@ function EvacPin() {
         >
           <DatePickerInput
             label="Expiry Date"
-            idField="EvacPin_ExpiryField"
-            idBtn="EvacPin_CalendarBtn"
+            idField="EvacPin_ReopenExpiryField"
+            idBtn="EvacPin_ReopenCalendarBtn"
             placeholder="Enter Expiration Date"
             value={expiry}
             onChange={setExpiry}
