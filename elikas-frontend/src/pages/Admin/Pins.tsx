@@ -8,15 +8,29 @@ import {
   InputGroupInput,
   InputGroupAddon,
 } from "@/components/ui/input-group";
-import { Filter, Search } from "lucide-react";
+import {
+  ChevronDownIcon,
+  ChevronUpIcon,
+  Search,
+  AlarmClockOff,
+  MapPinMinusInside,
+  X,
+} from "lucide-react";
 import Row from "@/components/Row";
 import { Skeleton } from "@/components/ui/skeleton";
+import {
+  Collapsible,
+  CollapsibleTrigger,
+  CollapsibleContent,
+} from "@/components/ui/collapsible";
+import { Toggle } from "@/components/ui/toggle";
+import SelectDropdown from "@/components/SelectDropdown";
 
-type BrgyUser = {
+type Barangays = {
   id: number;
-  location: string;
   name: string;
   role: string;
+  location: string;
 };
 
 function Pins() {
@@ -25,6 +39,29 @@ function Pins() {
   const [activeEvac, setActiveEvac] = useState(true);
   const [activeHaz, setActiveHaz] = useState(true);
   const [loading, setLoading] = useState(false);
+  const [openCollapse, setOpenCollapse] = useState(false);
+  const [status, setStatus] = useState<"Deactivated" | "Expiry" | null>();
+  const [barangays, setBarangays] = useState<Barangays[]>([]);
+  const [brgyFilter, setBrgyFilter] = useState(0);
+
+  useEffect(() => {
+    const getBrgy = async () => {
+      try {
+        setLoading(true);
+        const brgyRes = await api.get(`/locations/barangays?city_id=2`);
+
+        const barangays = brgyRes.data.Barangays;
+        console.log(barangays);
+        setBarangays(barangays);
+      } catch (err: any) {
+        console.log(err.message);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    getBrgy();
+  }, []);
 
   return (
     <>
@@ -104,7 +141,14 @@ function Pins() {
                     id="History_ExpiredEvacTrigger"
                     onClick={() => setActiveEvac(false)}
                   >
-                    Expired Pins
+                    Inactive Pins
+                  </TabsTrigger>
+                  <TabsTrigger
+                    value="ExpiredEvac"
+                    id="History_ExpiredEvacTrigger"
+                    // onClick={() => setActiveEvac(false)}
+                  >
+                    Flagged
                   </TabsTrigger>
                 </TabsList>
               ) : !isEvac && !isSensors ? (
@@ -125,25 +169,98 @@ function Pins() {
                     id="History_ExpiredHazardTrigger"
                     onClick={() => setActiveHaz(false)}
                   >
-                    Expired Pins
+                    Inactive Pins
+                  </TabsTrigger>
+                  <TabsTrigger
+                    value="ExpiredHaz"
+                    id="History_ExpiredHazardTrigger"
+                    // onClick={() => setActiveHaz(false)}
+                  >
+                    Flagged
                   </TabsTrigger>
                 </TabsList>
               ) : null}
             </Tabs>
-            <div className="flex flex-row">
-              <div className="w-2/3 flex justify-start items-center gap-2">
+            <Collapsible className="w-full flex-col items-center gap-2">
+              <div className="w-full flex justify-between">
                 <InputGroup className="w-2/3">
                   <InputGroupInput
                     className="text-sm h-8"
-                    id="Admin_BrgySearchField"
+                    id="Admin_IndivSearchField"
                   ></InputGroupInput>
                   <InputGroupAddon align="inline-end">
                     <Search />
                   </InputGroupAddon>
                 </InputGroup>
-                <Filter size={18} id="Admin_BrgyFilterBtn" />
+                <CollapsibleTrigger
+                  onClick={() => setOpenCollapse(!openCollapse)}
+                  id="History_FiltersTrigger"
+                >
+                  <div className="w-full flex flex-row justify-end mb-2">
+                    Filters
+                    {openCollapse ? (
+                      <ChevronUpIcon className="ml-2 group-data-[state=open]:rotate-180" />
+                    ) : (
+                      <ChevronDownIcon className="ml-2 group-data-[state=open]:rotate-180" />
+                    )}
+                  </div>
+                </CollapsibleTrigger>
               </div>
-            </div>
+              <CollapsibleContent
+                id="History_FiltersContent"
+                className="bg-gray-300/50 p-2 rounded-lg flex flex-row items-center justify-end gap-2 px-2.5 mt-2 text-sm"
+              >
+                {(!activeEvac || !activeHaz) && (
+                  <>
+                    <Toggle
+                      size="sm"
+                      variant="outline"
+                      className="aria-pressed:bg-gray-500/50 aria-pressed:text-white border-gray-400"
+                      onPressedChange={(pressed) =>
+                        setStatus(pressed ? "Expiry" : null)
+                      }
+                      pressed={status == "Expiry"}
+                      id="History_InactiveFilter"
+                    >
+                      <AlarmClockOff className="group-aria-pressed/toggle:stroke-white" />
+                    </Toggle>
+                    <Toggle
+                      size="sm"
+                      variant="outline"
+                      className="aria-pressed:bg-gray-500/50 aria-pressed:text-white border-gray-400"
+                      onPressedChange={(pressed) =>
+                        setStatus(pressed ? "Deactivated" : null)
+                      }
+                      pressed={status == "Deactivated"}
+                      id="History_InactiveFilter"
+                    >
+                      <MapPinMinusInside className="group-aria-pressed/toggle:stroke-white" />
+                    </Toggle>
+                  </>
+                )}
+                <SelectDropdown
+                  value={String(brgyFilter)}
+                  onValueChange={(val) => setBrgyFilter(Number(val))}
+                  placeholder="Barangay"
+                  id="Admin_PinsBrgyFilter"
+                  options={[
+                    { label: "All", value: "0" },
+                    ...barangays?.map((barangay) => ({
+                      label: barangay.name,
+                      value: String(barangay.id),
+                    })),
+                  ]}
+                />
+                {brgyFilter ? (
+                  <button
+                    onClick={() => setBrgyFilter(0)}
+                    id="History_ClearBrgyFilter"
+                  >
+                    <X size={14} />
+                  </button>
+                ) : null}
+              </CollapsibleContent>
+            </Collapsible>
 
             <div className="flex flex-col gap-2">
               {loading ? (
