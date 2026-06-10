@@ -46,7 +46,6 @@ Route::post('/auth/register', [AuthController::class, 'register']);
 Route::post('/auth/login',    [AuthController::class, 'login']);
 Route::get('/public/sensors', [PublicSensorController::class, 'index']);
 Route::get('/public/sensors/{sensor}', [PublicSensorController::class, 'show']);
-Route::get('flood-paths', [FloodPathController::class, 'index']);
 
 Route::get('/locations/cities', [LocationsController::class, 'cities']);
 Route::get('/locations/barangays', [LocationsController::class, 'barangays']);
@@ -66,6 +65,14 @@ Route::post('/sensor-logs', [SensorLogController::class, 'store']);
 // ---------------------------------------------------------------
 Route::get('/pins/nearby', [GetNearbyEvacuationAreasController::class, 'getNearbyEvacuationAreas']);
 Route::get('/pins/routes', [GetEvacuationRoutesController::class, 'getEvacuationRoutes']);
+
+
+
+// ---------------------------------------------------------------
+// OPTIONAL FIREBASE MIDDLEWARE
+// ---------------------------------------------------------------
+Route::middleware('optional.firebase.auth')
+    ->get('flood-paths', [FloodPathController::class, 'index']);
 
 // ---------------------------------------------------------------
 // ONLY ADMIN ROUTES
