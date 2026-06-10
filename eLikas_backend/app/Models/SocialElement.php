@@ -65,7 +65,14 @@ class SocialElement extends Model
 		return $this->belongsTo(TargetTable::class, 'type_id');
 	}
 
+	// Gets the comment that OWNS this social element (the comment itself)
 	public function comment()
+	{
+		return $this->hasOne(Comment::class, 'element_id');
+	}
+
+	// Gets comments that were posted UNDER this social element (e.g. evac area's comments)
+	public function comments()
 	{
 		return $this->hasMany(Comment::class, 'parent_id');
 	}
@@ -85,9 +92,10 @@ class SocialElement extends Model
 		return $this->hasMany(Flag::class, 'element_id');
 	}
 
+	//changed from hasMany
 	public function floodPath()
 	{
-		return $this->hasMany(FloodPath::class, 'element_id');
+		return $this->hasOne(FloodPath::class, 'element_id');
 	}
 
 	public function media()
