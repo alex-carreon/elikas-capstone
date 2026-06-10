@@ -400,70 +400,72 @@ function SensorForm() {
             </>
           )}
         </div>
-        {id ? (
-          !isEditable ? (
-            <>
-              <div className="w-full mx-2 flex justify-evenly shrink gap-4">
-                <ButtonComp
-                  text="Update"
-                  id="EvacPin_UpdatePinBtn"
-                  variant="primary"
-                  heightSize="38px"
-                  widthSize="20"
-                  onClick={() => setIsEditable(true)}
-                  type="button"
-                ></ButtonComp>
-                <ButtonComp
-                  text="Delete"
-                  id="EvacPin_ClosePinBtn"
-                  variant="important"
-                  heightSize="38px"
-                  widthSize="20"
-                  type="button"
-                  onClick={() => setWillDeac(true)}
-                ></ButtonComp>
-              </div>
-            </>
+        <div className="w-full max-w-sm">
+          {id ? (
+            !isEditable ? (
+              <>
+                <div className="w-full mx-2 flex justify-evenly shrink gap-4">
+                  <ButtonComp
+                    text="Update"
+                    id="EvacPin_UpdatePinBtn"
+                    variant="primary"
+                    heightSize="38px"
+                    widthSize="20"
+                    onClick={() => setIsEditable(true)}
+                    type="button"
+                  ></ButtonComp>
+                  <ButtonComp
+                    text="Delete"
+                    id="EvacPin_ClosePinBtn"
+                    variant="important"
+                    heightSize="38px"
+                    widthSize="20"
+                    type="button"
+                    onClick={() => setWillDeac(true)}
+                  ></ButtonComp>
+                </div>
+              </>
+            ) : (
+              <>
+                <div className="w-full mx-2 flex justify-evenly shrink gap-4">
+                  <ButtonComp
+                    text="Submit"
+                    id="EvacPin_SubmitUpdBtn"
+                    type="button"
+                    variant="primary"
+                    heightSize="38px"
+                    widthSize="20"
+                    onClick={(e) => update(e)}
+                  ></ButtonComp>
+                  <ButtonComp
+                    text="Cancel"
+                    id="EvacPin_CancelUpdBtn"
+                    variant="outline"
+                    heightSize="38px"
+                    widthSize="20"
+                    onClick={() => {
+                      setIsEditable(false);
+                    }}
+                    type="button"
+                  ></ButtonComp>
+                </div>
+              </>
+            )
           ) : (
             <>
-              <div className="w-full mx-2 flex justify-evenly shrink gap-4">
+              <div className="w-full max-w-md flex justify-center">
                 <ButtonComp
-                  text="Submit"
-                  id="EvacPin_SubmitUpdBtn"
-                  type="button"
+                  text="Add Sensor"
                   variant="primary"
-                  heightSize="38px"
-                  widthSize="20"
-                  onClick={(e) => update(e)}
-                ></ButtonComp>
-                <ButtonComp
-                  text="Cancel"
-                  id="EvacPin_CancelUpdBtn"
-                  variant="outline"
-                  heightSize="38px"
-                  widthSize="20"
-                  onClick={() => {
-                    setIsEditable(false);
-                  }}
-                  type="button"
-                ></ButtonComp>
+                  id="Sensor_SubmitBtn"
+                  heightSize="46px"
+                  onClick={(e) => create(e)}
+                  type="submit"
+                />
               </div>
             </>
-          )
-        ) : (
-          <>
-            <div className="w-full max-w-md flex justify-center">
-              <ButtonComp
-                text="Add Sensor"
-                variant="primary"
-                id="Sensor_SubmitBtn"
-                heightSize="46px"
-                onClick={(e) => create(e)}
-                type="submit"
-              />
-            </div>
-          </>
-        )}
+          )}
+        </div>
       </div>
     </>
   );
