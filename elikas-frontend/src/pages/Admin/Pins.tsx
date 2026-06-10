@@ -1,7 +1,7 @@
 import api from "@/api";
 import CountRow from "@/components/Admin/CountRow";
 import DashboardHeader from "@/components/Admin/DashboardHeader";
-import { useState, useEffect } from "react";
+import { useState, useEffect, Fragment } from "react";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   InputGroup,
@@ -33,16 +33,41 @@ type Barangays = {
   location: string;
 };
 
+type FlaggedPaths = {
+  flag_id: number;
+  flood_path_id: number;
+  element_id: number;
+  reason: string;
+  flag_count: number;
+  flagged_at: string;
+};
+
 function Pins() {
   const [isEvac, setIsEvac] = useState(true);
-  const [isSensors, setIsSensors] = useState(false);
   const [activeEvac, setActiveEvac] = useState(true);
   const [activeHaz, setActiveHaz] = useState(true);
+  const [flaggedHaz, setFlaggedHaz] = useState(false);
   const [loading, setLoading] = useState(false);
   const [openCollapse, setOpenCollapse] = useState(false);
   const [status, setStatus] = useState<"Deactivated" | "Expiry" | null>();
   const [barangays, setBarangays] = useState<Barangays[]>([]);
   const [brgyFilter, setBrgyFilter] = useState(0);
+  const [flaggedPaths, setFlaggedPaths] = useState<FlaggedPaths[]>([]);
+  const [flaggedPathsCount, setFlaggedPathsCount] = useState(0);
+
+  const getHazardFlagged = async () => {
+    try {
+      setLoading(true);
+      const response = await api.get("admin/flood-paths/flags");
+
+      setFlaggedPaths(response.data.flags);
+      setFlaggedPathsCount(response.data.count);
+    } catch (err: any) {
+      console.log(err.response.data);
+    } finally {
+      setLoading(false);
+    }
+  };
 
   useEffect(() => {
     const getBrgy = async () => {
@@ -60,6 +85,7 @@ function Pins() {
     };
 
     getBrgy();
+    getHazardFlagged();
   }, []);
 
   return (
@@ -79,12 +105,21 @@ function Pins() {
               count={3}
               // loading={loading}
             />
-            <CountRow
-              title="Flagged Comments"
-              lastUpdated="Last updated 3 minutes ago"
-              count={3}
-              // loading={loading}
-            />
+            {isEvac ? (
+              <CountRow
+                title="Flagged Comments"
+                lastUpdated="Last updated 3 minutes ago"
+                count={3}
+                // loading={loading}
+              />
+            ) : (
+              <CountRow
+                title="Flagged Hazard Paths"
+                lastUpdated="Last updated 3 minutes ago"
+                count={flaggedPathsCount}
+                loading={loading}
+              />
+            )}
           </DashboardHeader>
           <div className="bg-white -mt-8 rounded-4xl p-4 flex flex-col gap-2">
             <Tabs
@@ -96,7 +131,6 @@ function Pins() {
                   value="Evacuation"
                   onClick={() => {
                     setIsEvac(true);
-                    setIsSensors(false);
                   }}
                   id="History_EvacTrigger"
                 >
@@ -106,7 +140,6 @@ function Pins() {
                   value="Hazard"
                   onClick={() => {
                     setIsEvac(false);
-                    setIsSensors(false);
                   }}
                   id="History_HazardTrigger"
                 >
@@ -118,7 +151,7 @@ function Pins() {
               defaultValue="overview"
               className="w-full max-w-md flex items-center"
             >
-              {isEvac && !isSensors ? (
+              {isEvac ? (
                 <TabsList
                   variant="line"
                   className="w-full flex justify-between"
@@ -146,7 +179,7 @@ function Pins() {
                     Flagged
                   </TabsTrigger>
                 </TabsList>
-              ) : !isEvac && !isSensors ? (
+              ) : (
                 <TabsList
                   variant="line"
                   className="w-full flex justify-between"
@@ -155,26 +188,35 @@ function Pins() {
                   <TabsTrigger
                     value="ActiveHaz"
                     id="History_ActiveHazardTrigger"
-                    onClick={() => setActiveHaz(true)}
+                    onClick={() => {
+                      setActiveHaz(true);
+                      setFlaggedHaz(false);
+                    }}
                   >
                     Active Pins
                   </TabsTrigger>
                   <TabsTrigger
                     value="ExpiredHaz"
                     id="History_ExpiredHazardTrigger"
-                    onClick={() => setActiveHaz(false)}
+                    onClick={() => {
+                      setActiveHaz(false);
+                      setFlaggedHaz(false);
+                    }}
                   >
                     Inactive Pins
                   </TabsTrigger>
                   <TabsTrigger
-                    value="ExpiredHaz"
-                    id="History_ExpiredHazardTrigger"
-                    // onClick={() => setActiveHaz(false)}
+                    value="FlaggedHaz"
+                    id="History_FlaggedHazardTrigger"
+                    onClick={() => {
+                      setActiveHaz(false);
+                      setFlaggedHaz(true);
+                    }}
                   >
                     Flagged
                   </TabsTrigger>
                 </TabsList>
-              ) : null}
+              )}
             </Tabs>
             <Collapsible className="w-full flex-col items-center gap-2">
               <div className="w-full flex justify-between">
@@ -258,7 +300,7 @@ function Pins() {
             </Collapsible>
 
             <div className="flex flex-col gap-2">
-              {loading ? (
+              {loading && (
                 <>
                   <div className="w-full flex flex-col items-center">
                     <div className="flex w-full max-w-sm flex-col gap-7 pt-4">
@@ -274,179 +316,25 @@ function Pins() {
                     </div>
                   </div>
                 </>
-              ) : isEvac ? (
-                activeEvac ? (
-                  // evacPins.map((pins) => {
-                  //   if (!pins.is_expired && !pins.deactivated_at) {
-                  //     return (
-                  //       <Row
-                  //         postId={String(pins.id)}
-                  //         title={pins.name}
-                  //         address={pins.address}
-                  //         datePosted={pins.posted_at}
-                  //         link={`/EvacForm/${pins.id}`}
-                  //         isExpired={pins.is_expired}
-                  //         buttonId="History_ActiveEvacDetailsBtn"
-                  //         showBtn
-                  //       />
-                  //     );
-                  //   }
-                  // })
-                  <Row
-                    postId="Placeholder"
-                    title="Placeholder"
-                    address="Placeholder"
-                    datePosted="Placeholder"
-                    link="Placeholder"
-                    // isExpired="Placeholder"
-                    buttonId="Placeholder"
-                    showBtn
-                  />
-                ) : (
-                  // evacPins.map((pins) => {
-                  //   if (pins.is_expired) {
-                  //     return (
-                  //       <Row
-                  //         postId={String(pins.id)}
-                  //         title={pins.name}
-                  //         address={pins.address}
-                  //         datePosted={pins.posted_at}
-                  //         link={`/EvacForm/${pins.id}`}
-                  //         isExpired={pins.is_expired}
-                  //         buttonId="History_ExpiredEvacDetailsBtn"
-                  //         showBtn
-                  //       />
-                  //     );
-                  //   }
-                  // })
-                  <Row
-                    postId="placeholder"
-                    title="placeholder"
-                    address="placeholder"
-                    datePosted="placeholder"
-                    link="placeholder"
-                    // isExpired={pins.is_expired}
-                    buttonId="placeholder"
-                    showBtn
-                  />
-                )
-              ) : isSensors ? (
-                // sensors.map((pins) => {
-                //   return (
-                //     <Row
-                //       postId={String(pins.sensorCode)}
-                //       title={pins.name}
-                //       desc={`Status: ${pins.currentStatus}`}
-                //       address={`${pins.address}`}
-                //       datePosted={pins.lastOnline}
-                //       link={`/SensorForm/${pins.id}`}
-                //       // isExpired={pins.deactivatedAt}
-                //       buttonId="History_ExpiredEvacDetailsBtn"
-                //       showBtn
-                //     >
-                //       <div className="flex flex-row gap-2">
-                //         <div
-                //           className={`mt-2 px-2 py-1 rounded-3xl ${pins.deactivatedAt ? "bg-gray-500/30" : "bg-green-700/60"} w-fit text-sm`}
-                //         >
-                //           {pins.deactivatedAt ? "Inactive" : "Active"}
-                //         </div>
-                //         {!pins.deactivatedAt && (
-                //           <div
-                //             className={`mt-2 px-2 py-1 rounded-3xl ${pins.currentStatus == "normal" ? "bg-green-700/60" : pins.currentStatus == "yellow" ? "bg-yellow-700/60" : pins.currentStatus == "orange" ? "bg-amber-700/60" : pins.currentStatus == "red" ? "bg-red-700/60" : "bg-gray-500/30"} w-fit text-sm`}
-                //           >
-                //             {pins.currentStatus
-                //               ? pins.currentStatus
-                //               : "No Level Detected"}
-                //           </div>
-                //         )}
-                //       </div>
-                //     </Row>
-                //   );
-                // })
-                <Row
-                  postId="Placeholder"
-                  title="Placeholder"
-                  desc="Placeholder"
-                  address="Placeholder"
-                  datePosted="Placeholder"
-                  link="Placeholder"
-                  // isExpired={pins.deactivatedAt}
-                  buttonId="Placeholder"
-                  showBtn
-                >
-                  {/* <div className="flex flex-row gap-2">
-                    <div
-                      className={`mt-2 px-2 py-1 rounded-3xl ${pins.deactivatedAt ? "bg-gray-500/30" : "bg-green-700/60"} w-fit text-sm`}
-                    >
-                      {pins.deactivatedAt ? "Inactive" : "Active"}
-                    </div>
-                    {!pins.deactivatedAt && (
-                      <div
-                        className={`mt-2 px-2 py-1 rounded-3xl ${pins.currentStatus == "normal" ? "bg-green-700/60" : pins.currentStatus == "yellow" ? "bg-yellow-700/60" : pins.currentStatus == "orange" ? "bg-amber-700/60" : pins.currentStatus == "red" ? "bg-red-700/60" : "bg-gray-500/30"} w-fit text-sm`}
-                      >
-                        {pins.currentStatus
-                          ? pins.currentStatus
-                          : "No Level Detected"}
-                      </div>
-                    )}
-                  </div> */}
-                </Row>
-              ) : activeHaz ? (
-                //
-                <Row
-                  postId="Placeholder"
-                  title="Flood"
-                  desc="Placeholder"
-                  address="Placeholder"
-                  datePosted="Placeholder"
-                  link="Placeholder"
-                  // isExpired="Placeholder"
-                  buttonId="Placeholder"
-                >
-                  {/* <div
-                    className={`mt-2 px-2 py-1 rounded-3xl w-fit text-sm`}
-                    style={{
-                      backgroundColor:
-                        path.level === "Gutter" || path.level === "Half Knee"
-                          ? colorHazard.lightBlue
-                          : path.level === "Half Tire" || path.level === "Knee"
-                            ? colorHazard.darkBlue
-                            : path.level === "Tire" ||
-                                path.level === "Waist" ||
-                                path.level === "chest"
-                              ? colorHazard.red
-                              : colorHazard.fallback,
-                    }}
-                  >
-                    {path.level}
-                  </div> */}
-                </Row>
+              )}
+              {isEvac && activeEvac ? <></> : flaggedHaz ? <></> : <></>}
+              {!isEvac && activeHaz ? (
+                <></>
+              ) : flaggedHaz ? (
+                flaggedPaths.map((paths) => (
+                  <Fragment key={paths.flag_id}>
+                    <Row
+                      postId={String(paths.flag_id)}
+                      title={paths.reason}
+                      desc={`On Comment ID: ${paths.flood_path_id}`}
+                      link={`/admin-flagged/${paths.flood_path_id}`}
+                      buttonId="Admin_ActiveIndivDetailsBtn"
+                      showBtn
+                    />
+                  </Fragment>
+                ))
               ) : (
-                // floodPaths.map((path) => {
-                //   if (path.is_expired)
-                //     return (
-                //       <Row
-                //         postId={String(path.id)}
-                //         title="Flood"
-                //         desc={path.level}
-                //         address={path.description}
-                //         datePosted={path.last_confirmed}
-                //         link="/HazardForm"
-                //         isExpired={path.is_expired}
-                //         buttonId="History_ExpHazardDetailsBtn"
-                //       />
-                //     );
-                // })
-                <Row
-                  postId="Placeholder"
-                  title="Flood"
-                  desc="Placeholder"
-                  address="Placeholder"
-                  datePosted="Placeholder"
-                  link="/HazardForm"
-                  // isExpired="Placeholder"
-                  buttonId="Placeholder"
-                />
+                <></>
               )}
             </div>
           </div>

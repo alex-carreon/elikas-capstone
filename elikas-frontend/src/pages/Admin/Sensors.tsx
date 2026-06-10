@@ -217,7 +217,7 @@ function Sensors() {
                   setIsSensors(true);
                   setIsSensorLogs(false);
                 }}
-                id="History_EvacTrigger"
+                id="Admin_SensorsTrigger"
               >
                 All Sensors
               </TabsTrigger>
@@ -227,7 +227,7 @@ function Sensors() {
                   setIsSensorLogs(true);
                   setIsSensors(false);
                 }}
-                id="History_HazardTrigger"
+                id="Admin_SensorLogTrigger"
               >
                 Sensor Logs
               </TabsTrigger>
@@ -241,18 +241,18 @@ function Sensors() {
               <TabsList
                 variant="line"
                 className="w-full flex justify-between"
-                id="History_EvacTabs"
+                id="Admin_SensorTabs"
               >
                 <TabsTrigger
-                  value="ActiveEvac"
-                  id="History_ActiveEvacTrigger"
+                  value="ActiveSensors"
+                  id="Admin_ActiveSensorTrigger"
                   onClick={() => setIsActiveSensor(true)}
                 >
                   Active Sensors
                 </TabsTrigger>
                 <TabsTrigger
                   value="ExpiredEvac"
-                  id="History_ExpiredEvacTrigger"
+                  id="Admin_InactiveSensorTrigger"
                   onClick={() => setIsActiveSensor(false)}
                 >
                   Inactive Sensors
@@ -265,7 +265,7 @@ function Sensors() {
               <InputGroup className="w-2/3">
                 <InputGroupInput
                   className="text-sm h-8"
-                  id="Admin_IndivSearchField"
+                  id="Admin_SensorSearchField"
                   onChange={(e) => setSearchFor(e.target.value)}
                   value={searchFor}
                 ></InputGroupInput>
@@ -281,7 +281,7 @@ function Sensors() {
               </InputGroup>
               <CollapsibleTrigger
                 onClick={() => setOpenCollapse(!openCollapse)}
-                id="History_FiltersTrigger"
+                id="Admin_SensorFilterTrigger"
               >
                 <div className="w-full flex flex-row justify-end mb-2">
                   Filters
@@ -294,7 +294,7 @@ function Sensors() {
               </CollapsibleTrigger>
             </div>
             <CollapsibleContent
-              id="History_FiltersContent"
+              id="Admin_SensorFilterContent"
               className="bg-gray-300/50 p-2 rounded-lg flex flex-row items-center justify-end gap-2 px-2.5 mt-2 text-sm"
             >
               <SelectDropdown
@@ -325,7 +325,7 @@ function Sensors() {
                       ? setActiveBrgyFilter(0)
                       : setInactiveBrgyFilter(0)
                   }
-                  id="History_ClearBrgyFilter"
+                  id="Admin_ClearSensorsBrgyFilter"
                 >
                   <X size={14} />
                 </button>
@@ -365,7 +365,7 @@ function Sensors() {
                           : "Not yet installed"
                       }
                       link={`/admin-sensorDetails/${sensors.id}`}
-                      buttonId="History_ExpiredEvacDetailsBtn"
+                      buttonId="Admin_SensorDetailsBtn"
                       showBtn
                     >
                       <div className="flex flex-row gap-2">
@@ -392,7 +392,7 @@ function Sensors() {
                       address={`${sensors.address}`}
                       datePosted={`Deactivated at: ${convertDateTime(sensors.deactivatedAt)}`}
                       link={`/admin-sensorDetails/${sensors.id}`}
-                      buttonId="History_ExpiredEvacDetailsBtn"
+                      buttonId="Admin_SensorDetailsBtn"
                       showBtn
                     ></Row>
                   </Fragment>

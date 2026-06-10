@@ -11,7 +11,7 @@ import AuthNavbar from "./components/Navbar/AuthNavbar";
 import ConstNavbar from "./components/Navbar/ConstNavbar";
 import Map from "@/pages/Shared/Map";
 import Hotlines from "@/pages/Shared/Hotlines";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { Routes, Route } from "react-router-dom";
 import Settings from "@/pages/Shared/Settings";
 import ProtectedRoute from "./components/ProtectedRoutes";
 import SMS from "./pages/brgy_ops/Forms/SMS";
@@ -36,6 +36,7 @@ import Pins from "./pages/Admin/Pins";
 import { AuthProvider } from "./context/AuthContext.tsx";
 import Sensors from "@/pages/Admin/Sensors.tsx";
 import SensorDetails from "./pages/Admin/Forms/SensorDetails.tsx";
+import FlaggedDetails from "./pages/Admin/Forms/FlaggedDetails.tsx";
 
 function App() {
   return (
@@ -96,6 +97,7 @@ function App() {
               element={<SensorDetails />}
             />
             <Route path="/admin-brgyAdd" element={<BrgyAdd />} />
+            <Route path="/admin-flagged/:id" element={<FlaggedDetails />} />
           </Route>
 
           <Route element={<ProtectedRoute />}>
