@@ -25,6 +25,7 @@ function Permissions() {
     phone: localStorage.getItem("contact") ?? "",
     loc: localStorage.getItem("brgy") ?? "",
     firebase_uid: localStorage.getItem("firebaseUser") ?? "",
+    avatarSeed: localStorage.getItem("avatarSeed"),
   };
 
   // const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -55,6 +56,7 @@ function Permissions() {
               phone: formData.phone,
               location_id: Number(formData.loc),
               firebase_uid: localStorage.getItem("firebaseUser"),
+              avatar_seed: formData.avatarSeed,
             }),
           },
         );
