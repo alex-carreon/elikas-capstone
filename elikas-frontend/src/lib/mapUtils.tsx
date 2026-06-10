@@ -11,6 +11,7 @@ import { renderToString } from "react-dom/server";
 import MarkerClusterGroup from "react-leaflet-cluster";
 import FloodIcon from "@/assets/Map/FloodIcon.svg?react";
 import BlankPin from "@/assets/Map/BlankPin.svg?react";
+import MyHazardPin from "@/assets/Map/MyHazardPins 1.svg?react";
 import "leaflet-routing-machine/dist/leaflet-routing-machine.css";
 import "leaflet-routing-machine";
 import { toast } from "sonner";
@@ -44,6 +45,7 @@ type FloodPath = {
   is_deactivated: boolean;
   level: FloodLevel;
   path: [number, number][];
+  my_path: boolean;
 };
 
 type Sensors = {
@@ -564,6 +566,12 @@ export function RoadMapping({ onPinClick }: RoadMappingProps) {
     iconAnchor: [18, 20],
   });
 
+  const myIcon = divIcon({
+    html: renderToString(<MyHazardPin width={36} height={36} />),
+    className: "",
+    iconAnchor: [18, 20],
+  });
+
   let floodData;
 
   const getFloodPaths = async () => {
@@ -600,7 +608,7 @@ export function RoadMapping({ onPinClick }: RoadMappingProps) {
                 <Marker
                   key={pin.id}
                   position={midpoint}
-                  icon={icon}
+                  icon={pin.my_path ? myIcon : icon}
                   eventHandlers={{
                     click: () => {
                       onPinClick && onPinClick(pin, midpoint);
