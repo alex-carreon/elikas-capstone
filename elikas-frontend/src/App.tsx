@@ -97,6 +97,7 @@ function App() {
               element={<SensorDetails />}
             />
             <Route path="/admin-brgyAdd" element={<BrgyAdd />} />
+            <Route path="/admin-flagged/:id" element={<FlaggedDetails />} />
           </Route>
 
           <Route element={<ProtectedRoute />}>
