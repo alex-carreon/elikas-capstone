@@ -50,6 +50,7 @@ interface handleActionProps {
   snapped?: [number, number][];
   isEditable?: boolean;
   media?: File | undefined;
+  deleteNavigate?: string;
 }
 
 export const handleSubmit = async ({
@@ -58,7 +59,6 @@ export const handleSubmit = async ({
   routePoints,
   desc,
   floodLevel,
-  token,
   setSnapped,
   setMidpoint,
   setError,
@@ -201,38 +201,31 @@ export const handleUpdate = async ({
       return;
     }
 
-    const updPromise = new Promise(async (resolve, reject) => {
-      const response = await api.patch(
-        `/flood-paths/${id}`,
-        {
-          level_id: floodLevel,
-          description: desc,
-          expiry: expDate,
-          path: finalSnapped,
+    const response = api.patch(
+      `/flood-paths/${id}`,
+      {
+        level_id: floodLevel,
+        description: desc,
+        expiry: expDate,
+        path: finalSnapped,
+      },
+      {
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
         },
-        {
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
-          },
-        },
-      );
+      },
+    );
 
-      console.log(response);
+    console.log(response);
 
-      if (!response) {
-        reject(console.log("Creating Path Failed"));
-        return;
-      } else resolve(response);
-    });
-
-    toast.promise(updPromise, {
+    toast.promise(response, {
       loading: "Saving your updates...",
       success: "Pin successfully updated!",
       position: "top-center",
     });
 
-    updPromise.then(() => {
+    response.then(() => {
       setIsEditable?.(false);
       setHasUpdated?.(true);
     });
@@ -242,28 +235,16 @@ export const handleUpdate = async ({
 };
 
 export const handleDelete = async ({
-  token,
   id,
   navigate,
+  deleteNavigate,
 }: handleActionProps) => {
   try {
-    const deacPromise = new Promise(async (resolve, reject) => {
-      const response = await api.patch(`/flood-paths/${id}/deactivate`, {
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-      });
+    const response = api.patch(`/flood-paths/${id}/deactivate`);
 
-      console.log(response);
+    console.log(response);
 
-      if (!response) {
-        reject(console.log("Creating Path Failed"));
-        return;
-      } else resolve(response);
-    });
-
-    toast.promise(deacPromise, {
+    toast.promise(response, {
       loading: "Deleting your pin...",
       success: "Pin Deleted!",
       error: (err: any) => {
@@ -273,8 +254,10 @@ export const handleDelete = async ({
       position: "top-center",
     });
 
-    deacPromise.then(() => {
-      navigate?.("/History");
+    const navigation = deleteNavigate ? deleteNavigate : "/History";
+
+    response.then(() => {
+      navigate?.(navigation);
     });
   } catch (err) {
     console.error("Error Deactivating");
