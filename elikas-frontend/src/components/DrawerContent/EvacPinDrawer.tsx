@@ -45,11 +45,11 @@ import { bigSmile } from "@dicebear/collection";
 import { createAvatar } from "@dicebear/core";
 import { Skeleton } from "@/components/ui/skeleton";
 import PostRow from "@/components/PostRow";
-import sample from "@/assets/Map/SamplePhoto.png";
 import { useUserContext } from "@/context/AuthContext";
 import { toast } from "sonner";
 import { toZonedTime } from "date-fns-tz";
 import { format } from "date-fns";
+import { Spinner } from "../ui/spinner";
 
 type CommentType = {
   id: number;
@@ -70,6 +70,7 @@ type postedBy = {
   user_id: number;
   username: string;
   posted_at: string;
+  avatar_seed: string;
 };
 
 type media = {
@@ -114,6 +115,7 @@ type EvacPin = {
   posted_by: postedBy;
   last_confirmed: string | null;
   media: media[];
+  avatar_seed: string;
 };
 
 type FacilityKey =
@@ -201,6 +203,8 @@ function EvacPinDrawer({
   const [verifiedBy, setVerifiedBy] = useState(0);
   const [verified, setVerified] = useState(false);
   const [newComment, setNewComment] = useState<string | null>();
+  const [seed, setSeed] = useState("");
+  const [seedLoad, setSeedLoad] = useState(false);
 
   const cameraInputRef = useRef<HTMLInputElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -208,7 +212,7 @@ function EvacPinDrawer({
   const { role } = useUserContext();
 
   const avatar = createAvatar(bigSmile, {
-    seed: "Felix",
+    seed: seed,
     backgroundColor: ["b6e3f4", "c0aede", "d1d4f9"],
     radius: 50,
     scale: 90,
@@ -261,6 +265,26 @@ function EvacPinDrawer({
     }
   };
 
+  const getAvatar = async () => {
+    try {
+      setSeedLoad(true);
+      const response = await api.get("/profile");
+
+      const userData = response.data;
+      console.log(userData);
+
+      setSeed(userData.avatar_seed);
+
+      return userData;
+    } catch (err: string | any) {
+      console.error("Status:", err.response?.status);
+      console.error("Data:", err.response?.data);
+      console.error("Message:", err.message);
+    } finally {
+      setSeedLoad(false);
+    }
+  };
+
   const submitComment = (e: FormEvent) => {
     e.preventDefault();
 
@@ -307,6 +331,7 @@ function EvacPinDrawer({
     if (!isExpanded) return;
 
     getComments();
+    getAvatar();
   }, [isExpanded]);
 
   useEffect(() => {
@@ -611,6 +636,7 @@ function EvacPinDrawer({
                       isEvacComments={true}
                       isHazardPost={false}
                       image={comment.media}
+                      seed={comment.posted_by.avatar_seed}
                     />
                   </Fragment>
                 ))
@@ -619,7 +645,11 @@ function EvacPinDrawer({
             <div className="fixed bottom-0 z-100 bg-white w-full h-content">
               <div className="flex flex-col h-fit justify-center">
                 <div className="h-full flex flex-row items-center p-2 gap-2">
-                  <img src={dataUri} className="w-11" />
+                  {seedLoad ? (
+                    <Spinner />
+                  ) : (
+                    <img src={dataUri} className="w-11" />
+                  )}
                   <InputGroup>
                     <InputGroupInput
                       placeholder="Add a Comment"

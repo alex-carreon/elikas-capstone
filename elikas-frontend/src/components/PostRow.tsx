@@ -15,7 +15,6 @@ import api from "@/api";
 import { Spinner } from "@/components/ui/spinner";
 import ButtonComp from "./Button";
 import { Link } from "react-router";
-import { set } from "date-fns";
 import { toast } from "sonner";
 import { Skeleton } from "./ui/skeleton";
 
@@ -25,6 +24,7 @@ type Reasons = {
 };
 
 interface PostRowProps {
+  seed: string;
   username: string;
   timePosted: string;
   description: string;
@@ -42,6 +42,7 @@ interface PostRowProps {
 }
 
 function PostRow({
+  seed,
   username,
   timePosted,
   description,
@@ -61,7 +62,6 @@ function PostRow({
   const [upvote, setUpvote] = useState(0);
   const [vote, setVote] = useState<1 | -1 | 0>(0);
   const [downvote, setDownvote] = useState(0);
-  const [seed, setSeed] = useState("Felix");
   const [openDialog, setOpenDialog] = useState(false);
   const [reason, setReason] = useState("");
   const [voteLoad, setVoteLoad] = useState(false);

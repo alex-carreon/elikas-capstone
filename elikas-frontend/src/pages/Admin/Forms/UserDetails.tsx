@@ -8,6 +8,8 @@ import FormSkeleton from "@/pages/Skeletons/FormSkeleton";
 import { toast } from "sonner";
 import AlertDialogue from "@/components/AlertDialogue";
 import SelectDropdown from "@/components/SelectDropdown";
+import { bigSmile } from "@dicebear/collection";
+import { createAvatar } from "@dicebear/core";
 
 type UserData = {
   created_at: string;
@@ -21,6 +23,7 @@ type UserData = {
   phone: string | null;
   role: string | null;
   username: string;
+  avatar_seed: string;
 };
 
 type Barangays = {
@@ -48,6 +51,7 @@ function UserDetails() {
   const { token } = useUserContext();
   const navigate = useNavigate();
 
+  const [seed, setSeed] = useState("");
   const [username, setUsername] = useState("");
   const [firstname, setFirstname] = useState("");
   const [lastname, setLastname] = useState("");
@@ -81,6 +85,7 @@ function UserDetails() {
       }
 
       const userDetails = response.data;
+      setSeed(userDetails.avatar_seed);
       setUserData(userDetails);
       setUsername(userDetails.username);
       setFirstname(userDetails.first_name);
@@ -224,6 +229,18 @@ function UserDetails() {
     }
   }, [isEditable]);
 
+  const avatar = createAvatar(bigSmile, {
+    seed: seed,
+    backgroundColor: ["b6e3f4", "c0aede", "d1d4f9"],
+    radius: 50,
+    scale: 90,
+    accessoriesProbability: 50,
+    eyes: ["cheery", "normal", "starstruck", "winking"],
+    mouth: ["braces", "gapSmile", "kawaii", "openedSmile", "teethSmile"],
+  });
+
+  const dataUri = avatar.toDataUri();
+
   return (
     <>
       {willDeac && (
@@ -242,7 +259,6 @@ function UserDetails() {
         />
       )}
       <FormLayout
-        isAvatar
         updateId="Admin_IndivUpdateBtn"
         deleteId="Admin_IndivDeleteBtn"
         deleteClick={() => setWillDeac(true)}
@@ -267,6 +283,9 @@ function UserDetails() {
               className="flex flex-col gap-4"
               id="Admin_IndivUpdateForm"
             >
+              <div className="w-full flex justify-center">
+                <img src={dataUri} className="w-24" />
+              </div>
               <TextField
                 label="User ID"
                 inputType="text"
