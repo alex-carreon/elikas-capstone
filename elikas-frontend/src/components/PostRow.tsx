@@ -145,22 +145,27 @@ function PostRow({
 
   useEffect(() => {
     getVotes();
-    getFlags();
     getFlagged();
   }, []);
+
+  useEffect(() => {
+    if (openDialog) {
+      getFlags();
+    }
+  }, [openDialog]);
 
   const handleVote = async (voteValue: number) => {
     try {
       setVoteLoad(true);
 
       if (isHazardPost) {
-        const response = await api.post(`/flood-paths/${id}/vote`, {
+        await api.post(`/flood-paths/${id}/vote`, {
           vote: voteValue,
         });
       }
 
       if (isEvacComments) {
-        const response = await api.post(`/comments/${id}/vote`, {
+        await api.post(`/comments/${id}/vote`, {
           vote: voteValue,
         });
       }
