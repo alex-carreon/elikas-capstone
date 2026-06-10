@@ -18,6 +18,7 @@ class ProfileController extends Controller
                 'id' => $user->id,
                 'username' => $user->username,
                 'email' => $user->email,
+                'avatar_seed' => $user->avatar_seed,
                 'role' => $user->role->role_name,
 
                 'first_name' => $user->name?->first_name,
@@ -48,22 +49,22 @@ class ProfileController extends Controller
 
             // Validation
             $request->validate([
-                'username' => 'nullable|string|max:255',
-                'first_name' => 'nullable|string|max:255',
-                'last_name' => 'nullable|string|max:255',
+                'username' => 'nullable|string|max:20|unique:Users,username',
+                'first_name' => 'nullable|string|max:50',
+                'last_name' => 'nullable|string|max:50',
                 'phone' => 'nullable|string|max:20',
                 'location_id' => 'nullable|integer',
+                'avatar_seed' => 'nullable|string|size:8',
             ]);
 
             // Update users table
-            if ($request->filled('username')) {
-                $user->username = $request->username;
-                $user->save();
-            }
+            $user->update([
+                'username'    => $request->username ?? $user->username,
+                'avatar_seed' => $request->avatar_seed ?? $user->avatar_seed,
+            ]);
 
             // Update name table
             if ($user->name) {
-
                 $user->name->update([
                     'first_name' => $request->first_name ?? $user->name->first_name,
                     'last_name'  => $request->last_name ?? $user->name->last_name,
