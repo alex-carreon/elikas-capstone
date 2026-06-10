@@ -15,7 +15,7 @@ interface AuthContextProps {
   loading: boolean;
   role: string | null;
   token: string | null;
-  // skipAuthContext: React.MutableRefObject<boolean>;
+  logout: () => Promise<void>;
 }
 
 const AuthContext = createContext<AuthContextProps>({
@@ -23,7 +23,7 @@ const AuthContext = createContext<AuthContextProps>({
   loading: true,
   role: null,
   token: null,
-  // skipAuthContext: skipAuthRef,
+  logout: async () => {},
 });
 
 interface AuthProviderProps {
@@ -49,7 +49,21 @@ export function AuthProvider({ children }: AuthProviderProps) {
     location.pathname.startsWith(path),
   );
 
+  const roleDefault: Record<string, string> = {
+    indiv: "/map",
+    brgy_op: "/map",
+    admin: "/admin-map",
+  };
+
   const navigate = useNavigate();
+
+  const logout = async () => {
+    await auth.signOut();
+    setRole(null);
+    setToken(null);
+    setUser(null);
+    navigate("/Login");
+  };
 
   // Find user in firebase while loading, when user is found loading stops
   useEffect(() => {
@@ -64,7 +78,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
         return;
       }
 
-      if (isPublicRoute) return;
+      // if (isPublicRoute) return;
 
       try {
         const t = await firebaseUser?.getIdTokenResult(false);
@@ -79,17 +93,23 @@ export function AuthProvider({ children }: AuthProviderProps) {
 
         const currentToken = t.token;
 
-        if (!role && !isPublicRoute) {
+        if (!role) {
           const loginResponse = await api.post(
             "/auth/login",
             {},
             { headers: { Authorization: `Bearer ${currentToken}` } },
           );
-          setRole(loginResponse.data.role);
-        }
+          const userRole = loginResponse.data.role;
 
-        setUser(firebaseUser);
-        setToken(currentToken);
+          setRole(userRole);
+          setUser(firebaseUser);
+          setToken(currentToken);
+          navigate(roleDefault[userRole] ?? "/Login");
+
+          // if (isPublicRoute) {
+          //   // only redirect if coming from a public route
+          // }
+        }
       } catch (err: any) {
         await auth.signOut();
         navigate("/Login");
@@ -103,7 +123,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
   }, []);
 
   return (
-    <AuthContext.Provider value={{ user, loading, role, token }}>
+    <AuthContext.Provider value={{ user, loading, role, token, logout }}>
       {children}
     </AuthContext.Provider>
   );

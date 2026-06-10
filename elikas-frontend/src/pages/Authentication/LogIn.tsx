@@ -11,6 +11,7 @@ import { useState } from "react";
 import { auth } from "@/firebase";
 import { signInWithEmailAndPassword } from "@firebase/auth";
 import { toast } from "sonner";
+import api from "@/api";
 
 function LogIn() {
   const [email, setEmail] = useState("");
@@ -26,6 +27,7 @@ function LogIn() {
     e.preventDefault();
 
     try {
+      await auth.signOut();
       // Step 1: Sign in with Firebase — checks email + password
       const userCredential = await signInWithEmailAndPassword(
         auth,
@@ -45,43 +47,40 @@ function LogIn() {
       }
 
       // Step 2: Get the ID token — this is proof of identity sent to Laravel
-      const token = await userCredential.user.getIdToken();
 
       // Step 3: Send token to Laravel to get the user's role
-      const loginPromise = new Promise(async (resolve, reject) => {
-        const response = await fetch("http://localhost:8000/api/auth/login", {
-          method: "POST",
+      const token = await userCredential.user.getIdToken(true);
+      const response = api.post(
+        "/auth/login",
+        {},
+        {
           headers: {
-            "Content-Type": "application/json",
             Authorization: `Bearer ${token}`,
           },
-        });
-        // // Step 4: Save user info so other pages can access it
-        // localStorage.setItem("user", JSON.stringify(userData));
-        const userData = await response.json();
+        },
+      );
+      // // Step 4: Save user info so other pages can access it
+      // localStorage.setItem("user", JSON.stringify(userData));
+      console.log(response);
 
-        if (!response.ok) {
-          reject(setErrors(userData.error || "Login failed"));
-        } else {
-          resolve(userData);
-        }
-      });
-
-      toast.promise(loginPromise, {
+      toast.promise(response, {
         loading: "Logging you in...",
         success: "You're logged in!",
         error: "User not found",
         position: "top-center",
       });
 
+      const userData = await response;
+
+      console.log(userData.data.role);
+
       // Step 5: Redirect based on role
-      loginPromise.then((userData: any) => {
-        if (userData.role === "admin") {
-          window.location.href = "/admin-map";
-        } else {
-          navigate("/Map");
-        }
-      });
+
+      // if (userData.data.role === "admin") {
+      //   navigate("/admin-map");
+      // } else {
+      //   navigate("/map");
+      // }
     } catch (err: string | any) {
       if (
         err.code === "auth/user-not-found" ||
