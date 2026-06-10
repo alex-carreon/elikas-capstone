@@ -113,7 +113,7 @@ class FloodPathController extends Controller
 
         $floodPath = FloodPath::with([
             'floodLevel:id,level_name,description',
-            'socialElement.user:id,username',
+            'socialElement.user:id,username,avatar_seed',
             'socialElement:id,user_id,posted_at,deactivated_at,has_media',
             'socialElement.media'
         ])->find($id);
@@ -407,6 +407,7 @@ class FloodPathController extends Controller
                         "id" => $floodPath->floodLevel->id,
                         "level_name" => $floodPath->floodLevel->level_name ],
             'posted_by'      => $floodPath->socialElement->user?->username,
+            'avatar_seed' => $floodPath->socialElement->user?->avatar_seed,
             'path'           => $this->formatPath($floodPath->path),
             'description'    => $floodPath->description,
             'upvotes'        => $floodPath->upvotes,
