@@ -98,6 +98,7 @@ class UserController extends Controller
                 return [
 
                     'id' => $user->id,
+                    'avatar_seed' => $user->avatar_seed,
 
                     'name' =>
                         trim(
@@ -168,6 +169,8 @@ class UserController extends Controller
                 'id' => $user->id,
                 'username' => $user->username,
                 'email' => $user->email,
+
+                'avatar_seed' => $user->avatar_seed,
 
                 'role' => $user->role?->role_name,
 
@@ -261,10 +264,10 @@ class UserController extends Controller
 
                 'email' => 'sometimes|email|max:255|unique:Users,email,' . $user->id,
 
-                'first_name' => 'sometimes|string|max:255',
-                'last_name' => 'sometimes|string|max:255',
+                'first_name' => 'sometimes|string|max:50',
+                'last_name' => 'sometimes|string|max:50',
 
-                'phone' => 'sometimes|string|max:20',
+                'phone' => 'sometimes|string|max:15',
 
                 // Individual
                 'indiv_location_id' => 'sometimes|integer|exists:Locations,id',
@@ -273,8 +276,8 @@ class UserController extends Controller
                 'govop_location_id' => 'sometimes|integer|exists:Locations,id',
                 'govop_level_id' => 'sometimes|integer|exists:LocationLevels,id',
 
-                'point_person' => 'sometimes|string|max:255',
-                'point_position' => 'sometimes|string|max:255',
+                'point_person' => 'sometimes|string|max:100',
+                'point_position' => 'sometimes|string|max:50',
             ]);
 
             // -----------------------------------------
