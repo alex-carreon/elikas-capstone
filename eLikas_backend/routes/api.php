@@ -3,15 +3,12 @@
 use App\Http\Controllers\AdminController;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\CapacityLevelController;
-use App\Http\Controllers\Comments\EvacComments;
 use App\Http\Controllers\Dashboards\CommentsAdminController;
+use App\Http\Controllers\Comments\EvacComments;
 use App\Http\Controllers\Dashboards\FloodPathAdminController;
 use App\Http\Controllers\Dashboards\UserController;
 use App\Http\Controllers\EmergencyContactController;
 use App\Http\Controllers\EvacTypeController;
-use App\Http\Controllers\FeedbackController;
-use App\Http\Controllers\Flags\FlagCommentController;
-use App\Http\Controllers\Flags\FlagFloodController;
 use App\Http\Controllers\Hazards\FloodLevelController;
 use App\Http\Controllers\Hazards\FloodPathController;
 use App\Http\Controllers\LocationsController;
@@ -26,11 +23,12 @@ use App\Http\Controllers\PinControllers\VerifyEvacuationAreaController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\SensorControllers\PublicSensorController;
 use App\Http\Controllers\SensorControllers\SensorController;
-use App\Http\Controllers\SensorControllers\SensorLogController;
 use App\Http\Controllers\SMSController;
-use App\Http\Controllers\Votes\VoteCommentController;
 use App\Http\Controllers\Votes\VoteController;
+use App\Http\Controllers\Votes\VoteCommentController;
 use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\FeedbackController;
+use App\Http\Controllers\SensorControllers\SensorLogController;
 
 Route::get('/test', function () {
     return response()->json([
@@ -70,7 +68,7 @@ Route::get('/pins/routes', [GetEvacuationRoutesController::class, 'getEvacuation
 // ONLY ADMIN ROUTES
 // ---------------------------------------------------------------
 Route::prefix('admin')->middleware(['firebase.auth', 'role:1'])->group(function () {
-
+    Route::post('/create-admin', [AdminController::class, 'createUser']);
 
     // Changed from deleteUser to match your controller naming preference
     Route::patch('/users/{id}/deactivate', [UserController::class, 'deactivateUser']);
@@ -99,8 +97,9 @@ Route::prefix('admin')->middleware(['firebase.auth', 'role:1'])->group(function 
 // ---------------------------------------------------------------
 // ONLY GOVERNMENT OPERATOR ROUTES
 // ---------------------------------------------------------------
-
 Route::middleware(['firebase.auth', 'role:2'])->group(function () {
+    Route::apiResource('sensors', SensorController::class)->except(['destroy']);
+    Route::patch('/sensors/{sensor}/deactivate', [SensorController::class, 'deactivate']);
 
     // ---------------------------------------------------------------
     // SMS SYSTEM UPDATES
@@ -121,7 +120,7 @@ Route::middleware(['firebase.auth', 'role:2'])->group(function () {
 });
 
 
-// 1 = admin; 2 = brgy_op; 3 = indiv;
+// 1 = admin; 2 = brgy_op; 3 = indiv; city_op = 3
 
 // BARANGAY OR ADMIN ROUTES
 Route::middleware(['firebase.auth', 'role:1,2'])->group(function () {
@@ -133,10 +132,6 @@ Route::middleware(['firebase.auth', 'role:1,2'])->group(function () {
     Route::get('/sensors', [SensorController::class, 'index']);
     Route::get('/sensors/{sensor}', [SensorController::class, 'show']);
     Route::get('sensors/{sensor_code}/logs', [SensorLogController::class, 'index']);
-
-    //RETURN TO GOVOPS BLOCK once auth is fixed
-    Route::apiResource('sensors', SensorController::class)->except(['destroy']);
-    Route::patch('/sensors/{sensor}/deactivate', [SensorController::class, 'deactivate']);
 
     Route::apiResource('flood-levels', FloodLevelController::class)->except(['index']);
 
@@ -208,10 +203,5 @@ Route::middleware(['firebase.auth', 'role:1,2,3'])->group(function () {
 
     //Emergency contact
     Route::get('/emergency-contacts/location/{location_id}', [EmergencyContactController::class, 'getByLocationId']);
-
-    //FLAGS
-    Route::post('/comments/{commentId}/flag', [FlagCommentController::class, 'store']);
-    Route::post('/flood-paths/{floodPathId}/flag', [FlagFloodController::class, 'store']);
-    Route::get('/flag-reasons', [FlagCommentController::class, 'reasons']);
 });
 
