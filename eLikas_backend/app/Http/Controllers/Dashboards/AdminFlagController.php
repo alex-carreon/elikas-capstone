@@ -22,10 +22,10 @@ class AdminFlagController extends Controller
         if ($type === 'moderation') {
             // AI moderation logs for comments
             $logs = ModerationLog::with([
-                'social_element.comment',
+                'socialElement.comment',
             ])
             ->whereNull('is_approved')
-            ->whereHas('social_element.comment')
+            ->whereHas('socialElement.comment')
             ->orderByDesc('created_at')
             ->get();
 
@@ -33,7 +33,7 @@ class AdminFlagController extends Controller
                 'count' => $logs->count(),
                 'flags' => $logs->map(fn ($log) => [
                     'moderation_id' => $log->id,
-                    'comment_id'    => $log->social_element->comment->id,
+                    'comment_id'    => $log->socialElement->comment->id,
                     'element_id'    => $log->element_id,
                     'reason'        => 'AI Moderation',
                     'flagged_at'    => $log->created_at
@@ -79,10 +79,10 @@ class AdminFlagController extends Controller
 
         if ($type === 'moderation') {
             $logs = ModerationLog::with([
-                'social_element.floodPath',
+                'socialElement.floodPath',
             ])
             ->whereNull('is_approved')
-            ->whereHas('social_element.floodPath')
+            ->whereHas('socialElement.floodPath')
             ->orderByDesc('created_at')
             ->get();
 
@@ -90,7 +90,7 @@ class AdminFlagController extends Controller
                 'count' => $logs->count(),
                 'flags' => $logs->map(fn ($log) => [
                     'moderation_id'  => $log->id,
-                    'flood_path_id'  => $log->social_element->floodPath->id,
+                    'flood_path_id'  => $log->socialElement->floodPath->id,
                     'element_id'     => $log->element_id,
                     'reason'         => 'AI Moderation',
                     'flagged_at'     => $log->created_at
@@ -314,7 +314,7 @@ class AdminFlagController extends Controller
             'message' => 'Content rejected and deactivated.',
         ]);
     }
-    
+
     // ── Private Helpers ───────────────────────────────────────────────────────
 
     private function resolveFlags(int $elementId, bool $isApproved, int $adminId): void
