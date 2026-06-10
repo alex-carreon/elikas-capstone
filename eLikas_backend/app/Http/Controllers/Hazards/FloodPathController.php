@@ -26,25 +26,32 @@ class FloodPathController extends Controller
     /**
      * GET /flood-paths
      */
-    public function index()
-    {        
+    public function index(Request $request)
+    {
+        $user = $request->attributes->get('firebase_user');
+
         $floodPaths = FloodPath::with([
-            'floodLevel:id,level_name',
-            'socialElement:id,user_id,posted_at,deactivated_at',
+                'floodLevel:id,level_name',
+                'socialElement:id,user_id,posted_at,deactivated_at',
             ])
-        ->notExpired()
-        ->notDeactivated()
-        ->orderByDesc('last_confirmed')
-        ->get();
+            ->notExpired()
+            ->notDeactivated()
+            ->orderByDesc('last_confirmed')
+            ->get();
 
         return response()->json([
             'count' => $floodPaths->count(),
             'flood_paths' => $floodPaths->map(fn ($fp) => [
-                'id'   => $fp->id,
-                'level'=> $fp->floodLevel,
+                'id' => $fp->id,
+                'level' => $fp->floodLevel,
                 'path' => $this->formatPath($fp->path),
-                'is_expired' => $fp->expiry < now(), 'is_deactivated' => 
-                !is_null( $fp->socialElement->deactivated_at ),
+
+                'my_path' => $user
+                    ? $fp->socialElement->user_id === $user->id
+                    : false,
+
+                'is_expired' => $fp->expiry < now(),
+                'is_deactivated' => !is_null($fp->socialElement->deactivated_at),
             ]),
         ]);
     }
