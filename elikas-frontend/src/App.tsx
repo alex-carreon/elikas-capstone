@@ -35,6 +35,7 @@ import SMSHistory from "./pages/brgy_ops/SMSHistory";
 import Pins from "./pages/Admin/Pins";
 import { AuthProvider } from "./context/AuthContext.tsx";
 import Sensors from "@/pages/Admin/Sensors.tsx";
+import SensorDetails from "./pages/Admin/Forms/SensorDetails.tsx";
 
 function App() {
   return (
@@ -90,6 +91,10 @@ function App() {
 
             <Route path="/admin-userDetails/:id" element={<UserDetails />} />
             <Route path="/admin-brgyDetails/:id" element={<GovopDetails />} />
+            <Route
+              path="/admin-sensorDetails/:id"
+              element={<SensorDetails />}
+            />
             <Route path="/admin-brgyAdd" element={<BrgyAdd />} />
           </Route>
 
