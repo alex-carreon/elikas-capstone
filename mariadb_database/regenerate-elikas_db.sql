@@ -548,7 +548,7 @@ CREATE TABLE `SensorLogs` (
   `sensor_code` varchar(20) NOT NULL,
   `sensor_timestamp` datetime NOT NULL,
   `log_time` datetime NOT NULL DEFAULT current_timestamp(),
-  `water_level` decimal(5,2) NOT NULL,
+  `water_level` decimal(6,2) NOT NULL,
   `status_level` varchar(20) NOT NULL,
   PRIMARY KEY (`id`),
   KEY `sensor_id` (`sensor_code`)
@@ -566,21 +566,21 @@ CREATE TABLE `Sensors` (
   `id` int(11) NOT NULL AUTO_INCREMENT,
   `element_id` int(11) NOT NULL,
   `sensor_code` varchar(20) NOT NULL DEFAULT concat('SR-',ucase(substr(replace(uuid(),'-',''),1,6))),
-  `mount_height` decimal(3,2) NOT NULL,
+  `mount_height` decimal(4,2) NOT NULL,
   `name` varchar(50) NOT NULL,
   `location` point NOT NULL,
   `address` text NOT NULL,
   `last_online` datetime DEFAULT NULL,
   `location_id` int(11) NOT NULL,
-  `yellow_level` decimal(3,2) NOT NULL,
-  `orange_level` decimal(3,2) NOT NULL,
-  `red_level` decimal(3,2) NOT NULL,
+  `yellow_level` decimal(4,2) NOT NULL,
+  `orange_level` decimal(4,2) NOT NULL,
+  `red_level` decimal(4,2) NOT NULL,
   PRIMARY KEY (`id`),
   UNIQUE KEY `Sensors_UNIQUE` (`sensor_code`),
   KEY `element_id` (`element_id`),
   CONSTRAINT `Sensors_Locations_FK` FOREIGN KEY (`id`) REFERENCES `Locations` (`id`),
   CONSTRAINT `Sensors_ibfk_1` FOREIGN KEY (`element_id`) REFERENCES `SocialElements` (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=5 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=7 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -602,7 +602,7 @@ CREATE TABLE `SocialElements` (
   KEY `type_id` (`type_id`),
   CONSTRAINT `SocialElements_ibfk_1` FOREIGN KEY (`user_id`) REFERENCES `Users` (`id`),
   CONSTRAINT `SocialElements_ibfk_2` FOREIGN KEY (`type_id`) REFERENCES `TargetTables` (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=11 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=14 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -694,4 +694,4 @@ CREATE TABLE `Votes` (
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*M!100616 SET NOTE_VERBOSITY=@OLD_NOTE_VERBOSITY */;
 
--- Dump completed on 2026-06-10 14:51:15
+-- Dump completed on 2026-06-10 15:06:30
