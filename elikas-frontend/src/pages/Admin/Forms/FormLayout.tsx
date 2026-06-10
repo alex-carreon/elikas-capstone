@@ -19,6 +19,7 @@ interface FormLayoutProps {
   formId?: string;
   updBtnLabel?: string;
   btnType?: "button" | "submit" | "reset" | undefined;
+  formTitle?: string;
 }
 
 function FormLayout({
@@ -35,6 +36,7 @@ function FormLayout({
   formId,
   updBtnLabel,
   btnType,
+  formTitle,
 }: FormLayoutProps) {
   const navigate = useNavigate();
 
@@ -57,7 +59,7 @@ function FormLayout({
           <div className="pt-6 bg-[#FFB13B] px-6 pb-14 flex flex-col gap-4">
             <div className="flex flex-row justify-between items-center">
               <p className="text-white BeVietnamPro text-2xl font-bold">
-                User Details
+                {formTitle}
               </p>
               <div className="text-white BeVietnamPro text-end">
                 <WhiteLogo />
