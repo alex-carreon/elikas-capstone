@@ -17,6 +17,9 @@ import {
   CollapsibleContent,
 } from "@/components/ui/collapsible";
 import SelectDropdown from "@/components/SelectDropdown";
+import { toZonedTime } from "date-fns-tz";
+import { format } from "date-fns";
+import { toast } from "sonner";
 
 type Barangays = {
   id: number;
@@ -49,10 +52,21 @@ function Sensors() {
   const [openCollapse, setOpenCollapse] = useState(false);
   const [loading, setLoading] = useState(false);
   const [barangays, setBarangays] = useState<Barangays[]>([]);
-  const [brgyFilter, setBrgyFilter] = useState(0);
+  const [activeBrgyFilter, setActiveBrgyFilter] = useState(0);
+  const [inactiveBrgyFilter, setInactiveBrgyFilter] = useState(0);
   const [activeSensors, setActiveSensors] = useState<SensorsDetails[]>([]);
   const [activeSensorsCount, setActiveSensorsCount] = useState(0);
+  const [inactiveSensorsCount, setInactiveSensorsCount] = useState(0);
+  const [searchFor, setSearchFor] = useState("");
+
   const [inactiveSensors, setInactiveSensors] = useState<SensorsDetails[]>([]);
+
+  const params = new URLSearchParams();
+
+  const convertDateTime = (utcString: string) => {
+    const zoned = toZonedTime(new Date(utcString), "Asia/Manila");
+    return format(zoned, "MMM d, yyyy h:mm a");
+  };
 
   const getBarangays = async () => {
     try {
@@ -70,6 +84,7 @@ function Sensors() {
   const getSensors = async () => {
     try {
       setLoading(true);
+
       const [activeSensorsRes, inactiveSensorsRes] = await Promise.all([
         api.get(`/sensors?is_active=1`),
         api.get(`/sensors?is_active=0`),
@@ -78,12 +93,75 @@ function Sensors() {
       const activeSensors = activeSensorsRes.data.data;
       const inactiveSensors = inactiveSensorsRes.data.data;
       const activeCount = activeSensors.length;
+      const inactiveCount = inactiveSensors.length;
 
       console.log(activeSensors);
 
       setActiveSensors(activeSensors);
       setInactiveSensors(inactiveSensors);
       setActiveSensorsCount(activeCount);
+      setInactiveSensorsCount(inactiveCount);
+    } catch (err: any) {
+      console.log(err.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const getFilteredActive = async (search = searchFor) => {
+    try {
+      setLoading(true);
+
+      if (activeBrgyFilter || activeBrgyFilter != 0) {
+        params.set("location_id", String(activeBrgyFilter));
+      }
+      if (searchFor) {
+        params.set("search", search);
+      }
+
+      const parameters = params.toString();
+
+      const activeSensorsRes = await api.get(
+        `/sensors?is_active=1${parameters ? `&${parameters}` : ""}`,
+      );
+
+      const activeSensors = activeSensorsRes.data.data;
+
+      console.log(activeSensors);
+
+      setActiveSensors(activeSensors);
+    } catch (err: any) {
+      console.log(err.message);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const getFilteredInactive = async (search = searchFor) => {
+    try {
+      setLoading(true);
+
+      if (inactiveBrgyFilter || inactiveBrgyFilter != 0) {
+        params.set("location_id", String(inactiveBrgyFilter));
+      }
+
+      if (searchFor) {
+        params.set("search", search);
+      }
+
+      const parameters = params;
+
+      const inactiveSensorsRes = await api.get(
+        `/sensors?is_active=0${parameters ? `&${parameters}` : ""}`,
+      );
+
+      const inactiveSensors = inactiveSensorsRes.data.data;
+
+      console.log(inactiveSensors);
+
+      setInactiveSensors(inactiveSensors);
+
+      toast.success("Sensors filtered!");
     } catch (err: any) {
       console.log(err.message);
     } finally {
@@ -96,6 +174,20 @@ function Sensors() {
     getBarangays();
   }, []);
 
+  useEffect(() => {
+    if (activeBrgyFilter) {
+      getFilteredActive();
+      toast.success("Sensors filtered!");
+    }
+  }, [activeBrgyFilter]);
+
+  useEffect(() => {
+    if (inactiveBrgyFilter) {
+      getFilteredInactive();
+      toast.success("Sensors filtered!");
+    }
+  }, [inactiveBrgyFilter]);
+
   return (
     <div className="w-full flex flex-col items-center">
       <div className="w-full max-w-md">
@@ -104,13 +196,13 @@ function Sensors() {
             title="Active Sensors"
             lastUpdated="Last updated 3 minutes ago"
             count={activeSensorsCount}
-            // loading={loading}
+            loading={loading}
           />
           <CountRow
             title="Inactive Sensors"
             lastUpdated="Last updated 3 minutes ago"
-            count={3}
-            // loading={loading}
+            count={inactiveSensorsCount}
+            loading={loading}
           />
         </DashboardHeader>
         <div className="bg-white -mt-8 rounded-4xl p-4 flex flex-col gap-2">
@@ -174,9 +266,17 @@ function Sensors() {
                 <InputGroupInput
                   className="text-sm h-8"
                   id="Admin_IndivSearchField"
+                  onChange={(e) => setSearchFor(e.target.value)}
+                  value={searchFor}
                 ></InputGroupInput>
                 <InputGroupAddon align="inline-end">
-                  <Search />
+                  <Search
+                    onClick={() => {
+                      isActiveSensor
+                        ? getFilteredActive()
+                        : getFilteredInactive();
+                    }}
+                  />
                 </InputGroupAddon>
               </InputGroup>
               <CollapsibleTrigger
@@ -198,10 +298,18 @@ function Sensors() {
               className="bg-gray-300/50 p-2 rounded-lg flex flex-row items-center justify-end gap-2 px-2.5 mt-2 text-sm"
             >
               <SelectDropdown
-                value={String(brgyFilter)}
-                onValueChange={(val) => setBrgyFilter(Number(val))}
+                value={
+                  isActiveSensor
+                    ? String(activeBrgyFilter)
+                    : String(inactiveBrgyFilter)
+                }
+                onValueChange={(val) => {
+                  isActiveSensor
+                    ? setActiveBrgyFilter(Number(val))
+                    : setInactiveBrgyFilter(Number(val));
+                }}
                 placeholder="Barangay"
-                id="Admin_PinsBrgyFilter"
+                id="Admin_SensorsBrgyFilter"
                 options={[
                   { label: "All", value: "0" },
                   ...barangays?.map((barangay) => ({
@@ -210,9 +318,13 @@ function Sensors() {
                   })),
                 ]}
               />
-              {brgyFilter ? (
+              {activeBrgyFilter || inactiveBrgyFilter ? (
                 <button
-                  onClick={() => setBrgyFilter(0)}
+                  onClick={() =>
+                    activeSensors
+                      ? setActiveBrgyFilter(0)
+                      : setInactiveBrgyFilter(0)
+                  }
                   id="History_ClearBrgyFilter"
                 >
                   <X size={14} />
@@ -247,8 +359,12 @@ function Sensors() {
                       title={sensors.name}
                       desc={`Status: ${sensors.currentStatus}`}
                       address={`${sensors.address}`}
-                      datePosted={sensors.lastOnline}
-                      link={`/SensorForm/${sensors.id}`}
+                      datePosted={
+                        sensors.lastOnline
+                          ? `Last Online: ${convertDateTime(sensors.lastOnline)}`
+                          : "Not yet installed"
+                      }
+                      link={`/admin-sensorDetails/${sensors.id}`}
                       buttonId="History_ExpiredEvacDetailsBtn"
                       showBtn
                     >
@@ -267,42 +383,20 @@ function Sensors() {
                   </Fragment>
                 ))
               ) : (
-                // <Row
-                //   postId="Placeholder"
-                //   title="Placeholder"
-                //   address="Placeholder"
-                //   datePosted="Placeholder"
-                //   link="Placeholder"
-                //   // isExpired="Placeholder"
-                //   buttonId="Placeholder"
-                //   showBtn
-                // />
-                // evacPins.map((pins) => {
-                //   if (pins.is_expired) {
-                //     return (
-                //       <Row
-                //         postId={String(pins.id)}
-                //         title={pins.name}
-                //         address={pins.address}
-                //         datePosted={pins.posted_at}
-                //         link={`/EvacForm/${pins.id}`}
-                //         isExpired={pins.is_expired}
-                //         buttonId="History_ExpiredEvacDetailsBtn"
-                //         showBtn
-                //       />
-                //     );
-                //   }
-                // })
-                <Row
-                  postId="placeholder"
-                  title="placeholder"
-                  address="placeholder"
-                  datePosted="placeholder"
-                  link="placeholder"
-                  // isExpired={pins.is_expired}
-                  buttonId="placeholder"
-                  showBtn
-                />
+                inactiveSensors.map((sensors) => (
+                  <Fragment key={sensors.id}>
+                    <Row
+                      postId={String(sensors.sensorCode)}
+                      title={sensors.name}
+                      desc={`Status: ${sensors.currentStatus}`}
+                      address={`${sensors.address}`}
+                      datePosted={`Deactivated at: ${convertDateTime(sensors.deactivatedAt)}`}
+                      link={`/admin-sensorDetails/${sensors.id}`}
+                      buttonId="History_ExpiredEvacDetailsBtn"
+                      showBtn
+                    ></Row>
+                  </Fragment>
+                ))
               )
             ) : (
               // sensors.map((pins) => {
