@@ -37,6 +37,7 @@ import { AuthProvider } from "./context/AuthContext.tsx";
 import Sensors from "@/pages/Admin/Sensors.tsx";
 import SensorDetails from "./pages/Admin/Forms/SensorDetails.tsx";
 import FlaggedDetails from "./pages/Admin/Forms/FlaggedDetails.tsx";
+import HazardDetails from "./pages/Admin/Forms/HazardDetails.tsx";
 
 function App() {
   return (
@@ -98,6 +99,10 @@ function App() {
             />
             <Route path="/admin-brgyAdd" element={<BrgyAdd />} />
             <Route path="/admin-flagged/:id" element={<FlaggedDetails />} />
+            <Route
+              path="/admin-hazardDetails/:id"
+              element={<HazardDetails />}
+            />
           </Route>
 
           <Route element={<ProtectedRoute />}>

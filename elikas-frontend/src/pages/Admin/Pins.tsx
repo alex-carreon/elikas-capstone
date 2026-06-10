@@ -62,17 +62,22 @@ function Pins() {
   const [activeEvac, setActiveEvac] = useState(true);
   const [activeHaz, setActiveHaz] = useState(true);
   const [flaggedHaz, setFlaggedHaz] = useState(false);
+  const [flaggedCom, setFlaggedCom] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [hazardCountLoad, setHazardCountLoad] = useState(false);
   const [openCollapse, setOpenCollapse] = useState(false);
   const [status, setStatus] = useState<"Deactivated" | "Expiry" | null>();
-  const [barangays, setBarangays] = useState<Barangays[]>([]);
-  const [brgyFilter, setBrgyFilter] = useState(0);
+  // const [barangays, setBarangays] = useState<Barangays[]>([]);
+  // const [brgyFilter, setBrgyFilter] = useState(0);
   const [flaggedPaths, setFlaggedPaths] = useState<FlaggedPaths[]>([]);
   const [flaggedPathsCount, setFlaggedPathsCount] = useState(0);
   const [activeHazards, setActiveHazards] = useState<Hazards[]>([]);
   const [activeHazCount, setActiveHazCount] = useState(0);
+  const [inactiveHazCount, setInactiveHazCount] = useState(0);
   const [floodLevels, setFloodLevels] = useState<FloodLevels[]>([]);
   const [levelFilter, setLevelFilter] = useState(0);
+
+  const params = new URLSearchParams();
 
   const colorHazard = {
     lightBlue: "#52B2DA",
@@ -83,17 +88,27 @@ function Pins() {
 
   const getHazardCounts = async () => {
     try {
-      setLoading(true);
+      setHazardCountLoad(true);
       const [flaggedHazRes, hazRes] = await Promise.all([
         api.get("admin/flood-paths/flags"),
-        api.get("/admin/flood-paths?is_expired=false&is_deactivated=false"),
+        api.get("/admin/flood-paths"),
       ]);
+
+      const inactiveCount = hazRes.data.flood_paths.filter(
+        (path: Hazards) => path.is_deactivated || path.is_expired,
+      ).length;
+
+      const activeCount = hazRes.data.flood_paths.filter(
+        (path: Hazards) => !path.is_deactivated && !path.is_expired,
+      ).length;
+
       setFlaggedPathsCount(flaggedHazRes.data.count);
-      setActiveHazCount(hazRes.data.count);
+      setActiveHazCount(activeCount);
+      setInactiveHazCount(inactiveCount);
     } catch (err: any) {
       console.log(err.response.data);
     } finally {
-      setLoading(false);
+      setHazardCountLoad(false);
     }
   };
 
@@ -113,30 +128,28 @@ function Pins() {
   const getHazards = async () => {
     try {
       setLoading(true);
-      const response = await api.get("/admin/flood-paths");
+
+      if (levelFilter || levelFilter !== 0) {
+        params.set("flood_level_id", String(levelFilter));
+      }
+
+      const parameters = params.toString();
+      const endpoint = `/admin/flood-paths${parameters ? `?${parameters}` : ""}`;
+      console.log(endpoint);
+      const response = await api.get(
+        `/admin/flood-paths${parameters ? `?${parameters}` : ""}`,
+      );
       const floodPaths = response.data.flood_paths;
 
       setActiveHazards(floodPaths);
     } catch (err: any) {
       console.log(err.response.data);
+    } finally {
+      setLoading(false);
     }
   };
 
   useEffect(() => {
-    // const getBrgy = async () => {
-    //   try {
-    //     setLoading(true);
-    //     const brgyRes = await api.get(`/locations/barangays?city_id=2`);
-
-    //     const barangays = brgyRes.data.Barangays;
-    //     setBarangays(barangays);
-    //   } catch (err: any) {
-    //     console.log(err.message);
-    //   } finally {
-    //     setLoading(false);
-    //   }
-    // };
-
     const getLevels = async () => {
       try {
         setLoading(true);
@@ -148,24 +161,21 @@ function Pins() {
       }
     };
 
-    // getBrgy();
     getLevels();
     getHazardFlagged();
     getHazards();
     getHazardCounts();
   }, []);
 
+  useEffect(() => {
+    getHazards();
+  }, [levelFilter]);
+
   return (
     <>
       <div className="w-full flex flex-col items-center">
         <div className="w-full max-w-md">
           <DashboardHeader title="Map Pins">
-            <CountRow
-              title="Evacuation Pins"
-              lastUpdated="Last updated 3 minutes ago"
-              count={3}
-              // loading={loading}
-            />
             {isEvac ? (
               <>
                 <CountRow
@@ -190,10 +200,16 @@ function Pins() {
                   loading={loading}
                 />
                 <CountRow
+                  title="Inactive Hazard Paths"
+                  lastUpdated="Last updated 3 minutes ago"
+                  count={inactiveHazCount}
+                  loading={hazardCountLoad}
+                />
+                <CountRow
                   title="Flagged Hazard Paths"
                   lastUpdated="Last updated 3 minutes ago"
                   count={flaggedPathsCount}
-                  loading={loading}
+                  loading={hazardCountLoad}
                 />
               </>
             )}
@@ -295,9 +311,10 @@ function Pins() {
                 </TabsList>
               )}
             </Tabs>
-            <Collapsible className="w-full flex-col items-center gap-2">
-              <div className="w-full flex justify-between">
-                <InputGroup className="w-2/3">
+            {!flaggedHaz && (
+              <Collapsible className="w-full flex-col items-center gap-2 mt-2">
+                <div className="w-full flex justify-between">
+                  {/* <InputGroup className="w-2/3">
                   <InputGroupInput
                     className="text-sm h-8"
                     id="Admin_IndivSearchField"
@@ -305,78 +322,79 @@ function Pins() {
                   <InputGroupAddon align="inline-end">
                     <Search />
                   </InputGroupAddon>
-                </InputGroup>
-                <CollapsibleTrigger
-                  onClick={() => setOpenCollapse(!openCollapse)}
-                  id="History_FiltersTrigger"
-                >
-                  <div className="w-full flex flex-row justify-end mb-2">
-                    Filters
-                    {openCollapse ? (
-                      <ChevronUpIcon className="ml-2 group-data-[state=open]:rotate-180" />
-                    ) : (
-                      <ChevronDownIcon className="ml-2 group-data-[state=open]:rotate-180" />
-                    )}
-                  </div>
-                </CollapsibleTrigger>
-              </div>
-              <CollapsibleContent
-                id="History_FiltersContent"
-                className="bg-gray-300/50 p-2 rounded-lg flex flex-row items-center justify-end gap-2 px-2.5 mt-2 text-sm"
-              >
-                {flaggedHaz && (
-                  <>
-                    <Toggle
-                      size="sm"
-                      variant="outline"
-                      className="aria-pressed:bg-gray-500/50 aria-pressed:text-white border-gray-400"
-                      onPressedChange={(pressed) =>
-                        setStatus(pressed ? "Expiry" : null)
-                      }
-                      pressed={status == "Expiry"}
-                      id="History_InactiveFilter"
-                    >
-                      <AlarmClockOff className="group-aria-pressed/toggle:stroke-white" />
-                    </Toggle>
-                    <Toggle
-                      size="sm"
-                      variant="outline"
-                      className="aria-pressed:bg-gray-500/50 aria-pressed:text-white border-gray-400"
-                      onPressedChange={(pressed) =>
-                        setStatus(pressed ? "Deactivated" : null)
-                      }
-                      pressed={status == "Deactivated"}
-                      id="History_InactiveFilter"
-                    >
-                      <MapPinMinusInside className="group-aria-pressed/toggle:stroke-white" />
-                    </Toggle>
-                  </>
-                )}
-                {!isEvac && (
-                  <SelectDropdown
-                    value={String(levelFilter)}
-                    onValueChange={(val) => setLevelFilter(Number(val))}
-                    placeholder="Flood Level"
-                    id="Admin_HazardLevelFilter"
-                    options={[
-                      { label: "All", value: "0" },
-                      ...floodLevels?.map((level) => ({
-                        label: level.level_name,
-                        value: String(level.id),
-                      })),
-                    ]}
-                  />
-                )}
-                {levelFilter ? (
-                  <button
-                    onClick={() => setBrgyFilter(0)}
-                    id="History_ClearBrgyFilter"
+                </InputGroup> */}
+                  <CollapsibleTrigger
+                    onClick={() => setOpenCollapse(!openCollapse)}
+                    id="History_FiltersTrigger"
                   >
-                    <X size={14} />
-                  </button>
-                ) : null}
-              </CollapsibleContent>
-            </Collapsible>
+                    <div className="w-full flex flex-row justify-end mb-2">
+                      Filters
+                      {openCollapse ? (
+                        <ChevronUpIcon className="ml-2 group-data-[state=open]:rotate-180" />
+                      ) : (
+                        <ChevronDownIcon className="ml-2 group-data-[state=open]:rotate-180" />
+                      )}
+                    </div>
+                  </CollapsibleTrigger>
+                </div>
+                <CollapsibleContent
+                  id="History_FiltersContent"
+                  className="bg-gray-300/50 p-2 rounded-lg flex flex-row items-center justify-end gap-2 px-2.5 mt-2 text-sm"
+                >
+                  {flaggedCom && (
+                    <>
+                      <Toggle
+                        size="sm"
+                        variant="outline"
+                        className="aria-pressed:bg-gray-500/50 aria-pressed:text-white border-gray-400"
+                        onPressedChange={(pressed) =>
+                          setStatus(pressed ? "Expiry" : null)
+                        }
+                        pressed={status == "Expiry"}
+                        id="History_InactiveFilter"
+                      >
+                        <AlarmClockOff className="group-aria-pressed/toggle:stroke-white" />
+                      </Toggle>
+                      <Toggle
+                        size="sm"
+                        variant="outline"
+                        className="aria-pressed:bg-gray-500/50 aria-pressed:text-white border-gray-400"
+                        onPressedChange={(pressed) =>
+                          setStatus(pressed ? "Deactivated" : null)
+                        }
+                        pressed={status == "Deactivated"}
+                        id="History_InactiveFilter"
+                      >
+                        <MapPinMinusInside className="group-aria-pressed/toggle:stroke-white" />
+                      </Toggle>
+                    </>
+                  )}
+                  {!isEvac && (
+                    <SelectDropdown
+                      value={String(levelFilter)}
+                      onValueChange={(val) => setLevelFilter(Number(val))}
+                      placeholder="Flood Level"
+                      id="Admin_HazardLevelFilter"
+                      options={[
+                        { label: "All", value: "0" },
+                        ...floodLevels?.map((level) => ({
+                          label: level.level_name,
+                          value: String(level.id),
+                        })),
+                      ]}
+                    />
+                  )}
+                  {levelFilter ? (
+                    <button
+                      onClick={() => setLevelFilter(0)}
+                      id="History_ClearBrgyFilter"
+                    >
+                      <X size={14} />
+                    </button>
+                  ) : null}
+                </CollapsibleContent>
+              </Collapsible>
+            )}
 
             <div className="flex flex-col gap-2">
               {loading && (
@@ -396,8 +414,14 @@ function Pins() {
                   </div>
                 </>
               )}
-              {isEvac && activeEvac ? <></> : flaggedHaz ? <></> : <></>}
-              {!isEvac && activeHaz
+              {!loading && isEvac && activeEvac ? (
+                <></>
+              ) : flaggedHaz ? (
+                <></>
+              ) : (
+                <></>
+              )}
+              {!loading && !isEvac && activeHaz
                 ? activeHazards.map((path) => {
                     if (!path.is_expired && !path.is_deactivated) {
                       return (
@@ -407,7 +431,7 @@ function Pins() {
                           desc={path.level}
                           address={path.description}
                           datePosted={path.posted_at}
-                          link="/HazardForm"
+                          link={`/admin-hazardDetails/${path.id}`}
                           isExpired={path.is_expired}
                           buttonId="History_ExpHazardDetailsBtn"
                           showBtn
@@ -457,7 +481,7 @@ function Pins() {
                             desc={path.level}
                             address={path.description}
                             datePosted={path.posted_at}
-                            link="/HazardForm"
+                            link={`/admin-hazardDetails/${path.id}`}
                             isExpired={path.is_expired}
                             buttonId="History_ExpHazardDetailsBtn"
                             showBtn
