@@ -12,6 +12,7 @@ import {
   Map,
   UserRound,
   Landmark,
+  Wifi,
 } from "lucide-react";
 import WhiteLogo from "../Admin/WhiteLogo";
 import SidebarRow from "../SidebarRow";
@@ -64,6 +65,14 @@ function AdminSidebar() {
       description: "Evacuation and Hazard Pins",
       icon: MapPin,
       link: "/admin-pins",
+      testId: "Admin_BurgerNavPins",
+    },
+    {
+      id: "sensors",
+      label: "Sensors",
+      description: "Barangay Registered Sensors",
+      icon: Wifi,
+      link: "/admin-sensors",
       testId: "Admin_BurgerNavPins",
     },
     {

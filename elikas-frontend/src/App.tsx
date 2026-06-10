@@ -34,6 +34,7 @@ import SensorForm from "./pages/brgy_ops/Forms/SensorForm";
 import SMSHistory from "./pages/brgy_ops/SMSHistory";
 import Pins from "./pages/Admin/Pins";
 import { AuthProvider } from "./context/AuthContext.tsx";
+import Sensors from "@/pages/Admin/Sensors.tsx";
 
 function App() {
   return (
@@ -84,6 +85,7 @@ function App() {
               <Route path="/admin-indiv" element={<IndivUsers />} />
               <Route path="/admin-brgy" element={<BrgyUsers />} />
               <Route path="/admin-pins" element={<Pins />} />
+              <Route path="/admin-sensors" element={<Sensors />} />
             </Route>
 
             <Route path="/admin-userDetails/:id" element={<UserDetails />} />

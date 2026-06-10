@@ -51,7 +51,6 @@ function Pins() {
         const brgyRes = await api.get(`/locations/barangays?city_id=2`);
 
         const barangays = brgyRes.data.Barangays;
-        console.log(barangays);
         setBarangays(barangays);
       } catch (err: any) {
         console.log(err.message);
@@ -69,13 +68,19 @@ function Pins() {
         <div className="w-full max-w-md">
           <DashboardHeader title="Map Pins">
             <CountRow
-              title="Active Users"
+              title="Evacuation Pins"
               lastUpdated="Last updated 3 minutes ago"
               count={3}
               // loading={loading}
             />
             <CountRow
-              title="Deactivated Users"
+              title="Hazard Pins"
+              lastUpdated="Last updated 3 minutes ago"
+              count={3}
+              // loading={loading}
+            />
+            <CountRow
+              title="Flagged Comments"
               lastUpdated="Last updated 3 minutes ago"
               count={3}
               // loading={loading}
@@ -106,16 +111,6 @@ function Pins() {
                   id="History_HazardTrigger"
                 >
                   Hazard Pins
-                </TabsTrigger>
-                <TabsTrigger
-                  value="Sensors"
-                  onClick={() => {
-                    setIsEvac(false);
-                    setIsSensors(true);
-                  }}
-                  id="History_HazardTrigger"
-                >
-                  Sensors
                 </TabsTrigger>
               </TabsList>
             </Tabs>
