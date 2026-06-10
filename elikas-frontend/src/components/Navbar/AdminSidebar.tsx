@@ -22,6 +22,7 @@ import { signOut } from "firebase/auth";
 import { auth } from "@/firebase";
 import { useNavigate, useLocation } from "react-router";
 import ButtonComp from "@/components/Button";
+import { useUserContext } from "@/context/AuthContext";
 
 function AdminSidebar() {
   const navigate = useNavigate();
@@ -29,6 +30,8 @@ function AdminSidebar() {
 
   const [error, setError] = useState("");
   const [activeLink, setActiveLink] = useState("map");
+
+  const { logout } = useUserContext();
 
   const navItems = [
     {
@@ -95,6 +98,7 @@ function AdminSidebar() {
         } else {
           resolve(userData);
           await signOut(auth);
+          await logout();
         }
       });
 
