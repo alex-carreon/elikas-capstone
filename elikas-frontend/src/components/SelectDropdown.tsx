@@ -66,7 +66,7 @@ function SelectDropdown({
 
             {/* <SelectValue placeholder={placeholder} /> */}
           </SelectTrigger>
-          <SelectContent>
+          <SelectContent className="z-[900]">
             <SelectGroup>
               {options.map((option) => (
                 <SelectItem key={option.value} value={option.value}>

@@ -650,6 +650,36 @@ function History() {
                         ) : null}
                       </div>
                     )}
+                    {isEvac && !isSensors && (
+                      <div className="w-full gap-2 bg-gray-300/50 p-4 rounded-lg">
+                        <div className="flex flex-row items-center justify-end gap-2">
+                          <Toggle
+                            size="sm"
+                            variant="outline"
+                            className="aria-pressed:bg-yellow-500/50 aria-pressed:text-white border-gray-400"
+                            onPressedChange={setYellow}
+                            pressed={yellow}
+                            id="History_YellowFilter"
+                          >
+                            <p className="m-2 group-aria-pressed/toggle:text-black">
+                              Full
+                            </p>
+                          </Toggle>
+                          <Toggle
+                            size="sm"
+                            variant="outline"
+                            className="aria-pressed:bg-orange-500/50 aria-pressed:text-white border-gray-400"
+                            onPressedChange={setOrange}
+                            pressed={orange}
+                            id="History_OrangeFilter"
+                          >
+                            <p className="m-2 group-aria-pressed/toggle:text-black">
+                              Available
+                            </p>
+                          </Toggle>
+                        </div>
+                      </div>
+                    )}
                   </CollapsibleContent>
                 </Collapsible>
               </>
