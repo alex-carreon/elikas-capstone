@@ -276,7 +276,7 @@ function HazardForm() {
         </div>
         <form
           id="HazardPin_Form"
-          onSubmit={id ? (isEditable ? update : undefined) : submit}
+          onSubmit={submit}
           className="w-full flex flex-col justify-center items-center m-0"
         >
           <div className="w-full max-w-md flex flex-col gap-5">
@@ -295,6 +295,7 @@ function HazardForm() {
                     text="Clear"
                     variant="outline"
                     id="HazardPin_ImageClearBtn"
+                    type="button"
                     onClick={handleClearImage}
                   ></ButtonComp>
                 </>
@@ -363,11 +364,6 @@ function HazardForm() {
                             position={midpoint as LatLngExpression}
                             icon={floodIcon}
                           />
-                          <Polyline
-                            positions={floodDetails.path as LatLngTuple[]}
-                            weight={6}
-                            color="#5F80AA"
-                          />
                         </>
                       )
                     ) : (
@@ -406,6 +402,7 @@ function HazardForm() {
                   text="Clear"
                   variant="outline"
                   id="HazardPin_PinClearBtn"
+                  type="button"
                   onClick={handleClearRoutePoints}
                 ></ButtonComp>
               )}
@@ -497,7 +494,10 @@ function HazardForm() {
                         variant="primary"
                         heightSize="38px"
                         widthSize="20"
-                        type="submit"
+                        type="button"
+                        onClick={(e) => {
+                          update(e);
+                        }}
                       ></ButtonComp>
                       <ButtonComp
                         text="Cancel"

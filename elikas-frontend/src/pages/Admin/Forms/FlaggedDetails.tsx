@@ -5,8 +5,7 @@ import TextField from "@/components/TextField";
 import { useNavigate, useParams } from "react-router";
 import api from "@/api";
 import { Field, FieldLabel } from "@/components/ui/field";
-import { FormMapClickHandler, getMidpoint } from "@/lib/mapUtils";
-import { RoadMapping } from "@/lib/mapUtils";
+import { getMidpoint } from "@/lib/mapUtils";
 import { MapContainer, TileLayer, Marker, Polyline } from "react-leaflet";
 import FloodIcon from "@/assets/Map/FloodIcon.svg?react";
 import { divIcon, type LatLngExpression, type LatLngTuple } from "leaflet";
@@ -153,7 +152,7 @@ function FlaggedDetails() {
   return (
     <>
       <FormLayout
-        formTitle="Flagged Comment Details"
+        formTitle="Flagged Hazard Details"
         updateId="Admin_FlaggedPathIgnore"
         updBtnLabel="Ignore"
         deleteId="Admin_FlaggedPathDelete"
@@ -171,14 +170,14 @@ function FlaggedDetails() {
                 label="Flag Type"
                 value={String(pathDetails?.flag_info.type)}
                 inputType="text"
-                id="Sensor_SensorCode"
+                id="Admin_FlaggedPathType"
                 readonly
               />
               <TextField
                 label="Flag Count"
                 value={String(pathDetails?.flag_info.flag_count)}
                 inputType="text"
-                id="Sensor_SensorCode"
+                id="Admin_FlaggedPathCount"
                 readonly
               />
               {pathDetails?.flag_info.reasons.map((reason) => (
@@ -187,14 +186,14 @@ function FlaggedDetails() {
                     label="Flag Reason"
                     value={reason.reason}
                     inputType="text"
-                    id="Sensor_SensorCode"
+                    id="Admin_FlaggedPathReason"
                     readonly
                   />
                   <TextField
                     label="Count"
                     value={String(reason.flag_count)}
                     inputType="text"
-                    id="Sensor_SensorCode"
+                    id="Admin_FlaggedPathReasonCount"
                     readonly
                   />
                 </div>
@@ -204,14 +203,14 @@ function FlaggedDetails() {
                 label="Flood Path Id"
                 value={String(pathDetails?.id)}
                 inputType="text"
-                id="Sensor_SensorCode"
+                id="Admin_FlaggedPathId"
                 readonly
               />
               <TextField
                 label="Element Id"
                 value={String(pathDetails?.element_id)}
                 inputType="text"
-                id="Sensor_SensorCode"
+                id="Admin_FlaggedPathElementId"
                 readonly
               />
               <Field>
@@ -227,7 +226,7 @@ function FlaggedDetails() {
                 zoom={17}
                 scrollWheelZoom={false}
                 style={{ height: "30vh", width: "100%" }}
-                id="HazardPin_MapContainer"
+                id="Admin_FlaggedPathMapContainer"
               >
                 <TileLayer
                   attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
@@ -247,21 +246,21 @@ function FlaggedDetails() {
                 label="Flood Level"
                 value={String(pathDetails?.flood_level.level_name)}
                 inputType="text"
-                id="Sensor_SensorCode"
+                id="Admin_FlaggedPathLevel"
                 readonly
               />
               <TextField
                 label="Posted By"
                 value={String(pathDetails?.posted_by.username)}
                 inputType="text"
-                id="Sensor_SensorCode"
+                id="Admin_FlaggedPathPostedBy"
                 readonly
               />
               <TextField
                 label="Description"
                 value={String(pathDetails?.description)}
                 inputType="text"
-                id="Sensor_SensorCode"
+                id="Admin_FlaggedPathDesc"
                 readonly
               />
               <div className="flex gap-2">
@@ -269,14 +268,14 @@ function FlaggedDetails() {
                   label="Upvotes"
                   value={String(pathDetails?.upvotes)}
                   inputType="text"
-                  id="Sensor_SensorCode"
+                  id="Admin_FlaggedPathUpvotes"
                   readonly
                 />
                 <TextField
                   label="Downvotes"
                   value={String(pathDetails?.downvotes)}
                   inputType="text"
-                  id="Sensor_SensorCode"
+                  id="Admin_FlaggedPathDownvotes"
                   readonly
                 />
               </div>
@@ -284,7 +283,7 @@ function FlaggedDetails() {
                 label="Last Confirmed"
                 value={String(pathDetails?.last_confirmed)}
                 inputType="text"
-                id="Sensor_SensorCode"
+                id="Admin_FlaggedPathLastConfirmed"
                 readonly
               />
               <div className="flex flex-col gap-1">
@@ -292,14 +291,14 @@ function FlaggedDetails() {
                   label="Expiry Date"
                   value={String(pathDetails?.expiry)}
                   inputType="text"
-                  id="Sensor_SensorCode"
+                  id="Admin_FlaggedPathExpiry"
                   readonly
                 />
                 <div className="flex gap-4">
-                  <p className="text-xs italic">
+                  <p className="text-xs italic" id="Admin_FlaggedIsExpired">
                     Has expired: {String(pathDetails?.is_expired)}
                   </p>
-                  <p className="text-xs italic">
+                  <p className="text-xs italic" id="Admin_FlaggedIsDeac">
                     Has deactivated: {String(pathDetails?.is_deactivated)}
                   </p>
                 </div>

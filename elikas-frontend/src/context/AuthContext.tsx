@@ -1,4 +1,5 @@
 import api from "@/api";
+import ProtectedRoute from "@/components/ProtectedRoutes";
 import { auth } from "@/firebase";
 import { onAuthStateChanged, type User } from "firebase/auth";
 import {
@@ -93,7 +94,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
 
         const currentToken = t.token;
 
-        if (!role) {
+        if (!role || !isPublicRoute) {
           const loginResponse = await api.post(
             "/auth/login",
             {},
