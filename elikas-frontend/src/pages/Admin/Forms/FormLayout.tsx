@@ -12,8 +12,8 @@ interface FormLayoutProps {
   deleteId?: string;
   submitUpdId?: string;
   closeUpdId?: string;
-  deleteClick?: () => void;
-  updateClick?: () => void;
+  deleteClick?: (e?: React.FormEvent<Element>) => void;
+  updateClick?: (e?: React.FormEvent<Element>) => void;
   closeUpdClick?: () => void;
   isEditable?: boolean;
   formId?: string;
@@ -107,7 +107,7 @@ function FormLayout({
               ) : updateId && deleteId ? (
                 <div className="mx-4 flex justify-evenly shrink gap-4 mb-8">
                   <ButtonComp
-                    text="Update"
+                    text={updBtnLabel ? updBtnLabel : "Update"}
                     variant="primary"
                     id={updateId}
                     heightSize="38px"
