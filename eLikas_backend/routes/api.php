@@ -70,7 +70,7 @@ Route::get('/pins/routes', [GetEvacuationRoutesController::class, 'getEvacuation
 // ONLY ADMIN ROUTES
 // ---------------------------------------------------------------
 Route::prefix('admin')->middleware(['firebase.auth', 'role:1'])->group(function () {
-   
+
 
     // Changed from deleteUser to match your controller naming preference
     Route::patch('/users/{id}/deactivate', [UserController::class, 'deactivateUser']);
@@ -99,9 +99,8 @@ Route::prefix('admin')->middleware(['firebase.auth', 'role:1'])->group(function 
 // ---------------------------------------------------------------
 // ONLY GOVERNMENT OPERATOR ROUTES
 // ---------------------------------------------------------------
+
 Route::middleware(['firebase.auth', 'role:2'])->group(function () {
-    Route::apiResource('sensors', SensorController::class)->except(['destroy']);
-    Route::patch('/sensors/{sensor}/deactivate', [SensorController::class, 'deactivate']);
 
     // ---------------------------------------------------------------
     // SMS SYSTEM UPDATES
@@ -134,6 +133,10 @@ Route::middleware(['firebase.auth', 'role:1,2'])->group(function () {
     Route::get('/sensors', [SensorController::class, 'index']);
     Route::get('/sensors/{sensor}', [SensorController::class, 'show']);
     Route::get('sensors/{sensor_code}/logs', [SensorLogController::class, 'index']);
+
+    //RETURN TO GOVOPS BLOCK once auth is fixed
+    Route::apiResource('sensors', SensorController::class)->except(['destroy']);
+    Route::patch('/sensors/{sensor}/deactivate', [SensorController::class, 'deactivate']);
 
     Route::apiResource('flood-levels', FloodLevelController::class)->except(['index']);
 
@@ -212,4 +215,3 @@ Route::middleware(['firebase.auth', 'role:1,2,3'])->group(function () {
     Route::get('/flag-reasons', [FlagCommentController::class, 'reasons']);
 });
 
- 
