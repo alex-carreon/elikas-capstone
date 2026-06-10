@@ -39,6 +39,7 @@ type FloodDetails = {
   last_confirmed: string;
   expiry: string;
   posted_at: string;
+  avatar_seed: string;
 };
 
 function HazardDrawer({ selectedPin }: { selectedPin: FloodPath }) {
@@ -137,6 +138,7 @@ function HazardDrawer({ selectedPin }: { selectedPin: FloodPath }) {
             id={floodDetails.id}
             isSimple
             isMyHazard={isMine}
+            seed={floodDetails.avatar_seed}
           >
             <img src={floodDetails.media} />
           </PostRow>
