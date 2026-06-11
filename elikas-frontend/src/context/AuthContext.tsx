@@ -79,7 +79,11 @@ export function AuthProvider({ children }: AuthProviderProps) {
         return;
       }
 
-      // if (isPublicRoute) return;
+      if (!firebaseUser.emailVerified) {
+        setUser(firebaseUser);
+        setLoading(false);
+        return;
+      }
 
       try {
         const t = await firebaseUser?.getIdTokenResult(false);
