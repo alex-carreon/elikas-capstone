@@ -84,6 +84,50 @@ class FeedbackController extends Controller
                 $query->whereDate('sent_at', '<=', $request->query('date_to'));
             }
 
+            //Filter by role
+            if ($request->filled('role')) {
+                $roleMap = [
+                    'brgy'       => 2,
+                    'barangay'   => 2,
+                    'brgy_op'    => 2,
+                    'govop'      => 2,
+                    'indiv'      => 3,
+                    'individual' => 3,
+                    'user'       => 3,
+                ];
+
+                $roleKey = strtolower($request->query('role'));
+                $roleId  = $roleMap[$roleKey] ?? null;
+
+                if ($roleId === null) {
+                    return response()->json([
+                        'error' => 'Invalid role filter. Accepted values: brgy, indiv',
+                    ], 422);
+                }
+
+                $query->whereHas('user', function ($q) use ($roleId) {
+                    $q->where('role_id', $roleId);
+                });
+            }
+
+            // Filter by location_id (resolves through GovOp or IndivAcc depending on role)
+            if ($request->filled('location_id')) {
+                $locationId = (int) $request->query('location_id');
+
+                $query->whereHas('user', function ($q) use ($locationId) {
+                    $q->where(function ($q) use ($locationId) {
+                        // GovOp users (role 2)
+                        $q->whereHas('govOp', function ($q) use ($locationId) {
+                            $q->where('location_id', $locationId);
+                        })
+                        // Individual users (role 3)
+                        ->orWhereHas('indivAcc', function ($q) use ($locationId) {
+                            $q->where('location_id', $locationId);
+                        });
+                    });
+                });
+            }
+
             $feedbackList = $query->get()->map(fn($fb) => $this->formatFeedback($fb));
 
             return response()->json([
