@@ -84,10 +84,17 @@ function PostRow({
 
   const getFlagged = async () => {
     try {
-      const response = await api.get(`/flood-paths/${id}`);
+      if (isHazardPost) {
+        const response = await api.get(`/flood-paths/${id}`);
+        const flagged = response.data.user_flagged;
+        setReport(flagged);
+      }
 
-      const flagged = response.data.user_flagged;
-      setReport(flagged);
+      if (isEvacComments) {
+        const response = await api.get(`/comments/${id}`);
+        const flagged = response.data.user_flagged;
+        setReport(flagged);
+      }
     } catch (err: any) {
       console.log(err.response.data);
     }
@@ -181,24 +188,47 @@ function PostRow({
     e.preventDefault();
 
     try {
-      const response = api.post(`/flood-paths/${id}/flag`, {
-        reason_id: reason,
-      });
+      if (isHazardPost) {
+        const response = api.post(`/flood-paths/${id}/flag`, {
+          reason_id: reason,
+        });
 
-      toast.promise(response, {
-        loading: "Flagging this comment...",
-        success:
-          "Comment has been flagged! Thank you for making this community safer for everyone.",
-        error: (err: any) => {
-          return err.response.data;
-        },
-        position: "top-center",
-      });
+        toast.promise(response, {
+          loading: "Flagging this comment...",
+          success:
+            "Comment has been flagged! Thank you for making this community safer for everyone.",
+          error: (err: any) => {
+            return err.response.data;
+          },
+          position: "top-center",
+        });
 
-      response.then(() => {
-        setOpenDialog(false);
-        getFlagged();
-      });
+        response.then(() => {
+          setOpenDialog(false);
+          getFlagged();
+        });
+      }
+
+      if (isEvacComments) {
+        const response = api.post(`/comments/${id}/flag`, {
+          reason_id: reason,
+        });
+
+        toast.promise(response, {
+          loading: "Flagging this comment...",
+          success:
+            "Comment has been flagged! Thank you for making this community safer for everyone.",
+          error: (err: any) => {
+            return err.response.data;
+          },
+          position: "top-center",
+        });
+
+        response.then(() => {
+          setOpenDialog(false);
+          getFlagged();
+        });
+      }
     } catch (err: any) {
       console.log(err.response.data);
     }
