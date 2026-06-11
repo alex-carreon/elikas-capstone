@@ -1,7 +1,7 @@
 import api from "@/api";
 import FormLayout from "./FormLayout";
 import TextField from "@/components/TextField";
-import { useParams } from "react-router";
+import { useNavigate, useParams } from "react-router";
 import { useEffect, useState } from "react";
 import FormSkeleton from "@/pages/Skeletons/FormSkeleton";
 import { toZonedTime } from "date-fns-tz";
@@ -21,6 +21,8 @@ function SensorDetails() {
   const [mountLocation, setMountLocation] = useState("");
   const [registeredBy, setRegisteredBy] = useState("");
   const [deactivatedAt, setDeactivatedAt] = useState("");
+
+  const navigate = useNavigate();
 
   const convertDateTime = (utcString: string) => {
     const zoned = toZonedTime(new Date(utcString), "Asia/Manila");
@@ -68,7 +70,14 @@ function SensorDetails() {
 
   return (
     <>
-      <FormLayout formTitle="Sensor Details">
+      <FormLayout
+        formTitle="Sensor Details"
+        updBtnLabel="See Logs"
+        updateId="Sensors_Logs"
+        singleUpd={() => {
+          navigate(`/admin-sensorlogs/${sensorCode}`);
+        }}
+      >
         {loading ? (
           <div className="flex justify-center">
             <FormSkeleton />
