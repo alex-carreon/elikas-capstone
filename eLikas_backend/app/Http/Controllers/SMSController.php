@@ -170,7 +170,6 @@ class SMSController extends Controller
             return response()->json([
                 'message'   => 'SMS broadcast scheduled successfully.',
                 'status'    => [
-                    'id'   => $result['broadcast']->status,
                     'name' => $result['broadcast']->broadcast_status?->status_name ?? 'Scheduled',
                 ],
                 'broadcast' => $this->smsService->formatBroadcast($result['broadcast']),
@@ -310,7 +309,7 @@ class SMSController extends Controller
 
     private function resolveGovOp(Request $request): \App\Models\GovOp|JsonResponse
     {
-        $govOp = $request->get('firebase_user')?->govOp;
+        $govOp = $request->attributes->get('firebase_user')?->govOp;
         if (!$govOp) {
             return response()->json(['message' => 'No GovOp profile found for this account.'], 403);
         }
