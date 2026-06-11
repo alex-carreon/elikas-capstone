@@ -39,6 +39,7 @@ import SensorDetails from "./pages/Admin/Forms/SensorDetails.tsx";
 import FlaggedDetails from "./pages/Admin/Forms/FlaggedDetails.tsx";
 import HazardDetails from "./pages/Admin/Forms/HazardDetails.tsx";
 import HotlinesAdmin from "./pages/Admin/Hotlines.tsx";
+import SensorLogs from "./pages/Admin/SensorLogs.tsx";
 
 function App() {
   return (
@@ -104,6 +105,10 @@ function App() {
             <Route
               path="/admin-hazardDetails/:id"
               element={<HazardDetails />}
+            />
+            <Route
+              path="/admin-sensorlogs/:sensorcode"
+              element={<SensorLogs />}
             />
           </Route>
 

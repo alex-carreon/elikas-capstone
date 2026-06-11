@@ -20,6 +20,7 @@ interface FormLayoutProps {
   updBtnLabel?: string;
   btnType?: "button" | "submit" | "reset" | undefined;
   formTitle?: string;
+  singleUpd?: () => void;
 }
 
 function FormLayout({
@@ -37,6 +38,7 @@ function FormLayout({
   updBtnLabel,
   btnType,
   formTitle,
+  singleUpd,
 }: FormLayoutProps) {
   const navigate = useNavigate();
 
@@ -133,7 +135,7 @@ function FormLayout({
                       id={updateId}
                       heightSize="38px"
                       type={btnType}
-                      // onClick={updateClick}
+                      onClick={singleUpd}
                       formId={formId}
                     />
                   )}
