@@ -56,7 +56,7 @@ class DeleteEvacuationAreaController extends Controller
                     ? $pin->social_element->deactivated_at->timezone('Asia/Manila')->toDateTimeString()
                     : null,
                 'deactivated_by' => [
-                    'name' => $this->displayName($pin->social_element?->user),
+                    'name' => $this->displayName($user),
                 ],
             ], 200);
 
@@ -71,6 +71,12 @@ class DeleteEvacuationAreaController extends Controller
 {
     try {
         $user = $request->attributes->get('firebase_user');
+
+        if (!$user) {
+            return response()->json([
+                'error' => 'Authentication required to restore evacuation area pins'
+            ], 401);
+        }
 
         $pin = EvacArea::with('social_element')->find($id);
 
@@ -103,7 +109,7 @@ class DeleteEvacuationAreaController extends Controller
             ? $pin->social_element->deactivated_at->timezone('Asia/Manila')->toDateTimeString()
             : null,
         'restored_by' => [
-            'name' => $this->displayName($pin->social_element?->user),
+            'name' => $this->displayName($user),
         ],
     ], 200);
     } catch (\Exception $e) {

@@ -23,8 +23,26 @@ class GetEvacAreasController extends Controller
             // Apply search filter globally for name/address matches
             $this->applySearchFilter($query, $request);
 
-            // Default behaviour: only show active (non-deactivated, non-expired) pins
-            if (!$request->filled('active') || $request->boolean('active')) {
+            $active = $this->parseBooleanQuery($request, 'active');
+
+            if ($active === null && $request->filled('active')) {
+                return response()->json([
+                    'error' => 'Invalid active value. Use true or false.',
+                ], 422);
+            }
+
+            // Default behaviour: only show active (non-deactivated, non-expired) pins.
+            // active=false returns only inactive pins: deactivated or expired.
+            if ($active === false) {
+                $query->where(function ($q) {
+                    $q->whereHas('social_element', function ($social) {
+                        $social->whereNotNull('deactivated_at');
+                    })->orWhere(function ($expiry) {
+                        $expiry->whereNotNull('expiry')
+                            ->where('expiry', '<=', now('UTC'));
+                    });
+                });
+            } else {
                 $query
                     ->whereHas('social_element', function ($q) {
                         $q->whereNull('deactivated_at');
@@ -385,11 +403,13 @@ class GetEvacAreasController extends Controller
      */
     private function formatEvacArea(EvacArea $pin, $user = null): array
     {
+        $isOwner = $this->isOwner($pin, $user);
+
         return [
             'id'       => $pin->id,
             'lat'      => $pin->location?->latitude,
             'lng'      => $pin->location?->longitude,
-            'my_pins'  => $this->isOwner($pin, $user),
+            'my_pin'   => $isOwner,
         ];
     }
 
@@ -403,6 +423,7 @@ class GetEvacAreasController extends Controller
      */
     private function formatCoordsOnly(EvacArea $pin, $user = null, bool $forceOwner = false): array
     {
+        $isOwner = $forceOwner ? true : $this->isOwner($pin, $user);
         $isActive = $pin->social_element?->deactivated_at === null
             && (
                 $pin->expiry === null ||
@@ -417,12 +438,14 @@ class GetEvacAreasController extends Controller
             'location_name' => $pin->location_info?->name,
             'is_persistent' => (bool) $pin->is_persistent,
             'status'        => $isActive ? 'active' : 'inactive',
-            'my_pins'       => $forceOwner ? true : $this->isOwner($pin, $user),
+            'my_pin'        => $isOwner,
         ];
     }
 
     private function formatHistoryEvacArea(EvacArea $pin, $user = null): array
     {
+        $isOwner = $this->isOwner($pin, $user);
+
         return [
             'id'             => $pin->id,
             'name'           => $pin->name,
@@ -439,7 +462,7 @@ class GetEvacAreasController extends Controller
             'posted_at'      => $pin->social_element?->posted_at
                 ? $pin->social_element->posted_at->timezone('Asia/Manila')->toDateTimeString()
                 : null,
-            'my_pins'        => $this->isOwner($pin, $user),
+            'my_pin'         => $isOwner,
         ];
     }
 
@@ -462,6 +485,15 @@ class GetEvacAreasController extends Controller
     private function escapeLike(string $value): string
     {
         return str_replace(['\\', '%', '_'], ['\\\\', '\\%', '\\_'], $value);
+    }
+
+    private function parseBooleanQuery(Request $request, string $key): ?bool
+    {
+        if (!$request->filled($key)) {
+            return null;
+        }
+
+        return filter_var($request->query($key), FILTER_VALIDATE_BOOLEAN, FILTER_NULL_ON_FAILURE);
     }
 
     private function resolveRoleId(?string $role): ?int
