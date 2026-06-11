@@ -4,9 +4,12 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use App\Models\User;
+use Kreait\Firebase\Contract\Auth as FirebaseAuth;
 
 class ProfileController extends Controller
 {
+    public function __construct(protected FirebaseAuth $firebaseAuth) {}
+
     public function profile(Request $request)
     {
         try {
@@ -127,6 +130,34 @@ class ProfileController extends Controller
             return response()->json([
                 'error' => 'Failed to deactivate account',
                 'details' => $e->getMessage()
+            ], 500);
+        }
+    }
+
+    public function syncEmail(Request $request)
+    {
+        try {
+
+            $user = $request->attributes->get('firebase_user');
+
+            $firebaseUid = $user->userAuth->identity_uid;
+
+            $firebaseUser = $this->firebaseAuth->getUser($firebaseUid);
+
+            $user->update([
+                'email' => $firebaseUser->email,
+            ]);
+
+            return response()->json([
+                'message' => 'Email synced successfully',
+                'email' => $user->email,
+            ]);
+
+        } catch (\Exception $e) {
+
+            return response()->json([
+                'error' => 'Failed to sync email',
+                'details' => $e->getMessage(),
             ], 500);
         }
     }
