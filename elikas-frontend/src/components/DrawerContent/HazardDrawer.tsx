@@ -1,15 +1,17 @@
 import { DrawerClose } from "@/components/ui/drawer";
-import { CircleX } from "lucide-react";
+import { CircleX, X } from "lucide-react";
 import ButtonComp from "@/components/Button";
 import CSIcon from "@/assets/Map/CrowdsourceIcon.svg";
 import PostRow from "@/components/PostRow";
 import { Link } from "react-router";
 import { Skeleton } from "@/components/ui/skeleton";
-import { useEffect, useState } from "react";
+import { useEffect, useState, type SetStateAction } from "react";
 import { differenceInDays } from "date-fns";
 import api from "@/api";
 import { toZonedTime } from "date-fns-tz";
 import { format } from "date-fns";
+import { cn } from "@/lib/utils";
+import { type Dispatch } from "react";
 
 type FloodLevel = {
   id: number;
@@ -27,7 +29,7 @@ type FloodPath = {
 type FloodDetails = {
   id: number;
   element_id: number;
-  media: string;
+  media: string[];
   is_expired: boolean;
   is_deactivated: boolean;
   flood_levels: FloodLevel;
@@ -49,6 +51,7 @@ function HazardDrawer({ selectedPin }: { selectedPin: FloodPath }) {
   const [upVote, setUpvote] = useState(0);
   const [downVote, setDownvote] = useState(0);
   const [isMine, setIsMine] = useState(false);
+  const [selectedImage, setSelectedImage] = useState<string | null>(null);
 
   const convertDateTime = (utcString: string) => {
     const zoned = toZonedTime(new Date(utcString), "Asia/Manila");
@@ -110,7 +113,25 @@ function HazardDrawer({ selectedPin }: { selectedPin: FloodPath }) {
     </>
   ) : (
     <>
-      <div className="px-4 pb-4 flex flex-col">
+      {selectedImage && (
+        <div
+          className="fixed inset-0 z-50 bg-black/80 flex items-center justify-center"
+          onClick={() => setSelectedImage(null)} // click outside to close
+        >
+          <img
+            src={selectedImage}
+            className="max-w-full max-h-full object-contain p-4"
+            onClick={(e) => e.stopPropagation()} // prevent closing when clicking image
+          />
+          <button
+            className="absolute top-4 right-4 text-white"
+            onClick={() => setSelectedImage(null)}
+          >
+            <X size={28} />
+          </button>
+        </div>
+      )}
+      <div className="px-4 pb-4 flex flex-col overflow-y-auto">
         <div className="w-full flex flex-row justify-between">
           <div className="flex flex-row gap-2">
             <div className="flex flex-row items-center gap-2 px-4">
@@ -140,7 +161,25 @@ function HazardDrawer({ selectedPin }: { selectedPin: FloodPath }) {
             isMyHazard={isMine}
             seed={floodDetails.avatar_seed}
           >
-            <img src={floodDetails.media} />
+            <div
+              className={cn(
+                "gap-1 grid",
+                floodDetails.media.length === 1
+                  ? "grid-cols-1"
+                  : floodDetails.media.length === 2
+                    ? "grid-cols-2"
+                    : "grid-cols-3",
+              )}
+            >
+              {floodDetails.media.map((media, index) => (
+                <img
+                  key={index}
+                  src={media}
+                  className="w-full h-24 object-cover cursor-pointer"
+                  onClick={() => setSelectedImage(media)}
+                />
+              ))}
+            </div>
           </PostRow>
         ) : (
           <>

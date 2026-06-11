@@ -5,8 +5,8 @@ import {
   CollapsibleTrigger,
 } from "@/components/ui/collapsible";
 import colors from "@/constants/colors";
-import React, { useEffect, useState, type ReactHTMLElement } from "react";
-import { bigSmile, identicon } from "@dicebear/collection";
+import React, { useEffect, useState } from "react";
+import { bigSmile } from "@dicebear/collection";
 import { createAvatar } from "@dicebear/core";
 import AlertDialogue from "./AlertDialogue";
 import { createPortal } from "react-dom";
@@ -417,27 +417,6 @@ function PostRow({
             )}
           </div>
           <CollapsibleContent id="Drawer_PostDetailsContent">
-            {/* <div className="border-2 border-solid rounded-lg p-4 m-2 flex flex-col gap-1">
-              <div className="flex flex-row gap-2 text-xs">
-                <ThumbsUp size={16} strokeWidth={1.5} fill="#FFA215" />
-                {upvote}
-              </div>
-              <div className="flex flex-row gap-2 text-xs">
-                <ThumbsDown size={16} strokeWidth={1.5} fill="#642424" />
-                {downvote}
-              </div>
-              <div className="flex flex-row gap-2 text-xs">
-                <Flag size={16} strokeWidth={1.5} fill="#C43E3E" /> {flagCount}
-                {expiryDays && (
-                  <p
-                    className="italic text-xs flex ml-auto"
-                    style={{ color: colors.label }}
-                  >
-                    Expires in {expiryDays} days
-                  </p>
-                )}
-              </div>
-            </div> */}
             {image ? (
               <>
                 <img src={image} />
