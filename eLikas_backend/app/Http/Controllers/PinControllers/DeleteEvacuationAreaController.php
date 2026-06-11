@@ -15,6 +15,12 @@ class DeleteEvacuationAreaController extends Controller
         try {
             $user = $request->attributes->get('firebase_user');
 
+            if (!$user) {
+                return response()->json([
+                    'error' => 'Authentication required to deactivate evacuation area pins'
+                ], 401);
+            }
+
             $pin = EvacArea::with('social_element.user.name')
                 ->whereHas('social_element', function ($q) {
                     $q->whereNull('deactivated_at');
