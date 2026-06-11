@@ -175,7 +175,7 @@ Route::middleware(['firebase.auth', 'role:1,2,3'])->group(function () {
     Route::get('/profile', [ProfileController::class, 'profile']);
     Route::put('/profile', [ProfileController::class, 'updateProfile']);
     Route::patch('/profile/deactivate', [ProfileController::class, 'deactivateSelf']);
-    Route::patch('/profile/email-sync', [ProfileController::class, 'syncEmail']); // wala pa talaga
+    Route::post('/profile/email-sync', [ProfileController::class, 'syncEmail']);
 
     //FLOOD LEVELS
     Route::get('flood-levels', [FloodLevelController::class, 'index']);
