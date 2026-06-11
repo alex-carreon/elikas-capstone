@@ -36,7 +36,7 @@ function randomSeed(): string {
 
 function Profile() {
   const [isEditable, setIsEditable] = useState(false);
-  const [seed, setSeed] = useState("");
+  const [seed, setSeed] = useState<string | null>("");
   const [errors, setErrors] = useState("");
   const [username, setUsername] = useState("");
   const [newUsername, setNewUsername] = useState<string | null>(null);
@@ -77,7 +77,7 @@ function Profile() {
       setAddress(userData.location);
       setUserId(userData.id);
       setContact(userData.phone || "No Registered Number");
-      setSeed(userData.avatar_seed);
+      setSeed(userData?.avatar_seed);
 
       return userData;
     } catch (err: string | any) {
@@ -210,7 +210,7 @@ function Profile() {
   }, []);
 
   const avatar = createAvatar(bigSmile, {
-    seed: seed,
+    seed: seed ? seed : undefined,
     backgroundColor: ["b6e3f4", "c0aede", "d1d4f9"],
     radius: 50,
     scale: 90,
@@ -233,7 +233,7 @@ function Profile() {
             <div>
               <div className="flex flex-col">
                 <div className="w-full flex flex-col items-center gap-2">
-                  <img src={dataUri} className="w-24" />
+                  {seed && <img src={dataUri} className="w-24" />}
                   {isEditable ? (
                     <ButtonComp
                       text="Generate New Avatar"

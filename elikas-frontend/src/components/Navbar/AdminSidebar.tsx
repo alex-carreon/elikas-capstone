@@ -80,7 +80,7 @@ function AdminSidebar() {
       label: "Emergency Contacts",
       description: "Hotline Numbers",
       icon: Phone,
-      link: "",
+      link: "/admin-hotlines",
       testId: "Admin_BurgerNavHotlines",
     },
     {

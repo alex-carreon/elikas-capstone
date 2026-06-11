@@ -38,6 +38,7 @@ import Sensors from "@/pages/Admin/Sensors.tsx";
 import SensorDetails from "./pages/Admin/Forms/SensorDetails.tsx";
 import FlaggedDetails from "./pages/Admin/Forms/FlaggedDetails.tsx";
 import HazardDetails from "./pages/Admin/Forms/HazardDetails.tsx";
+import HotlinesAdmin from "./pages/Admin/Hotlines.tsx";
 
 function App() {
   return (
@@ -89,6 +90,7 @@ function App() {
               <Route path="/admin-brgy" element={<BrgyUsers />} />
               <Route path="/admin-pins" element={<Pins />} />
               <Route path="/admin-sensors" element={<Sensors />} />
+              <Route path="/admin-hotlines" element={<HotlinesAdmin />} />
             </Route>
 
             <Route path="/admin-userDetails/:id" element={<UserDetails />} />
