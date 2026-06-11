@@ -26,20 +26,22 @@ function SensorLogs() {
     return format(zoned, "MMM d, yyyy h:mm a");
   };
 
-  const getSensorLogs = async () => {
+  const getSensorLogs = async (signal?: AbortSignal) => {
     try {
-      setLoading(true);
-      const response = await api.get(`/sensors/${sensorcode}/logs`);
+      const response = await api.get(`/sensors/${sensorcode}/logs`, { signal });
       setLogs(response.data.data);
     } catch (err: any) {
-      console.log(err.response.data);
-    } finally {
-      setLoading(false);
+      if (err.name === "CanceledError") {
+        return;
+      }
+      console.log(err.response?.data);
     }
   };
 
   useEffect(() => {
-    getSensorLogs();
+    const controller = new AbortController();
+    getSensorLogs(controller.signal);
+    return () => controller.abort();
   }, []);
 
   return (
