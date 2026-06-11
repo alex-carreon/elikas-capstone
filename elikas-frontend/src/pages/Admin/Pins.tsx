@@ -9,6 +9,7 @@ import {
   AlarmClockOff,
   MapPinMinusInside,
   X,
+  Search,
 } from "lucide-react";
 import Row from "@/components/Row";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -19,6 +20,11 @@ import {
 } from "@/components/ui/collapsible";
 import { Toggle } from "@/components/ui/toggle";
 import SelectDropdown from "@/components/SelectDropdown";
+import {
+  InputGroup,
+  InputGroupInput,
+  InputGroupAddon,
+} from "@/components/ui/input-group";
 
 type FlaggedPaths = {
   flag_id: number;
@@ -44,6 +50,19 @@ type FloodLevels = {
   description: string;
 };
 
+type EvacPins = {
+  id: number;
+  name: string;
+  address: string;
+  is_persistent: boolean;
+  expiry: string;
+  is_expired: boolean;
+  is_deactivated: boolean;
+  deactivated_at: string | null;
+  posted_at: string;
+  my_pin: boolean;
+};
+
 function Pins() {
   const [isEvac, setIsEvac] = useState(true);
   const [activeEvac, setActiveEvac] = useState(true);
@@ -63,6 +82,11 @@ function Pins() {
   const [inactiveHazCount, setInactiveHazCount] = useState(0);
   const [floodLevels, setFloodLevels] = useState<FloodLevels[]>([]);
   const [levelFilter, setLevelFilter] = useState(0);
+  const [pins, setPins] = useState<EvacPins[]>([]);
+  const [activePinCount, setActivePinCount] = useState(0);
+  const [inactivePinCount, setInactivePinCount] = useState(0);
+  const [pinCountLoad, setPinCountLoad] = useState(false);
+  const [searchFor, setSearchFor] = useState<string | null>(null);
 
   const params = new URLSearchParams();
 
@@ -117,6 +141,14 @@ function Pins() {
         params.set("flood_level_id", String(levelFilter));
       }
 
+      if (status == "Expiry") {
+        params.set("is_expired", "true");
+      }
+
+      if (status == "Deactivated") {
+        params.set("is_deactivated", "true");
+      }
+
       const parameters = params.toString();
 
       const response = await api.get(
@@ -126,6 +158,60 @@ function Pins() {
       const floodPaths = response.data.flood_paths;
 
       setActiveHazards(floodPaths);
+    } catch (err: any) {
+      if (err.name === "CanceledError") {
+        return;
+      }
+      console.log(err.response?.data);
+    }
+  };
+
+  const getPinCounts = async (signal?: AbortSignal) => {
+    try {
+      setPinCountLoad(true);
+      const response = await api.get(`/admin/pins`, { signal });
+      const inactiveCount = response.data.pins.filter(
+        (pin: EvacPins) => pin.is_deactivated || pin.is_expired,
+      ).length;
+
+      const activeCount = response.data.pins.filter(
+        (pin: EvacPins) => !pin.is_deactivated && !pin.is_expired,
+      ).length;
+
+      setActivePinCount(activeCount);
+      setInactivePinCount(inactiveCount);
+      setPinCountLoad(false);
+    } catch (err: any) {
+      if (err.name === "CanceledError") {
+        setPinCountLoad(true);
+        return;
+      }
+      console.log(err);
+      setPinCountLoad(true);
+    }
+  };
+
+  const getPins = async (signal?: AbortSignal, search = searchFor) => {
+    try {
+      if (status == "Expiry") {
+        params.set("is_expired", "true");
+      }
+
+      if (status == "Deactivated") {
+        params.set("is_deactivated", "true");
+      }
+
+      if (search) {
+        params.set("search", search);
+      }
+
+      const parameters = params.toString();
+
+      const response = await api.get(
+        `/admin/pins${parameters ? `?${parameters}` : ""}`,
+        { signal },
+      );
+      setPins(response.data.pins);
     } catch (err: any) {
       if (err.name === "CanceledError") {
         return;
@@ -156,6 +242,8 @@ function Pins() {
         getHazardFlagged(controller.signal),
         getHazards(controller.signal),
         getHazardCounts(controller.signal),
+        getPins(controller.signal),
+        getPinCounts(controller.signal),
       ]);
     } catch (err: any) {
       if (err.name === "CanceledError") return;
@@ -172,9 +260,15 @@ function Pins() {
 
   useEffect(() => {
     const controller = new AbortController();
-    getHazards(controller.signal);
+    if (!isEvac) {
+      getHazards(controller.signal);
+    }
+
+    if (isEvac) {
+      getPins(controller.signal);
+    }
     return () => controller.abort();
-  }, [levelFilter]);
+  }, [levelFilter, status]);
 
   return (
     <>
@@ -184,16 +278,16 @@ function Pins() {
             {isEvac ? (
               <>
                 <CountRow
-                  title="Hazard Pins"
+                  title="Active Pins"
                   lastUpdated="Last updated 3 minutes ago"
-                  count={3}
-                  // loading={loading}
+                  count={activePinCount}
+                  loading={pinCountLoad}
                 />
                 <CountRow
                   title="Flagged Comments"
                   lastUpdated="Last updated 3 minutes ago"
-                  count={3}
-                  // loading={loading}
+                  count={inactivePinCount}
+                  loading={pinCountLoad}
                 />
               </>
             ) : (
@@ -257,22 +351,31 @@ function Pins() {
                 >
                   <TabsTrigger
                     value="ActiveEvac"
-                    id="History_ActiveEvacTrigger"
-                    onClick={() => setActiveEvac(true)}
+                    id="Admin_PinsActivePins"
+                    onClick={() => {
+                      setActiveEvac(true);
+                      setFlaggedCom(false);
+                    }}
                   >
                     Active Pins
                   </TabsTrigger>
                   <TabsTrigger
                     value="ExpiredEvac"
-                    id="History_ExpiredEvacTrigger"
-                    onClick={() => setActiveEvac(false)}
+                    id="Admin_PinsInactivePins"
+                    onClick={() => {
+                      setActiveEvac(false);
+                      setFlaggedCom(false);
+                    }}
                   >
                     Inactive Pins
                   </TabsTrigger>
                   <TabsTrigger
-                    value="ExpiredEvac"
-                    id="History_ExpiredEvacTrigger"
-                    // onClick={() => setActiveEvac(false)}
+                    value="FlaggedComms"
+                    id="Admin_PinsFlaggedComms"
+                    onClick={() => {
+                      setActiveEvac(false);
+                      setFlaggedCom(true);
+                    }}
                   >
                     Flagged
                   </TabsTrigger>
@@ -316,18 +419,9 @@ function Pins() {
                 </TabsList>
               )}
             </Tabs>
-            {!flaggedHaz && (
+            {!isEvac && !flaggedHaz && (
               <Collapsible className="w-full flex-col items-center gap-2 mt-2">
                 <div className="w-full flex justify-between">
-                  {/* <InputGroup className="w-2/3">
-                  <InputGroupInput
-                    className="text-sm h-8"
-                    id="Admin_IndivSearchField"
-                  ></InputGroupInput>
-                  <InputGroupAddon align="inline-end">
-                    <Search />
-                  </InputGroupAddon>
-                </InputGroup> */}
                   <CollapsibleTrigger
                     onClick={() => setOpenCollapse(!openCollapse)}
                     id="History_FiltersTrigger"
@@ -346,7 +440,7 @@ function Pins() {
                   id="History_FiltersContent"
                   className="bg-gray-300/50 p-2 rounded-lg flex flex-row items-center justify-end gap-2 px-2.5 mt-2 text-sm"
                 >
-                  {flaggedCom && (
+                  {!activeHaz && !flaggedHaz && (
                     <>
                       <Toggle
                         size="sm"
@@ -401,6 +495,69 @@ function Pins() {
               </Collapsible>
             )}
 
+            {isEvac && (
+              <Collapsible className="w-full flex-col items-center gap-2 mt-2">
+                <div className="w-full flex justify-between">
+                  <InputGroup className="w-2/3">
+                    <InputGroupInput
+                      className="text-sm h-8"
+                      id="Admin_IndivSearchField"
+                      onChange={(e) => setSearchFor(e.target.value)}
+                    ></InputGroupInput>
+                    <InputGroupAddon align="inline-end">
+                      <Search onClick={() => getPins()} />
+                    </InputGroupAddon>
+                  </InputGroup>
+                  <CollapsibleTrigger
+                    onClick={() => setOpenCollapse(!openCollapse)}
+                    id="History_FiltersTrigger"
+                  >
+                    <div className="w-full flex flex-row justify-end mb-2">
+                      Filters
+                      {openCollapse ? (
+                        <ChevronUpIcon className="ml-2 group-data-[state=open]:rotate-180" />
+                      ) : (
+                        <ChevronDownIcon className="ml-2 group-data-[state=open]:rotate-180" />
+                      )}
+                    </div>
+                  </CollapsibleTrigger>
+                </div>
+                <CollapsibleContent
+                  id="History_FiltersContent"
+                  className="bg-gray-300/50 p-2 rounded-lg flex flex-row items-center justify-end gap-2 px-2.5 mt-2 text-sm"
+                >
+                  {!activeEvac && !flaggedCom && (
+                    <>
+                      <Toggle
+                        size="sm"
+                        variant="outline"
+                        className="aria-pressed:bg-gray-500/50 aria-pressed:text-white border-gray-400"
+                        onPressedChange={(pressed) =>
+                          setStatus(pressed ? "Expiry" : null)
+                        }
+                        pressed={status == "Expiry"}
+                        id="History_InactiveFilter"
+                      >
+                        <AlarmClockOff className="group-aria-pressed/toggle:stroke-white" />
+                      </Toggle>
+                      <Toggle
+                        size="sm"
+                        variant="outline"
+                        className="aria-pressed:bg-gray-500/50 aria-pressed:text-white border-gray-400"
+                        onPressedChange={(pressed) =>
+                          setStatus(pressed ? "Deactivated" : null)
+                        }
+                        pressed={status == "Deactivated"}
+                        id="History_InactiveFilter"
+                      >
+                        <MapPinMinusInside className="group-aria-pressed/toggle:stroke-white" />
+                      </Toggle>
+                    </>
+                  )}
+                </CollapsibleContent>
+              </Collapsible>
+            )}
+
             <div className="flex flex-col gap-2">
               {loading && (
                 <>
@@ -419,81 +576,133 @@ function Pins() {
                   </div>
                 </>
               )}
-              {!loading && isEvac && activeEvac ? (
-                <></>
-              ) : flaggedHaz ? (
-                <></>
-              ) : (
-                <></>
-              )}
-              {!loading && !isEvac && activeHaz
-                ? activeHazards.map((path) => {
-                    if (!path.is_expired && !path.is_deactivated) {
+              {isEvac ? (
+                !loading && activeEvac ? (
+                  pins.map((pin) => {
+                    if (!pin.is_deactivated && !pin.is_expired) {
                       return (
                         <Row
-                          postId={String(path.id)}
-                          title="Flood"
-                          desc={path.level}
-                          address={path.description}
-                          datePosted={path.posted_at}
-                          link={`/admin-hazardDetails/${path.id}`}
-                          isExpired={path.is_expired}
+                          postId={String(pin.id)}
+                          title={pin.name}
+                          address={pin.address}
+                          datePosted={pin.posted_at}
+                          link="{`/admin-hazardDetails/${path.id}`}"
+                          isExpired={pin.is_expired}
                           buttonId="History_ExpHazardDetailsBtn"
                           showBtn
-                        >
-                          <div
-                            className={`mt-2 px-2 py-1 rounded-3xl w-fit text-sm`}
-                            style={{
-                              backgroundColor:
-                                path.level === "Gutter" ||
-                                path.level === "Half Knee"
-                                  ? colorHazard.lightBlue
-                                  : path.level === "Half Tire" ||
-                                      path.level === "Knee"
-                                    ? colorHazard.darkBlue
-                                    : path.level === "Tire" ||
-                                        path.level === "Waist" ||
-                                        path.level === "chest"
-                                      ? colorHazard.red
-                                      : colorHazard.fallback,
-                            }}
-                          >
-                            {path.level}
-                          </div>
-                        </Row>
+                        ></Row>
                       );
                     }
                   })
-                : flaggedHaz
-                  ? flaggedPaths.map((paths) => (
-                      <Fragment key={paths.flag_id}>
+                ) : flaggedCom ? (
+                  <></>
+                ) : (
+                  pins.map((pin) => {
+                    if (pin.is_deactivated || pin.is_expired) {
+                      return (
                         <Row
-                          postId={String(paths.flag_id)}
-                          title={paths.reason}
-                          desc={`On Comment ID: ${paths.flood_path_id}`}
-                          link={`/admin-flagged/${paths.flood_path_id}`}
-                          buttonId="Admin_ActiveIndivDetailsBtn"
+                          postId={String(pin.id)}
+                          title={pin.name}
+                          address={pin.address}
+                          datePosted={pin.posted_at}
+                          link="{`/admin-hazardDetails/${path.id}`}"
+                          isExpired={pin.is_expired}
+                          buttonId="History_ExpHazardDetailsBtn"
                           showBtn
-                        />
-                      </Fragment>
-                    ))
-                  : activeHazards.map((path) => {
-                      if (path.is_expired || path.is_deactivated) {
-                        return (
-                          <Row
-                            postId={String(path.id)}
-                            title="Flood"
-                            desc={path.level}
-                            address={path.description}
-                            datePosted={path.posted_at}
-                            link={`/admin-hazardDetails/${path.id}`}
-                            isExpired={path.is_expired}
-                            buttonId="History_ExpHazardDetailsBtn"
-                            showBtn
-                          />
-                        );
-                      }
-                    })}
+                        ></Row>
+                      );
+                    }
+                  })
+                )
+              ) : !loading && !isEvac && activeHaz ? (
+                activeHazards.map((path) => {
+                  if (!path.is_expired && !path.is_deactivated) {
+                    return (
+                      <Row
+                        postId={String(path.id)}
+                        title="Flood"
+                        desc={path.level}
+                        address={path.description}
+                        datePosted={path.posted_at}
+                        link={`/admin-hazardDetails/${path.id}`}
+                        isExpired={path.is_expired}
+                        buttonId="History_ExpHazardDetailsBtn"
+                        showBtn
+                      >
+                        <div
+                          className={`mt-2 px-2 py-1 rounded-3xl w-fit text-sm`}
+                          style={{
+                            backgroundColor:
+                              path.level === "Gutter" ||
+                              path.level === "Half Knee"
+                                ? colorHazard.lightBlue
+                                : path.level === "Half Tire" ||
+                                    path.level === "Knee"
+                                  ? colorHazard.darkBlue
+                                  : path.level === "Tire" ||
+                                      path.level === "Waist" ||
+                                      path.level === "chest"
+                                    ? colorHazard.red
+                                    : colorHazard.fallback,
+                          }}
+                        >
+                          {path.level}
+                        </div>
+                      </Row>
+                    );
+                  }
+                })
+              ) : flaggedHaz ? (
+                flaggedPaths.map((paths) => (
+                  <Fragment key={paths.flag_id}>
+                    <Row
+                      postId={String(paths.flag_id)}
+                      title={paths.reason}
+                      desc={`On Comment ID: ${paths.flood_path_id}`}
+                      link={`/admin-flagged/${paths.flood_path_id}`}
+                      buttonId="Admin_ActiveIndivDetailsBtn"
+                      showBtn
+                    />
+                  </Fragment>
+                ))
+              ) : (
+                activeHazards.map((path) => {
+                  if (path.is_expired || path.is_deactivated) {
+                    return (
+                      <Row
+                        postId={String(path.id)}
+                        title="Flood"
+                        address={path.description}
+                        datePosted={path.posted_at}
+                        link={`/admin-hazardDetails/${path.id}`}
+                        isExpired={path.is_expired}
+                        buttonId="History_ExpHazardDetailsBtn"
+                        showBtn
+                      >
+                        <div
+                          className={`mt-2 px-2 py-1 rounded-3xl w-fit text-sm`}
+                          style={{
+                            backgroundColor:
+                              path.level === "Gutter" ||
+                              path.level === "Half Knee"
+                                ? colorHazard.lightBlue
+                                : path.level === "Half Tire" ||
+                                    path.level === "Knee"
+                                  ? colorHazard.darkBlue
+                                  : path.level === "Tire" ||
+                                      path.level === "Waist" ||
+                                      path.level === "chest"
+                                    ? colorHazard.red
+                                    : colorHazard.fallback,
+                          }}
+                        >
+                          {path.level}
+                        </div>
+                      </Row>
+                    );
+                  }
+                })
+              )}
             </div>
           </div>
         </div>
