@@ -53,6 +53,7 @@ type postedBy = {
   user_id: number;
   username: string;
   posted_at: string;
+  avatar_seed: string;
 };
 
 type media = {
@@ -97,6 +98,7 @@ type EvacPin = {
   posted_by: postedBy;
   last_confirmed: string | null;
   media: media[];
+  avatar_seed: string;
 };
 
 type Sensors = {
@@ -132,7 +134,6 @@ function DrawerComp({
   isHazard,
 }: DrawerProps) {
   const [expanded, setExpanded] = useState(false);
-  const [selectedImage, setSelectedImage] = useState<string | null>(null);
 
   useEffect(() => {
     if (!open) setExpanded(false);

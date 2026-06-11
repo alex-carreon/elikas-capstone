@@ -184,7 +184,7 @@ function EvacPinDrawer({
   isExpanded,
   setIsExpanded,
 }: {
-  selectedPin: EvacPin;
+  selectedPin: EvacPin | null;
   onFindRoute?: (findRoute: boolean) => void;
   isExpanded?: boolean;
   setIsExpanded?: (val: boolean) => void;
@@ -238,13 +238,6 @@ function EvacPinDrawer({
 
     if (!file) return;
 
-    toast.info(
-      `Size: ${(file.size / 1024 / 1024).toFixed(2)}MB | Type: ${file.type}`,
-      {
-        position: "top-center",
-      },
-    );
-
     setImage(file);
     setImagePreview(URL.createObjectURL(file));
   };
@@ -265,7 +258,7 @@ function EvacPinDrawer({
   const getComments = async () => {
     try {
       setCommentsLoad(true);
-      const response = await api.get(`/evac-areas/${selectedPin.id}/comments`);
+      const response = await api.get(`/evac-areas/${selectedPin?.id}/comments`);
       setComments(response.data.comments);
     } catch (err: any) {
       console.log(err.response.data);
@@ -308,7 +301,7 @@ function EvacPinDrawer({
 
     try {
       const response = api.post(
-        `/evac-areas/${selectedPin.id}/comments`,
+        `/evac-areas/${selectedPin?.id}/comments`,
         formData,
       );
 
