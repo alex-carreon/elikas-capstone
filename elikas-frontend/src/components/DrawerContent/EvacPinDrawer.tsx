@@ -12,6 +12,8 @@ import {
   ChevronUpIcon,
   Form,
   X,
+  User,
+  UserIcon,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -50,6 +52,8 @@ import { toast } from "sonner";
 import { toZonedTime } from "date-fns-tz";
 import { format } from "date-fns";
 import { Spinner } from "../ui/spinner";
+import brgyProfile from "@/assets/brgyProfile.svg";
+import adminProfile from "@/assets/adminProfile.svg";
 
 type CommentType = {
   id: number;
@@ -643,8 +647,14 @@ function EvacPinDrawer({
                 <div className="h-full flex flex-row items-center p-2 gap-2">
                   {seedLoad ? (
                     <Spinner />
-                  ) : (
+                  ) : seed ? (
                     <img src={dataUri} className="w-11" />
+                  ) : role === "brgy_op" ? (
+                    <img src={brgyProfile} className="w-11" />
+                  ) : role === "admin" ? (
+                    <img src={adminProfile} className="w-11" />
+                  ) : (
+                    <UserIcon className="w-11" />
                   )}
                   <InputGroup>
                     <InputGroupInput
