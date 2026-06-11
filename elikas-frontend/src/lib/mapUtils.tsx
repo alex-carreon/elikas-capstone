@@ -23,14 +23,14 @@ type EvacPin = {
   id: number;
   lat: number;
   lng: number;
-  own_pins: boolean;
+  my_pin: boolean;
 };
 
 type MyEvacPin = {
   id: number;
   lat: number;
   lng: number;
-  own_pins: boolean;
+  my_pin: boolean;
   status: string;
 };
 
@@ -102,8 +102,9 @@ const getMyPins = async ({
   setOwnPins?: Dispatch<SetStateAction<MyEvacPin[]>>;
 }) => {
   try {
-    const IndivResponse = await api.get("/evacpins/users/coords");
+    const IndivResponse = await api.get("/pins/my-coords");
     const myPins = await IndivResponse.data.pins;
+    console.log("MINE", myPins);
 
     setOwnPins?.(myPins);
   } catch (err: any) {
@@ -356,12 +357,12 @@ export function PinMarking({ onPinClick }: { onPinClick: (pin: any) => void }) {
             <Marker
               key={pin.id}
               position={[pin.lat, pin.lng]}
-              icon={pin.own_pins ? myIcon : icon}
+              icon={pin.my_pin ? myIcon : icon}
               eventHandlers={{ click: () => onPinClick(pin) }}
             />
           ))
         : myPins.map((pin) => {
-            if (pin.own_pins && pin.status == "active") {
+            if (pin.my_pin && pin.status == "active") {
               return (
                 <Marker
                   key={pin.id}
