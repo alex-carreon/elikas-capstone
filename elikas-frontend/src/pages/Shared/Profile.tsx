@@ -9,6 +9,8 @@ import { useNavigate } from "react-router";
 import { toast } from "sonner";
 import SelectDropdown from "@/components/SelectDropdown";
 import FormSkeleton from "@/pages/Skeletons/FormSkeleton";
+import { UserIcon } from "lucide-react";
+import brgyProfile from "@/assets/brgyProfile.svg";
 
 type Barangays = {
   id: number;
@@ -54,7 +56,7 @@ function Profile() {
   const [brgyLoad, setBrgyLoad] = useState(false);
   const [cityLoad, setCityLoad] = useState(false);
 
-  const { token } = useUserContext();
+  const { token, role } = useUserContext();
 
   const navigate = useNavigate();
 
@@ -233,14 +235,22 @@ function Profile() {
             <div>
               <div className="flex flex-col">
                 <div className="w-full flex flex-col items-center gap-2">
-                  {seed && <img src={dataUri} className="w-24" />}
+                  {seed ? (
+                    <img src={dataUri} className="w-24" />
+                  ) : role === "indiv" ? (
+                    <UserIcon className="w-24" />
+                  ) : (
+                    <img src={brgyProfile} className="w-24" />
+                  )}
                   {isEditable ? (
-                    <ButtonComp
-                      text="Generate New Avatar"
-                      id="Profile_RandommAvatarBtn"
-                      variant="outline"
-                      onClick={() => setSeed(randomSeed())}
-                    />
+                    role === "indiv" && (
+                      <ButtonComp
+                        text="Generate New Avatar"
+                        id="Profile_RandommAvatarBtn"
+                        variant="outline"
+                        onClick={() => setSeed(randomSeed())}
+                      />
+                    )
                   ) : (
                     <ButtonComp
                       text="Edit Profile"
