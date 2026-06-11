@@ -4,14 +4,8 @@ import DashboardHeader from "@/components/Admin/DashboardHeader";
 import { useState, useEffect, Fragment } from "react";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
-  InputGroup,
-  InputGroupInput,
-  InputGroupAddon,
-} from "@/components/ui/input-group";
-import {
   ChevronDownIcon,
   ChevronUpIcon,
-  Search,
   AlarmClockOff,
   MapPinMinusInside,
   X,
@@ -25,13 +19,6 @@ import {
 } from "@/components/ui/collapsible";
 import { Toggle } from "@/components/ui/toggle";
 import SelectDropdown from "@/components/SelectDropdown";
-
-type Barangays = {
-  id: number;
-  name: string;
-  role: string;
-  location: string;
-};
 
 type FlaggedPaths = {
   flag_id: number;
