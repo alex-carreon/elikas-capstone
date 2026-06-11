@@ -106,7 +106,6 @@ class AuthController extends Controller
     public function login(Request $request)
     {
         // The React app sends the Firebase ID token in the Authorization header
-        // It looks like: "Bearer eyJhbGci..."
         $token = $request->bearerToken();
 
         if (!$token) {
@@ -116,6 +115,16 @@ class AuthController extends Controller
         // Verify the token with Firebase
         try {
             $verifiedToken = $this->firebaseAuth->verifyIdToken($token, true);
+
+            // Check if the user's email is verified in Firebase
+            $emailVerified = $verifiedToken->claims()->get('email_verified');
+
+            if (!$emailVerified) {
+                return response()->json([
+                    'error' => 'Email not verified'
+                ], 403);
+            }
+
         } catch (\Exception $e) {
             return response()->json([
                 'error' => 'Unauthorized',
@@ -150,6 +159,7 @@ class AuthController extends Controller
             'role'     => $user->role->role_name,
         ]);
     }
+    
 
     // ---------------------------------------------------------------
     // LOGOUT
