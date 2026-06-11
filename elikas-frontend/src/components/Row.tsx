@@ -11,16 +11,16 @@ import { ChevronDownIcon, ChevronUpIcon, Clock, Send } from "lucide-react";
 import { collapseClasses } from "@mui/material/Collapse";
 
 interface rowProps {
-  postId: string;
-  title: string;
+  postId?: string;
+  title?: string;
   address?: string;
   desc?: string;
   datePosted?: string;
   isAvailable?: boolean;
   availability?: boolean;
   isExpired?: boolean;
-  link: string;
-  buttonId: string;
+  link?: string;
+  buttonId?: string;
   children?: React.ReactNode;
   btnText?: string;
   showBtn?: boolean;
@@ -106,11 +106,15 @@ function Row({
         </p>
       </div>
       {showBtn && (
-        <Link to={link} state={{ from: location.pathname }} className="ml-2">
+        <Link
+          to={link ? link : ""}
+          state={{ from: location.pathname }}
+          className="ml-2"
+        >
           <ButtonComp
             variant="important"
             text={btnText ? btnText : "Details"}
-            id={buttonId}
+            id={buttonId ? buttonId : ""}
             heightSize="45px"
             widthSize="100%"
           ></ButtonComp>

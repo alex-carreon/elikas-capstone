@@ -20,6 +20,7 @@ import SelectDropdown from "@/components/SelectDropdown";
 import { toZonedTime } from "date-fns-tz";
 import { format } from "date-fns";
 import { toast } from "sonner";
+import { Toggle } from "@/components/ui/toggle";
 
 type Barangays = {
   id: number;
@@ -58,6 +59,9 @@ function Sensors() {
   const [activeSensorsCount, setActiveSensorsCount] = useState(0);
   const [inactiveSensorsCount, setInactiveSensorsCount] = useState(0);
   const [searchFor, setSearchFor] = useState("");
+  const [red, setRed] = useState(false);
+  const [yellow, setYellow] = useState(false);
+  const [orange, setOrange] = useState(false);
 
   const [inactiveSensors, setInactiveSensors] = useState<SensorsDetails[]>([]);
 
@@ -110,13 +114,25 @@ function Sensors() {
 
   const getFilteredActive = async (search = searchFor) => {
     try {
-      setLoading(true);
-
       if (activeBrgyFilter || activeBrgyFilter != 0) {
         params.set("location_id", String(activeBrgyFilter));
       }
+
       if (searchFor) {
         params.set("search", search);
+      }
+
+      setLoading(true);
+      if (yellow) {
+        params.append("current_status[]", "yellow");
+      }
+
+      if (orange) {
+        params.append("current_status[]", "orange");
+      }
+
+      if (red) {
+        params.append("current_status[]", "red");
       }
 
       const parameters = params.toString();
@@ -125,6 +141,8 @@ function Sensors() {
         `/sensors?is_active=1${parameters ? `&${parameters}` : ""}`,
       );
 
+      const endpoint = `/sensors?is_active=1${parameters ? `&${parameters}` : ""}`;
+      console.log(endpoint);
       const activeSensors = activeSensorsRes.data.data;
 
       console.log(activeSensors);
@@ -140,6 +158,18 @@ function Sensors() {
   const getFilteredInactive = async (search = searchFor) => {
     try {
       setLoading(true);
+
+      if (yellow) {
+        params.append("current_status[]", "yellow");
+      }
+
+      if (orange) {
+        params.append("current_status[]", "orange");
+      }
+
+      if (red) {
+        params.append("current_status[]", "red");
+      }
 
       if (inactiveBrgyFilter || inactiveBrgyFilter != 0) {
         params.set("location_id", String(inactiveBrgyFilter));
@@ -175,18 +205,14 @@ function Sensors() {
   }, []);
 
   useEffect(() => {
-    if (activeBrgyFilter) {
-      getFilteredActive();
-      toast.success("Sensors filtered!");
-    }
-  }, [activeBrgyFilter]);
+    getFilteredActive();
+    toast.success("Sensors filtered!");
+  }, [activeBrgyFilter, yellow, red, orange]);
 
   useEffect(() => {
-    if (inactiveBrgyFilter) {
-      getFilteredInactive();
-      toast.success("Sensors filtered!");
-    }
-  }, [inactiveBrgyFilter]);
+    getFilteredInactive();
+    toast.success("Sensors filtered!");
+  }, [inactiveBrgyFilter, yellow, red, orange]);
 
   return (
     <div className="w-full flex flex-col items-center">
@@ -220,16 +246,6 @@ function Sensors() {
                 id="Admin_SensorsTrigger"
               >
                 All Sensors
-              </TabsTrigger>
-              <TabsTrigger
-                value="Hazard"
-                onClick={() => {
-                  setIsSensorLogs(true);
-                  setIsSensors(false);
-                }}
-                id="Admin_SensorLogTrigger"
-              >
-                Sensor Logs
               </TabsTrigger>
             </TabsList>
           </Tabs>
@@ -297,6 +313,40 @@ function Sensors() {
               id="Admin_SensorFilterContent"
               className="bg-gray-300/50 p-2 rounded-lg flex flex-row items-center justify-end gap-2 px-2.5 mt-2 text-sm"
             >
+              <Toggle
+                size="sm"
+                variant="outline"
+                className="aria-pressed:bg-yellow-500/50 aria-pressed:text-white border-gray-400"
+                onPressedChange={setYellow}
+                pressed={yellow}
+                id="History_YellowFilter"
+              >
+                <p className="m-2 group-aria-pressed/toggle:text-black">
+                  Yellow
+                </p>
+              </Toggle>
+              <Toggle
+                size="sm"
+                variant="outline"
+                className="aria-pressed:bg-orange-500/50 aria-pressed:text-white border-gray-400"
+                onPressedChange={setOrange}
+                pressed={orange}
+                id="History_OrangeFilter"
+              >
+                <p className="m-2 group-aria-pressed/toggle:text-black">
+                  Orange
+                </p>
+              </Toggle>
+              <Toggle
+                size="sm"
+                variant="outline"
+                className="aria-pressed:bg-red-500/50 aria-pressed:text-white border-gray-400"
+                onPressedChange={setRed}
+                pressed={red}
+                id="History_RedFilter"
+              >
+                Red
+              </Toggle>
               <SelectDropdown
                 value={
                   isActiveSensor
