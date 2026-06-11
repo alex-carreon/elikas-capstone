@@ -249,15 +249,6 @@ function BrgyUsers() {
             )}
             <Collapsible className="w-full flex-col items-center">
               <div className="w-full flex justify-between gap-2">
-                <InputGroup className="w-2/3">
-                  <InputGroupInput
-                    className="text-sm h-8"
-                    id="Admin_IndivSearchField"
-                  ></InputGroupInput>
-                  <InputGroupAddon align="inline-end">
-                    <Search />
-                  </InputGroupAddon>
-                </InputGroup>
                 {!isSMS && (
                   <div className="w-30">
                     <Link to="/admin-brgyAdd">
