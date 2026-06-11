@@ -72,26 +72,26 @@ function Sensors() {
     return format(zoned, "MMM d, yyyy h:mm a");
   };
 
-  const getBarangays = async () => {
+  const getBarangays = async (signal?: AbortSignal) => {
     try {
-      setLoading(true);
-      const brgyRes = await api.get(`/locations/barangays?city_id=2`);
+      const brgyRes = await api.get(`/locations/barangays?city_id=2`, {
+        signal,
+      });
       const barangays = brgyRes.data.Barangays;
       setBarangays(barangays);
     } catch (err: any) {
-      console.log(err.message);
-    } finally {
-      setLoading(false);
+      if (err.name === "CanceledError") {
+        return;
+      }
+      console.log(err.response?.data);
     }
   };
 
-  const getSensors = async () => {
+  const getSensors = async (signal?: AbortSignal) => {
     try {
-      setLoading(true);
-
       const [activeSensorsRes, inactiveSensorsRes] = await Promise.all([
-        api.get(`/sensors?is_active=1`),
-        api.get(`/sensors?is_active=0`),
+        api.get(`/sensors?is_active=1`, { signal }),
+        api.get(`/sensors?is_active=0`, { signal }),
       ]);
 
       const activeSensors = activeSensorsRes.data.data;
@@ -106,13 +106,17 @@ function Sensors() {
       setActiveSensorsCount(activeCount);
       setInactiveSensorsCount(inactiveCount);
     } catch (err: any) {
-      console.log(err.message);
-    } finally {
-      setLoading(false);
+      if (err.name === "CanceledError") {
+        return;
+      }
+      console.log(err.response?.data);
     }
   };
 
-  const getFilteredActive = async (search = searchFor) => {
+  const getFilteredActive = async (
+    signal?: AbortSignal,
+    search = searchFor,
+  ) => {
     try {
       if (activeBrgyFilter || activeBrgyFilter != 0) {
         params.set("location_id", String(activeBrgyFilter));
@@ -122,7 +126,6 @@ function Sensors() {
         params.set("search", search);
       }
 
-      setLoading(true);
       if (yellow) {
         params.append("current_status[]", "yellow");
       }
@@ -139,6 +142,7 @@ function Sensors() {
 
       const activeSensorsRes = await api.get(
         `/sensors?is_active=1${parameters ? `&${parameters}` : ""}`,
+        { signal },
       );
 
       const endpoint = `/sensors?is_active=1${parameters ? `&${parameters}` : ""}`;
@@ -149,16 +153,18 @@ function Sensors() {
 
       setActiveSensors(activeSensors);
     } catch (err: any) {
-      console.log(err.message);
-    } finally {
-      setLoading(false);
+      if (err.name === "CanceledError") {
+        return;
+      }
+      console.log(err.response?.data);
     }
   };
 
-  const getFilteredInactive = async (search = searchFor) => {
+  const getFilteredInactive = async (
+    signal?: AbortSignal,
+    search = searchFor,
+  ) => {
     try {
-      setLoading(true);
-
       if (yellow) {
         params.append("current_status[]", "yellow");
       }
@@ -183,35 +189,55 @@ function Sensors() {
 
       const inactiveSensorsRes = await api.get(
         `/sensors?is_active=0${parameters ? `&${parameters}` : ""}`,
+        { signal },
       );
 
       const inactiveSensors = inactiveSensorsRes.data.data;
-
-      console.log(inactiveSensors);
 
       setInactiveSensors(inactiveSensors);
 
       toast.success("Sensors filtered!");
     } catch (err: any) {
-      console.log(err.message);
+      if (err.name === "CanceledError") {
+        return;
+      }
+      console.log(err.response?.data);
+    }
+  };
+
+  const getAll = async () => {
+    try {
+      setLoading(true);
+      const controller = new AbortController();
+      getSensors(controller.signal);
+      getBarangays(controller.signal);
+      return () => controller.abort();
+    } catch (err: any) {
+      if (err.name === "CanceledError") return;
+      console.log(err);
     } finally {
       setLoading(false);
     }
   };
 
   useEffect(() => {
-    getSensors();
-    getBarangays();
+    getAll();
   }, []);
 
   useEffect(() => {
-    getFilteredActive();
+    const controller = new AbortController();
+
+    getFilteredActive(controller.signal);
     toast.success("Sensors filtered!");
+
+    return () => controller.abort();
   }, [activeBrgyFilter, yellow, red, orange]);
 
   useEffect(() => {
-    getFilteredInactive();
+    const controller = new AbortController();
+    getFilteredInactive(controller.signal);
     toast.success("Sensors filtered!");
+    return () => controller.abort();
   }, [inactiveBrgyFilter, yellow, red, orange]);
 
   return (

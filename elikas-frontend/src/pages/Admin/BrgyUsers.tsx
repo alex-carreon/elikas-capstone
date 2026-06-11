@@ -42,7 +42,7 @@ type Province = {
 };
 
 function BrgyUsers() {
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true);
   const [countLoad, setCountLoad] = useState(false);
   const [activeCount, setActiveCount] = useState(0);
   const [deacCount, setDeacCount] = useState(0);
@@ -57,7 +57,7 @@ function BrgyUsers() {
 
   const params = new URLSearchParams();
 
-  const getBrgyData = async () => {
+  const getBrgyData = async (signal?: AbortSignal) => {
     try {
       if (cityFilter && cityFilter !== 0) {
         params.set("city_id", String(cityFilter));
@@ -65,12 +65,12 @@ function BrgyUsers() {
 
       const parameter = params.toString();
 
-      setLoading(true);
       const [activeResponse, deacResponse] = await Promise.all([
         api.get(
           `/admin/users?role=brgy_op&active=true${parameter ? `&${parameter}` : ""}`,
+          { signal },
         ),
-        api.get("/admin/users?role=brgy_op&active=false"),
+        api.get("/admin/users?role=brgy_op&active=false", { signal }),
       ]);
 
       const endpoint = `/admin/users?role=brgy_op&active=true${parameter ? `&${parameter}` : ""}`;
@@ -81,18 +81,19 @@ function BrgyUsers() {
       setActiveUsers(activeResponse.data.users);
       setDeacUsers(deacResponse.data.users);
     } catch (err: string | any) {
-      new Error(err.message || "An error occurred during registration");
-    } finally {
-      setLoading(false);
+      if (err.name === "CanceledError") {
+        return;
+      }
+      console.log(err.response?.data);
     }
   };
 
-  const getBrgyCount = async () => {
+  const getBrgyCount = async (signal?: AbortSignal) => {
     try {
       setCountLoad(true);
       const [activeResponse, deacResponse] = await Promise.all([
-        api.get(`/admin/users?role=brgy_op&active=true`),
-        api.get("/admin/users?role=brgy_op&active=false"),
+        api.get(`/admin/users?role=brgy_op&active=true`, { signal }),
+        api.get("/admin/users?role=brgy_op&active=false", { signal }),
       ]);
 
       console.log("active", activeResponse);
@@ -100,35 +101,67 @@ function BrgyUsers() {
 
       setActiveCount(activeResponse.data.count);
       setDeacCount(deacResponse.data.count);
+      setCountLoad(false);
     } catch (err: string | any) {
-      new Error(err.message || "An error occurred during registration");
-    } finally {
+      if (err.name === "CanceledError") {
+        setCountLoad(false);
+        return;
+      }
+      console.log(err.response?.data);
       setCountLoad(false);
     }
   };
 
-  useEffect(() => {
-    const getCity = async () => {
-      try {
-        setLoading(true);
-        const cityRes = await api.get("/locations/cities");
+  const getCity = async (signal?: AbortSignal) => {
+    try {
+      setCountLoad(true);
 
-        const cities = cityRes.data.Cities;
-        setCities(cities);
-      } catch (err: any) {
-        console.log(err.message);
-      } finally {
-        setLoading(false);
+      const cityRes = await api.get("/locations/cities", { signal });
+
+      const cities = cityRes.data.Cities;
+      setCities(cities);
+      setCountLoad(false);
+    } catch (err: any) {
+      console.log(err.message);
+      if (err.name === "CanceledError") {
+        setCountLoad(false);
+        return;
       }
-    };
+      console.log(err.response?.data);
+      setCountLoad(false);
+    }
+  };
 
-    getCity();
-    getBrgyData();
-    getBrgyCount();
+  const getAll = async () => {
+    const controller = new AbortController();
+
+    try {
+      setLoading(true);
+      await Promise.all([
+        getCity(controller.signal),
+        getBrgyData(controller.signal),
+        getBrgyCount(controller.signal),
+      ]);
+    } catch (err: any) {
+      if (err.name === "CanceledError") return;
+      console.log(err);
+    } finally {
+      setLoading(false);
+    }
+
+    return () => controller.abort();
+  };
+
+  useEffect(() => {
+    getAll();
   }, []);
 
   useEffect(() => {
-    getBrgyData();
+    const controller = new AbortController();
+
+    getBrgyData(controller.signal);
+
+    return () => controller.abort();
   }, [cityFilter]);
 
   return (
