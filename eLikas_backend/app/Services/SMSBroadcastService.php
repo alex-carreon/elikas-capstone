@@ -283,8 +283,8 @@ class SMSBroadcastService
                 'id'   => $broadcast->status,
                 'name' => $broadcast->broadcast_status?->status_name ?? 'Unknown',
             ],
-            'scheduled_for'    => $broadcast->scheduled_for?->timezone('Asia/Manila')->toDateTimeString(),
-            'sent_at'          => $broadcast->sent_at?->timezone('Asia/Manila')->toDateTimeString(),
+            'scheduled_for'    => $broadcast->scheduled_for ? Carbon::parse($broadcast->scheduled_for)->timezone('Asia/Manila')->toDateTimeString() : null,
+            'sent_at'          => $broadcast->sent_at ? Carbon::parse($broadcast->sent_at)->timezone('Asia/Manila')->toDateTimeString() : null,
             'total_recipients' => $broadcast->total_recipients,
             'sender'           => [
                 'govop_id'       => $sender?->id,
@@ -306,7 +306,7 @@ class SMSBroadcastService
             'id'              => $template->id,
             'template_name'   => $template->template_name,
             'message_content' => $template->message_content,
-            'created_at'      => $template->created_at ? $template->created_at->timezone('Asia/Manila')->toDateTimeString() : null,
+            'created_at'      => $template->created_at ? Carbon::parse($template->created_at)->timezone('Asia/Manila')->toDateTimeString() : null,
             'created_by'      => [
                 'govop_id'    => $template->gov_op?->id,
                 'username'    => $template->gov_op?->user?->username,
