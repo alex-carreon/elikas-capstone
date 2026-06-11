@@ -44,6 +44,7 @@ class User extends Model
 	public $timestamps = false;
 
 	protected $casts = [
+		'id' => 'int',
 		'role_id' => 'int',
 		'created_at' => 'datetime',
 		'deactivated_at' => 'datetime'

@@ -3,16 +3,12 @@
 use App\Http\Controllers\AdminController;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\CapacityLevelController;
-use App\Http\Controllers\Comments\EvacComments;
-use App\Http\Controllers\Dashboards\AdminFlagController;
 use App\Http\Controllers\Dashboards\CommentsAdminController;
+use App\Http\Controllers\Comments\EvacComments;
 use App\Http\Controllers\Dashboards\FloodPathAdminController;
 use App\Http\Controllers\Dashboards\UserController;
 use App\Http\Controllers\EmergencyContactController;
 use App\Http\Controllers\EvacTypeController;
-use App\Http\Controllers\FeedbackController;
-use App\Http\Controllers\Flags\FlagCommentController;
-use App\Http\Controllers\Flags\FlagFloodController;
 use App\Http\Controllers\Hazards\FloodLevelController;
 use App\Http\Controllers\Hazards\FloodPathController;
 use App\Http\Controllers\LocationsController;
@@ -27,11 +23,12 @@ use App\Http\Controllers\PinControllers\VerifyEvacuationAreaController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\SensorControllers\PublicSensorController;
 use App\Http\Controllers\SensorControllers\SensorController;
-use App\Http\Controllers\SensorControllers\SensorLogController;
 use App\Http\Controllers\SMSController;
-use App\Http\Controllers\Votes\VoteCommentController;
 use App\Http\Controllers\Votes\VoteController;
+use App\Http\Controllers\Votes\VoteCommentController;
 use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\FeedbackController;
+use App\Http\Controllers\SensorControllers\SensorLogController;
 
 Route::get('/test', function () {
     return response()->json([
@@ -55,8 +52,7 @@ Route::get('/emergency-contacts/{id}', [EmergencyContactController::class, 'show
 Route::get('/evac-types', [EvacTypeController::class, 'index']);
 Route::get('/capacity-levels', [CapacityLevelController::class, 'index']);
 Route::get('/pins/{id}', [GetEvacAreaDetailsController::class, 'getEvacAreaDetails']);
-Route::get('/pins', [GetEvacAreasController::class, 'getEvacAreas']);
-Route::get('/evacpins/users/coords', [GetEvacAreasController::class, 'getMyCoords']);
+Route::get('/evacpins/users/coords', [GetEvacAreasController::class, 'getRoleIndivCoords']);
 
 Route::post('/sensor-logs', [SensorLogController::class, 'store']);
 
@@ -73,6 +69,7 @@ Route::get('/pins/routes', [GetEvacuationRoutesController::class, 'getEvacuation
 // ---------------------------------------------------------------
 Route::middleware('optional.firebase.auth')
     ->get('flood-paths', [FloodPathController::class, 'index']);
+Route::get('/pins', [GetEvacAreasController::class, 'getEvacAreas']);
 
 // ---------------------------------------------------------------
 // ONLY ADMIN ROUTES
@@ -87,17 +84,7 @@ Route::prefix('admin')->middleware(['firebase.auth', 'role:1'])->group(function 
 
     Route::get('/pins', [GetEvacAreasController::class, 'getAdminEvacAreas']); //Admin pins showing all pins regardless of status
 
-    Route::get('/flood-paths', [FloodPathAdminController::class, 'index']);
-
-    //FLAGS
-    Route::get('/comments/flags', [AdminFlagController::class, 'commentFlags']);
-    Route::get('/comments/flags/{commentId}', [AdminFlagController::class, 'commentDetail']);
-
-    Route::get('/flood-paths/flags', [AdminFlagController::class, 'floodPathFlags']);
-    Route::get('/flood-paths/flags/{floodPathId}', [AdminFlagController::class, 'floodPathDetail']);
-
-    Route::patch('/flags/{elementId}/approve', [AdminFlagController::class, 'approve']);
-    Route::patch('/flags/{elementId}/reject', [AdminFlagController::class, 'reject']);
+    Route::get('flood-paths', [FloodPathAdminController::class, 'index']);
 
     //Comments
     Route::patch('/comments/{id}', [CommentsAdminController::class, 'update']);
@@ -130,6 +117,7 @@ Route::middleware(['firebase.auth', 'role:2'])->group(function () {
     Route::post('/sms/broadcasts', [SMSController::class, 'store']);
     Route::get('/sms/broadcasts', [SMSController::class, 'history']);
     Route::post('/sms/broadcasts/send-now', [SMSController::class, 'sendImmediate']);
+    Route::post('/sms-broadcasts/schedule', [SMSController::class, 'schedule']);
     Route::get('/sms/broadcasts/{broadcastId}/status', [SMSController::class, 'status'])->whereNumber('broadcastId');
     Route::delete('/sms/broadcasts/{broadcastId}', [SMSController::class, 'destroy'])->whereNumber('broadcastId');
 
@@ -217,10 +205,4 @@ Route::middleware(['firebase.auth', 'role:1,2,3'])->group(function () {
 
     //Emergency contact
     Route::get('/emergency-contacts/location/{location_id}', [EmergencyContactController::class, 'getByLocationId']);
-
-    //FLAGS
-    Route::post('/comments/{commentId}/flag', [FlagCommentController::class, 'store']);
-    Route::post('/flood-paths/{floodPathId}/flag', [FlagFloodController::class, 'store']);
-    Route::get('/flag-reasons', [FlagCommentController::class, 'reasons']);
 });
-

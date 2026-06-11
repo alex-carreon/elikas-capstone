@@ -147,6 +147,45 @@ class SMSController extends Controller
             return response()->json(['error' => 'Failed to dispatch SMS.', 'details' => $e->getMessage()], 500);
         }
     }
+    public function schedule(Request $request): JsonResponse
+    {
+        try {
+            $validated = $request->validate([
+                'message_content' => 'required|string|max:600',
+                'scheduled_for'   => 'required|date|after:now',
+            ]);
+
+            $govOp = $this->resolveGovOp($request);
+            if ($govOp instanceof JsonResponse) {
+                return $govOp;
+            }
+
+            $result = $this->smsService->scheduleBroadcast(
+                $govOp->id,
+                $govOp->location_id,
+                $validated['message_content'],
+                $validated['scheduled_for'],
+            );
+
+            return response()->json([
+                'message'   => 'SMS broadcast scheduled successfully.',
+                'status'    => [
+                    'id'   => $result['broadcast']->status,
+                    'name' => $result['broadcast']->broadcast_status?->status_name ?? 'Scheduled',
+                ],
+                'broadcast' => $this->smsService->formatBroadcast($result['broadcast']),
+                'queue'     => [
+                    'scheduled_for' => $result['scheduled_for'],
+                    'delay_seconds' => $result['delay_seconds'],
+                ],
+            ], 202);
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            return response()->json(['message' => 'Validation failed.', 'errors' => $e->errors()], 422);
+        } catch (\Exception $e) {
+            Log::error('SMSController@schedule', ['error' => $e->getMessage()]);
+            return response()->json(['error' => 'Failed to schedule SMS broadcast.', 'details' => $e->getMessage()], 500);
+        }
+    }
 
     public function status(Request $request, int $broadcastId): JsonResponse
     {
@@ -165,8 +204,8 @@ class SMSController extends Controller
                 'broadcast_id'     => $broadcast->id,
                 'status_id'        => $broadcast->status,
                 'status_name'      => $broadcast->broadcast_status?->status_name ?? 'Unknown',
-                'scheduled_for'    => $broadcast->scheduled_for?->toIso8601String(),
-                'sent_at'          => $broadcast->sent_at?->toIso8601String(),
+                'scheduled_for'    => $broadcast->scheduled_for?->timezone('Asia/Manila')->toDateTimeString(),
+                'sent_at'          => $broadcast->sent_at?->timezone('Asia/Manila')->toDateTimeString(),
                 'total_recipients' => $broadcast->total_recipients,
                 'location'         => [
                     'id'   => $broadcast->location?->id,
