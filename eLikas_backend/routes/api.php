@@ -54,8 +54,6 @@ Route::get('/emergency-contacts/{id}', [EmergencyContactController::class, 'show
     ->whereNumber('id');
 Route::get('/evac-types', [EvacTypeController::class, 'index']);
 Route::get('/capacity-levels', [CapacityLevelController::class, 'index']);
-Route::get('/pins/{id}', [GetEvacAreaDetailsController::class, 'getEvacAreaDetails']);
-Route::get('/evacpins/users/coords', [GetEvacAreasController::class, 'getRoleIndivCoords']);
 
 Route::post('/sensor-logs', [SensorLogController::class, 'store']);
 
@@ -64,6 +62,7 @@ Route::post('/sensor-logs', [SensorLogController::class, 'store']);
 // ---------------------------------------------------------------
 Route::get('/pins/nearby', [GetNearbyEvacuationAreasController::class, 'getNearbyEvacuationAreas']);
 Route::get('/pins/routes', [GetEvacuationRoutesController::class, 'getEvacuationRoutes']);
+Route::get('/pins/{id}', [GetEvacAreaDetailsController::class, 'getEvacAreaDetails'])->whereNumber('id');
 
 
 
@@ -73,6 +72,7 @@ Route::get('/pins/routes', [GetEvacuationRoutesController::class, 'getEvacuation
 Route::middleware('optional.firebase.auth')->group(function () {
     Route::get('/flood-paths', [FloodPathController::class, 'index']);
     Route::get('/pins', [GetEvacAreasController::class, 'getEvacAreas']);
+    Route::get('/evacpins/users/coords', [GetEvacAreasController::class, 'getRoleIndivCoords']);
 });
 
 // ---------------------------------------------------------------

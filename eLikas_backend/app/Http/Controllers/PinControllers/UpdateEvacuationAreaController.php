@@ -14,6 +14,7 @@ class UpdateEvacuationAreaController extends Controller
     {
         try {
             $user = $request->attributes->get('firebase_user');
+            $roleId = $user?->role_id;
 
             $request->validate([
                 'name'               => 'nullable|string|max:255',
@@ -64,7 +65,7 @@ class UpdateEvacuationAreaController extends Controller
             }
 
             // Individual users may only edit their own pins
-            if ($user->role_id == 3 && $pin->social_element->user_id != $user->id) {
+            if ($roleId == 3 && $pin->social_element->user_id != ($user?->id ?? null)) {
                 return response()->json([
                     'error' => 'Forbidden. You may only update your own evacuation area pins',
                 ], 403);

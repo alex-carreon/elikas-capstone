@@ -4,12 +4,14 @@ namespace App\Http\Controllers\PinControllers;
 
 use App\Http\Controllers\Controller;
 use App\Models\EvacArea;
+use Illuminate\Http\Request;
 
 class GetEvacAreaDetailsController extends Controller
 {
-    public function getEvacAreaDetails($id)
+    public function getEvacAreaDetails(Request $request, $id)
     {
         try {
+            $user = $request->attributes->get('firebase_user');
 
             $pin = EvacArea::with([
             'social_element.user',
@@ -38,7 +40,6 @@ class GetEvacAreaDetailsController extends Controller
                 'description' => $pin->description,
                 'coordinates' => $coordinates,
                 'location_id' => $pin->location_id,
-                'barangay' => $pin->location_info?->name,
                 'area_type_id' => $pin->area_type,
                 'area_type' => $pin->evac_type?->evac_type,
                 'capacity_level_id' => $pin->capacity_level,
@@ -76,8 +77,8 @@ class GetEvacAreaDetailsController extends Controller
                     'username' => $pin->gov_op?->user?->username,
                 ],
                 'posted_by' => [
-                    'user_id' => $pin->social_element?->user_id,
-                    'username' => $pin->social_element?->user?->username,
+                    'user_id' => $user?->id ?? null,
+                    'username' => $user?->username ?? null,
                     'posted_at' => $pin->social_element?->posted_at
                         ? $pin->social_element->posted_at->timezone('Asia/Manila')->toDateTimeString()
                         : null,
