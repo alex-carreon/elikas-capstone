@@ -263,3 +263,32 @@ export const handleDelete = async ({
     console.error("Error Deactivating");
   }
 };
+
+export const handleAddMedia = async ({ e, id, media }: handleActionProps) => {
+  e?.preventDefault();
+
+  const formData = new FormData();
+
+  try {
+    if (media) {
+      formData.append("file", media);
+    }
+
+    console.log("sending: ", formData);
+
+    const response = api.post(`/flood-paths/${id}/media`, formData);
+
+    console.log(response);
+
+    toast.promise(response, {
+      loading: "Adding your photo...",
+      success: "Photo added. Do the same if you want to add another!",
+      error: (err: any) => {
+        return err.response.data;
+      },
+      position: "top-center",
+    });
+  } catch (err: any) {
+    console.log(err.response.data);
+  }
+};
