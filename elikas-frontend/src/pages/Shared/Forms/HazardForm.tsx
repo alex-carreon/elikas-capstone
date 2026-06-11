@@ -18,8 +18,14 @@ import { useUserContext } from "@/context/AuthContext";
 import { differenceInDays } from "date-fns";
 import FloodIcon from "@/assets/Map/FloodIcon.svg?react";
 import AlertDialogue from "@/components/AlertDialogue";
-import { handleSubmit, handleUpdate, handleDelete } from "@/lib/hazardUtils";
+import {
+  handleSubmit,
+  handleUpdate,
+  handleDelete,
+  handleAddMedia,
+} from "@/lib/hazardUtils";
 import FormSkeleton from "../../Skeletons/FormSkeleton";
+import { Separator } from "@/components/ui/separator";
 
 type FloodLevel = {
   id: number;
@@ -232,6 +238,14 @@ function HazardForm() {
 
   const deleteHazard = () => handleDelete({ id: id, navigate: navigate });
 
+  const addMedia = (e: React.FormEvent) => {
+    e.preventDefault();
+
+    handleAddMedia({ e: e, id: id, media: fileName });
+
+    handleClearImage();
+  };
+
   return loading ? (
     <div className="w-full h-full flex flex-col items-center p-12 mt-8 mb-2 gap-4">
       <FormSkeleton />
@@ -287,20 +301,37 @@ function HazardForm() {
                 id="HazardPin_PhotoField"
                 onSubmit={fileOnChange}
                 ref={inputRef}
+                description={
+                  id
+                    ? "You may only add one photo at a time. Please press the add photo below to post the photo on your post!"
+                    : ""
+                }
               />
               {fileName && (
                 <>
                   <img src={imagePreview} />
-                  <ButtonComp
-                    text="Clear"
-                    variant="outline"
-                    id="HazardPin_ImageClearBtn"
-                    type="button"
-                    onClick={handleClearImage}
-                  ></ButtonComp>
+                  <div className="flex gap-2">
+                    <ButtonComp
+                      text="Clear"
+                      variant="outline"
+                      id="HazardPin_ImageClearBtn"
+                      type="button"
+                      onClick={handleClearImage}
+                    ></ButtonComp>
+                    {id && (
+                      <ButtonComp
+                        text="Add Photo"
+                        variant="primary"
+                        id="HazardPin_ImageClearBtn"
+                        type="button"
+                        onClick={(e) => addMedia(e)}
+                      ></ButtonComp>
+                    )}
+                  </div>
                 </>
               )}
             </div>
+            {id ? <Separator /> : null}
             <Field>
               <FieldLabel
                 className={"text-sm w-s"}
