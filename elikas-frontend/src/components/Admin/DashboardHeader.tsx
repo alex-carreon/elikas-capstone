@@ -1,7 +1,7 @@
 import api from "@/api";
 import { useState, useEffect } from "react";
 import { Outlet } from "react-router";
-import { toast } from "sonner";
+import { Skeleton } from "../ui/skeleton";
 
 function DashboardHeader({
   children,
@@ -12,33 +12,30 @@ function DashboardHeader({
 }) {
   const [username, setUsername] = useState("");
   const [email, setEmail] = useState("");
+  const [loading, setLoading] = useState(false);
 
   useEffect(() => {
+    const controller = new AbortController();
     const getProfile = async () => {
       try {
-        const getPromise = new Promise(async (resolve, reject) => {
-          const response = await api.get("/profile");
-          const userData = response.data;
-
-          if (!response) {
-            reject(new Error(userData.error || "Getting your data failed"));
-          } else resolve(userData);
-
-          setUsername(userData.username);
-          setEmail(userData.email);
+        setLoading(true);
+        const response = await api.get("/profile", {
+          signal: controller.signal,
         });
+        const userData = response.data;
 
-        toast.promise(getPromise, {
-          loading: "Getting your information...",
-          error: Error,
-          position: "top-center",
-        });
+        setUsername(userData.username);
+        setEmail(userData.email);
+        setLoading(false);
       } catch (err: string | any) {
-        new Error(err.message || "An error occurred during registration");
+        if (err.name === "CanceledError") return;
+        console.log(err.response?.data);
+        setLoading(false);
       }
     };
 
     getProfile();
+    return () => controller.abort();
   }, []);
 
   return (
@@ -51,9 +48,18 @@ function DashboardHeader({
             </p>
           </div>
           <div className="text-white BeVietnamPro text-end">
-            <p className="text-md">Welcome back,</p>{" "}
-            <p className="text-2xl font-bold">{username}</p>
-            <p className="text-xs">{email}</p>
+            <p className="text-md">Welcome back,</p>
+            {loading ? (
+              <div className="flex flex-col gap-2 items-end mt-2">
+                <Skeleton className="h-4 w-24 bg-[#59260B]/30" />
+                <Skeleton className="h-4 w-24 bg-[#59260B]/30" />
+              </div>
+            ) : (
+              <>
+                <p className="text-2xl font-bold">{username}</p>
+                <p className="text-xs">{email}</p>
+              </>
+            )}
           </div>
         </div>
         <div className="flex flex-col gap-2">{children}</div>
