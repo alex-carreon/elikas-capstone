@@ -194,6 +194,7 @@ Route::middleware(['firebase.auth', 'role:1,2,3'])->group(function () {
         ->whereNumber('id');
     Route::patch('/flood-paths/{id}', [FloodPathController::class, 'update']);
     Route::patch('/flood-paths/{id}/deactivate', [FloodPathController::class, 'destroy']); // soft delete
+    Route::post('/flood-paths/{id}/media', [FloodPathController::class, 'addMedia']);
 
     //EVAC PINS
     Route::post('/pins', [StoreEvacuationAreaController::class, 'storeEvacuationArea']);
