@@ -5,7 +5,7 @@ import {
   DrawerDescription,
   DrawerTitle,
 } from "@/components/ui/drawer";
-import { CircleX } from "lucide-react";
+import { CircleX, X } from "lucide-react";
 import { useEffect, useState } from "react";
 import { cn } from "@/lib/utils";
 import ButtonComp from "./Button";
@@ -132,6 +132,7 @@ function DrawerComp({
   isHazard,
 }: DrawerProps) {
   const [expanded, setExpanded] = useState(false);
+  const [selectedImage, setSelectedImage] = useState<string | null>(null);
 
   useEffect(() => {
     if (!open) setExpanded(false);
@@ -212,7 +213,7 @@ function DrawerComp({
         <DrawerContent
           className={cn(
             "transition-all duration-300 inset-x-0 mx-auto w-full max-w-md",
-            expanded ? "h-[80vh]" : isHazard ? "h-content" : "h-content",
+            expanded ? "h-content" : isHazard ? "h-content" : "h-content",
           )}
           id="Drawer_DrawerContent"
         >
