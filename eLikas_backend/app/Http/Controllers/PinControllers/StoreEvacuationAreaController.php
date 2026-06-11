@@ -27,6 +27,12 @@ class StoreEvacuationAreaController extends Controller
         try {
             $user = $request->attributes->get('firebase_user');
 
+            if (!$user) {
+                return response()->json([
+                    'error' => 'Authentication required to create evacuation area pins'
+                ], 401);
+            }
+
             $request->validate([
                 'name' => 'required|string|max:255',
                 'address' => 'required|string|max:255',
@@ -67,7 +73,7 @@ class StoreEvacuationAreaController extends Controller
             DB::beginTransaction();
 
             $element = SocialElement::create([
-                'user_id' => $user->id,
+                'user_id' => $user?->id ?? null,
                 'posted_at' => now(),
                 'type_id' => 1,
                 'has_media' => !is_null($uploadedPath),
@@ -76,7 +82,7 @@ class StoreEvacuationAreaController extends Controller
             if ($uploadedPath) {
                 $media = MediaFile::create([
                     'parent_id' => $element->id,
-                    'user_id' => $user->id,
+                    'user_id' => $user?->id ?? null,
                     'file_path' => $uploadedPath,
                     'file_type' => 'jpg',
                     'uploaded_at' => now(),
