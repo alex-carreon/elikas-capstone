@@ -73,12 +73,12 @@ function Pins() {
     fallback: "#C7C7C7",
   };
 
-  const getHazardCounts = async () => {
+  const getHazardCounts = async (signal?: AbortSignal) => {
     try {
       setHazardCountLoad(true);
       const [flaggedHazRes, hazRes] = await Promise.all([
-        api.get("admin/flood-paths/flags"),
-        api.get("/admin/flood-paths"),
+        api.get("admin/flood-paths/flags", { signal }),
+        api.get("/admin/flood-paths", { signal }),
       ]);
 
       const inactiveCount = hazRes.data.flood_paths.filter(
@@ -92,70 +92,88 @@ function Pins() {
       setFlaggedPathsCount(flaggedHazRes.data.count);
       setActiveHazCount(activeCount);
       setInactiveHazCount(inactiveCount);
+      setHazardCountLoad(false);
     } catch (err: any) {
-      console.log(err.response.data);
-    } finally {
+      if (err.name === "CanceledError") return;
+      console.log(err);
       setHazardCountLoad(false);
     }
   };
 
-  const getHazardFlagged = async () => {
+  const getHazardFlagged = async (signal?: AbortSignal) => {
     try {
-      setLoading(true);
-      const response = await api.get("admin/flood-paths/flags");
+      const response = await api.get("admin/flood-paths/flags", { signal });
       setFlaggedPaths(response.data.flags);
       setFlaggedPathsCount(response.data.count);
     } catch (err: any) {
-      console.log(err.response.data);
-    } finally {
-      setLoading(false);
+      if (err.name === "CanceledError") return;
+      console.log(err);
     }
   };
 
-  const getHazards = async () => {
+  const getHazards = async (signal?: AbortSignal) => {
     try {
-      setLoading(true);
-
       if (levelFilter || levelFilter !== 0) {
         params.set("flood_level_id", String(levelFilter));
       }
 
       const parameters = params.toString();
-      const endpoint = `/admin/flood-paths${parameters ? `?${parameters}` : ""}`;
-      console.log(endpoint);
+
       const response = await api.get(
         `/admin/flood-paths${parameters ? `?${parameters}` : ""}`,
+        { signal },
       );
       const floodPaths = response.data.flood_paths;
 
       setActiveHazards(floodPaths);
     } catch (err: any) {
-      console.log(err.response.data);
-    } finally {
-      setLoading(false);
+      if (err.name === "CanceledError") {
+        return;
+      }
+      console.log(err.response?.data);
     }
   };
 
-  useEffect(() => {
-    const getLevels = async () => {
-      try {
-        setLoading(true);
-
-        const response = await api.get("/flood-levels");
-        setFloodLevels(response.data.flood_levels);
-      } catch (err: any) {
-        console.log(err.response.data);
+  const getLevels = async (signal?: AbortSignal) => {
+    try {
+      const response = await api.get("/flood-levels", { signal });
+      setFloodLevels(response.data.flood_levels);
+    } catch (err: any) {
+      if (err.name === "CanceledError") {
+        return;
       }
-    };
+      console.log(err.response?.data);
+    }
+  };
 
-    getLevels();
-    getHazardFlagged();
-    getHazards();
-    getHazardCounts();
+  const getAll = async () => {
+    const controller = new AbortController();
+
+    try {
+      setLoading(true);
+      await Promise.all([
+        getLevels(controller.signal),
+        getHazardFlagged(controller.signal),
+        getHazards(controller.signal),
+        getHazardCounts(controller.signal),
+      ]);
+    } catch (err: any) {
+      if (err.name === "CanceledError") return;
+      console.log(err);
+    } finally {
+      setLoading(false);
+    }
+    return () => controller.abort();
+  };
+
+  useEffect(() => {
+    getAll();
   }, []);
 
   useEffect(() => {
-    getHazards();
+    const controller = new AbortController();
+    getHazards(controller.signal);
+    return () => controller.abort();
   }, [levelFilter]);
 
   return (

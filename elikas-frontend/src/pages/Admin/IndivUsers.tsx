@@ -17,6 +17,7 @@ import {
   CollapsibleContent,
 } from "@/components/ui/collapsible";
 import SelectDropdown from "@/components/SelectDropdown";
+import { Toggle } from "@/components/ui/toggle";
 
 type Users = {
   id: number;
@@ -55,53 +56,115 @@ function IndivUsers() {
   const [activeUsers, setActiveUsers] = useState<Users[]>([]);
   const [deacUsers, setDeacUsers] = useState<Users[]>([]);
   const [feedback, setFeedback] = useState<Feedback[]>([]);
-  const [loading, setLoading] = useState(false);
-  const [countLoad, setCountLoad] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [countLoad, setCountLoad] = useState(true);
   const [openCollapse, setOpenCollapse] = useState(false);
   const [barangays, setBarangays] = useState<Barangays[]>([]);
   const [brgyFilter, setBrgyFilter] = useState(0);
+  const [ratingFilter, setRatingFilter] = useState("");
+  const [roleFilter, setRoleFilter] = useState<"indiv" | "brgy" | null>();
+  const [messageFilter, setMessageFilter] = useState("");
+  const [allRating, setAllRating] = useState<Feedback[]>([]);
 
   const params = new URLSearchParams();
 
-  const getIndivData = async () => {
+  const getActiveIndivData = async (signal?: AbortSignal) => {
     try {
-      setLoading(true);
       if (brgyFilter || brgyFilter !== 0) {
         params.set("barangay_id", String(brgyFilter));
       }
 
       const parameter = params.toString();
-      const activeEndpoint = `/admin/users?role=indiv&active=true${parameter ? `&${parameter}` : ""}`;
-      console.log(activeEndpoint);
-      const [activeResponse, deacResponse, feedbackResponse] =
-        await Promise.all([
-          api.get(
-            `/admin/users?role=indiv&active=true${parameter ? `&${parameter}` : ""}`,
-          ),
-          api.get(
-            `/admin/users?role=indiv&active=false${parameter ? `&${parameter}` : ""}`,
-          ),
-          api.get("/admin/feedback"),
-        ]);
+      const [activeResponse, feedbackResponse] = await Promise.all([
+        api.get(
+          `/admin/users?role=indiv&active=true${parameter ? `&${parameter}` : ""}`,
+          { signal },
+        ),
+        api.get(`/admin/feedback${parameter ? `?${parameter}` : ""}`, {
+          signal,
+        }),
+      ]);
 
       setActiveUsers(activeResponse.data.users);
-      setDeacUsers(deacResponse.data.users);
       setFeedback(feedbackResponse.data.feedback);
     } catch (err: string | any) {
-      new Error(err.message || "An error occurred during registration");
-    } finally {
-      setLoading(false);
+      if (err.name === "CanceledError") {
+        return;
+      }
+      console.log(err.response?.data);
     }
   };
 
-  const getIndivCount = async () => {
+  const getInactiveIndivData = async (signal?: AbortSignal) => {
+    try {
+      if (brgyFilter || brgyFilter !== 0) {
+        params.set("barangay_id", String(brgyFilter));
+      }
+
+      const parameter = params.toString();
+
+      const [deacResponse, feedbackResponse] = await Promise.all([
+        api.get(
+          `/admin/users?role=indiv&active=false${parameter ? `&${parameter}` : ""}`,
+          { signal },
+        ),
+        api.get(`/admin/feedback${parameter ? `?${parameter}` : ""}`, {
+          signal,
+        }),
+      ]);
+
+      setDeacUsers(deacResponse.data.users);
+      setFeedback(feedbackResponse.data.feedback);
+    } catch (err: string | any) {
+      if (err.name === "CanceledError") {
+        return;
+      }
+      console.log(err.response?.data);
+    }
+  };
+
+  const getFeedbacks = async (signal?: AbortSignal) => {
+    try {
+      if (brgyFilter || brgyFilter !== 0) {
+        params.set("location_id", String(brgyFilter));
+      }
+
+      if (ratingFilter) {
+        params.append("rating", ratingFilter);
+      }
+
+      if (roleFilter) {
+        params.append("role", roleFilter);
+      }
+
+      if (messageFilter) {
+        params.append("message", messageFilter);
+      }
+
+      const parameter = params.toString();
+
+      const feedbackResponse = await api.get(
+        `/admin/feedback${parameter ? `?${parameter}` : ""}`,
+        { signal },
+      );
+
+      setFeedback(feedbackResponse.data.feedback);
+    } catch (err: string | any) {
+      if (err.name === "CanceledError") {
+        return;
+      }
+      console.log(err.response?.data);
+    }
+  };
+
+  const getIndivCount = async (signal?: AbortSignal) => {
     try {
       setCountLoad(true);
       const [activeResponse, deacResponse, feedbackResponse] =
         await Promise.all([
-          api.get("/admin/users?role=indiv&active=true"),
-          api.get("/admin/users?role=indiv&active=false"),
-          api.get("/admin/feedback"),
+          api.get("/admin/users?role=indiv&active=true", { signal }),
+          api.get("/admin/users?role=indiv&active=false", { signal }),
+          api.get("/admin/feedback", { signal }),
         ]);
 
       const ratings = feedbackResponse.data.feedback.map(
@@ -116,36 +179,89 @@ function IndivUsers() {
       setActiveCount(activeResponse.data.count);
       setDeacCount(deacResponse.data.count);
       setFeedbackAve(aveRating);
+
+      setCountLoad(false);
     } catch (err: string | any) {
-      new Error(err.message || "An error occurred during registration");
-    } finally {
+      if (err.name === "CanceledError") {
+        setCountLoad(false);
+        return;
+      }
+      console.log(err.response?.data);
       setCountLoad(false);
     }
   };
 
-  useEffect(() => {
-    const getBrgy = async () => {
-      try {
-        setLoading(true);
-        const brgyRes = await api.get(`/locations/barangays?city_id=2`);
+  const getBrgy = async (signal?: AbortSignal) => {
+    try {
+      const brgyRes = await api.get(`/locations/barangays?city_id=2`, {
+        signal,
+      });
 
-        const barangays = brgyRes.data.Barangays;
-        console.log(barangays);
-        setBarangays(barangays);
-      } catch (err: any) {
-        console.log(err.message);
-      } finally {
-        setLoading(false);
+      const barangays = brgyRes.data.Barangays;
+      console.log(barangays);
+      setBarangays(barangays);
+    } catch (err: any) {
+      if (err.name === "CanceledError") {
+        return;
       }
-    };
-    getIndivData();
-    getIndivCount();
-    getBrgy();
+      console.log(err.response?.data);
+    }
+  };
+
+  const getAllRating = async (signal?: AbortSignal) => {
+    try {
+      const response = await api.get("/admin/feedback", { signal });
+      setAllRating(response.data.feedback);
+    } catch (err: any) {
+      if (err.name === "CanceledError") {
+        return;
+      }
+      console.log(err.response?.data);
+    }
+  };
+
+  const getAll = async () => {
+    const controller = new AbortController();
+
+    try {
+      setLoading(true);
+      await Promise.all([
+        getAllRating(controller.signal),
+        getActiveIndivData(controller.signal),
+        getInactiveIndivData(controller.signal),
+        getFeedbacks(controller.signal),
+        getBrgy(controller.signal),
+        getIndivCount(controller.signal),
+      ]);
+    } catch (err: any) {
+      if (err.name === "CanceledError") return;
+      console.log(err);
+    } finally {
+      setLoading(false);
+    }
+
+    return () => controller.abort();
+  };
+
+  useEffect(() => {
+    getAll();
   }, []);
 
   useEffect(() => {
-    getIndivData();
-  }, [brgyFilter]);
+    const controller = new AbortController();
+
+    if (isActiveUsers) {
+      getActiveIndivData(controller.signal);
+    }
+    if (isFeedback) {
+      getFeedbacks(controller.signal);
+    }
+    if (!isActiveUsers) {
+      getInactiveIndivData(controller.signal);
+    }
+
+    return () => controller.abort();
+  }, [brgyFilter, ratingFilter, roleFilter, messageFilter]);
 
   return (
     <>
@@ -212,14 +328,15 @@ function IndivUsers() {
                   <InputGroupInput
                     className="text-sm h-8"
                     id="Admin_IndivSearchField"
+                    onChange={(e) => setMessageFilter(e.target.value)}
                   ></InputGroupInput>
                   <InputGroupAddon align="inline-end">
-                    <Search />
+                    <Search onClick={() => getFeedbacks()} />
                   </InputGroupAddon>
                 </InputGroup>
                 <CollapsibleTrigger
                   onClick={() => setOpenCollapse(!openCollapse)}
-                  id="History_FiltersTrigger"
+                  id="Admin_IndivFilterTrigger"
                 >
                   <div className="w-full flex flex-row justify-end mb-2">
                     Filters
@@ -233,31 +350,77 @@ function IndivUsers() {
               </div>
 
               <CollapsibleContent
-                id="History_FiltersContent"
+                id="Admin_IndivFilterContent"
                 className="flex flex-col items-center px-2.5 mt-2 text-sm"
               >
-                <div className="w-full gap-2 bg-gray-300/50 p-4 rounded-lg flex">
-                  <SelectDropdown
-                    value={String(brgyFilter)}
-                    onValueChange={(val) => setBrgyFilter(Number(val))}
-                    placeholder="Barangay"
-                    id="History_LevelFilter"
-                    options={[
-                      { label: "All", value: "0" },
-                      ...(barangays?.map((barangay) => ({
-                        label: barangay.name,
-                        value: String(barangay.id),
-                      })) ?? []),
-                    ]}
-                  />
-                  {brgyFilter ? (
-                    <button
-                      onClick={() => setBrgyFilter(0)}
-                      id="History_ClearBrgyFilter"
-                    >
-                      <X size={14} />
-                    </button>
-                  ) : null}
+                <div className="w-full gap-2 bg-gray-300/50 p-4 rounded-lg flex flex-col items-center">
+                  {isFeedback && (
+                    <div className="flex flex-row w-full gap-2 justify-end">
+                      <Toggle
+                        size="sm"
+                        variant="outline"
+                        className="aria-pressed:bg-red-500/50 aria-pressed:text-white border-gray-400"
+                        onPressedChange={(pressed) =>
+                          setRoleFilter(pressed ? "indiv" : null)
+                        }
+                        pressed={roleFilter === "indiv"}
+                        id="Admin_IndivFeedbackRoleIndiv"
+                      >
+                        Indiv
+                      </Toggle>
+                      <Toggle
+                        size="sm"
+                        variant="outline"
+                        className="aria-pressed:bg-red-500/50 aria-pressed:text-white border-gray-400"
+                        onPressedChange={(pressed) =>
+                          setRoleFilter(pressed ? "brgy" : null)
+                        }
+                        pressed={roleFilter === "brgy"}
+                        id="Admin_IndivFeedbackRoleBrgy"
+                      >
+                        Brgy
+                      </Toggle>
+                    </div>
+                  )}
+                  <div className="flex flex-row w-full gap-2">
+                    {isFeedback ? (
+                      <SelectDropdown
+                        value={String(ratingFilter)}
+                        onValueChange={(val) => setRatingFilter(val)}
+                        placeholder="Rating"
+                        id="Admin_IndivFeedbackRating"
+                        options={[
+                          { label: "All", value: "0" },
+                          ...(allRating?.map((rating) => ({
+                            label: String(rating.rating),
+                            value: String(rating.rating),
+                          })) ?? []),
+                        ]}
+                      />
+                    ) : (
+                      <SelectDropdown
+                        value={String(brgyFilter)}
+                        onValueChange={(val) => setBrgyFilter(Number(val))}
+                        placeholder="Barangay"
+                        id="Admin_IndivFeedbackBrgy"
+                        options={[
+                          { label: "All", value: "0" },
+                          ...(barangays?.map((brgy) => ({
+                            label: String(brgy.name),
+                            value: String(brgy.id),
+                          })) ?? []),
+                        ]}
+                      />
+                    )}
+                    {ratingFilter || brgyFilter ? (
+                      <button
+                        onClick={() => setRatingFilter("")}
+                        id="Admin_IndivFeedbackRatingClear"
+                      >
+                        <X size={14} />
+                      </button>
+                    ) : null}
+                  </div>
                 </div>
               </CollapsibleContent>
             </Collapsible>
@@ -300,6 +463,7 @@ function IndivUsers() {
                       key={index}
                       postId={String(feedback.id)}
                       title={`Rating: ${String(feedback.rating)}`}
+                      desc={feedback.message}
                       address={`User: ${feedback.submitted_by.username} - ${feedback.submitted_by.role}`}
                       datePosted={feedback.sent_at}
                       link=""
