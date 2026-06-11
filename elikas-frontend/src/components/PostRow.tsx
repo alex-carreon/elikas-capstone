@@ -1,4 +1,4 @@
-import { Flag, ThumbsUp, ThumbsDown } from "lucide-react";
+import { Flag, ThumbsUp, ThumbsDown, UserIcon } from "lucide-react";
 import {
   Collapsible,
   CollapsibleContent,
@@ -17,6 +17,9 @@ import ButtonComp from "./Button";
 import { Link } from "react-router";
 import { toast } from "sonner";
 import { Skeleton } from "./ui/skeleton";
+import { useUserContext } from "@/context/AuthContext";
+import brgyProfile from "@/assets/brgyProfile.svg";
+import adminProfile from "@/assets/adminProfile.svg";
 
 type Reasons = {
   id: number;
@@ -39,6 +42,7 @@ interface PostRowProps {
   isHazardPost: boolean;
   isEvacComments: boolean;
   isMyHazard?: boolean;
+  role?: string;
 }
 
 function PostRow({
@@ -57,6 +61,7 @@ function PostRow({
   isHazardPost,
   isEvacComments,
   isMyHazard,
+  role,
 }: PostRowProps) {
   const [report, setReport] = useState(false);
   const [upvote, setUpvote] = useState(0);
@@ -236,10 +241,6 @@ function PostRow({
     }
   };
 
-  const handleRemove = () => {
-    console.log("Report Removed");
-  };
-
   return (
     <>
       {openDialog &&
@@ -307,7 +308,6 @@ function PostRow({
               fill="#C43E3E"
               strokeWidth={1}
               size={16}
-              onClick={handleRemove}
             />
           ) : (
             <Flag id="Drawer_PostFlagBtn" strokeWidth={1} size={16} />
@@ -317,7 +317,15 @@ function PostRow({
         <div className="bg-[#B6D6FF] p-3 rounded-lg flex flex-col gap-2">
           <div className="flex flex-row">
             <div className="w-full flex flex-row gap-2">
-              <img src={dataUri} className="w-10" />
+              {seed ? (
+                <img src={dataUri} className="w-10" />
+              ) : role === "brgy_op" ? (
+                <img src={brgyProfile} className="w-11" />
+              ) : role === "admin" ? (
+                <img src={adminProfile} className="w-11" />
+              ) : (
+                <UserIcon className="w-11" />
+              )}
               <div className="w-full flex flex-col">
                 <div className="flex flex-row justify-between">
                   <p>
