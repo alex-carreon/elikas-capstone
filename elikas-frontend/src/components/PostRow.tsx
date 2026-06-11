@@ -70,17 +70,19 @@ function PostRow({
   const [reasons, setReasons] = useState<Reasons[]>([]);
   const [reasonLoad, setReasonLoad] = useState(false);
 
-  const avatar = createAvatar(bigSmile, {
-    seed: seed,
-    backgroundColor: ["b6e3f4", "c0aede", "d1d4f9"],
-    radius: 50,
-    scale: 90,
-    accessoriesProbability: 50,
-    eyes: ["cheery", "normal", "starstruck", "winking"],
-    mouth: ["braces", "gapSmile", "kawaii", "openedSmile", "teethSmile"],
-  });
+  const avatar = seed
+    ? createAvatar(bigSmile, {
+        seed: seed,
+        backgroundColor: ["b6e3f4", "c0aede", "d1d4f9"],
+        radius: 50,
+        scale: 90,
+        accessoriesProbability: 50,
+        eyes: ["cheery", "normal", "starstruck", "winking"],
+        mouth: ["braces", "gapSmile", "kawaii", "openedSmile", "teethSmile"],
+      })
+    : null;
 
-  const dataUri = avatar.toDataUri();
+  const dataUri = avatar?.toDataUri() ?? "";
 
   const getFlagged = async () => {
     try {
@@ -436,7 +438,11 @@ function PostRow({
                 )}
               </div>
             </div> */}
-            <img src={image} className="m-2" />
+            {image ? (
+              <>
+                <img src={image} />
+              </>
+            ) : null}
           </CollapsibleContent>
         </Collapsible>
       </div>

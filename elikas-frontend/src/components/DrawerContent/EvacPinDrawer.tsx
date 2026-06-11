@@ -211,17 +211,19 @@ function EvacPinDrawer({
 
   const { role } = useUserContext();
 
-  const avatar = createAvatar(bigSmile, {
-    seed: seed,
-    backgroundColor: ["b6e3f4", "c0aede", "d1d4f9"],
-    radius: 50,
-    scale: 90,
-    accessoriesProbability: 50,
-    eyes: ["cheery", "normal", "starstruck", "winking"],
-    mouth: ["braces", "gapSmile", "kawaii", "openedSmile", "teethSmile"],
-  });
+  const avatar = seed
+    ? createAvatar(bigSmile, {
+        seed: seed,
+        backgroundColor: ["b6e3f4", "c0aede", "d1d4f9"],
+        radius: 50,
+        scale: 90,
+        accessoriesProbability: 50,
+        eyes: ["cheery", "normal", "starstruck", "winking"],
+        mouth: ["braces", "gapSmile", "kawaii", "openedSmile", "teethSmile"],
+      })
+    : null;
 
-  const dataUri = avatar.toDataUri();
+  const dataUri = avatar?.toDataUri() ?? "";
 
   const handleCameraClick = () => {
     cameraInputRef.current?.click();
@@ -235,6 +237,13 @@ function EvacPinDrawer({
     const file = e.target.files?.[0];
 
     if (!file) return;
+
+    toast.info(
+      `Size: ${(file.size / 1024 / 1024).toFixed(2)}MB | Type: ${file.type}`,
+      {
+        position: "top-center",
+      },
+    );
 
     setImage(file);
     setImagePreview(URL.createObjectURL(file));
@@ -271,7 +280,6 @@ function EvacPinDrawer({
       const response = await api.get("/profile");
 
       const userData = response.data;
-      console.log(userData);
 
       setSeed(userData.avatar_seed);
 
@@ -285,7 +293,7 @@ function EvacPinDrawer({
     }
   };
 
-  const submitComment = (e: FormEvent) => {
+  const submitComment = async (e: FormEvent) => {
     e.preventDefault();
 
     const formData = new FormData();
@@ -302,11 +310,6 @@ function EvacPinDrawer({
       const response = api.post(
         `/evac-areas/${selectedPin.id}/comments`,
         formData,
-        {
-          headers: {
-            "Content-Type": undefined,
-          },
-        },
       );
 
       toast.promise(response, {
