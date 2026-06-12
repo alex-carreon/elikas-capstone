@@ -33,7 +33,7 @@ use \OwenIt\Auditing\Contracts\Auditable;
 class Sensor extends Model implements Auditable
 {
     use HasSpatial;
-    use \OwenIt\Auditing\CustomAuditable;
+    use \App\Services\Audit\CustomAuditable;
 
 	protected $table = 'Sensors';
 	public $timestamps = false;
