@@ -11,9 +11,12 @@ class TargetTableResolver implements Resolver
 {
     public static function resolve(Auditable $auditable)
     {
-        $tableName = $auditable instanceof Model ? $auditable->getTable() : null;
-        $targetTable = TargetTable::where('table_name', $tableName)->value('id');
+        if ($auditable instanceof Model) {
+            $tableName = $auditable->getTable();
+            $targetTableId = TargetTable::where('table_name', $tableName)->value('id');
+            return $targetTableId ? (int) $targetTableId : null;
+        }
 
-        return $targetTable;
+        return null;
     }
 }
