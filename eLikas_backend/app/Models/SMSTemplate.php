@@ -8,22 +8,25 @@ namespace App\Models;
 
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Model;
+use \OwenIt\Auditing\Contracts\Auditable;
 
 /**
  * Class SMSTemplate
- * 
+ *
  * @property int $id
  * @property int $optr_id
  * @property string $template_name
  * @property string $message_content
  * @property Carbon $created_at
- * 
+ *
  * @property GovOp $gov_op
  *
  * @package App\Models
  */
-class SMSTemplate extends Model
+class SMSTemplate extends Model implements Auditable
 {
+    use \App\Services\Audit\CustomAuditable;
+
 	protected $table = 'SMSTemplates';
 	public $timestamps = false;
 
