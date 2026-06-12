@@ -37,6 +37,8 @@ class FloodPathController extends Controller
         $floodPaths = FloodPath::with([
                 'floodLevel:id,level_name',
                 'socialElement:id,user_id,posted_at,deactivated_at',
+                'socialElement.user:id,role_id',
+                'socialElement.user.role:id,role_name',
             ])
             ->notExpired()
             ->notDeactivated()
@@ -49,6 +51,9 @@ class FloodPathController extends Controller
                 'id' => $fp->id,
                 'level' => $fp->floodLevel,
                 'path' => $this->formatPath($fp->path),
+                'posted_by' => [
+                    'role' => $fp->socialElement->user?->role?->role_name,
+                ],
 
                 'my_path' => $user
                     ? $fp->socialElement->user_id === $user->id
