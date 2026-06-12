@@ -75,6 +75,7 @@ type postedBy = {
   username: string;
   posted_at: string;
   avatar_seed: string;
+  role: string;
 };
 
 type media = {
@@ -640,6 +641,7 @@ function EvacPinDrawer({
                         isHazardPost={false}
                         image={comment.media}
                         seed={comment.posted_by.avatar_seed}
+                        role={comment.posted_by.role}
                       />
                     </Fragment>
                   ))
