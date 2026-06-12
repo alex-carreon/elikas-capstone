@@ -7,20 +7,23 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use \OwenIt\Auditing\Contracts\Auditable;
 
 /**
  * Class PhoneNumber
- * 
+ *
  * @property int $id
  * @property int $user_id
  * @property string $phone_no
- * 
+ *
  * @property User $user
  *
  * @package App\Models
  */
-class PhoneNumber extends Model
+class PhoneNumber extends Model implements Auditable
 {
+    use \App\Services\Audit\CustomAuditable;
+
 	protected $table = 'PhoneNumbers';
 	public $timestamps = false;
 

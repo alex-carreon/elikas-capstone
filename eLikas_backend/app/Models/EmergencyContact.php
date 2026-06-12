@@ -8,6 +8,7 @@ namespace App\Models;
 
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Model;
+use \OwenIt\Auditing\Contracts\Auditable;
 
 /**
  * Class EmergencyContact
@@ -26,8 +27,10 @@ use Illuminate\Database\Eloquent\Model;
  *
  * @package App\Models
  */
-class EmergencyContact extends Model
+class EmergencyContact extends Model implements Auditable
 {
+    use \App\Services\Audit\CustomAuditable;
+
 	protected $table = 'EmergencyContacts';
 	public $timestamps = false;
 

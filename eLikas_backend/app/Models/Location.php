@@ -8,6 +8,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Model;
+use \OwenIt\Auditing\Contracts\Auditable;
 
 /**
  * Class Location
@@ -28,8 +29,10 @@ use Illuminate\Database\Eloquent\Model;
  *
  * @package App\Models
  */
-class Location extends Model
+class Location extends Model implements Auditable
 {
+    use \App\Services\Audit\CustomAuditable;
+
 	protected $table = 'Locations';
 	public $timestamps = false;
 
