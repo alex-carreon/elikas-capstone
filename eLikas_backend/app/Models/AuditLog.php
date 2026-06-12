@@ -10,6 +10,11 @@ class AuditLog extends OwenItAudit
 
 	public function target_table()
 	{
-		return $this->belongsTo(TargetTable::class, 'target_type');
+		return $this->belongsTo(TargetTable::class, 'target_table_id');
 	}
+
+    public function user()
+    {
+        return $this->belongsTo(User::class, 'user_id');
+    }
 }
