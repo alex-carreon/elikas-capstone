@@ -11,10 +11,10 @@ use Illuminate\Database\Eloquent\Model;
 
 /**
  * Class TargetTable
- * 
+ *
  * @property int $id
  * @property string $table_name
- * 
+ *
  * @property Collection|AuditLog[] $audit_logs
  * @property Collection|SocialElement[] $social_elements
  *

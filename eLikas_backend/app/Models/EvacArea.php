@@ -5,10 +5,12 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
 use MatanYadaev\EloquentSpatial\Objects\Point;
 use MatanYadaev\EloquentSpatial\Traits\HasSpatial;
+use \OwenIt\Auditing\Contracts\Auditable;
 
-class EvacArea extends Model
+class EvacArea extends Model implements Auditable
 {
     use HasSpatial;
+    use \App\Services\Audit\CustomAuditable;
 
     protected $table = 'EvacAreas';
     public $timestamps = false;

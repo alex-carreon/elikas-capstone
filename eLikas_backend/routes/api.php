@@ -32,6 +32,7 @@ use App\Http\Controllers\Votes\VoteController;
 use App\Http\Controllers\Votes\VoteCommentController;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\SensorControllers\SensorLogController;
+use App\Http\Controllers\AuditLogController;
 
 Route::get('/test', function () {
     return response()->json([
@@ -113,6 +114,7 @@ Route::prefix('admin')->middleware(['firebase.auth', 'role:1'])->group(function 
 
     Route::post('/create-admin', [AdminController::class, 'createUser']);
 
+    Route::apiResource('audit-logs', AuditLogController::class)->only(['index', 'show']);
 });
 
 // ---------------------------------------------------------------
