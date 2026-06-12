@@ -16,12 +16,7 @@ import ButtonComp from "@/components/Button";
 import { toast } from "sonner";
 import AlertDialogue from "@/components/AlertDialogue";
 import { toZonedTime, format } from "date-fns-tz";
-import {
-  handleUpdate,
-  handleReOpen,
-  handleDelete,
-  handleReactivate,
-} from "@/lib/evacUtils";
+import { handleUpdate, handleReOpen, handleDelete } from "@/lib/evacUtils";
 import { addDays } from "date-fns";
 
 type EvacType = {
@@ -127,7 +122,6 @@ function EvacDetails() {
   const [hasUpdated, setHasUpdated] = useState(false);
   const [willReopen, setWillReopen] = useState(false);
 
-  const capacityCount = Number(capacity);
   const toiletCount = Number(toilet);
   const kitchenCount = Number(kitchen);
   const childPrayerCount = Number(childPrayer);
@@ -333,14 +327,6 @@ function EvacDetails() {
     });
   };
 
-  const reactivate = (e: React.FormEvent) =>
-    handleReactivate({
-      e: e,
-      id: id,
-      navigate: navigate,
-      redirect: "/admin-pins",
-    });
-
   useEffect(() => {
     getAll();
   }, []);
@@ -379,9 +365,9 @@ function EvacDetails() {
     <>
       {willReopen && (
         <AlertDialogue
-          contentId="EvacPin_ReopenContent"
-          closeId="EvacPin_ReopenClose"
-          actionId="EvacPin_ReopenBtn"
+          contentId="Admin_EvacDetailsDialogReopenContent"
+          closeId="Admin_EvacDetailsDialogReopenClosebtn"
+          actionId="Admin_EvacDetailsDialogReopenbtn"
           open={willReopen}
           title="You are about to re-open this pin"
           description="Re-opening this pin add it to the map. The expiration date will default to 7 days unless specified."
@@ -393,8 +379,8 @@ function EvacDetails() {
         >
           <DatePickerInput
             label="Expiry Date"
-            idField="EvacPin_ReopenExpiryField"
-            idBtn="EvacPin_ReopenCalendarBtn"
+            idField="Admin_EvacDetailsDialogReopenExp"
+            idBtn="Admin_EvacDetailsDialogReopenCalendar"
             placeholder="Enter Expiration Date"
             value={expiry}
             onChange={setExpiry}
@@ -405,9 +391,9 @@ function EvacDetails() {
       )}
       {willOpen && (
         <AlertDialogue
-          contentId="EvacPin_OpenContent"
-          closeId="EvacPin_OpenClose"
-          actionId="EvacPin_OpenBtn"
+          contentId="Admin_EvacDetailsDialogOpenContent"
+          closeId="Admin_EvacDetailsDialogOpenCloseBtn"
+          actionId="Admin_EvacDetailsDialogOpenBtn"
           open={willOpen}
           title="You are about to open this pin"
           description="Opening this pin will let citizens know that this evacuation center still has space."
@@ -425,7 +411,7 @@ function EvacDetails() {
             onValueChange={setCapacity}
             label="Capacity Level*"
             placeholder="Select the capacity level"
-            id="EvacPin_CapacityOpenField"
+            id="Admin_EvacDetailsDialogOpenCapacity"
             onSubmit={(e) => setCapacity(e.target.value)}
             options={capacityLevels
               ?.filter((level) => level.capacity_level !== "Full")
@@ -439,12 +425,12 @@ function EvacDetails() {
       )}
       <FormLayout
         formTitle="Evacuation Pin Details"
-        formId="Admin_EvacPinUpdateForm"
+        formId="Admin_EvacDetailsUpdateForm"
         isEditable={isEditable}
-        updateId="Admin_EvacPinUpdBtn"
-        deleteId="Admin_EvacPinDelBtn"
-        submitUpdId="Admin_EvacPinSubmitUpd"
-        closeUpdId="Admin_EvacPinCloseUpd"
+        updateId="Admin_EvacDetailsUpdBtn"
+        deleteId="Admin_EvacDetailsDelBtn"
+        submitUpdId="Admin_EvacDetailsUpdSubBtn"
+        closeUpdId="Admin_EvacDetailsUpdCloseBtn"
         updateClick={() => setIsEditable(true)}
         closeUpdClick={() => {
           setIsEditable(false);
@@ -459,7 +445,7 @@ function EvacDetails() {
         ) : (
           <>
             <form
-              id="Admin_EvacPinUpdateForm"
+              id="Admin_EvacDetailsUpdateForm"
               onSubmit={(e) => update(e)}
               className="flex flex-col gap-4"
             >
@@ -467,7 +453,7 @@ function EvacDetails() {
                 <Field>
                   <CheckBox
                     text="Is this evacuation center persistent?"
-                    id="EvacPin_isPersistentChckbox"
+                    id="Admin_EvacDetailsIsPersistent"
                     checked={isPersistent}
                     onCheckedChange={setIsPersistent}
                     readOnly={!isEditable}
@@ -475,14 +461,14 @@ function EvacDetails() {
                   <div className="flex gap-4">
                     <CheckBox
                       text="for Regular Flooding"
-                      id="EvacPin_isRegChckbox"
+                      id="Admin_EvacDetailsIsReg"
                       checked={regFlood}
                       onCheckedChange={setRegFlood}
                       readOnly={!isEditable}
                     />
                     <CheckBox
                       text="for Heavy Flooding"
-                      id="EvacPin_isHeavyChckbox"
+                      id="Admin_EvacDetailsIsHeavy"
                       checked={heavyFlood}
                       onCheckedChange={setHeavyFlood}
                       readOnly={!isEditable}
@@ -490,7 +476,10 @@ function EvacDetails() {
                   </div>
                 </Field>
                 {pinDetails?.media[0]?.url && (
-                  <img src={String(pinDetails?.media[0].url)} />
+                  <img
+                    src={String(pinDetails?.media[0].url)}
+                    id="Admin_EvacDetailsMedia"
+                  />
                 )}
                 {isEditable ? (
                   <SelectDropdown
@@ -498,7 +487,7 @@ function EvacDetails() {
                     onValueChange={(val) => setAreaType(Number(val))}
                     label="Location Type*"
                     placeholder="Select the location type"
-                    id="EvacPin_LocTypeField"
+                    id="Admin_EvacDetailsAreaTypeDropdown"
                     onSubmit={(e) => setAreaType(Number(e.target.value))}
                     options={evacTypes.map((type) => ({
                       label: type.evac_type,
@@ -510,7 +499,7 @@ function EvacDetails() {
                     label="Location Type"
                     value={pinDetails?.area_type}
                     inputType="text"
-                    id="EvacPin_LocType"
+                    id="Admin_EvacDetailsAreaType"
                     readonly
                   />
                 )}
@@ -518,7 +507,7 @@ function EvacDetails() {
                   label="Pin Name*"
                   value={pinName}
                   inputType="text"
-                  id="EvacPin_PinNameField"
+                  id="Admin_EvacDetailsName"
                   onSubmit={(e) => setPinName(e.target.value)}
                   readonly={!isEditable}
                 />
@@ -531,7 +520,7 @@ function EvacDetails() {
                   </FieldLabel>
                   <InputGroupTextarea
                     className="h-10 border rounded-lg text-xs"
-                    id="EvacPin_DescField"
+                    id="Admin_EvacDetailsDesc"
                     value={desc || ""}
                     onChange={(e) => setDesc(e.target.value)}
                     readOnly={!isEditable}
@@ -560,7 +549,7 @@ function EvacDetails() {
                     zoom={17}
                     scrollWheelZoom={false}
                     style={{ height: "30vh", width: "100%" }}
-                    id="EvacPin_MapContainer"
+                    id="Admin_EvacDetailsMapContainer"
                   >
                     <TileLayer
                       attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
@@ -572,7 +561,9 @@ function EvacDetails() {
                       clickedLoc={pinDetails?.coordinates}
                     />
                   </MapContainer>
-                  <p className="text-sm">{address}</p>
+                  <p className="text-sm" id="Admin_EvacDetailsAddress">
+                    {address}
+                  </p>
                 </Field>
                 {isEditable || !id ? (
                   <SelectDropdown
@@ -580,7 +571,7 @@ function EvacDetails() {
                     onValueChange={setCapacity}
                     label="Capacity Level*"
                     placeholder="Select the capacity level"
-                    id="EvacPin_CapacityField"
+                    id="Admin_EvacDetailsCapacityDropdown"
                     onSubmit={(e) => setCapacity(e.target.value)}
                     options={capacityLevels
                       ?.filter((level) => level.capacity_level !== "Full")
@@ -592,7 +583,7 @@ function EvacDetails() {
                 ) : (
                   <TextField
                     label="Capacity Level"
-                    id="EvacPin_Capacity"
+                    id="Admin_EvacDetailsCapacity"
                     inputType="text"
                     value={pinDetails?.capacity_name}
                     readonly
@@ -612,14 +603,14 @@ function EvacDetails() {
                       <div className="flex gap-6">
                         <CheckBox
                           text="Accomodation"
-                          id="EvacPin_AccomodationChckbox"
+                          id="Admin_EvacDetailsAcco"
                           checked={hasAccom}
                           onCheckedChange={() => setHasAccom(!hasAccom)}
                           readOnly={!isEditable}
                         />
                         <CheckBox
                           text="DRRMO Office"
-                          id="EvacPin_DRRMOChckbox"
+                          id="Admin_EvacDetailsDRRMO"
                           checked={hasDRRMO}
                           onCheckedChange={() => setHasDRRMO(!hasDRRMO)}
                           readOnly={!isEditable}
@@ -628,14 +619,14 @@ function EvacDetails() {
                       <div className="flex gap-6">
                         <CheckBox
                           text="Health Station"
-                          id="EvacPin_HealthChckbox"
+                          id="Admin_EvacDetailsHealth"
                           checked={hasHealth}
                           onCheckedChange={() => setHasHealth(!hasHealth)}
                           readOnly={!isEditable}
                         />
                         <CheckBox
                           text="PWD Friendly"
-                          id="EvacPin_PWDChckbox"
+                          id="Admin_EvacDetailsPWD"
                           checked={pwdFriendly}
                           onCheckedChange={() => setPWDFriendly(!pwdFriendly)}
                           readOnly={!isEditable}
@@ -644,14 +635,14 @@ function EvacDetails() {
                       <div className="flex gap-6">
                         <CheckBox
                           text="Toilet"
-                          id="EvacPin_ToiletChckbox"
+                          id="Admin_EvacDetailsToilet"
                           checked={hasToilet}
                           onCheckedChange={() => setHasToilet(!hasToilet)}
                           readOnly={!isEditable}
                         />
                         <CheckBox
                           text="Kitchen"
-                          id="EvacPin_KitchenChckbox"
+                          id="Admin_EvacDetailsKitchen"
                           checked={hasKitchen}
                           onCheckedChange={() => setHasKitchen(!hasKitchen)}
                           readOnly={!isEditable}
@@ -660,7 +651,7 @@ function EvacDetails() {
                       <div className="flex gap-6">
                         <CheckBox
                           text="Child/Prayer Area"
-                          id="EvacPin_ChildPrayerChckbox"
+                          id="Admin_EvacDetailsChildPrayer"
                           checked={hasChildPrayer}
                           onCheckedChange={() =>
                             setHasChildPrayer(!hasChildPrayer)
@@ -669,7 +660,7 @@ function EvacDetails() {
                         />
                         <CheckBox
                           text="Breastfeeding Area"
-                          id="EvacPin_BreastfeedChckbox"
+                          id="Admin_EvacDetailsBreastfeed"
                           checked={hasBreastfeed}
                           onCheckedChange={() =>
                             setHasBreastfeed(!hasBreastfeed)
@@ -680,7 +671,7 @@ function EvacDetails() {
                       <div className="flex gap-4">
                         <CheckBox
                           text="Rainwater Catchment Facility"
-                          id="EvacPin_RainCatchChckbox"
+                          id="Admin_EvacDetailsRainCatch"
                           checked={hasCatchment}
                           onCheckedChange={() => setHasCatchment(!hasCatchment)}
                           readOnly={!isEditable}
@@ -691,7 +682,7 @@ function EvacDetails() {
                       {hasToilet && (
                         <TextField
                           label="Number of Toilets (optional)"
-                          id="EvacPin_ToiletField"
+                          id="Admin_EvacDetailsToiletCount"
                           inputType="number"
                           onSubmit={(e) => setToilet(e.target.value)}
                           value={toilet}
@@ -700,7 +691,7 @@ function EvacDetails() {
                       {hasKitchen && (
                         <TextField
                           label="Number of Kitchens (optional)"
-                          id="EvacPin_KitchenField"
+                          id="Admin_EvacDetailsKitchenCount"
                           inputType="number"
                           onSubmit={(e) => setKicthen(e.target.value)}
                           value={kitchen}
@@ -709,7 +700,7 @@ function EvacDetails() {
                       {hasChildPrayer && (
                         <TextField
                           label="Number of Prayer Areas/Child-friendly areas (optional)"
-                          id="EvacPin_PrayerChildField"
+                          id="Admin_EvacDetailsChildPrayerCount"
                           inputType="number"
                           onSubmit={(e) => setChildPrayer(e.target.value)}
                           value={childPrayer}
@@ -718,7 +709,7 @@ function EvacDetails() {
                       {hasBreastfeed && (
                         <TextField
                           label="Number of Breastfeeding areas (optional)"
-                          id="EvacPin_BreastfeedField"
+                          id="Admin_EvacDetailsBreastfeedCount"
                           inputType="number"
                           onSubmit={(e) => setBreastfeed(e.target.value)}
                           value={breastfeed}
@@ -729,7 +720,7 @@ function EvacDetails() {
                 </Field>
                 <TextField
                   label="Other Facilities (optional)"
-                  id="EvacPin_OtherFacilitiesField"
+                  id="Admin_EvacDetailsOther"
                   inputType="text"
                   onSubmit={(e) => setOther(e.target.value)}
                   value={other || ""}
@@ -737,7 +728,7 @@ function EvacDetails() {
                 ></TextField>
                 <TextField
                   label="Contact Person*"
-                  id="EvacPin_ContactPersonField"
+                  id="Admin_EvacDetailsContPerson"
                   inputType="text"
                   onSubmit={(e) => setContactPerson(e.target.value)}
                   value={contactPerson}
@@ -745,7 +736,7 @@ function EvacDetails() {
                 ></TextField>
                 <TextField
                   label="Contact Number*"
-                  id="EvacPin_ContactNumberField"
+                  id="Admin_EvacDetailsContNo"
                   inputType="text"
                   onSubmit={(e) => setContactNumber(e.target.value)}
                   value={contactNumber}
@@ -754,8 +745,8 @@ function EvacDetails() {
                 <div>
                   <DatePickerInput
                     label="Expiry Date"
-                    idField="EvacPin_ExpiryField"
-                    idBtn="EvacPin_CalendarBtn"
+                    idField="Admin_EvacDetailsExpiry"
+                    idBtn="Admin_EvacDetailsCalendar"
                     placeholder={String(expiry)}
                     value={expiry}
                     onChange={setExpiry}
@@ -763,7 +754,7 @@ function EvacDetails() {
                     edit={isEditable}
                     showTime
                   />
-                  <p className="text-xs italic" id="Admin_HazardIsExpired">
+                  <p className="text-xs italic" id="Admin_EvacDetailsIsExpired">
                     Has expired: {String(pinDetails?.is_expired)}
                   </p>
                 </div>
@@ -772,11 +763,11 @@ function EvacDetails() {
                     <TextField
                       label="Deactivated at"
                       value={String(pinDetails?.deactivated_at)}
-                      id="Admin_EvacPinDeactivationDate"
+                      id="Admin_EvacDetailsDeacDate"
                       readonly
                       inputType="text"
                     />
-                    <p className="text-xs italic" id="Admin_HazardIsExpired">
+                    <p className="text-xs italic" id="Admin_EvacDetailsIsDeac">
                       Has deactivated: {String(pinDetails?.is_deactivated)}
                     </p>
                   </div>
@@ -785,7 +776,7 @@ function EvacDetails() {
               <div className="w-full max-w-md flex flex-col gap-2 items-center justify-center">
                 <ButtonComp
                   text="See Comments"
-                  id="EvacPin_OpenPinBtn"
+                  id="Admin_EvacDetailsCommsBtn"
                   variant="primary"
                   heightSize="38px"
                   widthSize="100%"
@@ -799,7 +790,7 @@ function EvacDetails() {
                   (isFull ? (
                     <ButtonComp
                       text="Mark as Open"
-                      id="EvacPin_OpenPinBtn"
+                      id="Admin_EvacDetailsOpenBtn"
                       variant="outline"
                       heightSize="38px"
                       widthSize="100%"
@@ -809,7 +800,7 @@ function EvacDetails() {
                   ) : (
                     <ButtonComp
                       text="Mark as Full"
-                      id="EvacPin_FullPinBtn"
+                      id="Admin_EvacDetailsFullBtn"
                       variant="outline"
                       heightSize="38px"
                       widthSize="100%"
@@ -822,7 +813,7 @@ function EvacDetails() {
                     <ButtonComp
                       text="Re-Open Pin"
                       variant="primary"
-                      id="EvacPin_ReOpenPin"
+                      id="Admin_EvacDetailsReopenBtn"
                       heightSize="38px"
                       widthSize="100%"
                       type="button"
