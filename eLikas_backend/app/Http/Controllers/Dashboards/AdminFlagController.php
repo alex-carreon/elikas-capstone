@@ -13,63 +13,62 @@ use Illuminate\Http\Request;
 class AdminFlagController extends Controller
 {
     /**
-     * GET /admin/comments/flags?type=manual|moderation
+     * GET /admin/comments/flags?type=manual|moderation&reason_id=1
      */
     public function commentFlags(Request $request)
     {
-        $type = $request->query('type', 'manual');
+        $type     = $request->query('type');
+        $reasonId = $request->query('reason_id');
 
-        if ($type === 'moderation') {
-            // AI moderation logs for comments
-            $logs = ModerationLog::with([
-                'socialElement.comment',
-            ])
-            ->whereNull('is_approved')
-            ->whereHas('socialElement.comment')
-            ->orderByDesc('created_at')
-            ->get();
+        $manualFlags = collect();
+        $moderationFlags = collect();
 
-            return response()->json([
-                'count' => $logs->count(),
-                'flags' => $logs->map(fn ($log) => [
-                    'moderation_id' => $log->id,
-                    'comment_id'    => $log->socialElement->comment->id,
-                    'element_id'    => $log->element_id,
-                    'reason'        => 'AI Moderation',
-                    'flagged_at'    => $log->created_at
-                        ->timezone('Asia/Manila')
-                        ->toDateTimeString(),
-                ]),
-            ]);
+        if (!$type || $type === 'manual') {
+            $manualFlags = Flag::whereNull('is_approved')
+                ->whereHas('social_element.comment')
+                ->when($reasonId, fn ($q) => $q->where('reason_id', $reasonId))
+                ->selectRaw('element_id, COUNT(*) as manual_count')
+                ->groupBy('element_id')
+                ->pluck('manual_count', 'element_id');
         }
 
-        // Manual flags for comments
-        $flags = Flag::with([
-            'flag_reason',
-            'social_element.comment',
-        ])
-        ->whereNull('is_approved')
-        ->whereHas('social_element.comment')
-        ->selectRaw('MIN(id) as id, element_id, reason_id, MIN(flagged_at) as flagged_at, COUNT(*) as flag_count')
-        ->groupBy('element_id', 'reason_id')
-        ->orderByDesc('flag_count')
-        ->get();
+        if (!$type || $type === 'moderation') {
+            $moderationFlags = ModerationLog::whereNull('is_approved')
+                ->whereHas('socialElement.comment')
+                ->selectRaw('element_id, COUNT(*) as mod_count')
+                ->groupBy('element_id')
+                ->pluck('mod_count', 'element_id');
+        }
+
+        $allElementIds = $manualFlags->keys()
+            ->merge($moderationFlags->keys())
+            ->unique();
+
+        $elements = \App\Models\SocialElement::whereIn('id', $allElementIds)
+            ->with('comment')
+            ->get()
+            ->keyBy('id');
+
+        $flags = $allElementIds->map(function ($elementId) use ($manualFlags, $moderationFlags, $elements) {
+            $manual = $manualFlags->get($elementId, 0);
+            $mod    = $moderationFlags->get($elementId, 0);
+
+            return [
+                'element_id'       => $elementId,
+                'comment_id'       => $elements->get($elementId)?->comment?->id,
+                'manual_count'     => $manual,
+                'moderation_count' => $mod,
+                'total_flag_count' => $manual + $mod,
+            ];
+        })
+        ->sortByDesc('total_flag_count')
+        ->values();
 
         return response()->json([
             'count' => $flags->count(),
-            'flags' => $flags->map(fn ($flag) => [
-                'flag_id'    => $flag->id,
-                'comment_id' => $flag->social_element->comment->id,
-                'element_id' => $flag->element_id,
-                'reason'     => $flag->flag_reason->reason_label,
-                'flag_count' => $flag->flag_count,
-                'flagged_at' => \Carbon\Carbon::parse($flag->flagged_at)
-                    ->timezone('Asia/Manila')
-                    ->toDateTimeString(),
-            ]),
+            'flags' => $flags,
         ]);
     }
-
     /**
      * GET /admin/flood-paths/flags?type=manual|moderation
      */
