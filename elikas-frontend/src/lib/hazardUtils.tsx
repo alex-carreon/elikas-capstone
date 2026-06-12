@@ -1,5 +1,4 @@
 import { getMidpoint } from "@/lib/mapUtils";
-import { snapAllPointsToRoads } from "@/lib/mapUtils";
 import React from "react";
 import { type NavigateFunction } from "react-router";
 import { toast } from "sonner";
@@ -37,7 +36,6 @@ interface handleActionProps {
   desc?: string;
   floodLevel?: string;
   token?: string | null;
-  setSnapped?: React.Dispatch<React.SetStateAction<[number, number][]>>;
   setMidpoint?: React.Dispatch<
     React.SetStateAction<[number, number] | undefined>
   >;
@@ -59,7 +57,6 @@ export const handleSubmit = async ({
   routePoints,
   desc,
   floodLevel,
-  setSnapped,
   setMidpoint,
   setError,
   navigate,
@@ -71,19 +68,12 @@ export const handleSubmit = async ({
 
   try {
     if (center && routePoints) {
-      const fullPath: [number, number][] = [center, ...routePoints];
-      const snapped = await snapAllPointsToRoads(fullPath);
-
-      if (!snapped) {
-        toast("You went off-road. Please re-draw");
-        return;
-      } else if (snapped.length < 2) {
+      if (!routePoints || routePoints.length < 2) {
         toast("Please indicate the hazard on the map");
         return;
       }
 
-      setSnapped?.(snapped);
-      setMidpoint?.(getMidpoint(snapped));
+      setMidpoint?.(getMidpoint(routePoints));
 
       const dateTime = formatInTimeZone(
         new Date(),
@@ -99,7 +89,7 @@ export const handleSubmit = async ({
       const expDate = addDays(dateTime, 7);
 
       formData.append("expiry", format(expDate, "yyyy-MM-dd"));
-      snapped.forEach((point, index) => {
+      routePoints.forEach((point, index) => {
         formData.append(`path[${index}][0]`, String(point[0]));
         formData.append(`path[${index}][1]`, String(point[1]));
       });
@@ -154,7 +144,6 @@ export const handleUpdate = async ({
   desc,
   floodLevel,
   token,
-  setSnapped,
   floodDetails,
   id,
   setIsEditable,
@@ -163,31 +152,16 @@ export const handleUpdate = async ({
   e?.preventDefault();
 
   try {
-    const originalPath = floodDetails?.path ?? [];
-    const newPoints = routePoints?.slice(originalPath.length);
+    if (!floodDetails) return;
 
-    let finalSnapped: [number, number][] = [];
-
-    if (floodDetails && newPoints && routePoints) {
-      if (newPoints?.length === 0) {
-        finalSnapped = originalPath;
-      } else {
-        const snapped =
-          newPoints.length > 0 ? await snapAllPointsToRoads(routePoints) : [];
-
-        if (!snapped) {
-          toast("You went off-road. Please re-draw");
-          return;
-        } else if (routePoints.length < 2) {
-          toast("Please indicate the hazard on the map");
-          return;
-        } else {
-          finalSnapped = [...originalPath, ...snapped];
-        }
-      }
+    if (!routePoints || routePoints.length < 2) {
+      toast.error("Please indicate the hazard on the map");
+      return;
     }
 
-    setSnapped?.(finalSnapped);
+    if (!floodLevel) {
+      return;
+    }
 
     const dateTime = formatInTimeZone(
       new Date(),
@@ -197,17 +171,14 @@ export const handleUpdate = async ({
 
     const expDate = addDays(dateTime, 7);
 
-    if (!floodLevel) {
-      return;
-    }
-
+    console.log("Passing Update Points: ", routePoints);
     const response = api.patch(
       `/flood-paths/${id}`,
       {
         level_id: floodLevel,
         description: desc,
         expiry: expDate,
-        path: finalSnapped,
+        path: routePoints,
       },
       {
         headers: {
@@ -216,8 +187,6 @@ export const handleUpdate = async ({
         },
       },
     );
-
-    console.log(response);
 
     toast.promise(response, {
       loading: "Saving your updates...",
