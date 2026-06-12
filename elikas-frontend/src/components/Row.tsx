@@ -19,6 +19,7 @@ interface rowProps {
   isAvailable?: boolean;
   availability?: boolean;
   isExpired?: boolean;
+  isDeactivated?: boolean;
   link?: string;
   buttonId?: string;
   children?: React.ReactNode;
@@ -36,6 +37,7 @@ function Row({
   isAvailable,
   availability,
   isExpired,
+  isDeactivated,
   link,
   buttonId,
   desc,
@@ -69,6 +71,7 @@ function Row({
           <p className="text-sm font-bold" style={{ color: colors.heading }}>
             {availability ? (isAvailable ? "AVAILABLE" : "CLOSED") : null}
             {isExpired ? "EXPIRED" : null}
+            {isDeactivated ? "DEACTIVATED" : null}
           </p>
           {showCollapsible && (
             <Collapsible className="w-full flex flex-col rounded-md mt-2">
