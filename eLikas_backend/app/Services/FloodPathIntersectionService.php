@@ -14,7 +14,10 @@ class FloodPathIntersectionService
         return FloodPath::notExpired()
             ->notDeactivated()
             ->when($excludeId, fn($q) => $q->where('id', '!=', $excludeId))
-            ->whereRaw("ST_Intersects(path, ST_GeomFromText(?))", [$candidate->toWkt()])
+            ->whereRaw("ST_Intersects(
+                ST_Buffer(path, 0.0001),
+                ST_Buffer(ST_GeomFromText(?), 0.0001)
+            )", [$candidate->toWkt()])
             ->exists();
     }
 }
