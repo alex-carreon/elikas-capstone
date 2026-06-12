@@ -1,0 +1,295 @@
+import React, { useEffect, useState } from "react";
+import FormLayout from "@/pages/Admin/Forms/FormLayout";
+import FormSkeleton from "@/pages/Skeletons/FormSkeleton";
+import TextField from "@/components/TextField";
+import { useNavigate, useParams } from "react-router";
+import api from "@/api";
+import { Field, FieldLabel } from "@/components/ui/field";
+import { getMidpoint } from "@/lib/mapUtils";
+import { MapContainer, TileLayer, Marker, Polyline } from "react-leaflet";
+import FloodIcon from "@/assets/Map/FloodIcon.svg?react";
+import { divIcon, type LatLngExpression, type LatLngTuple } from "leaflet";
+import { renderToString } from "react-dom/server";
+import { toast } from "sonner";
+import SelectDropdown from "@/components/SelectDropdown";
+import { handleDelete } from "@/lib/hazardUtils";
+
+type FloodLevel = {
+  id: number;
+  level_name: string;
+  description: string;
+};
+
+type FloodDetails = {
+  id: number;
+  element_id: number;
+  is_expired: boolean;
+  is_deactivated: boolean;
+  flood_levels: FloodLevel;
+  path: [number, number][];
+  posted_by: string;
+  description: string;
+  upvotes: number;
+  downvotes: number;
+  last_confirmed: string;
+  expiry: string;
+  posted_at: string;
+  media: string[];
+};
+
+function HazardDetails() {
+  const [floodDetails, setFloodDetails] = useState<FloodDetails>();
+  const [loading, setLoading] = useState(true);
+  const [midpoint, setMidpoint] = useState<[number, number]>();
+  const [isEditable, setIsEditable] = useState(false);
+  const [levels, setLevels] = useState<FloodLevel[]>([]);
+  const [levelId, setLevelId] = useState(0);
+
+  const { id } = useParams();
+  const navigate = useNavigate();
+
+  const floodIcon = divIcon({
+    html: renderToString(<FloodIcon width={36} height={36} />),
+    className: "",
+    iconAnchor: [18, 20],
+  });
+
+  const colorHazard = {
+    lightBlue: "#52B2DA",
+    darkBlue: "#578EC2",
+    red: "#B22B42",
+    fallback: "#C7C7C7",
+  };
+
+  const getColor = (level: number | null | undefined): string => {
+    if (level === 1 || level === 2) {
+      return colorHazard.lightBlue;
+    } else if (level === 3 || level === 4) {
+      return colorHazard.darkBlue;
+    } else if (level === 5 || level === 6 || level === 7) {
+      return colorHazard.red;
+    } else return colorHazard.fallback;
+  };
+
+  const getFloodDetails = async () => {
+    try {
+      //   setHasUpdated(false);
+      setLoading(true);
+      const response = await api.get(`/flood-paths/${id}`);
+      const floodDetails = await response.data.flood_path;
+      console.log("Details", floodDetails);
+      setFloodDetails(floodDetails);
+
+      const midpoint = getMidpoint(floodDetails.path);
+      setMidpoint(midpoint);
+    } catch (err: string | any) {
+      console.log(err.message || "An error occurred");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const getFloodLevels = async () => {
+    try {
+      setLoading(true);
+      const response = await api.get("/flood-levels");
+
+      const levelData = await response.data.flood_levels;
+
+      setLevels(levelData);
+    } catch (err: string | any) {
+      Error(err.message || "An error occurred");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleUpdate = (e: React.FormEvent) => {
+    e?.preventDefault();
+
+    try {
+      const response = api.patch(`/flood-paths/${id}`, {
+        level_id: levelId,
+      });
+
+      console.log(response);
+
+      toast.promise(response, {
+        loading: "Saving your updates...",
+        success: "Pin successfully updated!",
+        position: "top-center",
+      });
+
+      response.then(() => {
+        setIsEditable?.(false);
+      });
+    } catch (err: string | any) {
+      console.log(err.message || "An error occurred");
+    }
+  };
+
+  const deleteHaz = () => {
+    handleDelete({ id: id, navigate: navigate, deleteNavigate: "/admin-pins" });
+  };
+
+  useEffect(() => {
+    getFloodDetails();
+  }, []);
+
+  useEffect(() => {
+    if (isEditable) {
+      getFloodLevels();
+    }
+  }, [isEditable]);
+
+  return (
+    <>
+      <FormLayout
+        formTitle="Hazard Details"
+        updateId="Admin_HazardUpdBtn"
+        deleteId="Admin_HazardDelBtn"
+        submitUpdId="Admin_HazardUpdSubmit"
+        closeUpdId="Admin_HazardUpdClose"
+        updateClick={() => setIsEditable(true)}
+        closeUpdClick={() => setIsEditable(false)}
+        formId="Admin_HazardUpdateForm"
+        deleteClick={() => deleteHaz()}
+        isEditable={isEditable}
+      >
+        {loading ? (
+          <div className="flex justify-center">
+            <FormSkeleton />
+          </div>
+        ) : (
+          <>
+            <form
+              onSubmit={handleUpdate}
+              id="Admin_HazardUpdateForm"
+              className="flex flex-col gap-4"
+            >
+              <TextField
+                label="Flood Path Id"
+                value={String(floodDetails?.id)}
+                inputType="text"
+                id="Admin_HazardId"
+                readonly
+              />
+              <Field>
+                <FieldLabel>Media</FieldLabel>
+                {floodDetails?.media && floodDetails?.media.length > 0 ? (
+                  floodDetails?.media.map((media) => <img src={media} />)
+                ) : (
+                  <p>No Media</p>
+                )}
+              </Field>
+              <MapContainer
+                center={midpoint}
+                zoom={17}
+                scrollWheelZoom={false}
+                style={{ height: "30vh", width: "100%" }}
+                id="Admin_HazardMapContainer"
+              >
+                <TileLayer
+                  attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+                  url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+                />
+                <Marker
+                  position={midpoint as LatLngExpression}
+                  icon={floodIcon}
+                />
+                <Polyline
+                  positions={floodDetails?.path as LatLngTuple[]}
+                  weight={6}
+                  color={getColor(floodDetails?.flood_levels.id)}
+                />
+              </MapContainer>
+              {isEditable ? (
+                <div className="w-full">
+                  <SelectDropdown
+                    value={String(levelId)}
+                    onValueChange={(val) => setLevelId(Number(val))}
+                    label="Flood Level*"
+                    placeholder="Select the Flood Level"
+                    id="Admin_HazardLevelField"
+                    onSubmit={(e) => setLevelId(Number(e.target.value))}
+                    options={levels?.map((level) => ({
+                      label: level.level_name,
+                      value: String(level.id),
+                      description: level.description,
+                    }))}
+                    isRequired={!id ? true : false}
+                  />
+                </div>
+              ) : (
+                <TextField
+                  label="Flood Level"
+                  value={String(floodDetails?.flood_levels.level_name)}
+                  inputType="text"
+                  id="Admin_HazardLevel"
+                  readonly
+                />
+              )}
+
+              <TextField
+                label="Posted By"
+                value={String(floodDetails?.posted_by)}
+                inputType="text"
+                id="Admin_HazardPostedBy"
+                readonly
+              />
+              <TextField
+                label="Description"
+                value={String(floodDetails?.description)}
+                inputType="text"
+                id="Admin_HazardDesc"
+                readonly
+              />
+              <div className="flex gap-2">
+                <TextField
+                  label="Upvotes"
+                  value={String(floodDetails?.upvotes)}
+                  inputType="text"
+                  id="Admin_HazardUpvotes"
+                  readonly
+                />
+                <TextField
+                  label="Downvotes"
+                  value={String(floodDetails?.downvotes)}
+                  inputType="text"
+                  id="Admin_HazardDownvotes"
+                  readonly
+                />
+              </div>
+              <TextField
+                label="Last Confirmed"
+                value={String(floodDetails?.last_confirmed)}
+                inputType="text"
+                id="Admin_HazardLastConfirmed"
+                readonly
+              />
+              <div className="flex flex-col gap-1">
+                <TextField
+                  label="Expiry Date"
+                  value={String(floodDetails?.expiry)}
+                  inputType="text"
+                  id="Admin_HazardExpiry"
+                  readonly
+                />
+                <div className="flex gap-4">
+                  <p className="text-xs italic" id="Admin_HazardIsExpired">
+                    Has expired: {String(floodDetails?.is_expired)}
+                  </p>
+                  <p className="text-xs italic" id="Admin_HazardIsDeac">
+                    Has deactivated: {String(floodDetails?.is_deactivated)}
+                  </p>
+                </div>
+              </div>
+            </form>
+          </>
+        )}
+      </FormLayout>
+    </>
+  );
+}
+
+export default HazardDetails;

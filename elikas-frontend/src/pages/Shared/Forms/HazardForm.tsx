@@ -18,8 +18,14 @@ import { useUserContext } from "@/context/AuthContext";
 import { differenceInDays } from "date-fns";
 import FloodIcon from "@/assets/Map/FloodIcon.svg?react";
 import AlertDialogue from "@/components/AlertDialogue";
-import { handleSubmit, handleUpdate, handleDelete } from "@/lib/hazardUtils";
+import {
+  handleSubmit,
+  handleUpdate,
+  handleDelete,
+  handleAddMedia,
+} from "@/lib/hazardUtils";
 import FormSkeleton from "../../Skeletons/FormSkeleton";
+import { Separator } from "@/components/ui/separator";
 
 type FloodLevel = {
   id: number;
@@ -232,6 +238,14 @@ function HazardForm() {
 
   const deleteHazard = () => handleDelete({ id: id, navigate: navigate });
 
+  const addMedia = (e: React.FormEvent) => {
+    e.preventDefault();
+
+    handleAddMedia({ e: e, id: id, media: fileName });
+
+    handleClearImage();
+  };
+
   return loading ? (
     <div className="w-full h-full flex flex-col items-center p-12 mt-8 mb-2 gap-4">
       <FormSkeleton />
@@ -276,7 +290,7 @@ function HazardForm() {
         </div>
         <form
           id="HazardPin_Form"
-          onSubmit={id ? (isEditable ? update : undefined) : submit}
+          onSubmit={submit}
           className="w-full flex flex-col justify-center items-center m-0"
         >
           <div className="w-full max-w-md flex flex-col gap-5">
@@ -287,19 +301,37 @@ function HazardForm() {
                 id="HazardPin_PhotoField"
                 onSubmit={fileOnChange}
                 ref={inputRef}
+                description={
+                  id
+                    ? "You may only add one photo at a time. Please press the add photo below to post the photo on your post!"
+                    : ""
+                }
               />
               {fileName && (
                 <>
                   <img src={imagePreview} />
-                  <ButtonComp
-                    text="Clear"
-                    variant="outline"
-                    id="HazardPin_ImageClearBtn"
-                    onClick={handleClearImage}
-                  ></ButtonComp>
+                  <div className="flex gap-2">
+                    <ButtonComp
+                      text="Clear"
+                      variant="outline"
+                      id="HazardPin_ImageClearBtn"
+                      type="button"
+                      onClick={handleClearImage}
+                    ></ButtonComp>
+                    {id && (
+                      <ButtonComp
+                        text="Add Photo"
+                        variant="primary"
+                        id="HazardPin_ImageClearBtn"
+                        type="button"
+                        onClick={(e) => addMedia(e)}
+                      ></ButtonComp>
+                    )}
+                  </div>
                 </>
               )}
             </div>
+            {id ? <Separator /> : null}
             <Field>
               <FieldLabel
                 className={"text-sm w-s"}
@@ -363,11 +395,6 @@ function HazardForm() {
                             position={midpoint as LatLngExpression}
                             icon={floodIcon}
                           />
-                          <Polyline
-                            positions={floodDetails.path as LatLngTuple[]}
-                            weight={6}
-                            color="#5F80AA"
-                          />
                         </>
                       )
                     ) : (
@@ -406,6 +433,7 @@ function HazardForm() {
                   text="Clear"
                   variant="outline"
                   id="HazardPin_PinClearBtn"
+                  type="button"
                   onClick={handleClearRoutePoints}
                 ></ButtonComp>
               )}
@@ -433,20 +461,22 @@ function HazardForm() {
               <p className="text-xs text-red-500">{error}</p>
             </Field>
             {(!id || isEditable) && levels ? (
-              <SelectDropdown
-                value={floodLevel}
-                onValueChange={setFloodLevel}
-                label="Flood Level*"
-                placeholder="Select the Flood Level"
-                id="HazardPin_FloodLevelField"
-                onSubmit={(e) => setFloodLevel(e.target.value)}
-                options={levels?.map((level) => ({
-                  label: level.level_name,
-                  value: String(level.id),
-                  description: level.description,
-                }))}
-                isRequired={!id ? true : false}
-              />
+              <div className="w-full">
+                <SelectDropdown
+                  value={floodLevel}
+                  onValueChange={setFloodLevel}
+                  label="Flood Level*"
+                  placeholder="Select the Flood Level"
+                  id="HazardPin_FloodLevelField"
+                  onSubmit={(e) => setFloodLevel(e.target.value)}
+                  options={levels?.map((level) => ({
+                    label: level.level_name,
+                    value: String(level.id),
+                    description: level.description,
+                  }))}
+                  isRequired={!id ? true : false}
+                />
+              </div>
             ) : (
               <TextField
                 label="Flood Level"
@@ -495,7 +525,10 @@ function HazardForm() {
                         variant="primary"
                         heightSize="38px"
                         widthSize="20"
-                        type="submit"
+                        type="button"
+                        onClick={(e) => {
+                          update(e);
+                        }}
                       ></ButtonComp>
                       <ButtonComp
                         text="Cancel"

@@ -12,13 +12,15 @@ interface FormLayoutProps {
   deleteId?: string;
   submitUpdId?: string;
   closeUpdId?: string;
-  deleteClick?: () => void;
-  updateClick?: () => void;
+  deleteClick?: (e?: React.FormEvent<Element>) => void;
+  updateClick?: (e?: React.FormEvent<Element>) => void;
   closeUpdClick?: () => void;
   isEditable?: boolean;
   formId?: string;
   updBtnLabel?: string;
   btnType?: "button" | "submit" | "reset" | undefined;
+  formTitle?: string;
+  singleUpd?: () => void;
 }
 
 function FormLayout({
@@ -35,6 +37,8 @@ function FormLayout({
   formId,
   updBtnLabel,
   btnType,
+  formTitle,
+  singleUpd,
 }: FormLayoutProps) {
   const navigate = useNavigate();
 
@@ -57,7 +61,7 @@ function FormLayout({
           <div className="pt-6 bg-[#FFB13B] px-6 pb-14 flex flex-col gap-4">
             <div className="flex flex-row justify-between items-center">
               <p className="text-white BeVietnamPro text-2xl font-bold">
-                User Details
+                {formTitle}
               </p>
               <div className="text-white BeVietnamPro text-end">
                 <WhiteLogo />
@@ -105,7 +109,7 @@ function FormLayout({
               ) : updateId && deleteId ? (
                 <div className="mx-4 flex justify-evenly shrink gap-4 mb-8">
                   <ButtonComp
-                    text="Update"
+                    text={updBtnLabel ? updBtnLabel : "Update"}
                     variant="primary"
                     id={updateId}
                     heightSize="38px"
@@ -131,7 +135,7 @@ function FormLayout({
                       id={updateId}
                       heightSize="38px"
                       type={btnType}
-                      // onClick={updateClick}
+                      onClick={singleUpd}
                       formId={formId}
                     />
                   )}

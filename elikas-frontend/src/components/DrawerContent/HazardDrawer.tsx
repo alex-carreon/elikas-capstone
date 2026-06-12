@@ -1,13 +1,17 @@
 import { DrawerClose } from "@/components/ui/drawer";
-import { CircleX } from "lucide-react";
+import { CircleX, X } from "lucide-react";
 import ButtonComp from "@/components/Button";
 import CSIcon from "@/assets/Map/CrowdsourceIcon.svg";
 import PostRow from "@/components/PostRow";
 import { Link } from "react-router";
 import { Skeleton } from "@/components/ui/skeleton";
-import { useEffect, useState } from "react";
+import { useEffect, useState, type SetStateAction } from "react";
 import { differenceInDays } from "date-fns";
 import api from "@/api";
+import { toZonedTime } from "date-fns-tz";
+import { format } from "date-fns";
+import { cn } from "@/lib/utils";
+import { type Dispatch } from "react";
 
 type FloodLevel = {
   id: number;
@@ -25,7 +29,7 @@ type FloodPath = {
 type FloodDetails = {
   id: number;
   element_id: number;
-  media: string;
+  media: string[];
   is_expired: boolean;
   is_deactivated: boolean;
   flood_levels: FloodLevel;
@@ -37,6 +41,7 @@ type FloodDetails = {
   last_confirmed: string;
   expiry: string;
   posted_at: string;
+  avatar_seed: string;
 };
 
 function HazardDrawer({ selectedPin }: { selectedPin: FloodPath }) {
@@ -45,6 +50,13 @@ function HazardDrawer({ selectedPin }: { selectedPin: FloodPath }) {
   const [daysLeft, setDaysleft] = useState(0);
   const [upVote, setUpvote] = useState(0);
   const [downVote, setDownvote] = useState(0);
+  const [isMine, setIsMine] = useState(false);
+  const [selectedImage, setSelectedImage] = useState<string | null>(null);
+
+  const convertDateTime = (utcString: string) => {
+    const zoned = toZonedTime(new Date(utcString), "Asia/Manila");
+    return format(zoned, "MMM d, yyyy h:mm a");
+  };
 
   useEffect(() => {
     if (!selectedPin) return;
@@ -57,6 +69,7 @@ function HazardDrawer({ selectedPin }: { selectedPin: FloodPath }) {
         setFloodDetails(floodDetails);
         setUpvote(floodDetails.upvotes);
         setDownvote(floodDetails.downvotes);
+        setIsMine(response.data.is_mine);
 
         const today = new Date();
         const expDate = new Date(floodDetails.expiry);
@@ -100,7 +113,25 @@ function HazardDrawer({ selectedPin }: { selectedPin: FloodPath }) {
     </>
   ) : (
     <>
-      <div className="px-4 pb-4 flex flex-col">
+      {selectedImage && (
+        <div
+          className="fixed inset-0 z-50 bg-black/80 flex items-center justify-center"
+          onClick={() => setSelectedImage(null)} // click outside to close
+        >
+          <img
+            src={selectedImage}
+            className="max-w-full max-h-full object-contain p-4"
+            onClick={(e) => e.stopPropagation()} // prevent closing when clicking image
+          />
+          <button
+            className="absolute top-4 right-4 text-white"
+            onClick={() => setSelectedImage(null)}
+          >
+            <X size={28} />
+          </button>
+        </div>
+      )}
+      <div className="px-4 pb-4 flex flex-col overflow-y-auto">
         <div className="w-full flex flex-row justify-between">
           <div className="flex flex-row gap-2">
             <div className="flex flex-row items-center gap-2 px-4">
@@ -117,7 +148,7 @@ function HazardDrawer({ selectedPin }: { selectedPin: FloodPath }) {
         {floodDetails ? (
           <PostRow
             username={floodDetails.posted_by}
-            timePosted={floodDetails.posted_at}
+            timePosted={convertDateTime(floodDetails.last_confirmed)}
             description={floodDetails.description}
             isEvacComments={false}
             isHazardPost={true}
@@ -127,8 +158,28 @@ function HazardDrawer({ selectedPin }: { selectedPin: FloodPath }) {
             expiryDays={daysLeft}
             id={floodDetails.id}
             isSimple
+            isMyHazard={isMine}
+            seed={floodDetails.avatar_seed}
           >
-            <img src={floodDetails.media} />
+            <div
+              className={cn(
+                "gap-1 grid",
+                floodDetails.media.length === 1
+                  ? "grid-cols-1"
+                  : floodDetails.media.length === 2
+                    ? "grid-cols-2"
+                    : "grid-cols-3",
+              )}
+            >
+              {floodDetails.media.map((media, index) => (
+                <img
+                  key={index}
+                  src={media}
+                  className="w-full h-24 object-cover cursor-pointer"
+                  onClick={() => setSelectedImage(media)}
+                />
+              ))}
+            </div>
           </PostRow>
         ) : (
           <>

@@ -238,25 +238,17 @@ Creates a new sensor. The `sensor_code` and `element_id` are set automatically â
 
 ```json
 {
-    "data": {
-        "id": 19,
-        "sensorCode": "SR-120910",
-        "name": "Ibanez Street Sensor",
-        "waterLevel": null,
-        "lastOnline": null,
-        "mountHeight": 3.5,
-        "location": [
-            14.600140911055,
-            121.04148573512
-        ],
-        "address": "V. Ibanez Street",
-        "yellowLevel": 1.5,
-        "orangeLevel": 2,
-        "redLevel": 2.5,
-        "currentStatus": null,
-        "mountLocation": "Barangay Salapan",
-        "deactivatedAt": null
-    }
+    "name": "Ibanez Street Sensor",
+    "mountHeight": 3.5,
+    "location": [
+        14.600140911055,
+        121.04148573512
+    ],
+    "address": "V. Ibanez Street",
+    "yellowLevel": 1.5,
+    "orangeLevel": 2,
+    "redLevel": 2.5,
+    "locationId": 3
 }
 ```
 
@@ -289,6 +281,30 @@ The `SocialElement` parent record is created in the same database transaction as
 #### Response
 
 Returns the created sensor in the same shape as `GET /api/sensors/{id}`, with HTTP `200`.
+
+```json
+{
+    "data": {
+        "id": 3,
+        "sensorCode": "SR-B09E9D",
+        "name": "Ibanez Street Sensor",
+        "lastOnline": null,
+        "mountHeight": 3.5,
+        "location": [
+            14.600140911055,
+            121.04148573512
+        ],
+        "address": "V. Ibanez Street",
+        "yellowLevel": 1.5,
+        "orangeLevel": 2,
+        "redLevel": 2.5,
+        "waterLevel": null,
+        "currentStatus": null,
+        "mountLocation": "Barangay Addition Hills",
+        "deactivatedAt": null
+    }
+}
+```
 
 ---
 

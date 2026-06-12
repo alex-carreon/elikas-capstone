@@ -29,6 +29,7 @@ class AuthController extends Controller
             'phone'        => 'nullable|string|max:20',
             'firebase_uid' => 'required|string',
             'location_id'  => 'required|integer',
+            'avatar_seed'  => 'required|string|size:8',
         ]);
         
 
@@ -41,16 +42,16 @@ class AuthController extends Controller
         }
 
         // Step 3: Save everything to the database inside a transaction
-        // A transaction means: if ANY step fails, ALL steps are undone
         try {
             DB::beginTransaction();
 
-            // Insert into users table — role_id 3 = 'indiv' (Citizen)
+            // Insert into users table role_id 3 = 'indiv'
             $user = User::create([
                 'username'   => $request->username,
                 'email'      => $request->email,
                 'role_id'    => 3,
-                'created_at' => now(), //can remove this
+                'created_at' => now(), 
+                'avatar_seed' => $request->avatar_seed,
             ]);
 
 
@@ -105,7 +106,6 @@ class AuthController extends Controller
     public function login(Request $request)
     {
         // The React app sends the Firebase ID token in the Authorization header
-        // It looks like: "Bearer eyJhbGci..."
         $token = $request->bearerToken();
 
         if (!$token) {
@@ -115,6 +115,16 @@ class AuthController extends Controller
         // Verify the token with Firebase
         try {
             $verifiedToken = $this->firebaseAuth->verifyIdToken($token, true);
+
+            // Check if the user's email is verified in Firebase
+            $emailVerified = $verifiedToken->claims()->get('email_verified');
+
+            if (!$emailVerified) {
+                return response()->json([
+                    'error' => 'Email not verified'
+                ], 403);
+            }
+
         } catch (\Exception $e) {
             return response()->json([
                 'error' => 'Unauthorized',
@@ -149,6 +159,7 @@ class AuthController extends Controller
             'role'     => $user->role->role_name,
         ]);
     }
+    
 
     // ---------------------------------------------------------------
     // LOGOUT

@@ -14,35 +14,37 @@ class UpdateEvacuationAreaController extends Controller
     {
         try {
             $user = $request->attributes->get('firebase_user');
+            $roleId = $user?->role_id;
 
             $request->validate([
-                'name' => 'nullable|string|max:255',
-                'address' => 'nullable|string|max:255',
-                'lat' => 'nullable|numeric|between:-90,90',
-                'lng' => 'nullable|numeric|between:-180,180',
-                'location_id' => 'nullable|integer|exists:Locations,id',
-                'area_type' => 'nullable|integer|exists:EvacTypes,id',
-                'capacity_level' => 'nullable|integer|exists:CapacityLevels,id',
-                'description' => 'nullable|string',
-                'is_persistent' => 'boolean',
-                'for_reg_flood' => 'boolean',
-                'for_heavy_flood' => 'boolean',
-                'has_accom' => 'boolean',
-                'has_DRRMO' => 'boolean',
-                'has_health' => 'boolean',
-                'pwd_friendly' => 'boolean',
-                'has_catchment' => 'boolean',
-                'toilet_count' => 'nullable|integer|min:0',
-                'kitchen_count' => 'nullable|integer|min:0',
+                'name'               => 'nullable|string|max:255',
+                'address'            => 'nullable|string|max:255',
+                'lat'                => 'nullable|numeric|between:-90,90',
+                'lng'                => 'nullable|numeric|between:-180,180',
+                'location_id'        => 'nullable|integer|exists:Locations,id',
+                'area_type'          => 'nullable|integer|exists:EvacTypes,id',
+                'capacity_level'     => 'nullable|integer|exists:CapacityLevels,id',
+                'description'        => 'nullable|string',
+                'is_persistent'      => 'boolean',
+                'for_reg_flood'      => 'boolean',
+                'for_heavy_flood'    => 'boolean',
+                'has_accom'          => 'boolean',
+                'has_DRRMO'          => 'boolean',
+                'has_health'         => 'boolean',
+                'pwd_friendly'       => 'boolean',
+                'has_catchment'      => 'boolean',
+                'toilet_count'       => 'nullable|integer|min:0',
+                'kitchen_count'      => 'nullable|integer|min:0',
                 'child_prayer_count' => 'nullable|integer|min:0',
-                'breastfeed_count' => 'nullable|integer|min:0',
-                'other_facilities' => 'nullable|string',
-                'contact_person' => 'nullable|string|max:255',
-                'contact_number' => 'nullable|string|max:20',
-                'expiry' => 'nullable|date|after:now',
+                'breastfeed_count'   => 'nullable|integer|min:0',
+                'other_facilities'   => 'nullable|string',
+                'contact_person'     => 'nullable|string|max:255',
+                'contact_number'     => 'nullable|string|max:20',
+                'expiry'             => 'nullable|date|after:now',
             ]);
 
-            if (($request->filled('lat') && !$request->filled('lng')) || (!$request->filled('lat') && $request->filled('lng'))) {
+            if (($request->filled('lat') && !$request->filled('lng')) ||
+                (!$request->filled('lat') && $request->filled('lng'))) {
                 return response()->json([
                     'error' => 'Both lat and lng are required when updating location',
                 ], 422);
@@ -62,7 +64,8 @@ class UpdateEvacuationAreaController extends Controller
                 ], 422);
             }
 
-            if ($user->role_id == 3 && $pin->social_element->user_id != $user->id) {
+            // Individual users may only edit their own pins
+            if ($roleId == 3 && $pin->social_element->user_id != ($user?->id ?? null)) {
                 return response()->json([
                     'error' => 'Forbidden. You may only update your own evacuation area pins',
                 ], 403);
@@ -74,16 +77,24 @@ class UpdateEvacuationAreaController extends Controller
                 ], 403);
             }
 
-            if ($request->filled('name')) {
-                $pin->name = $request->name;
+            //expiry may only be changed on persistent pins
+            if ($request->has('expiry')) {
+                $effectiveIsPersistent = $request->has('is_persistent')
+                    ? (bool) $request->is_persistent
+                    : (bool) $pin->is_persistent;
+
+                if (!$effectiveIsPersistent) {
+                    return response()->json([
+                        'error' => 'The expiry date cannot be modified for non-persistent (ad-hoc) evacuation pins. '
+                                 . 'Set is_persistent to true before adjusting the expiry, or omit the expiry field.',
+                    ], 422);
+                }
             }
 
-            if ($request->filled('address')) {
-                $pin->address = $request->address;
-            }
-
-            if ($request->filled('description')) {
-                $pin->description = $request->description;
+            foreach (['name', 'address', 'description'] as $field) {
+                if ($request->filled($field)) {
+                    $pin->$field = $request->$field;
+                }
             }
 
             if ($request->filled('location_id')) {
@@ -117,6 +128,7 @@ class UpdateEvacuationAreaController extends Controller
                 }
             }
 
+            // ── Facility counts and contact details ──────────────────────────────
             foreach ([
                 'toilet_count',
                 'kitchen_count',
@@ -131,6 +143,7 @@ class UpdateEvacuationAreaController extends Controller
                 }
             }
 
+            // ── Expiry — only reached here when is_persistent check passes ───────
             if ($request->has('expiry')) {
                 $expiry = $request->filled('expiry')
                     ? Carbon::parse($request->expiry, 'Asia/Manila')->utc()
@@ -138,6 +151,7 @@ class UpdateEvacuationAreaController extends Controller
 
                 $pin->expiry = $expiry;
 
+                // If a future expiry is set, restore the social element (un-deactivate)
                 if ($expiry && $expiry->greaterThan(Carbon::now('UTC'))) {
                     $pin->social_element->deactivated_at = null;
                     $pin->social_element->save();
@@ -148,9 +162,10 @@ class UpdateEvacuationAreaController extends Controller
             $pin->save();
 
             return response()->json([
-                'message' => 'Evacuation area updated successfully',
-                'pin_id' => $pin->id,
-                'expiry' => $pin->expiry
+                'message'        => 'Evacuation area updated successfully',
+                'pin_id'         => $pin->id,
+                'is_persistent'  => (bool) $pin->is_persistent,
+                'expiry'         => $pin->expiry
                     ? $pin->expiry->timezone('Asia/Manila')->toDateTimeString()
                     : null,
                 'deactivated_at' => $pin->social_element->deactivated_at
@@ -160,7 +175,7 @@ class UpdateEvacuationAreaController extends Controller
 
         } catch (\Exception $e) {
             return response()->json([
-                'error' => 'Failed to update evacuation area',
+                'error'   => 'Failed to update evacuation area',
                 'details' => $e->getMessage(),
             ], 500);
         }

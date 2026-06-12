@@ -4,9 +4,12 @@ namespace App\Http\Controllers;
 
 use Illuminate\Http\Request;
 use App\Models\User;
+use Kreait\Firebase\Contract\Auth as FirebaseAuth;
 
 class ProfileController extends Controller
 {
+    public function __construct(protected FirebaseAuth $firebaseAuth) {}
+
     public function profile(Request $request)
     {
         try {
@@ -18,6 +21,7 @@ class ProfileController extends Controller
                 'id' => $user->id,
                 'username' => $user->username,
                 'email' => $user->email,
+                'avatar_seed' => $user->avatar_seed,
                 'role' => $user->role->role_name,
 
                 'first_name' => $user->name?->first_name,
@@ -48,22 +52,22 @@ class ProfileController extends Controller
 
             // Validation
             $request->validate([
-                'username' => 'nullable|string|max:255',
-                'first_name' => 'nullable|string|max:255',
-                'last_name' => 'nullable|string|max:255',
+                'username' => 'nullable|string|max:20|unique:Users,username',
+                'first_name' => 'nullable|string|max:50',
+                'last_name' => 'nullable|string|max:50',
                 'phone' => 'nullable|string|max:20',
                 'location_id' => 'nullable|integer',
+                'avatar_seed' => 'nullable|string|size:8',
             ]);
 
             // Update users table
-            if ($request->filled('username')) {
-                $user->username = $request->username;
-                $user->save();
-            }
+            $user->update([
+                'username'    => $request->username ?? $user->username,
+                'avatar_seed' => $request->avatar_seed ?? $user->avatar_seed,
+            ]);
 
             // Update name table
             if ($user->name) {
-
                 $user->name->update([
                     'first_name' => $request->first_name ?? $user->name->first_name,
                     'last_name'  => $request->last_name ?? $user->name->last_name,
@@ -126,6 +130,34 @@ class ProfileController extends Controller
             return response()->json([
                 'error' => 'Failed to deactivate account',
                 'details' => $e->getMessage()
+            ], 500);
+        }
+    }
+
+    public function syncEmail(Request $request)
+    {
+        try {
+
+            $user = $request->attributes->get('firebase_user');
+
+            $firebaseUid = $user->userAuth->identity_uid;
+
+            $firebaseUser = $this->firebaseAuth->getUser($firebaseUid);
+
+            $user->update([
+                'email' => $firebaseUser->email,
+            ]);
+
+            return response()->json([
+                'message' => 'Email synced successfully',
+                'email' => $user->email,
+            ]);
+
+        } catch (\Exception $e) {
+
+            return response()->json([
+                'error' => 'Failed to sync email',
+                'details' => $e->getMessage(),
             ], 500);
         }
     }

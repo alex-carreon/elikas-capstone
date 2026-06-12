@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Hazards;
 
 use App\Enums\MediaCollection;
 use App\Http\Controllers\Controller;
+use App\Models\Flag;
 use App\Models\FloodLevel;
 use App\Models\FloodPath;
 use App\Models\MediaFile;
@@ -25,25 +26,32 @@ class FloodPathController extends Controller
     /**
      * GET /flood-paths
      */
-    public function index()
+    public function index(Request $request)
     {
+        $user = $request->attributes->get('firebase_user');
+
         $floodPaths = FloodPath::with([
-            'floodLevel:id,level_name',
-            'socialElement:id,user_id,posted_at,deactivated_at',
+                'floodLevel:id,level_name',
+                'socialElement:id,user_id,posted_at,deactivated_at',
             ])
-        ->notExpired()
-        ->notDeactivated()
-        ->orderByDesc('last_confirmed')
-        ->get();
+            ->notExpired()
+            ->notDeactivated()
+            ->orderByDesc('last_confirmed')
+            ->get();
 
         return response()->json([
             'count' => $floodPaths->count(),
             'flood_paths' => $floodPaths->map(fn ($fp) => [
-                'id'   => $fp->id,
-                'level'=> $fp->floodLevel,
+                'id' => $fp->id,
+                'level' => $fp->floodLevel,
                 'path' => $this->formatPath($fp->path),
-                'is_expired' => $fp->expiry < now(), 'is_deactivated' => 
-                !is_null( $fp->socialElement->deactivated_at ),
+
+                'my_path' => $user
+                    ? $fp->socialElement->user_id === $user->id
+                    : false,
+
+                'is_expired' => $fp->expiry < now(),
+                'is_deactivated' => !is_null($fp->socialElement->deactivated_at),
             ]),
         ]);
     }
@@ -105,7 +113,7 @@ class FloodPathController extends Controller
 
         $floodPath = FloodPath::with([
             'floodLevel:id,level_name,description',
-            'socialElement.user:id,username',
+            'socialElement.user:id,username,avatar_seed',
             'socialElement:id,user_id,posted_at,deactivated_at,has_media',
             'socialElement.media'
         ])->find($id);
@@ -134,10 +142,15 @@ class FloodPathController extends Controller
             ->where('element_id', $floodPath->element_id)
             ->value('vote');
 
+        $userFlagged = Flag::where('user_id', $user->id)
+            ->where('element_id', $floodPath->element_id)
+            ->exists();
+
         return response()->json([
             'flood_path' => $this->formatFloodPath($floodPath),
             'user_vote' => $userVote,
             'is_mine' => $isOwner,
+            'user_flagged' => $userFlagged,
         ]);
     }
  
@@ -320,6 +333,83 @@ class FloodPathController extends Controller
     }
 
     /**
+     * POST /flood-paths/{id}/media
+     *
+     * Attach an additional media file to an existing flood path.
+     */
+    public function addMedia(Request $request, int $id)
+    {
+        $user = $request->attributes->get('firebase_user');
+
+        $query = FloodPath::with('socialElement')
+            ->whereHas('socialElement', fn($q) =>
+                $q->whereNull('deactivated_at')
+            );
+
+        // Only apply ownership restriction to normal users.
+        if ($user->role_id == 3) {
+            $query->whereHas('socialElement', fn($q) =>
+                $q->where('user_id', $user->id)
+            );
+        }
+
+        $floodPath = $query->find($id);
+
+        if (!$floodPath) {
+            return response()->json([
+                'message' => 'Flood path not found or you do not have permission to add media to it.',
+            ], 404);
+        }
+
+        $request->validate([
+            'file' => ['required', 'file', 'image', 'mimes:jpg,jpeg,png,heic', 'max:8192'],
+        ]);
+
+        $uploadedPath = null;
+
+        try {
+            $uploadedPath = $this->mediaUploadService->upload(
+                $request->file('file'),
+                MediaCollection::FloodReports
+            );
+
+            DB::beginTransaction();
+
+            MediaFile::create([
+                'parent_id'   => $floodPath->element_id,
+                'user_id'     => $user->id,
+                'file_path'   => $uploadedPath,
+                'file_type'   => 'jpg',
+                'uploaded_at' => now(),
+            ]);
+
+            // Ensure has_media is true (may already be, but safe to always sync)
+            if (!$floodPath->socialElement->has_media) {
+                $floodPath->socialElement->update(['has_media' => true]);
+            }
+
+            DB::commit();
+
+            return response()->json([
+                'message'    => 'Media added successfully.',
+                'media_url'  => config('app.media_base_url') . '/' . $uploadedPath,
+            ], 201);
+
+        } catch (\Throwable $e) {
+            DB::rollBack();
+            Log::error('FloodPath addMedia failed: ' . $e->getMessage());
+
+            if ($uploadedPath) {
+                Storage::disk('sftp')->delete($uploadedPath);
+            }
+
+            return response()->json([
+                'message' => 'Failed to add media. Please try again.',
+            ], 500);
+        }
+    }
+
+    /**
      * DELETE /flood-paths/{id}
      */
     public function destroy(Request $request, int $id)
@@ -394,6 +484,7 @@ class FloodPathController extends Controller
                         "id" => $floodPath->floodLevel->id,
                         "level_name" => $floodPath->floodLevel->level_name ],
             'posted_by'      => $floodPath->socialElement->user?->username,
+            'avatar_seed' => $floodPath->socialElement->user?->avatar_seed,
             'path'           => $this->formatPath($floodPath->path),
             'description'    => $floodPath->description,
             'upvotes'        => $floodPath->upvotes,

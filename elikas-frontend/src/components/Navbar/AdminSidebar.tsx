@@ -12,6 +12,7 @@ import {
   Map,
   UserRound,
   Landmark,
+  Wifi,
 } from "lucide-react";
 import WhiteLogo from "../Admin/WhiteLogo";
 import SidebarRow from "../SidebarRow";
@@ -22,6 +23,7 @@ import { signOut } from "firebase/auth";
 import { auth } from "@/firebase";
 import { useNavigate, useLocation } from "react-router";
 import ButtonComp from "@/components/Button";
+import { useUserContext } from "@/context/AuthContext";
 
 function AdminSidebar() {
   const navigate = useNavigate();
@@ -29,6 +31,8 @@ function AdminSidebar() {
 
   const [error, setError] = useState("");
   const [activeLink, setActiveLink] = useState("map");
+
+  const { logout } = useUserContext();
 
   const navItems = [
     {
@@ -60,7 +64,15 @@ function AdminSidebar() {
       label: "Pins",
       description: "Evacuation and Hazard Pins",
       icon: MapPin,
-      link: "",
+      link: "/admin-pins",
+      testId: "Admin_BurgerNavPins",
+    },
+    {
+      id: "sensors",
+      label: "Sensors",
+      description: "Barangay Registered Sensors",
+      icon: Wifi,
+      link: "/admin-sensors",
       testId: "Admin_BurgerNavPins",
     },
     {
@@ -68,7 +80,7 @@ function AdminSidebar() {
       label: "Emergency Contacts",
       description: "Hotline Numbers",
       icon: Phone,
-      link: "",
+      link: "/admin-hotlines",
       testId: "Admin_BurgerNavHotlines",
     },
     {
@@ -95,6 +107,7 @@ function AdminSidebar() {
         } else {
           resolve(userData);
           await signOut(auth);
+          await logout();
         }
       });
 
