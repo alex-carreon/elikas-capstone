@@ -10,11 +10,6 @@ class AuditLogQuery
 {
     public function transform(Builder $query, Request $request): Builder
     {
-        // LIKE search for log_id
-        // if ($request->filled('log_id')) {
-        //     $query->where('log_id', 'LIKE', '%' . $this->escapeLike($request->log_id) . '%');
-        // }
-
         if ($request->filled('search')) {
             $searchTerm = $this->escapeLike($request->search);
 
@@ -34,8 +29,12 @@ class AuditLogQuery
                     });
 
                 })
-                // 3. FIX: Move this OUT of the user scope, straight onto the parent query ($q)
-                ->orWhere('log_id', 'LIKE', '%' . $searchTerm . '%');
+                // 3. OR serach for logId
+                ->orWhere('log_id', 'LIKE', '%' . $searchTerm . '%')
+
+                // 4. OR search in json
+                ->orWhere('old_values', 'LIKE', '%' . $searchTerm . '%')
+                ->orWhere('new_values', 'LIKE', '%' . $searchTerm . '%');
             });
         }
 
@@ -44,19 +43,19 @@ class AuditLogQuery
             $query->where('user_id', $request->input('user_id'));
         }
 
-        // Exact match for user_type
+        // Handles ?user_type[]=brgy_op&user_type[]-admin
         if ($request->filled('user_type')) {
-            $query->where('user_type', $request->input('user_type'));
-        }
-
-        // Exact match for target_id
-        if ($request->filled('target_id')) {
-            $query->where('target_id', $request->input('target_id'));
+            $query->whereIn('user_type', $request->input('user_type'));
         }
 
         // Handles ?event[]=created&event[]=deleted
         if ($request->filled('event')) {
             $query->whereIn('event', $request->input('event'));
+        }
+
+        // Exact match for target_id
+        if ($request->filled('target_id')) {
+            $query->where('target_id', $request->input('target_id'));
         }
 
         // Handles ?target_table_id[]=1, etc.
