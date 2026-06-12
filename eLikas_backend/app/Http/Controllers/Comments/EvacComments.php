@@ -42,7 +42,8 @@ class EvacComments extends Controller
         }
 
         $comments = Comment::with([
-                'element.user:id,username,avatar_seed',
+                'element.user:id,username,avatar_seed,role_id',
+                'element.user.role:id,role_name',
                 'element.media',
             ])
             ->whereHas('element', function ($q) {
@@ -87,6 +88,8 @@ class EvacComments extends Controller
 
                     'posted_by' => [
                         'id' => $comment->element?->user?->id,
+                        // 'role_id' => $comment->element?->user?->role_id,
+                        'role' => $comment->element?->user?->role?->role_name,
                         'username' => $comment->element?->user?->username,
                         'avatar_seed' => $comment->element?->user?->avatar_seed,
                     ],
