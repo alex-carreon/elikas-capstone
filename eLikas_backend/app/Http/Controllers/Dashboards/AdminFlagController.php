@@ -140,7 +140,7 @@ class AdminFlagController extends Controller
             return response()->json(['message' => 'Comment not found.'], 404);
         }
 
-        $evacArea = EvacArea::where('element_id', $comment->parent_id)->first();
+       $evacArea = EvacArea::with('social_element')->where('element_id', $comment->parent_id)->first();
 
         // Reuse same comment detail format
         $detail = [
@@ -149,6 +149,7 @@ class AdminFlagController extends Controller
             'evac_area'   => [
                 'id'   => $evacArea?->id,
                 'name' => $evacArea?->name,
+                'evac_deactivated' => !is_null($evacArea?->social_element?->deactivated_at),
             ],
             'posted_by'   => [
                 'id'       => $comment->element?->user?->id,
@@ -160,7 +161,6 @@ class AdminFlagController extends Controller
             'posted_at'    => $comment->element?->posted_at
                 ?->timezone('Asia/Manila')
                 ->toDateTimeString(),
-            'is_deactivated' => !is_null($comment->element?->deactivated_at),
             'media'        => $comment->element?->media
                 ->map(fn ($m) => config('app.media_base_url') . '/' . $m->file_path)
                 ->values()
