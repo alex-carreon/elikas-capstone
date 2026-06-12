@@ -11,7 +11,7 @@ use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Database\Eloquent\Model;
 use MatanYadaev\EloquentSpatial\Objects\Point;
 use MatanYadaev\EloquentSpatial\Traits\HasSpatial;
-use OwenIt\Auditing\Contracts\Auditable;
+use \OwenIt\Auditing\Contracts\Auditable;
 
 /**
  * Class Sensor
@@ -33,7 +33,7 @@ use OwenIt\Auditing\Contracts\Auditable;
 class Sensor extends Model implements Auditable
 {
     use HasSpatial;
-    use \OwenIt\Auditing\Auditable;
+    use \OwenIt\Auditing\CustomAuditable;
 
 	protected $table = 'Sensors';
 	public $timestamps = false;
@@ -60,6 +60,11 @@ class Sensor extends Model implements Auditable
         'orange_level',
         'location_id'
 	];
+
+    protected $auditExclude = [
+        'auditable_type',
+        'auditable_id'
+    ];
 
 	public function social_element()
 	{

@@ -13,7 +13,7 @@ return [
     |
     */
 
-    'implementation' => OwenIt\Auditing\Models\Audit::class,
+    'implementation' => App\Models\AuditLog::class,
 
     /*
     |--------------------------------------------------------------------------
@@ -44,8 +44,8 @@ return [
     'resolvers' => [
         'ip_address' => OwenIt\Auditing\Resolvers\IpAddressResolver::class,
         'user_agent' => OwenIt\Auditing\Resolvers\UserAgentResolver::class,
-        'url' => OwenIt\Auditing\Resolvers\UrlResolver::class,
-        'target_table' => App\AuditResolvers\TargetTableResolver::class,
+        // 'url' => OwenIt\Auditing\Resolvers\UrlResolver::class,
+        'target_table_id' => App\AuditResolvers\TargetTableResolver::class,
     ],
 
     /*
@@ -58,7 +58,7 @@ return [
     */
 
     'events' => [
-        'created',
+        // 'created',
         'updated',
         'deleted',
         'restored',
