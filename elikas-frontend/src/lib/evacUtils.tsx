@@ -1,6 +1,6 @@
 import api from "@/api";
 import { toast } from "sonner";
-import { type NavigateFunction } from "react-router-dom";
+import { redirect, type NavigateFunction } from "react-router-dom";
 
 interface handleActionProps {
   e?: React.FormEvent<Element>;
@@ -34,6 +34,7 @@ interface handleActionProps {
   setIsEditable?: React.Dispatch<React.SetStateAction<boolean>>;
   setHasUpdated?: React.Dispatch<React.SetStateAction<boolean>>;
   formData?: FormData;
+  redirect?: string;
 }
 
 export const handleSubmit = async ({
@@ -166,15 +167,19 @@ export const handleUpdate = async ({
   }
 };
 
-export const handleDelete = async ({ id, navigate }: handleActionProps) => {
+export const handleDelete = async ({
+  id,
+  navigate,
+  redirect,
+}: handleActionProps) => {
   try {
     const responsePromise = api.patch(`/pins/${id}/deactivate`);
 
     toast.promise(responsePromise, {
-      loading: "Deleting your pin...",
+      loading: "Deactivating your pin...",
       success: () => {
-        navigate?.("/History");
-        return "Pin Deleted!";
+        navigate?.(redirect ? redirect : "");
+        return "Pin Deactivated!";
       },
       error: (err: any) => {
         console.log(err.response?.data);
@@ -201,12 +206,12 @@ export const handleReOpen = ({
   id,
   expiry,
   navigate,
+  redirect,
 }: handleActionProps) => {
   e?.preventDefault();
 
   try {
     const response = api.put(`/pins/${id}`, { expiry: expiry });
-
     toast.promise(response, {
       loading: "Re-opening your pin...",
       success: "Pin Re-opened!",
@@ -217,7 +222,36 @@ export const handleReOpen = ({
     });
 
     response.then(() => {
-      navigate?.("/History");
+      navigate?.(redirect ? redirect : "");
+    });
+  } catch (err: any) {
+    console.log(err.response.data);
+  }
+};
+
+export const handleReactivate = ({
+  e,
+  id,
+  navigate,
+  redirect,
+}: handleActionProps) => {
+  e?.preventDefault();
+
+  try {
+    const response = api.patch(`/pins/${id}/restore`);
+    console.log(response);
+
+    toast.promise(response, {
+      loading: "Re-activating this pin...",
+      success: "Pin Re-activated!",
+      error: (err: any) => {
+        return err.response.data;
+      },
+      position: "top-center",
+    });
+
+    response.then(() => {
+      navigate?.(redirect ? redirect : "");
     });
   } catch (err: any) {
     console.log(err.response.data);
