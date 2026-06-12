@@ -42,6 +42,7 @@ type FloodDetails = {
   expiry: string;
   posted_at: string;
   avatar_seed: string;
+  role: string;
 };
 
 function HazardDrawer({ selectedPin }: { selectedPin: FloodPath }) {
@@ -160,7 +161,7 @@ function HazardDrawer({ selectedPin }: { selectedPin: FloodPath }) {
             isSimple
             isMyHazard={isMine}
             seed={floodDetails.avatar_seed}
-            // role={comment.posted_by.role}
+            role={floodDetails.role}
           >
             <div
               className={cn(
