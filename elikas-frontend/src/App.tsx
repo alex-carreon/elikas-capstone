@@ -40,6 +40,10 @@ import FlaggedDetails from "./pages/Admin/Forms/FlaggedDetails.tsx";
 import HazardDetails from "./pages/Admin/Forms/HazardDetails.tsx";
 import HotlinesAdmin from "./pages/Admin/Hotlines.tsx";
 import SensorLogs from "./pages/Admin/SensorLogs.tsx";
+import EvacDetails from "./pages/Admin/Forms/EvacDetails.tsx";
+import EvacComments from "./pages/Admin/EvacComments.tsx";
+import CommentDetails from "./pages/Admin/Forms/CommentDetails.tsx";
+import FlaggedCommentDetails from "./pages/Admin/Forms/FlaggedCommentDetails.tsx";
 
 function App() {
   return (
@@ -109,6 +113,19 @@ function App() {
             <Route
               path="/admin-sensorlogs/:sensorcode"
               element={<SensorLogs />}
+            />
+            <Route path="/admin-evacDetails/:id" element={<EvacDetails />} />
+            <Route
+              path="/admin-pins/:pinId/comments"
+              element={<EvacComments />}
+            />
+            <Route
+              path="/admin-pins/comments/:id"
+              element={<CommentDetails />}
+            />
+            <Route
+              path="/admin-flaggedComment/:id"
+              element={<FlaggedCommentDetails />}
             />
           </Route>
 

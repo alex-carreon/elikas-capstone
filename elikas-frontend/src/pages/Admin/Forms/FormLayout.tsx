@@ -116,7 +116,6 @@ function FormLayout({
                     type="button"
                     onClick={updateClick}
                   />
-
                   <ButtonComp
                     text="Delete"
                     variant="important"
@@ -146,6 +145,7 @@ function FormLayout({
                       id={deleteId}
                       heightSize="38px"
                       type="button"
+                      onClick={deleteClick}
                     />
                   )}
                 </div>
