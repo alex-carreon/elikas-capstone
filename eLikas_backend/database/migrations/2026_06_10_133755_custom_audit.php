@@ -12,7 +12,7 @@ return new class extends Migration
     public function up(): void
     {
         $connection = config('audit.drivers.database.connection', config('database.default'));
-        $table = config('audit.drivers.database.table', 'audits');
+        $table = config('audit.drivers.database.table', 'AuditLogs');
 
         Schema::connection($connection)->create($table, function (Blueprint $table) {
 
