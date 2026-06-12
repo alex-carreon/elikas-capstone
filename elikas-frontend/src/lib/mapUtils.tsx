@@ -1,6 +1,6 @@
 import { Fragment, useEffect, useRef, useState } from "react";
 import { useMap, Marker, Polyline } from "react-leaflet";
-import leaflet, { point } from "leaflet";
+import leaflet, { point, type LeafletMouseEvent } from "leaflet";
 import { LatLng, divIcon } from "leaflet";
 import "leaflet-routing-machine";
 import colors from "@/constants/colors";
@@ -499,6 +499,13 @@ function RouterHazard({
 }) {
   const [points, setPoints] = useState<[number, number][]>([]);
 
+  const handleLineClick = (e: LeafletMouseEvent) => {
+    leaflet.DomEvent.stopPropagation(e);
+    toast.error(
+      "To intersect with another road, click just past where they cross.",
+    );
+  };
+
   useEffect(() => {
     const getRoutes = async () => {
       try {
@@ -528,7 +535,14 @@ function RouterHazard({
 
   if (!points.length) return null;
 
-  return <Polyline positions={points} weight={6} color={color} />;
+  return (
+    <Polyline
+      positions={points}
+      weight={6}
+      color={color}
+      eventHandlers={{ click: (e: LeafletMouseEvent) => handleLineClick(e) }}
+    />
+  );
 }
 
 export function RoadMapping({ onPinClick }: RoadMappingProps) {
@@ -798,8 +812,6 @@ export function FormMapClickHandler({
       map.off("click", handleClick);
     };
   }, [map, clickedLoc]);
-
-  // localStorage.setItem("clickedPin", clickedLoc.JSON.stringify);
 
   return null;
 }
