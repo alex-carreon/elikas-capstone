@@ -160,6 +160,7 @@ function HazardDrawer({ selectedPin }: { selectedPin: FloodPath }) {
             isSimple
             isMyHazard={isMine}
             seed={floodDetails.avatar_seed}
+            // role={comment.posted_by.role}
           >
             <div
               className={cn(

@@ -221,7 +221,7 @@ function HazardForm() {
   }, [isEditable, floodDetails]);
 
   useEffect(() => {
-    if (routePoints.length < 2) {
+    if (routePoints.length < 1) {
       setSnapped([]);
       return;
     }
@@ -294,7 +294,7 @@ function HazardForm() {
     handleSubmit({
       e: e,
       center: center,
-      routePoints: snapped.length > 0 ? snapped : routePoints,
+      routePoints: snapped.length > 0 ? snapped : [center, ...routePoints],
       desc: desc,
       floodLevel: floodLevel,
       token: token,
