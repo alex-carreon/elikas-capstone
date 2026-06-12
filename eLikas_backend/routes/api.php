@@ -114,7 +114,7 @@ Route::prefix('admin')->middleware(['firebase.auth', 'role:1'])->group(function 
 
     Route::post('/create-admin', [AdminController::class, 'createUser']);
 
-    Route::get('/audit-logs', [AuditLogController::class, 'index']);
+    Route::apiResource('audit-logs', AuditLogController::class)->only(['index', 'show']);
 });
 
 // ---------------------------------------------------------------
