@@ -49,10 +49,12 @@ class AdminFlagController extends Controller
         $flags = $allElementIds->map(function ($elementId) use ($manualFlags, $moderationFlags, $elements) {
             $manual = $manualFlags->get($elementId, 0);
             $mod    = $moderationFlags->get($elementId, 0);
+            $comment = $elements->get($elementId)?->comment;
 
             return [
                 'element_id'       => $elementId,
-                'comment_id'       => $elements->get($elementId)?->comment?->id,
+                'comment_id'       => $comment?->id,
+                'content'          => $comment?->content,
                 'manual_count'     => $manual,
                 'moderation_count' => $mod,
                 'total_flag_count' => $manual + $mod,
