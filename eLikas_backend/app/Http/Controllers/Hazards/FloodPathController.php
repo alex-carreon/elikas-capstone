@@ -37,8 +37,6 @@ class FloodPathController extends Controller
         $floodPaths = FloodPath::with([
                 'floodLevel:id,level_name',
                 'socialElement:id,user_id,posted_at,deactivated_at',
-                'socialElement.user:id,role_id',
-                'socialElement.user.role:id,role_name',
             ])
             ->notExpired()
             ->notDeactivated()
@@ -51,9 +49,6 @@ class FloodPathController extends Controller
                 'id' => $fp->id,
                 'level' => $fp->floodLevel,
                 'path' => $this->formatPath($fp->path),
-                'posted_by' => [
-                    'role' => $fp->socialElement->user?->role?->role_name,
-                ],
 
                 'my_path' => $user
                     ? $fp->socialElement->user_id === $user->id
@@ -122,7 +117,8 @@ class FloodPathController extends Controller
 
         $floodPath = FloodPath::with([
             'floodLevel:id,level_name,description',
-            'socialElement.user:id,username,avatar_seed',
+            'socialElement.user:id,username,avatar_seed,role_id',
+            'socialElement.user.role:id,role_name',
             'socialElement:id,user_id,posted_at,deactivated_at,has_media',
             'socialElement.media'
         ])->find($id);
@@ -507,6 +503,7 @@ class FloodPathController extends Controller
                         "id" => $floodPath->floodLevel->id,
                         "level_name" => $floodPath->floodLevel->level_name ],
             'posted_by'      => $floodPath->socialElement->user?->username,
+            'role'           => $floodPath->socialElement->user?->role?->role_name,
             'avatar_seed' => $floodPath->socialElement->user?->avatar_seed,
             'path'           => $this->formatPath($floodPath->path),
             'description'    => $floodPath->description,
