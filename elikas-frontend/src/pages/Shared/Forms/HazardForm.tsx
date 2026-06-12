@@ -26,6 +26,7 @@ import {
 } from "@/lib/hazardUtils";
 import FormSkeleton from "../../Skeletons/FormSkeleton";
 import { Separator } from "@/components/ui/separator";
+import { toast } from "sonner";
 
 type FloodLevel = {
   id: number;
@@ -61,6 +62,9 @@ function HazardForm() {
   const [validCheck, setValidCheck] = useState(false);
   const [infoCheck, setInfoCheck] = useState(false);
   const [routePoints, setRoutePoints] = useState<[number, number][]>([]);
+  const [newRoutePoints, setNewRoutePoints] = useState<[number, number][]>([]);
+  const [newSnapped, setNewSnapped] = useState<[number, number][]>([]);
+  const [isFetchingRouter, setIsFetchingRouter] = useState(false);
   const [snapped, setSnapped] = useState<[number, number][]>([]);
   const [levels, setLevels] = useState<FloodLevel[]>();
   const [loading, setLoading] = useState(true);
@@ -111,8 +115,20 @@ function HazardForm() {
   };
 
   const handleClearRoutePoints = () => {
-    setRoutePoints([]);
-    setSnapped([]);
+    if (isEditable) {
+      setNewRoutePoints([]);
+    } else {
+      setRoutePoints([]);
+      setSnapped([]);
+    }
+  };
+
+  const handleUndoRoute = () => {
+    if (isEditable) {
+      setNewRoutePoints((prev) => prev.slice(0, -1));
+    } else {
+      setRoutePoints((prev) => prev.slice(0, -1));
+    }
   };
 
   useEffect(() => {
@@ -204,17 +220,84 @@ function HazardForm() {
     }
   }, [isEditable, floodDetails]);
 
+  useEffect(() => {
+    if (routePoints.length < 1) {
+      setSnapped([]);
+      return;
+    }
+
+    const getRoute = async () => {
+      setIsFetchingRouter(true);
+      toast.info("Tip: Click on or near a road for accurate routing.");
+      const allPoints: [number, number][] = [center, ...routePoints];
+
+      const lonlats = allPoints.map(([lat, lng]) => `${lng},${lat}`).join("|");
+
+      try {
+        const response = await fetch(
+          `http://brouter:17777/brouter?lonlats=${lonlats}&profile=all&format=geojson`,
+          { method: "GET" },
+        );
+
+        const data = await response.json();
+        setSnapped(
+          data.features[0].geometry.coordinates.map(
+            ([lon, lat]: [number, number]) => [lat, lon],
+          ),
+        );
+      } catch (err: any) {
+        console.log(err.response.message);
+      }
+    };
+
+    getRoute();
+  }, [routePoints]);
+
+  useEffect(() => {
+    if (newRoutePoints.length < 2) {
+      setNewSnapped([]);
+      return;
+    }
+
+    const getRoute = async () => {
+      const allPoints = [routePoints.at(-1)!, ...newRoutePoints];
+      console.log("All points update: ", allPoints);
+      const lonlats = allPoints.map(([lat, lng]) => `${lng},${lat}`).join("|");
+
+      try {
+        const response = await fetch(
+          `http://brouter:17777/brouter?lonlats=${lonlats}&profile=all&format=geojson`,
+          { method: "GET" },
+        );
+
+        console.log("Update routes: ", response);
+
+        const data = await response.json();
+        setNewSnapped(
+          data.features[0].geometry.coordinates.map(
+            ([lon, lat]: [number, number]) => [lat, lon],
+          ),
+        );
+      } catch (err: any) {
+        console.log(err.response.message);
+      }
+    };
+
+    getRoute();
+  }, [newRoutePoints]);
+
   const submit = (e: React.FormEvent) => {
     e.preventDefault();
+
+    console.log("Sending Submit: ", snapped);
 
     handleSubmit({
       e: e,
       center: center,
-      routePoints: routePoints,
+      routePoints: snapped.length > 0 ? snapped : [center, ...routePoints],
       desc: desc,
       floodLevel: floodLevel,
       token: token,
-      setSnapped: setSnapped,
       setMidpoint: setMidpoint,
       setError: setError,
       navigate: navigate,
@@ -225,11 +308,13 @@ function HazardForm() {
   const update = (e: React.FormEvent) =>
     handleUpdate({
       e: e,
-      routePoints: routePoints,
+      routePoints: [
+        ...routePoints,
+        ...(newSnapped.length > 0 ? newSnapped : newRoutePoints),
+      ],
       desc: desc,
       floodLevel: floodLevel,
       token: token,
-      setSnapped: setSnapped,
       floodDetails: floodDetails,
       id: id,
       setIsEditable: setIsEditable,
@@ -369,22 +454,31 @@ function HazardForm() {
                         <>
                           <FormMapClickHandler
                             onPinClick={null}
-                            setClickedLoc={setRoutePoints}
-                            clickedLoc={routePoints}
+                            setClickedLoc={setNewRoutePoints}
+                            clickedLoc={newRoutePoints}
                             center={floodDetails.path.at(-1)}
                           />
-                          {snapped.length > 0 ? (
+                          <Polyline
+                            positions={routePoints}
+                            weight={6}
+                            color="#5F80AA"
+                          />
+                          {newSnapped.length > 0 ? (
                             <Polyline
-                              positions={snapped}
+                              positions={newSnapped}
                               weight={6}
                               color="#5F80AA"
                             />
                           ) : (
-                            routePoints.length > 0 && (
+                            newRoutePoints.length > 1 && (
                               <Polyline
-                                positions={routePoints}
+                                positions={[
+                                  routePoints.at(-1)!,
+                                  ...newRoutePoints,
+                                ]}
                                 weight={6}
                                 color="#5F80AA"
+                                dashArray="6 4"
                               />
                             )
                           )}
@@ -429,13 +523,22 @@ function HazardForm() {
                 )}
               </MapContainer>
               {(!id || isEditable) && (
-                <ButtonComp
-                  text="Clear"
-                  variant="outline"
-                  id="HazardPin_PinClearBtn"
-                  type="button"
-                  onClick={handleClearRoutePoints}
-                ></ButtonComp>
+                <div className="flex flex-row gap-2">
+                  <ButtonComp
+                    text="Clear"
+                    variant="outline"
+                    id="HazardPin_PinClearBtn"
+                    type="button"
+                    onClick={handleClearRoutePoints}
+                  ></ButtonComp>
+                  <ButtonComp
+                    text="Undo"
+                    variant="outline"
+                    id="HazardPin_ImageClearBtn"
+                    type="button"
+                    onClick={handleUndoRoute}
+                  ></ButtonComp>
+                </div>
               )}
             </Field>
             <Field>
@@ -539,6 +642,8 @@ function HazardForm() {
                         type="button"
                         onClick={() => {
                           setIsEditable(false);
+                          setNewRoutePoints([]);
+                          setNewSnapped([]);
                         }}
                       ></ButtonComp>
                     </div>

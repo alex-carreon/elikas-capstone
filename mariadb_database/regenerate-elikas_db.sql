@@ -56,23 +56,65 @@ DROP TABLE IF EXISTS `AuditLogs`;
 /*!40101 SET character_set_client = utf8mb4 */;
 CREATE TABLE `AuditLogs` (
   `id` int(11) NOT NULL AUTO_INCREMENT,
-  `log_id` varchar(6) NOT NULL,
-  `executor_id` int(11) NOT NULL,
-  `action` int(11) NOT NULL,
-  `target_type` int(11) NOT NULL,
+  `user_type` varchar(255) DEFAULT NULL,
+  `user_id` int(11) DEFAULT NULL,
+  `event` varchar(255) NOT NULL,
   `target_id` int(11) NOT NULL,
-  `old_value` text DEFAULT NULL,
-  `new_value` text DEFAULT NULL,
-  `created_at` datetime NOT NULL DEFAULT current_timestamp(),
+  `old_values` text DEFAULT NULL,
+  `new_values` text DEFAULT NULL,
+  `target_table_id` int(11) NOT NULL,
+  `ip_address` varchar(45) DEFAULT NULL,
+  `user_agent` varchar(1023) DEFAULT NULL,
+  `created_at` timestamp NOT NULL DEFAULT current_timestamp(),
+  `log_id` varchar(10) NOT NULL,
   PRIMARY KEY (`id`),
-  KEY `executor_id` (`executor_id`),
-  KEY `action` (`action`),
-  KEY `target_type` (`target_type`),
-  CONSTRAINT `AuditLogs_ibfk_1` FOREIGN KEY (`executor_id`) REFERENCES `Users` (`id`),
-  CONSTRAINT `AuditLogs_ibfk_2` FOREIGN KEY (`action`) REFERENCES `AuditActions` (`id`),
-  CONSTRAINT `AuditLogs_ibfk_3` FOREIGN KEY (`target_type`) REFERENCES `TargetTables` (`id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+  UNIQUE KEY `AuditLogs_UNIQUE` (`log_id`),
+  KEY `auditlogs_user_id_user_type_index` (`user_id`,`user_type`),
+  KEY `AuditLogs_TargetTables_FK` (`target_table_id`),
+  CONSTRAINT `AuditLogs_TargetTables_FK` FOREIGN KEY (`target_table_id`) REFERENCES `TargetTables` (`id`),
+  CONSTRAINT `AuditLogs_Users_FK` FOREIGN KEY (`user_id`) REFERENCES `Users` (`id`)
+) ENGINE=InnoDB AUTO_INCREMENT=3 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
+/*!50003 SET @saved_cs_client      = @@character_set_client */ ;
+/*!50003 SET @saved_cs_results     = @@character_set_results */ ;
+/*!50003 SET @saved_col_connection = @@collation_connection */ ;
+/*!50003 SET character_set_client  = utf8mb4 */ ;
+/*!50003 SET character_set_results = utf8mb4 */ ;
+/*!50003 SET collation_connection  = utf8mb4_general_ci */ ;
+/*!50003 SET @saved_sql_mode       = @@sql_mode */ ;
+/*!50003 SET sql_mode              = 'IGNORE_SPACE,STRICT_TRANS_TABLES,ERROR_FOR_DIVISION_BY_ZERO,NO_AUTO_CREATE_USER,NO_ENGINE_SUBSTITUTION' */ ;
+DELIMITER ;;
+/*!50003 CREATE*/ /*!50017 */ /*!50003 TRIGGER generate_audit_log_id
+BEFORE INSERT
+ON AuditLogs FOR EACH ROW
+
+BEGIN
+    DECLARE event_letter CHAR(1);
+    DECLARE random_suffix VARCHAR(6);
+
+    -- 1. Determine the prefix letter based on the event column
+    IF NEW.event = 'created' THEN 
+        SET event_letter = 'C';
+    ELSEIF NEW.event = 'updated' THEN 
+        SET event_letter = 'U';
+    ELSEIF NEW.event = 'deleted' THEN 
+        SET event_letter = 'D';
+    ELSE 
+        SET event_letter = 'A'; -- Fallback for generic events
+    END IF;
+
+    -- 2. Generate an 6-character random hex string from a UUID
+    -- (We replace dashes and take characters 1 to 8)
+    SET random_suffix = UPPER(SUBSTRING(REPLACE(UUID(), '-', ''), 1, 6));
+
+    -- 3. Concatenate and assign to the column (replace 'audit_id' with your actual column name)
+    SET NEW.log_id = CONCAT(event_letter, random_suffix);
+END */;;
+DELIMITER ;
+/*!50003 SET sql_mode              = @saved_sql_mode */ ;
+/*!50003 SET character_set_client  = @saved_cs_client */ ;
+/*!50003 SET character_set_results = @saved_cs_results */ ;
+/*!50003 SET collation_connection  = @saved_col_connection */ ;
 
 --
 -- Table structure for table `BroadcastStatus`
@@ -86,7 +128,7 @@ CREATE TABLE `BroadcastStatus` (
   `status_name` varchar(20) NOT NULL,
   PRIMARY KEY (`id`),
   UNIQUE KEY `status_name` (`status_name`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=3 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -123,7 +165,7 @@ CREATE TABLE `Comments` (
   KEY `parent_id` (`parent_id`),
   CONSTRAINT `Comments_ibfk_1` FOREIGN KEY (`element_id`) REFERENCES `SocialElements` (`id`),
   CONSTRAINT `Comments_ibfk_2` FOREIGN KEY (`parent_id`) REFERENCES `SocialElements` (`id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=9 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -148,7 +190,7 @@ CREATE TABLE `EmergencyContacts` (
   KEY `location_id` (`location_id`),
   CONSTRAINT `EmergencyContacts_ibfk_1` FOREIGN KEY (`element_id`) REFERENCES `SocialElements` (`id`),
   CONSTRAINT `EmergencyContacts_ibfk_2` FOREIGN KEY (`location_id`) REFERENCES `Locations` (`id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=4 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -197,7 +239,7 @@ CREATE TABLE `EvacAreas` (
   CONSTRAINT `EvacAreas_ibfk_3` FOREIGN KEY (`area_type`) REFERENCES `EvacTypes` (`id`),
   CONSTRAINT `EvacAreas_ibfk_4` FOREIGN KEY (`capacity_level`) REFERENCES `CapacityLevels` (`id`),
   CONSTRAINT `EvacAreas_ibfk_5` FOREIGN KEY (`verified_by`) REFERENCES `GovOps` (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=2 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=8 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -231,7 +273,7 @@ CREATE TABLE `Feedback` (
   PRIMARY KEY (`id`),
   KEY `user_id` (`user_id`),
   CONSTRAINT `Feedback_ibfk_1` FOREIGN KEY (`user_id`) REFERENCES `Users` (`id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=5 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -274,7 +316,7 @@ CREATE TABLE `Flags` (
   CONSTRAINT `Flags_ibfk_2` FOREIGN KEY (`element_id`) REFERENCES `SocialElements` (`id`),
   CONSTRAINT `Flags_ibfk_3` FOREIGN KEY (`reason_id`) REFERENCES `FlagReasons` (`id`),
   CONSTRAINT `Flags_ibfk_4` FOREIGN KEY (`reviewed_by`) REFERENCES `Admins` (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=5 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=9 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -315,7 +357,7 @@ CREATE TABLE `FloodPaths` (
   KEY `level_id` (`level_id`),
   CONSTRAINT `FloodPaths_ibfk_1` FOREIGN KEY (`element_id`) REFERENCES `SocialElements` (`id`),
   CONSTRAINT `FloodPaths_ibfk_2` FOREIGN KEY (`level_id`) REFERENCES `FloodLevels` (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=4 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=18 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -358,7 +400,7 @@ CREATE TABLE `IndivAccs` (
   KEY `location_id` (`location_id`),
   CONSTRAINT `IndivAccs_ibfk_1` FOREIGN KEY (`user_id`) REFERENCES `Users` (`id`),
   CONSTRAINT `IndivAccs_ibfk_2` FOREIGN KEY (`location_id`) REFERENCES `Locations` (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=3 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=9 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -415,7 +457,7 @@ CREATE TABLE `Media` (
   KEY `user_id` (`user_id`),
   CONSTRAINT `Media_ibfk_1` FOREIGN KEY (`parent_id`) REFERENCES `SocialElements` (`id`),
   CONSTRAINT `Media_ibfk_2` FOREIGN KEY (`user_id`) REFERENCES `Users` (`id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=11 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -437,7 +479,7 @@ CREATE TABLE `ModerationLogs` (
   KEY `reviewed_by` (`reviewed_by`),
   CONSTRAINT `ModerationLogs_ibfk_1` FOREIGN KEY (`element_id`) REFERENCES `SocialElements` (`id`),
   CONSTRAINT `ModerationLogs_ibfk_2` FOREIGN KEY (`reviewed_by`) REFERENCES `Admins` (`id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=3 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -455,7 +497,7 @@ CREATE TABLE `Names` (
   PRIMARY KEY (`id`),
   KEY `user_id` (`user_id`),
   CONSTRAINT `Names_ibfk_1` FOREIGN KEY (`user_id`) REFERENCES `Users` (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=3 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=10 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -472,7 +514,7 @@ CREATE TABLE `PhoneNumbers` (
   PRIMARY KEY (`id`),
   KEY `user_id` (`user_id`),
   CONSTRAINT `PhoneNumbers_ibfk_1` FOREIGN KEY (`user_id`) REFERENCES `Users` (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=3 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=6 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -513,7 +555,7 @@ CREATE TABLE `SMSBroadcasts` (
   CONSTRAINT `SMSBroadcasts_ibfk_1` FOREIGN KEY (`sender_id`) REFERENCES `GovOps` (`id`),
   CONSTRAINT `SMSBroadcasts_ibfk_2` FOREIGN KEY (`location_id`) REFERENCES `Locations` (`id`),
   CONSTRAINT `SMSBroadcasts_ibfk_3` FOREIGN KEY (`status`) REFERENCES `BroadcastStatus` (`id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=13 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -533,7 +575,7 @@ CREATE TABLE `SMSTemplates` (
   UNIQUE KEY `template_name` (`template_name`),
   KEY `optr_id` (`optr_id`),
   CONSTRAINT `SMSTemplates_ibfk_1` FOREIGN KEY (`optr_id`) REFERENCES `GovOps` (`id`)
-) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=4 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -575,12 +617,13 @@ CREATE TABLE `Sensors` (
   `yellow_level` decimal(4,2) NOT NULL,
   `orange_level` decimal(4,2) NOT NULL,
   `red_level` decimal(4,2) NOT NULL,
+  `current_status` varchar(20) DEFAULT NULL,
   PRIMARY KEY (`id`),
   UNIQUE KEY `Sensors_UNIQUE` (`sensor_code`),
   KEY `element_id` (`element_id`),
   CONSTRAINT `Sensors_Locations_FK` FOREIGN KEY (`id`) REFERENCES `Locations` (`id`),
   CONSTRAINT `Sensors_ibfk_1` FOREIGN KEY (`element_id`) REFERENCES `SocialElements` (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=7 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=22 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -602,7 +645,7 @@ CREATE TABLE `SocialElements` (
   KEY `type_id` (`type_id`),
   CONSTRAINT `SocialElements_ibfk_1` FOREIGN KEY (`user_id`) REFERENCES `Users` (`id`),
   CONSTRAINT `SocialElements_ibfk_2` FOREIGN KEY (`type_id`) REFERENCES `TargetTables` (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=14 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=60 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -617,7 +660,7 @@ CREATE TABLE `TargetTables` (
   `table_name` varchar(20) NOT NULL,
   PRIMARY KEY (`id`),
   UNIQUE KEY `table_name` (`table_name`)
-) ENGINE=InnoDB AUTO_INCREMENT=5 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=6 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -635,7 +678,7 @@ CREATE TABLE `UserAuth` (
   UNIQUE KEY `identity_uid` (`identity_uid`),
   KEY `user_id` (`user_id`),
   CONSTRAINT `UserAuth_ibfk_1` FOREIGN KEY (`user_id`) REFERENCES `Users` (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=11 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=17 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -658,7 +701,7 @@ CREATE TABLE `Users` (
   UNIQUE KEY `email` (`email`),
   KEY `role_id` (`role_id`),
   CONSTRAINT `Users_ibfk_1` FOREIGN KEY (`role_id`) REFERENCES `Roles` (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=11 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=17 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -678,7 +721,84 @@ CREATE TABLE `Votes` (
   KEY `element_id` (`element_id`),
   CONSTRAINT `Votes_ibfk_1` FOREIGN KEY (`user_id`) REFERENCES `Users` (`id`),
   CONSTRAINT `Votes_ibfk_2` FOREIGN KEY (`element_id`) REFERENCES `SocialElements` (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=2 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=9 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Table structure for table `failed_jobs`
+--
+
+DROP TABLE IF EXISTS `failed_jobs`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8mb4 */;
+CREATE TABLE `failed_jobs` (
+  `id` bigint(20) unsigned NOT NULL AUTO_INCREMENT,
+  `uuid` varchar(255) NOT NULL,
+  `connection` text NOT NULL,
+  `queue` text NOT NULL,
+  `payload` longtext NOT NULL,
+  `exception` longtext NOT NULL,
+  `failed_at` timestamp NOT NULL DEFAULT current_timestamp(),
+  PRIMARY KEY (`id`),
+  UNIQUE KEY `failed_jobs_uuid_unique` (`uuid`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Table structure for table `job_batches`
+--
+
+DROP TABLE IF EXISTS `job_batches`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8mb4 */;
+CREATE TABLE `job_batches` (
+  `id` varchar(255) NOT NULL,
+  `name` varchar(255) NOT NULL,
+  `total_jobs` int(11) NOT NULL,
+  `pending_jobs` int(11) NOT NULL,
+  `failed_jobs` int(11) NOT NULL,
+  `failed_job_ids` longtext NOT NULL,
+  `options` mediumtext DEFAULT NULL,
+  `cancelled_at` int(11) DEFAULT NULL,
+  `created_at` int(11) NOT NULL,
+  `finished_at` int(11) DEFAULT NULL,
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Table structure for table `jobs`
+--
+
+DROP TABLE IF EXISTS `jobs`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8mb4 */;
+CREATE TABLE `jobs` (
+  `id` bigint(20) unsigned NOT NULL AUTO_INCREMENT,
+  `queue` varchar(255) NOT NULL,
+  `payload` longtext NOT NULL,
+  `attempts` smallint(5) unsigned NOT NULL,
+  `reserved_at` int(10) unsigned DEFAULT NULL,
+  `available_at` int(10) unsigned NOT NULL,
+  `created_at` int(10) unsigned NOT NULL,
+  PRIMARY KEY (`id`),
+  KEY `jobs_queue_index` (`queue`)
+) ENGINE=InnoDB AUTO_INCREMENT=8 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+/*!40101 SET character_set_client = @saved_cs_client */;
+
+--
+-- Table structure for table `migrations`
+--
+
+DROP TABLE IF EXISTS `migrations`;
+/*!40101 SET @saved_cs_client     = @@character_set_client */;
+/*!40101 SET character_set_client = utf8mb4 */;
+CREATE TABLE `migrations` (
+  `id` int(10) unsigned NOT NULL AUTO_INCREMENT,
+  `migration` varchar(255) NOT NULL,
+  `batch` int(11) NOT NULL,
+  PRIMARY KEY (`id`)
+) ENGINE=InnoDB AUTO_INCREMENT=8 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -694,4 +814,4 @@ CREATE TABLE `Votes` (
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*M!100616 SET NOTE_VERBOSITY=@OLD_NOTE_VERBOSITY */;
 
--- Dump completed on 2026-06-10 15:06:30
+-- Dump completed on 2026-06-12 18:48:32
