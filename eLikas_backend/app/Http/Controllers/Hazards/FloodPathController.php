@@ -11,6 +11,7 @@ use App\Models\MediaFile;
 use App\Models\SocialElement;
 use App\Models\TargetTable;
 use App\Models\Vote;
+use App\Services\FloodPathIntersectionService;
 use App\Services\MediaUploadService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -21,7 +22,10 @@ use MatanYadaev\EloquentSpatial\Objects\Point;
 
 class FloodPathController extends Controller
 {
-    public function __construct(protected MediaUploadService $mediaUploadService) {}
+    public function __construct(
+        protected MediaUploadService $mediaUploadService,
+        protected FloodPathIntersectionService $intersectionService
+        ) {}
     
     /**
      * GET /flood-paths
@@ -191,6 +195,12 @@ class FloodPathController extends Controller
             )
         );
 
+        if ($this->intersectionService->overlapsExisting($lineString)) {
+            return response()->json([
+                'message' => 'This flood path overlaps an existing active flood path.',
+            ], 422);
+        }
+
         $uploadedPath = null;
 
         if ($request->hasFile('file')) {
@@ -315,6 +325,14 @@ class FloodPathController extends Controller
                     $validated['path']
                 )
             );
+        }
+
+        if (isset($validated['path'])) {
+            if ($this->intersectionService->overlapsExisting($validated['path'], excludeId: $id)) {
+                return response()->json([
+                    'message' => 'Updated path overlaps an existing active flood path.',
+                ], 422);
+            }
         }
 
         $validated['last_confirmed'] = now();
