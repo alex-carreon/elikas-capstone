@@ -5,11 +5,13 @@ import { LatLng, divIcon } from "leaflet";
 import "leaflet-routing-machine";
 import colors from "@/constants/colors";
 import PinIcon from "@/assets/Map/Pins.svg?react";
+import MyPinIcon from "@/assets/Map/MyPin.svg?react";
 import SensorIcon from "@/components/sensorIcon";
 import { renderToString } from "react-dom/server";
 import MarkerClusterGroup from "react-leaflet-cluster";
 import FloodIcon from "@/assets/Map/FloodIcon.svg?react";
 import BlankPin from "@/assets/Map/BlankPin.svg?react";
+import MyHazardPin from "@/assets/Map/MyHazardPins 1.svg?react";
 import "leaflet-routing-machine/dist/leaflet-routing-machine.css";
 import "leaflet-routing-machine";
 import { toast } from "sonner";
@@ -21,7 +23,15 @@ type EvacPin = {
   id: number;
   lat: number;
   lng: number;
-  own_pins: boolean;
+  my_pin: boolean;
+};
+
+type MyEvacPin = {
+  id: number;
+  lat: number;
+  lng: number;
+  my_pin: boolean;
+  status: string;
 };
 
 type FloodLevel = {
@@ -35,6 +45,7 @@ type FloodPath = {
   is_deactivated: boolean;
   level: FloodLevel;
   path: [number, number][];
+  my_path: boolean;
 };
 
 type Sensors = {
@@ -56,9 +67,6 @@ export const sensorPins = [
 ];
 
 let evacPinData: EvacPin[] = [];
-// let brgyPins: EvacPin[] = [];
-// let myPins: EvacPin[] = [];
-// let indivPins: EvacPin[] = [];
 
 const getBrgyPins = async ({
   setBrgyPins,
@@ -80,8 +88,8 @@ const getAllIndivPins = async ({
   setIndivPins?: Dispatch<SetStateAction<EvacPin[]>>;
 }) => {
   try {
-    const BrgyResponse = await api.get("/pins?role=indiv");
-    const indivPins = await BrgyResponse.data.pins;
+    const IndivResponse = await api.get("/pins?role=indiv");
+    const indivPins = await IndivResponse.data.pins;
     setIndivPins?.(indivPins);
   } catch (err: string | any) {
     Error(err.message || "An error occurred");
@@ -91,11 +99,12 @@ const getAllIndivPins = async ({
 const getMyPins = async ({
   setOwnPins,
 }: {
-  setOwnPins?: Dispatch<SetStateAction<EvacPin[]>>;
+  setOwnPins?: Dispatch<SetStateAction<MyEvacPin[]>>;
 }) => {
   try {
-    const IndivResponse = await api.get("evacpins/users/coords");
+    const IndivResponse = await api.get("/pins/my-coords");
     const myPins = await IndivResponse.data.pins;
+    console.log("MINE", myPins);
 
     setOwnPins?.(myPins);
   } catch (err: any) {
@@ -282,7 +291,7 @@ export function Routing({
 export function PinMarking({ onPinClick }: { onPinClick: (pin: any) => void }) {
   const [evacPins, setEvacPins] = useState<EvacPin[]>([]);
   const [brgyPins, setBrgyPins] = useState<EvacPin[]>([]);
-  const [myPins, setMyPins] = useState<EvacPin[]>([]);
+  const [myPins, setMyPins] = useState<MyEvacPin[]>([]);
   const [indivPins, setIndivPins] = useState<EvacPin[]>([]);
 
   const { showGovPins, showOtherPins } = useMapFilterContext();
@@ -298,6 +307,12 @@ export function PinMarking({ onPinClick }: { onPinClick: (pin: any) => void }) {
 
   const icon = divIcon({
     html: renderToString(<PinIcon width={50} height={50} />),
+    className: "",
+    iconAnchor: [12, 12],
+  });
+
+  const myIcon = divIcon({
+    html: renderToString(<MyPinIcon width={50} height={50} />),
     className: "",
     iconAnchor: [12, 12],
   });
@@ -342,18 +357,22 @@ export function PinMarking({ onPinClick }: { onPinClick: (pin: any) => void }) {
             <Marker
               key={pin.id}
               position={[pin.lat, pin.lng]}
-              icon={icon}
+              icon={pin.my_pin ? myIcon : icon}
               eventHandlers={{ click: () => onPinClick(pin) }}
             />
           ))
-        : myPins.map((pin) => (
-            <Marker
-              key={pin.id}
-              position={[pin.lat, pin.lng]}
-              icon={icon}
-              eventHandlers={{ click: () => onPinClick(pin) }}
-            />
-          ))}
+        : myPins.map((pin) => {
+            if (pin.my_pin && pin.status == "active") {
+              return (
+                <Marker
+                  key={pin.id}
+                  position={[pin.lat, pin.lng]}
+                  icon={myIcon}
+                  eventHandlers={{ click: () => onPinClick(pin) }}
+                />
+              );
+            }
+          })}
     </MarkerClusterGroup>
   );
 }
@@ -548,6 +567,12 @@ export function RoadMapping({ onPinClick }: RoadMappingProps) {
     iconAnchor: [18, 20],
   });
 
+  const myIcon = divIcon({
+    html: renderToString(<MyHazardPin width={36} height={36} />),
+    className: "",
+    iconAnchor: [18, 20],
+  });
+
   let floodData;
 
   const getFloodPaths = async () => {
@@ -584,7 +609,7 @@ export function RoadMapping({ onPinClick }: RoadMappingProps) {
                 <Marker
                   key={pin.id}
                   position={midpoint}
-                  icon={icon}
+                  icon={pin.my_path ? myIcon : icon}
                   eventHandlers={{
                     click: () => {
                       onPinClick && onPinClick(pin, midpoint);

@@ -58,7 +58,7 @@ function SelectDropdown({
           required={isRequired}
           disabled={disabled}
         >
-          <SelectTrigger id={id} className="overflow-hidden">
+          <SelectTrigger id={id} className="w-full overflow-hidden">
             <span className="truncate block">
               {options.find((option) => option.value === value)?.label ||
                 placeholder}
@@ -66,7 +66,7 @@ function SelectDropdown({
 
             {/* <SelectValue placeholder={placeholder} /> */}
           </SelectTrigger>
-          <SelectContent>
+          <SelectContent className="z-[900]">
             <SelectGroup>
               {options.map((option) => (
                 <SelectItem key={option.value} value={option.value}>

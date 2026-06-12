@@ -79,51 +79,50 @@ class AdminController extends Controller
         $request->validate([
             'username'       => 'required|string|max:20|unique:Users,username',
             'email'          => 'required|email|max:50|unique:Users,email',
+            'password'       => 'required|string|min:8',
 
             'phone'          => 'nullable|string|max:20',
 
-            'firebase_uid'   => 'required|string',
-
-            'level_id'       => 'required|integer',
-            'location_id'    => 'required|integer',
+            'level_id'       => 'required|integer|exists:LocationLevels,id',
+            'location_id'    => 'required|integer|exists:Locations,id',
 
             'point_person'   => 'nullable|string|max:100',
             'point_position' => 'nullable|string|max:50',
         ]);
 
-        // Step 2: Verify Firebase UID exists
-        try {
+        $firebaseUid = null;
 
-            $this->firebaseAuth->getUser($request->firebase_uid);
-
-        } catch (\Exception $e) {
-
-            return response()->json([
-                'error' => 'Invalid Firebase user'
-            ], 401);
-        }
-
-        // Step 3: Database transaction
         try {
             DB::beginTransaction();
 
-            // Create user
+            // Step 2: Create Firebase user
+            $firebaseUser = $this->firebaseAuth->createUser([
+                'email'         => $request->email,
+                'password'      => $request->password,
+                'emailVerified' => false,
+            ]);
+
+            $firebaseUid = $firebaseUser->uid;
+
+            // Step 3: Send Firebase verification email
+            $this->firebaseAuth->sendEmailVerificationLink(
+                $request->email
+            );
+
+            // Step 4: Create User record
             $user = User::create([
                 'username'   => $request->username,
                 'email'      => $request->email,
-
-                // role_id 2 = govop
-                'role_id'    => 2,
-
+                'role_id'    => 2, // GovOp
                 'created_at' => now(),
             ]);
 
-            // Link the Firebase UID to this user
+            // Step 5: Store Firebase UID
             $user->userAuth()->create([
-                'identity_uid' => $request->firebase_uid,
+                'identity_uid' => $firebaseUid,
             ]);
 
-            // Create GovOp record
+            // Step 6: Create GovOp record
             $user->govOp()->create([
                 'level_id'       => $request->level_id,
                 'location_id'    => $request->location_id,
@@ -134,18 +133,26 @@ class AdminController extends Controller
             DB::commit();
 
             return response()->json([
-                'message' => 'GovOp created successfully',
+                'message' => 'GovOp created successfully. Verification email sent.',
                 'user_id' => $user->id,
+                'firebase_uid' => $firebaseUid,
             ], 201);
 
         } catch (\Exception $e) {
 
-            DB::rollBack(); 
+            DB::rollBack();
+
+            // Remove Firebase account if DB creation fails
+            if ($firebaseUid) {
+                try {
+                    $this->firebaseAuth->deleteUser($firebaseUid);
+                } catch (\Exception $ignored) {
+                }
+            }
 
             return response()->json([
                 'message' => 'GovOp creation failed',
                 'error' => $e->getMessage(),
-                'trace' => $e->getTraceAsString(),
             ], 500);
         }
     }

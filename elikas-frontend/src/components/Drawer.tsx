@@ -5,7 +5,7 @@ import {
   DrawerDescription,
   DrawerTitle,
 } from "@/components/ui/drawer";
-import { CircleX } from "lucide-react";
+import { CircleX, X } from "lucide-react";
 import { useEffect, useState } from "react";
 import { cn } from "@/lib/utils";
 import ButtonComp from "./Button";
@@ -53,6 +53,7 @@ type postedBy = {
   user_id: number;
   username: string;
   posted_at: string;
+  avatar_seed: string;
 };
 
 type media = {
@@ -97,6 +98,7 @@ type EvacPin = {
   posted_by: postedBy;
   last_confirmed: string | null;
   media: media[];
+  avatar_seed: string;
 };
 
 type Sensors = {
@@ -212,7 +214,7 @@ function DrawerComp({
         <DrawerContent
           className={cn(
             "transition-all duration-300 inset-x-0 mx-auto w-full max-w-md",
-            expanded ? "h-[80vh]" : isHazard ? "h-content" : "h-content",
+            expanded ? "h-content" : isHazard ? "h-content" : "h-content",
           )}
           id="Drawer_DrawerContent"
         >

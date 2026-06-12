@@ -12,6 +12,8 @@ import {
   ChevronUpIcon,
   Form,
   X,
+  User,
+  UserIcon,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -45,11 +47,13 @@ import { bigSmile } from "@dicebear/collection";
 import { createAvatar } from "@dicebear/core";
 import { Skeleton } from "@/components/ui/skeleton";
 import PostRow from "@/components/PostRow";
-import sample from "@/assets/Map/SamplePhoto.png";
 import { useUserContext } from "@/context/AuthContext";
 import { toast } from "sonner";
 import { toZonedTime } from "date-fns-tz";
 import { format } from "date-fns";
+import { Spinner } from "../ui/spinner";
+import brgyProfile from "@/assets/brgyProfile.svg";
+import adminProfile from "@/assets/adminProfile.svg";
 
 type CommentType = {
   id: number;
@@ -70,6 +74,7 @@ type postedBy = {
   user_id: number;
   username: string;
   posted_at: string;
+  avatar_seed: string;
 };
 
 type media = {
@@ -114,6 +119,7 @@ type EvacPin = {
   posted_by: postedBy;
   last_confirmed: string | null;
   media: media[];
+  avatar_seed: string;
 };
 
 type FacilityKey =
@@ -182,7 +188,7 @@ function EvacPinDrawer({
   isExpanded,
   setIsExpanded,
 }: {
-  selectedPin: EvacPin;
+  selectedPin: EvacPin | null;
   onFindRoute?: (findRoute: boolean) => void;
   isExpanded?: boolean;
   setIsExpanded?: (val: boolean) => void;
@@ -201,23 +207,27 @@ function EvacPinDrawer({
   const [verifiedBy, setVerifiedBy] = useState(0);
   const [verified, setVerified] = useState(false);
   const [newComment, setNewComment] = useState<string | null>();
+  const [seed, setSeed] = useState("");
+  const [seedLoad, setSeedLoad] = useState(false);
 
   const cameraInputRef = useRef<HTMLInputElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
   const { role } = useUserContext();
 
-  const avatar = createAvatar(bigSmile, {
-    seed: "Felix",
-    backgroundColor: ["b6e3f4", "c0aede", "d1d4f9"],
-    radius: 50,
-    scale: 90,
-    accessoriesProbability: 50,
-    eyes: ["cheery", "normal", "starstruck", "winking"],
-    mouth: ["braces", "gapSmile", "kawaii", "openedSmile", "teethSmile"],
-  });
+  const avatar = seed
+    ? createAvatar(bigSmile, {
+        seed: seed,
+        backgroundColor: ["b6e3f4", "c0aede", "d1d4f9"],
+        radius: 50,
+        scale: 90,
+        accessoriesProbability: 50,
+        eyes: ["cheery", "normal", "starstruck", "winking"],
+        mouth: ["braces", "gapSmile", "kawaii", "openedSmile", "teethSmile"],
+      })
+    : null;
 
-  const dataUri = avatar.toDataUri();
+  const dataUri = avatar?.toDataUri() ?? "";
 
   const handleCameraClick = () => {
     cameraInputRef.current?.click();
@@ -252,7 +262,7 @@ function EvacPinDrawer({
   const getComments = async () => {
     try {
       setCommentsLoad(true);
-      const response = await api.get(`/evac-areas/${selectedPin.id}/comments`);
+      const response = await api.get(`/evac-areas/${selectedPin?.id}/comments`);
       setComments(response.data.comments);
     } catch (err: any) {
       console.log(err.response.data);
@@ -261,7 +271,26 @@ function EvacPinDrawer({
     }
   };
 
-  const submitComment = (e: FormEvent) => {
+  const getAvatar = async () => {
+    try {
+      setSeedLoad(true);
+      const response = await api.get("/profile");
+
+      const userData = response.data;
+
+      setSeed(userData.avatar_seed);
+
+      return userData;
+    } catch (err: string | any) {
+      console.error("Status:", err.response?.status);
+      console.error("Data:", err.response?.data);
+      console.error("Message:", err.message);
+    } finally {
+      setSeedLoad(false);
+    }
+  };
+
+  const submitComment = async (e: FormEvent) => {
     e.preventDefault();
 
     const formData = new FormData();
@@ -276,13 +305,8 @@ function EvacPinDrawer({
 
     try {
       const response = api.post(
-        `/evac-areas/${selectedPin.id}/comments`,
+        `/evac-areas/${selectedPin?.id}/comments`,
         formData,
-        {
-          headers: {
-            "Content-Type": undefined,
-          },
-        },
       );
 
       toast.promise(response, {
@@ -307,6 +331,7 @@ function EvacPinDrawer({
     if (!isExpanded) return;
 
     getComments();
+    getAvatar();
   }, [isExpanded]);
 
   useEffect(() => {
@@ -611,6 +636,7 @@ function EvacPinDrawer({
                       isEvacComments={true}
                       isHazardPost={false}
                       image={comment.media}
+                      seed={comment.posted_by.avatar_seed}
                     />
                   </Fragment>
                 ))
@@ -619,7 +645,17 @@ function EvacPinDrawer({
             <div className="fixed bottom-0 z-100 bg-white w-full h-content">
               <div className="flex flex-col h-fit justify-center">
                 <div className="h-full flex flex-row items-center p-2 gap-2">
-                  <img src={dataUri} className="w-11" />
+                  {seedLoad ? (
+                    <Spinner />
+                  ) : seed ? (
+                    <img src={dataUri} className="w-11" />
+                  ) : role === "brgy_op" ? (
+                    <img src={brgyProfile} className="w-11" />
+                  ) : role === "admin" ? (
+                    <img src={adminProfile} className="w-11" />
+                  ) : (
+                    <UserIcon className="w-11" />
+                  )}
                   <InputGroup>
                     <InputGroupInput
                       placeholder="Add a Comment"

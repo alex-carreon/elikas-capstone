@@ -8,11 +8,18 @@ import {
   InputGroupInput,
   InputGroupAddon,
 } from "@/components/ui/input-group";
-import { Filter, Search } from "lucide-react";
+import { X, Search } from "lucide-react";
 import Row from "@/components/Row";
 import { Skeleton } from "@/components/ui/skeleton";
 import ButtonComp from "@/components/Button";
 import { Link } from "react-router";
+import {
+  Collapsible,
+  CollapsibleTrigger,
+  CollapsibleContent,
+} from "@/components/ui/collapsible";
+import { ChevronDownIcon, ChevronUpIcon } from "lucide-react";
+import SelectDropdown from "@/components/SelectDropdown";
 
 type BrgyUser = {
   id: number;
@@ -21,8 +28,22 @@ type BrgyUser = {
   role: string;
 };
 
+type Cities = {
+  id: number;
+  name: string;
+  parent_id: number;
+  parent_location: Province;
+};
+
+type Province = {
+  id: number;
+  level_id: number;
+  name: string;
+};
+
 function BrgyUsers() {
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [countLoad, setCountLoad] = useState(false);
   const [activeCount, setActiveCount] = useState(0);
   const [deacCount, setDeacCount] = useState(0);
   const [activeUsers, setActiveUsers] = useState<BrgyUser[]>([]);
@@ -30,32 +51,118 @@ function BrgyUsers() {
   const [isActiveUsers, setIsActiveUsers] = useState(true);
   const [isSMS, setIsSMS] = useState(false);
   const [sentMessages, setSentMessages] = useState(true);
+  const [cityFilter, setCityFilter] = useState(0);
+  const [cities, setCities] = useState<Cities[]>([]);
+  const [openCollapse, setOpenCollapse] = useState(false);
+
+  const params = new URLSearchParams();
+
+  const getBrgyData = async (signal?: AbortSignal) => {
+    try {
+      if (cityFilter && cityFilter !== 0) {
+        params.set("city_id", String(cityFilter));
+      }
+
+      const parameter = params.toString();
+
+      const [activeResponse, deacResponse] = await Promise.all([
+        api.get(
+          `/admin/users?role=brgy_op&active=true${parameter ? `&${parameter}` : ""}`,
+          { signal },
+        ),
+        api.get("/admin/users?role=brgy_op&active=false", { signal }),
+      ]);
+
+      const endpoint = `/admin/users?role=brgy_op&active=true${parameter ? `&${parameter}` : ""}`;
+
+      console.log("active", endpoint);
+      console.log("Active", activeResponse);
+
+      setActiveUsers(activeResponse.data.users);
+      setDeacUsers(deacResponse.data.users);
+    } catch (err: string | any) {
+      if (err.name === "CanceledError") {
+        return;
+      }
+      console.log(err.response?.data);
+    }
+  };
+
+  const getBrgyCount = async (signal?: AbortSignal) => {
+    try {
+      setCountLoad(true);
+      const [activeResponse, deacResponse] = await Promise.all([
+        api.get(`/admin/users?role=brgy_op&active=true`, { signal }),
+        api.get("/admin/users?role=brgy_op&active=false", { signal }),
+      ]);
+
+      console.log("active", activeResponse);
+      console.log("deac", deacResponse);
+
+      setActiveCount(activeResponse.data.count);
+      setDeacCount(deacResponse.data.count);
+      setCountLoad(false);
+    } catch (err: string | any) {
+      if (err.name === "CanceledError") {
+        setCountLoad(false);
+        return;
+      }
+      console.log(err.response?.data);
+      setCountLoad(false);
+    }
+  };
+
+  const getCity = async (signal?: AbortSignal) => {
+    try {
+      setCountLoad(true);
+
+      const cityRes = await api.get("/locations/cities", { signal });
+
+      const cities = cityRes.data.Cities;
+      setCities(cities);
+      setCountLoad(false);
+    } catch (err: any) {
+      console.log(err.message);
+      if (err.name === "CanceledError") {
+        setCountLoad(false);
+        return;
+      }
+      console.log(err.response?.data);
+      setCountLoad(false);
+    }
+  };
+
+  const getAll = async () => {
+    const controller = new AbortController();
+
+    try {
+      setLoading(true);
+      await Promise.all([
+        getCity(controller.signal),
+        getBrgyData(controller.signal),
+        getBrgyCount(controller.signal),
+      ]);
+    } catch (err: any) {
+      if (err.name === "CanceledError") return;
+      console.log(err);
+    } finally {
+      setLoading(false);
+    }
+
+    return () => controller.abort();
+  };
 
   useEffect(() => {
-    const getBrgyData = async () => {
-      try {
-        setLoading(true);
-        const [activeResponse, deacResponse] = await Promise.all([
-          api.get("/admin/users?role=brgy_op&active=true"),
-          api.get("/admin/users?role=brgy_op&active=false"),
-        ]);
-
-        console.log("active", activeResponse);
-        console.log("deac", deacResponse);
-
-        setActiveCount(activeResponse.data.count);
-        setActiveUsers(activeResponse.data.users);
-        setDeacCount(deacResponse.data.count);
-        setDeacUsers(deacResponse.data.users);
-      } catch (err: string | any) {
-        new Error(err.message || "An error occurred during registration");
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    getBrgyData();
+    getAll();
   }, []);
+
+  useEffect(() => {
+    const controller = new AbortController();
+
+    getBrgyData(controller.signal);
+
+    return () => controller.abort();
+  }, [cityFilter]);
 
   return (
     <>
@@ -66,13 +173,13 @@ function BrgyUsers() {
               title="Active Users"
               lastUpdated="Last updated 3 minutes ago"
               count={activeCount}
-              loading={loading}
+              loading={countLoad}
             />
             <CountRow
               title="Deactivated Users"
               lastUpdated="Last updated 3 minutes ago"
               count={deacCount}
-              loading={loading}
+              loading={countLoad}
             />
           </DashboardHeader>
           <div className="bg-white -mt-8 rounded-4xl p-4 flex flex-col gap-2">
@@ -140,34 +247,65 @@ function BrgyUsers() {
                 </TabsList>
               </Tabs>
             )}
-            <div className="flex flex-row">
-              <div className="w-2/3 flex justify-start items-center gap-2">
-                <InputGroup className="w-2/3">
-                  <InputGroupInput
-                    className="text-sm h-8"
-                    id="Admin_BrgySearchField"
-                  ></InputGroupInput>
-                  <InputGroupAddon align="inline-end">
-                    <Search />
-                  </InputGroupAddon>
-                </InputGroup>
-                <Filter size={18} id="Admin_BrgyFilterBtn" />
+            <Collapsible className="w-full flex-col items-center">
+              <div className="w-full flex justify-between gap-2">
+                {!isSMS && (
+                  <div className="w-30">
+                    <Link to="/admin-brgyAdd">
+                      <ButtonComp
+                        variant="primary"
+                        text="Add"
+                        id="Admin_BrgyAddBtn"
+                        heightSize="30px"
+                        widthSize="100%"
+                      />
+                    </Link>
+                  </div>
+                )}
               </div>
-              {!isSMS && (
-                <div className="w-30">
-                  <Link to="/admin-brgyAdd">
-                    <ButtonComp
-                      variant="primary"
-                      text="Add"
-                      id="Admin_BrgyAddBtn"
-                      heightSize="30px"
-                      widthSize="100%"
-                    />
-                  </Link>
+              <CollapsibleTrigger
+                onClick={() => setOpenCollapse(!openCollapse)}
+                id="History_FiltersTrigger"
+                className="mt-2 flex justify-self-end"
+              >
+                <div className="w-full flex flex-row justify-end mb-2">
+                  Filters
+                  {openCollapse ? (
+                    <ChevronUpIcon className="ml-2 group-data-[state=open]:rotate-180" />
+                  ) : (
+                    <ChevronDownIcon className="ml-2 group-data-[state=open]:rotate-180" />
+                  )}
                 </div>
-              )}
-            </div>
-
+              </CollapsibleTrigger>
+              <CollapsibleContent
+                id="Admin_BrgyFiltersContent"
+                className="flex flex-col items-center px-2.5 text-sm"
+              >
+                <div className="w-full gap-2 bg-gray-300/50 p-4 rounded-lg flex">
+                  <SelectDropdown
+                    value={String(cityFilter)}
+                    onValueChange={(val) => setCityFilter(Number(val))}
+                    placeholder="City"
+                    id="Admin_BrgyCityFilter"
+                    options={[
+                      { label: "All", value: "0" },
+                      ...(cities?.map((city) => ({
+                        label: city.name,
+                        value: String(city.id),
+                      })) ?? []),
+                    ]}
+                  />
+                  {cityFilter ? (
+                    <button
+                      onClick={() => setCityFilter(0)}
+                      id="History_ClearBrgyFilter"
+                    >
+                      <X size={14} />
+                    </button>
+                  ) : null}
+                </div>
+              </CollapsibleContent>
+            </Collapsible>
             <div className="flex flex-col gap-2">
               {loading ? (
                 <>

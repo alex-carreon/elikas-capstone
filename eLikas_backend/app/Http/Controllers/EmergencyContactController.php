@@ -127,7 +127,7 @@ class EmergencyContactController extends Controller
             }
 
             $element = SocialElement::create([
-                'user_id' => $user->id,
+                'user_id' => $user?->id ?? null,
                 'posted_at' => now(),
                 'type_id' => $targetTable->id,
                 'has_media' => false,
@@ -151,7 +151,7 @@ class EmergencyContactController extends Controller
 
             return response()->json([
                 'message' => 'Emergency contact created successfully',
-                'emergency_contact' => $this->formatContact($contact),
+                'emergency_contact' => $this->formatContact($contact, $user),
             ], 201);
 
         } catch (\Exception $e) {
@@ -296,8 +296,9 @@ class EmergencyContactController extends Controller
     }
 }
 
-    private function formatContact(EmergencyContact $contact): array
+    private function formatContact(EmergencyContact $contact, $authenticatedUser = null): array
     {
+        $user = $authenticatedUser ?? $contact->social_element?->user;
         return [
             'id' => $contact->id,
             'location_id' => $contact->location_id,

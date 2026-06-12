@@ -8,7 +8,7 @@ import {
   CarouselItem,
 } from "@/components/ui/carousel";
 import { Link } from "react-router-dom";
-import React, { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { type CarouselApi } from "@/components/ui/carousel";
 import ButtonComp from "../../components/Button";
 import { Circle } from "lucide-react";
@@ -18,13 +18,11 @@ import RegisterHeader from "@/components/RegisterHeader";
 function SplashRegistration() {
   const [api, setApi] = useState<CarouselApi>();
   const [current, setCurrent] = useState(0);
-  const [count, setCount] = React.useState(0);
 
   useEffect(() => {
     if (!api) return;
 
     // Set initial index
-    setCount(api.scrollSnapList().length);
     setCurrent(api.selectedScrollSnap());
 
     // Update index on slide change
@@ -32,8 +30,6 @@ function SplashRegistration() {
       setCurrent(api.selectedScrollSnap());
     });
   }, [api]);
-
-  console.log(count);
 
   return (
     <div className="min-h-screen flex justify-center">

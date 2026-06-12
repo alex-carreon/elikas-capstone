@@ -59,7 +59,8 @@ export const handleSubmit = async ({
     toast.promise(response, {
       loading: "Adding your pin to the map...",
       success: "Pin successfully added!",
-      error: (err) => err?.message || "Please try again.",
+      error:
+        "Creating Pin failed. Please make sure that all required fields are filled",
       position: "top-center",
     });
 
@@ -89,6 +90,7 @@ export const handleUpdate = async ({
   address,
   description,
   area_type,
+  capacity_level,
   is_persistent,
   for_reg_flood,
   for_heavy_flood,
@@ -118,7 +120,7 @@ export const handleUpdate = async ({
       description: description,
       //   location_id: location_id,
       area_type: area_type,
-      //   capacity_level: capacity_level,
+      capacity_level: capacity_level,
       is_persistent: is_persistent,
       for_reg_flood: for_reg_flood,
       for_heavy_flood: for_heavy_flood,
@@ -191,5 +193,33 @@ export const handleDelete = async ({ id, navigate }: handleActionProps) => {
     } else {
       console.error("Error:", error.message);
     }
+  }
+};
+
+export const handleReOpen = ({
+  e,
+  id,
+  expiry,
+  navigate,
+}: handleActionProps) => {
+  e?.preventDefault();
+
+  try {
+    const response = api.put(`/pins/${id}`, { expiry: expiry });
+
+    toast.promise(response, {
+      loading: "Re-opening your pin...",
+      success: "Pin Re-opened!",
+      error: (err: any) => {
+        return err.response.data;
+      },
+      position: "top-center",
+    });
+
+    response.then(() => {
+      navigate?.("/History");
+    });
+  } catch (err: any) {
+    console.log(err.response.data);
   }
 };

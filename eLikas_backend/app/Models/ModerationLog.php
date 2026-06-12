@@ -33,6 +33,7 @@ class ModerationLog extends Model
 		'element_id' => 'int',
 		'is_approved' => 'bool',
 		'reviewed_by' => 'int',
+		'created_at' => 'datetime',
 		'reviewed_at' => 'datetime'
 	];
 

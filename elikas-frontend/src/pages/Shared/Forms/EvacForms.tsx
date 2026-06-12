@@ -11,7 +11,12 @@ import { useLocation, useNavigate, useParams } from "react-router";
 import CheckBox from "@/components/CheckBox";
 import { InputGroupTextarea } from "@/components/ui/input-group";
 import { Camera } from "lucide-react";
-import { handleDelete, handleSubmit, handleUpdate } from "@/lib/evacUtils";
+import {
+  handleDelete,
+  handleReOpen,
+  handleSubmit,
+  handleUpdate,
+} from "@/lib/evacUtils";
 import { useUserContext } from "@/context/AuthContext";
 import api from "@/api";
 import FormSkeleton from "../../Skeletons/FormSkeleton";
@@ -19,6 +24,7 @@ import DatePickerInput from "@/components/DateField";
 import { toZonedTime, format } from "date-fns-tz";
 import { addDays } from "date-fns";
 import AlertDialogue from "@/components/AlertDialogue";
+import { toast } from "sonner";
 
 type EvacType = {
   id: number;
@@ -126,7 +132,11 @@ function EvacPin() {
   const [loading, setLoading] = useState(false);
   const [evacPins, setEvacPins] = useState<EvacPin | undefined>();
   const [expiry, setExpiry] = useState<Date | undefined>();
+  const [isExpired, setIsExpired] = useState(false);
   const [willDelete, setWillDelete] = useState(false);
+  const [willReopen, setWillReopen] = useState(false);
+  const [isFull, setIsFull] = useState(false);
+  const [willOpen, setWillOpen] = useState(false);
 
   const location = useLocation();
   const navigate = useNavigate();
@@ -140,6 +150,8 @@ function EvacPin() {
 
   const { role } = useUserContext();
   const { id } = useParams();
+
+  const defaultExpiry = addDays(new Date(), 7);
 
   useEffect(() => {
     if (location.state?.from === "/History") {
@@ -175,56 +187,73 @@ function EvacPin() {
 
   useEffect(() => {
     setStreet(description);
-  });
+
+    if (!id) {
+      setExpiry(defaultExpiry);
+    }
+  }, []);
+
+  const getEvacDetails = async () => {
+    try {
+      setLoading(true);
+      setHasUpdated(false);
+      const response = await api.get(`/pins/${id}`);
+      const evacDetails = await response.data;
+
+      setRegFlood(evacDetails.for_reg_flood);
+      setHeavyFlood(evacDetails.for_heavy_flood);
+      setAreaType(evacDetails.area_type);
+      setPinName(evacDetails.name);
+      setDesc(evacDetails.description);
+      setAddress(evacDetails.address);
+      setCapacity(String(evacDetails.capacity_level));
+      setIsFull(evacDetails.capacity_name === "Full");
+      setHasAccom(evacDetails.has_accom);
+      setHasDRRMO(evacDetails.has_DRRMO);
+      setHasHealth(evacDetails.has_health);
+      setPWDFriendly(evacDetails.pwd_friendly);
+      setHasCatchment(evacDetails.has_catchment);
+      setExpiry(evacDetails.expiry);
+      setIsExpired(evacDetails.is_expired);
+      if (evacDetails.toilet_count) {
+        setHasToilet(true);
+      }
+      setToilet(String(evacDetails.toilet_count));
+      if (evacDetails.kitchen_count) {
+        setHasKitchen(true);
+      }
+      setKicthen(String(evacDetails.kitchen_count));
+      if (evacDetails.breastfeed_count) {
+        setHasBreastfeed(true);
+      }
+      setChildPrayer(String(evacDetails.child_prayer_count));
+      if (evacDetails.child_prayer_count) {
+        setHasChildPrayer(true);
+      }
+      setBreastfeed(String(evacDetails.breastfeed_count));
+      setOther(evacDetails.other_facilities);
+      setContactPerson(evacDetails.contact_person);
+      setContactNumber(evacDetails.contact_number);
+      setIsPersistent(evacDetails.is_persistent);
+      setEvacPins(evacDetails);
+    } catch (err: string | any) {
+      console.log(err.response.data);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const getCapacityLevels = async () => {
+    try {
+      const response = await api.get("/capacity-levels");
+      setCapacityLevels(response.data);
+    } catch (error: any) {
+      console.error(error.response.data);
+    }
+  };
 
   useEffect(() => {
     if (id) {
-      const getEvacDetails = async () => {
-        try {
-          setLoading(true);
-          setHasUpdated(false);
-          const response = await api.get(`/pins/${id}`);
-          const evacDetails = await response.data;
-
-          setRegFlood(evacDetails.for_reg_flood);
-          setHeavyFlood(evacDetails.for_heavy_flood);
-          setAreaType(evacDetails.area_type);
-          setPinName(evacDetails.name);
-          setDesc(evacDetails.description);
-          setAddress(evacDetails.address);
-          setCapacity(String(evacDetails.capacity_level));
-          setHasAccom(evacDetails.has_accom);
-          setHasDRRMO(evacDetails.has_DRRMO);
-          setHasHealth(evacDetails.has_health);
-          setPWDFriendly(evacDetails.pwd_friendly);
-          setHasCatchment(evacDetails.has_catchment);
-          setExpiry(evacDetails.expiry);
-          if (evacDetails.toilet_count) {
-            setHasToilet(true);
-          }
-          setToilet(String(evacDetails.toilet_count));
-          if (evacDetails.kitchen_count) {
-            setHasKitchen(true);
-          }
-          setKicthen(String(evacDetails.kitchen_count));
-          if (evacDetails.breastfeed_count) {
-            setHasBreastfeed(true);
-          }
-          setChildPrayer(String(evacDetails.child_prayer_count));
-          if (evacDetails.child_prayer_count) {
-            setHasChildPrayer(true);
-          }
-          setBreastfeed(String(evacDetails.breastfeed_count));
-          setOther(evacDetails.other_facilities);
-          setContactPerson(evacDetails.contact_person);
-          setContactNumber(evacDetails.contact_number);
-          setEvacPins(evacDetails);
-        } catch (err: string | any) {
-          console.log(err.response.data);
-        } finally {
-          setLoading(false);
-        }
-      };
       getEvacDetails();
     } else if (!id) {
       const getAreaTypes = async () => {
@@ -241,19 +270,16 @@ function EvacPin() {
         }
       };
 
-      const getCapacityLevels = async () => {
-        try {
-          const response = await api.get("/capacity-levels");
-          setCapacityLevels(response.data);
-        } catch (error: any) {
-          console.error(error.response.data);
-        }
-      };
-
       getAreaTypes();
       getCapacityLevels();
     }
   }, [hasUpdated]);
+
+  useEffect(() => {
+    if (willOpen) {
+      getCapacityLevels();
+    }
+  }, [willOpen]);
 
   useEffect(() => {
     if (isEditable) {
@@ -304,6 +330,9 @@ function EvacPin() {
     }
   }, [isEditable, evacPins]);
 
+  useEffect(() => {
+    setExpiry(defaultExpiry);
+  }, [willReopen]);
   const submit = (e: React.FormEvent) => {
     // const dateTime = formatInTimeZone(new Date(), "Asia/Manila", "yyyy-MM-dd");
     e.preventDefault();
@@ -393,12 +422,87 @@ function EvacPin() {
     handleDelete({ id: id, navigate: navigate });
   };
 
+  const reOpen = (e: React.FormEvent) => {
+    const expDate = expiry ?? addDays(new Date(), 7);
+
+    handleReOpen({
+      e: e,
+      expiry: format(
+        toZonedTime(expDate!, "Asia/Manila"),
+        "yyyy-MM-dd HH:mm:ss",
+        {
+          timeZone: "Asia/Manila",
+        },
+      ),
+      id: id,
+      navigate: navigate,
+    });
+  };
+
+  const markFull = (e: React.FormEvent) => {
+    e.preventDefault();
+
+    try {
+      const fullLevel = capacityLevels?.find(
+        (level) => level.capacity_level === "Full",
+      )?.id;
+
+      // if currently full, mark as open using selected capacity
+      // if not full, mark as full using the Full level id
+      const newCapacityLevel = isFull ? Number(capacity) : fullLevel;
+
+      const response = api.put(`/pins/${id}`, {
+        capacity_level: newCapacityLevel,
+      });
+
+      toast.promise(response, {
+        loading: isFull ? "Marking as open..." : "Marking as full...",
+        success: isFull ? "Pin marked as open!" : "Pin marked as full!",
+        error: (err: any) => err.response.data,
+        position: "top-center",
+      });
+
+      response.then(() => {
+        getEvacDetails();
+        setIsFull(!isFull); // ✅ toggle instead of always true
+      });
+    } catch (err: any) {
+      console.log(err.response.data);
+    }
+  };
+
   return loading ? (
     <div className="w-full h-full flex flex-col items-center p-12 mt-8 mb-2 gap-4">
       <FormSkeleton />
     </div>
   ) : (
     <>
+      {willReopen && (
+        <AlertDialogue
+          contentId="EvacPin_ReopenContent"
+          closeId="EvacPin_ReopenClose"
+          actionId="EvacPin_ReopenBtn"
+          open={willReopen}
+          title="You are about to re-open this pin"
+          description="Re-opening this pin add it to the map. The expiration date will default to 7 days unless specified."
+          buttonText="Re-open"
+          onClose={() => {
+            setWillReopen(false);
+          }}
+          onClick={(e) => reOpen(e)}
+        >
+          <DatePickerInput
+            label="Expiry Date"
+            idField="EvacPin_ReopenExpiryField"
+            idBtn="EvacPin_ReopenCalendarBtn"
+            placeholder="Enter Expiration Date"
+            value={expiry}
+            onChange={setExpiry}
+            edit
+            showTime
+          />
+        </AlertDialogue>
+      )}
       {willDelete && (
         <AlertDialogue
           contentId="EvacPin_DeacContent"
@@ -413,6 +517,40 @@ function EvacPin() {
           }}
           onClick={() => deac()}
         />
+      )}
+      {willOpen && (
+        <AlertDialogue
+          contentId="EvacPin_OpenContent"
+          closeId="EvacPin_OpenClose"
+          actionId="EvacPin_OpenBtn"
+          open={willOpen}
+          title="You are about to open this pin"
+          description="Opening this pin will let citizens know that this evacuation center still has space."
+          buttonText="Open"
+          onClose={() => {
+            setWillOpen(false);
+          }}
+          onClick={(e) => {
+            markFull(e);
+            setWillOpen(!willOpen);
+          }}
+        >
+          <SelectDropdown
+            value={capacity}
+            onValueChange={setCapacity}
+            label="Capacity Level*"
+            placeholder="Select the capacity level"
+            id="EvacPin_CapacityOpenField"
+            onSubmit={(e) => setCapacity(e.target.value)}
+            options={capacityLevels
+              ?.filter((level) => level.capacity_level !== "Full")
+              .map((level) => ({
+                label: level.capacity_level,
+                value: String(level.id),
+              }))}
+            isRequired
+          />
+        </AlertDialogue>
       )}
       <div className="w-full h-full flex flex-col items-center p-12 mt-8 mb-2 gap-4">
         <div>
@@ -628,10 +766,12 @@ function EvacPin() {
                 placeholder="Select the capacity level"
                 id="EvacPin_CapacityField"
                 onSubmit={(e) => setLocationType(e.target.value)}
-                options={capacityLevels?.map((level) => ({
-                  label: level.capacity_level,
-                  value: String(level.id),
-                }))}
+                options={capacityLevels
+                  ?.filter((level) => level.capacity_level !== "Full")
+                  .map((level) => ({
+                    label: level.capacity_level,
+                    value: String(level.id),
+                  }))}
                 isRequired={!id}
               />
             ) : (
@@ -810,9 +950,7 @@ function EvacPin() {
               idField="EvacPin_ExpiryField"
               idBtn="EvacPin_CalendarBtn"
               placeholder={
-                !id || isEditable
-                  ? "Enter other facilities available"
-                  : String(expiry)
+                !id || isEditable ? "Enter Expiration Date" : String(expiry)
               }
               value={expiry}
               onChange={setExpiry}
@@ -836,12 +974,35 @@ function EvacPin() {
                     <ButtonComp
                       text="Delete"
                       id="EvacPin_ClosePinBtn"
-                      variant="important"
+                      variant="outline"
                       heightSize="38px"
                       widthSize="20"
                       type="button"
                       onClick={() => setWillDelete(true)}
                     ></ButtonComp>
+                  </div>
+                  <div className="w-full max-w-md flex justify-center">
+                    {isFull ? (
+                      <ButtonComp
+                        text="Mark as Open"
+                        id="EvacPin_OpenPinBtn"
+                        variant="important"
+                        heightSize="38px"
+                        widthSize="100%"
+                        type="button"
+                        onClick={() => setWillOpen(true)}
+                      ></ButtonComp>
+                    ) : (
+                      <ButtonComp
+                        text="Mark as Full"
+                        id="EvacPin_FullPinBtn"
+                        variant="important"
+                        heightSize="38px"
+                        widthSize="100%"
+                        type="button"
+                        onClick={(e) => markFull(e)}
+                      ></ButtonComp>
+                    )}
                   </div>
                 </>
               ) : (
@@ -906,6 +1067,18 @@ or account restriction."
                   />
                 </div>
               </>
+            )}
+            {isExpired && isPersistent && (
+              <div className="w-full max-w-md flex justify-center">
+                <ButtonComp
+                  text="Re-Open Pin"
+                  variant="primary"
+                  id="EvacPin_ReOpenPin"
+                  heightSize="38px"
+                  widthSize="100%"
+                  onClick={() => setWillReopen(true)}
+                />
+              </div>
             )}
           </div>
         </div>

@@ -11,7 +11,7 @@ import AuthNavbar from "./components/Navbar/AuthNavbar";
 import ConstNavbar from "./components/Navbar/ConstNavbar";
 import Map from "@/pages/Shared/Map";
 import Hotlines from "@/pages/Shared/Hotlines";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { Routes, Route } from "react-router-dom";
 import Settings from "@/pages/Shared/Settings";
 import ProtectedRoute from "./components/ProtectedRoutes";
 import SMS from "./pages/brgy_ops/Forms/SMS";
@@ -32,82 +32,104 @@ import GovopDetails from "./pages/Admin/Forms/GovOpDetails";
 import BrgyAdd from "./pages/Admin/Forms/GovopAdd";
 import SensorForm from "./pages/brgy_ops/Forms/SensorForm";
 import SMSHistory from "./pages/brgy_ops/SMSHistory";
+import Pins from "./pages/Admin/Pins";
+import { AuthProvider } from "./context/AuthContext.tsx";
+import Sensors from "@/pages/Admin/Sensors.tsx";
+import SensorDetails from "./pages/Admin/Forms/SensorDetails.tsx";
+import FlaggedDetails from "./pages/Admin/Forms/FlaggedDetails.tsx";
+import HazardDetails from "./pages/Admin/Forms/HazardDetails.tsx";
+import HotlinesAdmin from "./pages/Admin/Hotlines.tsx";
+import SensorLogs from "./pages/Admin/SensorLogs.tsx";
 
 function App() {
   return (
-    <Routes>
-      <Route path="/Loading" element={<Loading />} />
-      <Route path="/Login" element={<LogIn />} />
-      <Route path="/ResetPassword" element={<ForgotPW />} />
-      <Route path="/Registration">
-        <Route path="Splash" element={<SplashRegistration />} />
-        <Route path="Form" element={<FormRegistration />} />
-        <Route path="Verify" element={<EmailVerif />} />
-        <Route path="Contact" element={<ContactNo />} />
-        <Route path="CustomProfile" element={<CustomizeProfile />} />
-        <Route path="Permissions" element={<Permissions />} />
-        <Route path="Finish" element={<Finish />} />
-      </Route>
+    <>
+      <AuthProvider>
+        <Routes>
+          <Route path="/Loading" element={<Loading />} />
+          <Route path="/Login" element={<LogIn />} />
+          <Route path="/ResetPassword" element={<ForgotPW />} />
+          <Route path="/Registration">
+            <Route path="Splash" element={<SplashRegistration />} />
+            <Route path="Form" element={<FormRegistration />} />
+            <Route path="Verify" element={<EmailVerif />} />
+            <Route path="Contact" element={<ContactNo />} />
+            <Route path="CustomProfile" element={<CustomizeProfile />} />
+            <Route path="Permissions" element={<Permissions />} />
+            <Route path="Finish" element={<Finish />} />
+          </Route>
+          <Route element={<GuestNavbar />}>
+            <Route path="/" element={<Map />} />
+          </Route>
 
-      <Route element={<ProtectedRoute userRole={"indiv"} />}>
-        <Route element={<ConstNavbar />}>
-          {/* <Route path="/History" element={<History />} /> */}
-          <Route path="/Feedback" element={<Feedback />} />{" "}
-        </Route>
+          <Route element={<ConstNavbar />}>
+            <Route path="/Hotlines" element={<Hotlines />} />
+            <Route path="/TermsConditions" element={<TermsConditions />} />
+          </Route>
 
-        {/* <Route element={<AuthNavbar />}>
-            <Route path="/Map" element={<Map />} />
-          </Route> */}
-      </Route>
+          <Route element={<ProtectedRoute userRole={"indiv"} />}>
+            <Route element={<ConstNavbar />}>
+              <Route path="/Feedback" element={<Feedback />} />
+            </Route>
+          </Route>
 
-      <Route element={<ProtectedRoute userRole={"brgy_op"} />}>
-        <Route element={<ConstNavbar />}>
-          <Route path="/SMS" element={<SMS />} />
-          <Route path="/SMSHistory" element={<SMSHistory />} />
-          <Route path="/HotlinesForm" element={<HotlinesForm />} />
-          <Route path="/HotlinesForm/:id" element={<HotlinesForm />} />
-          <Route path="/SensorForm" element={<SensorForm />} />
-          <Route path="/SensorForm/:id" element={<SensorForm />} />
-        </Route>
-      </Route>
+          <Route element={<ProtectedRoute userRole={"brgy_op"} />}>
+            <Route element={<ConstNavbar />}>
+              <Route path="/SMS" element={<SMS />} />
+              <Route path="/SMSHistory" element={<SMSHistory />} />
+              <Route path="/HotlinesForm" element={<HotlinesForm />} />
+              <Route path="/HotlinesForm/:id" element={<HotlinesForm />} />
+              <Route path="/SensorForm" element={<SensorForm />} />
+              <Route path="/SensorForm/:id" element={<SensorForm />} />
+            </Route>
+          </Route>
 
-      <Route element={<ProtectedRoute userRole={"admin"} />}>
-        <Route element={<Layout />}>
-          <Route path="/admin-map" element={<Map />} />
-          <Route path="/admin-indiv" element={<IndivUsers />} />
-          <Route path="/admin-brgy" element={<BrgyUsers />} />
-        </Route>
+          <Route element={<ProtectedRoute userRole={"admin"} />}>
+            <Route element={<Layout />}>
+              <Route path="/admin-map" element={<Map />} />
+              <Route path="/admin-indiv" element={<IndivUsers />} />
+              <Route path="/admin-brgy" element={<BrgyUsers />} />
+              <Route path="/admin-pins" element={<Pins />} />
+              <Route path="/admin-sensors" element={<Sensors />} />
+              <Route path="/admin-hotlines" element={<HotlinesAdmin />} />
+            </Route>
 
-        <Route path="/admin-userDetails/:id" element={<UserDetails />} />
-        <Route path="/admin-brgyDetails/:id" element={<GovopDetails />} />
-        <Route path="/admin-brgyAdd" element={<BrgyAdd />} />
-      </Route>
+            <Route path="/admin-userDetails/:id" element={<UserDetails />} />
+            <Route path="/admin-brgyDetails/:id" element={<GovopDetails />} />
+            <Route
+              path="/admin-sensorDetails/:id"
+              element={<SensorDetails />}
+            />
+            <Route path="/admin-brgyAdd" element={<BrgyAdd />} />
+            <Route path="/admin-flagged/:id" element={<FlaggedDetails />} />
+            <Route
+              path="/admin-hazardDetails/:id"
+              element={<HazardDetails />}
+            />
+            <Route
+              path="/admin-sensorlogs/:sensorcode"
+              element={<SensorLogs />}
+            />
+          </Route>
 
-      <Route element={<ProtectedRoute />}>
-        <Route element={<ConstNavbar />}>
-          <Route path="/Settings" element={<Settings />} />
-          <Route path="/Profile" element={<Profile />} />
-          <Route path="/EvacForm" element={<EvacForm />} />
-          <Route path="/EvacForm/:id" element={<EvacForm />} />
-          <Route path="/HazardForm" element={<HazardForm />} />
-          <Route path="/HazardForm/:id" element={<HazardForm />} />
-          <Route path="/History" element={<History />} />
-        </Route>
+          <Route element={<ProtectedRoute />}>
+            <Route element={<ConstNavbar />}>
+              <Route path="/Settings" element={<Settings />} />
+              <Route path="/Profile" element={<Profile />} />
+              <Route path="/EvacForm" element={<EvacForm />} />
+              <Route path="/EvacForm/:id" element={<EvacForm />} />
+              <Route path="/HazardForm" element={<HazardForm />} />
+              <Route path="/HazardForm/:id" element={<HazardForm />} />
+              <Route path="/History" element={<History />} />
+            </Route>
 
-        <Route element={<AuthNavbar />}>
-          <Route path="/Map" element={<Map />} />
-        </Route>
-      </Route>
-
-      <Route element={<GuestNavbar />}>
-        <Route path="/" element={<Map />} />
-      </Route>
-
-      <Route element={<ConstNavbar />}>
-        <Route path="/Hotlines" element={<Hotlines />} />
-        <Route path="/TermsConditions" element={<TermsConditions />} />
-      </Route>
-    </Routes>
+            <Route element={<AuthNavbar />}>
+              <Route path="/Map" element={<Map />} />
+            </Route>
+          </Route>
+        </Routes>
+      </AuthProvider>
+    </>
   );
 }
 

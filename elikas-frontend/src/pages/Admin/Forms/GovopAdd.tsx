@@ -1,33 +1,10 @@
 import api from "@/api";
 import FormLayout from "./FormLayout";
 import TextField from "@/components/TextField";
-import { useNavigate, useParams } from "react-router";
+import { useNavigate } from "react-router";
 import React, { useEffect, useState } from "react";
-import { useUserContext } from "@/context/AuthContext";
-import FormSkeleton from "@/pages/Skeletons/FormSkeleton";
 import { toast } from "sonner";
-import AlertDialogue from "@/components/AlertDialogue";
 import SelectDropdown from "@/components/SelectDropdown";
-import {
-  createUserWithEmailAndPassword,
-  signInWithEmailAndPassword,
-  type User,
-} from "firebase/auth";
-import { auth } from "@/firebase";
-
-type UserData = {
-  created_at: string;
-  deactivated_at: string;
-  email: string;
-  username: string;
-  govop_level: string;
-  id: number;
-  govop_location: string;
-  govop_location_id: number;
-  point_person: string;
-  point_position: string;
-  role: string | null;
-};
 
 type Barangays = {
   id: number;
@@ -50,12 +27,10 @@ type Province = {
 };
 
 function BrgyAdd() {
-  const { token } = useUserContext();
   const navigate = useNavigate();
 
   const [username, setUsername] = useState("");
   const [email, setEmail] = useState("");
-  const [location, setLocation] = useState("");
   const [pointPerson, setPointPerson] = useState("");
   const [pointPosition, setPointPosition] = useState("");
   const [loading, setLoading] = useState(false);
@@ -69,19 +44,13 @@ function BrgyAdd() {
   const [pw, setPw] = useState("");
   const [confirmPw, setConfirmPw] = useState("");
   const [errors, setErrors] = useState({ email: "", pw: "", confirmPw: "" });
-  const [adminPw, setAdminPw] = useState("");
-  const [adminToken, setAdminToken] = useState("");
-  const [adminEmail, setAdminEmail] = useState("");
-  const [enterPw, setEnterPw] = useState(false);
-  const [firebaseUser, setFirebaseUser] = useState<User>();
-  const [adminIn, setAdminIn] = useState(false);
 
-  useEffect(() => {
-    if (!adminPw) {
-      setEnterPw(true);
-      return;
-    }
-  }, []);
+  // useEffect(() => {
+  //   if (!adminPw) {
+  //     setEnterPw(true);
+  //     return;
+  //   }
+  // }, []);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -94,47 +63,18 @@ function BrgyAdd() {
       });
       return;
     }
-
     try {
-      const adminEmail = auth.currentUser?.email ?? "";
+      const createPromise = api.post("/admin/create-govop", {
+        username: username,
+        email: email,
+        password: pw,
+        level_id: levelId,
+        location_id: brgyId ? brgyId : cityId,
+        point_person: pointPerson,
+        point_position: pointPosition,
+      });
 
-      const userCredential = await createUserWithEmailAndPassword(
-        auth,
-        email,
-        pw,
-      );
-      const firebaseUser = userCredential.user;
-      const firebaseUid = firebaseUser.uid;
-
-      await signInWithEmailAndPassword(auth, adminEmail, adminPw);
-
-      // Get token immediately after signing back in
-      const freshToken = (await auth.currentUser?.getIdToken(true)) ?? "";
-
-      console.log("freshToken:", freshToken); // check this
-
-      const createPromise = api.post(
-        "/admin/create-govop",
-        {
-          username: username,
-          email: email,
-          firebase_uid: String(firebaseUid),
-          level_id: levelId,
-          location_id: brgyId ? brgyId : cityId,
-          point_person: pointPerson,
-          point_position: pointPosition,
-        },
-        {
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${freshToken}`,
-          },
-        },
-      );
-
-      createPromise.catch((err) =>
-        console.log("API error:", err.response?.data),
-      );
+      createPromise.catch((err) => console.log(err.response?.data));
 
       toast.promise(createPromise, {
         loading: "Creating Govop User...",
@@ -144,6 +84,10 @@ function BrgyAdd() {
         },
         error: "Govop creation failed",
         position: "top-center",
+      });
+
+      createPromise.then(() => {
+        navigate("/admin-brgy");
       });
     } catch (err: any) {
       console.log(err.response?.data);
@@ -161,6 +105,7 @@ function BrgyAdd() {
         });
       }
     }
+    // Get token immediately after signing back in
   };
 
   useEffect(() => {
@@ -210,52 +155,16 @@ function BrgyAdd() {
 
   return (
     <>
-      {enterPw && (
-        <AlertDialogue
-          contentId="Admin_GovopAuthContent"
-          closeId="Admin_GovopAuthClose"
-          actionId="Admin_GovopAuthBtn"
-          open={enterPw}
-          title="Enter your Admin Password"
-          description="You need to enter your password to proceed with this action."
-          buttonText="Submit"
-          onClose={() => {
-            setEnterPw(false);
-          }}
-          onClick={() => setEnterPw(false)}
-        >
-          <TextField
-            label="Email"
-            inputType="text"
-            id="Admin_NewBrgyAdminEmail"
-            placeholder="Enter your email"
-            onSubmit={(e) => setAdminEmail(e.target.value)}
-            isRequired
-            isPassword
-          />
-          <TextField
-            label="Password"
-            inputType="password"
-            id="Admin_NewBrgyAdminPw"
-            placeholder="********"
-            onSubmit={(e) => setAdminPw(e.target.value)}
-            isRequired
-            isPassword
-          />
-        </AlertDialogue>
-      )}
       <FormLayout
         // isAvatar
         updateId="Admin_NewSubmitBtn"
         updBtnLabel="Create"
         btnType="submit"
-        // Add handleSubmit
         formId="Admin_BrgyAddForm"
-        // updateClick={() => setShowDialog(true)}
       >
         <>
           <form
-            onSubmit={adminPw ? handleSubmit : () => {}}
+            onSubmit={handleSubmit}
             className="flex flex-col gap-4"
             id="Admin_BrgyAddForm"
           >
@@ -301,6 +210,7 @@ function BrgyAdd() {
                 value: String(city.id),
               }))}
               isRequired
+              loading={loading}
             />
             <SelectDropdown
               value={String(brgyId)}
@@ -308,7 +218,7 @@ function BrgyAdd() {
               label="Barangay"
               placeholder="Select a Barangay (Please select a city first)"
               id="Admin_GovopBrgyField"
-              onSubmit={(e) => setLocation(e.target.value)}
+              onSubmit={(e) => setBrgyId(Number(e.target.value))}
               options={barangays?.map((brgy) => ({
                 label: brgy.name,
                 value: String(brgy.id),

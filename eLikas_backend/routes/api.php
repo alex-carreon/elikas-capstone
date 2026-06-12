@@ -3,12 +3,16 @@
 use App\Http\Controllers\AdminController;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\CapacityLevelController;
+use App\Http\Controllers\Dashboards\AdminFlagController;
 use App\Http\Controllers\Dashboards\CommentsAdminController;
 use App\Http\Controllers\Comments\EvacComments;
 use App\Http\Controllers\Dashboards\FloodPathAdminController;
 use App\Http\Controllers\Dashboards\UserController;
 use App\Http\Controllers\EmergencyContactController;
 use App\Http\Controllers\EvacTypeController;
+use App\Http\Controllers\FeedbackController;
+use App\Http\Controllers\Flags\FlagCommentController;
+use App\Http\Controllers\Flags\FlagFloodController;
 use App\Http\Controllers\Hazards\FloodLevelController;
 use App\Http\Controllers\Hazards\FloodPathController;
 use App\Http\Controllers\LocationsController;
@@ -27,7 +31,6 @@ use App\Http\Controllers\SMSController;
 use App\Http\Controllers\Votes\VoteController;
 use App\Http\Controllers\Votes\VoteCommentController;
 use Illuminate\Support\Facades\Route;
-use App\Http\Controllers\FeedbackController;
 use App\Http\Controllers\SensorControllers\SensorLogController;
 
 Route::get('/test', function () {
@@ -43,7 +46,6 @@ Route::post('/auth/register', [AuthController::class, 'register']);
 Route::post('/auth/login',    [AuthController::class, 'login']);
 Route::get('/public/sensors', [PublicSensorController::class, 'index']);
 Route::get('/public/sensors/{sensor}', [PublicSensorController::class, 'show']);
-Route::get('flood-paths', [FloodPathController::class, 'index']);
 
 Route::get('/locations/cities', [LocationsController::class, 'cities']);
 Route::get('/locations/barangays', [LocationsController::class, 'barangays']);
@@ -52,9 +54,6 @@ Route::get('/emergency-contacts/{id}', [EmergencyContactController::class, 'show
     ->whereNumber('id');
 Route::get('/evac-types', [EvacTypeController::class, 'index']);
 Route::get('/capacity-levels', [CapacityLevelController::class, 'index']);
-Route::get('/pins/{id}', [GetEvacAreaDetailsController::class, 'getEvacAreaDetails']);
-Route::get('/pins', [GetEvacAreasController::class, 'getEvacAreas']);
-Route::get('/evacpins/users/coords', [GetEvacAreasController::class, 'getMyCoords']);
 
 Route::post('/sensor-logs', [SensorLogController::class, 'store']);
 
@@ -63,6 +62,18 @@ Route::post('/sensor-logs', [SensorLogController::class, 'store']);
 // ---------------------------------------------------------------
 Route::get('/pins/nearby', [GetNearbyEvacuationAreasController::class, 'getNearbyEvacuationAreas']);
 Route::get('/pins/routes', [GetEvacuationRoutesController::class, 'getEvacuationRoutes']);
+Route::get('/pins/{id}', [GetEvacAreaDetailsController::class, 'getEvacAreaDetails'])->whereNumber('id');
+
+
+
+// ---------------------------------------------------------------
+// OPTIONAL FIREBASE MIDDLEWARE
+// ---------------------------------------------------------------
+Route::middleware('optional.firebase.auth')->group(function () {
+    Route::get('/flood-paths', [FloodPathController::class, 'index']);
+    Route::get('/pins', [GetEvacAreasController::class, 'getEvacAreas']);
+    Route::get('/evacpins/users/coords', [GetEvacAreasController::class, 'getRoleIndivCoords']);
+});
 
 // ---------------------------------------------------------------
 // ONLY ADMIN ROUTES
@@ -78,6 +89,16 @@ Route::prefix('admin')->middleware(['firebase.auth', 'role:1'])->group(function 
     Route::get('/pins', [GetEvacAreasController::class, 'getAdminEvacAreas']); //Admin pins showing all pins regardless of status
 
     Route::get('flood-paths', [FloodPathAdminController::class, 'index']);
+
+    //FLAGS
+    Route::get('/comments/flags', [AdminFlagController::class, 'commentFlags']);
+    Route::get('/comments/flags/{commentId}', [AdminFlagController::class, 'commentDetail']);
+
+    Route::get('/flood-paths/flags', [AdminFlagController::class, 'floodPathFlags']);
+    Route::get('/flood-paths/flags/{floodPathId}', [AdminFlagController::class, 'floodPathDetail']);
+
+    Route::patch('/flags/{elementId}/approve', [AdminFlagController::class, 'approve']);
+    Route::patch('/flags/{elementId}/reject', [AdminFlagController::class, 'reject']);
 
     //Comments
     Route::patch('/comments/{id}', [CommentsAdminController::class, 'update']);
@@ -110,6 +131,7 @@ Route::middleware(['firebase.auth', 'role:2'])->group(function () {
     Route::post('/sms/broadcasts', [SMSController::class, 'store']);
     Route::get('/sms/broadcasts', [SMSController::class, 'history']);
     Route::post('/sms/broadcasts/send-now', [SMSController::class, 'sendImmediate']);
+    Route::post('/sms-broadcasts/schedule', [SMSController::class, 'schedule']);
     Route::get('/sms/broadcasts/{broadcastId}/status', [SMSController::class, 'status'])->whereNumber('broadcastId');
     Route::delete('/sms/broadcasts/{broadcastId}', [SMSController::class, 'destroy'])->whereNumber('broadcastId');
 
@@ -151,18 +173,11 @@ Route::middleware(['firebase.auth', 'role:1,2,3'])->group(function () {
 
     Route::post('/feedback', [FeedbackController::class, 'store']);
 
-    Route::patch('/profile/email-sync', [ProfileController::class, 'syncEmail']);
     //PROFILE
     Route::get('/profile', [ProfileController::class, 'profile']);
     Route::put('/profile', [ProfileController::class, 'updateProfile']);
     Route::patch('/profile/deactivate', [ProfileController::class, 'deactivateSelf']);
-    Route::patch('/profile/email-sync', [ProfileController::class, 'syncEmail']); // wala pa talaga
-
-    //PROFILE
-    Route::get('/profile', [ProfileController::class, 'profile']);
-    Route::put('/profile', [ProfileController::class, 'updateProfile']);
-    Route::patch('/profile/deactivate', [ProfileController::class, 'deactivateSelf']);
-    Route::patch('/profile/email-sync', [ProfileController::class, 'syncEmail']);
+    Route::post('/profile/email-sync', [ProfileController::class, 'syncEmail']);
 
     //FLOOD LEVELS
     Route::get('flood-levels', [FloodLevelController::class, 'index']);
@@ -174,6 +189,7 @@ Route::middleware(['firebase.auth', 'role:1,2,3'])->group(function () {
         ->whereNumber('id');
     Route::patch('/flood-paths/{id}', [FloodPathController::class, 'update']);
     Route::patch('/flood-paths/{id}/deactivate', [FloodPathController::class, 'destroy']); // soft delete
+    Route::post('/flood-paths/{id}/media', [FloodPathController::class, 'addMedia']);
 
     //EVAC PINS
     Route::post('/pins', [StoreEvacuationAreaController::class, 'storeEvacuationArea']);
@@ -203,5 +219,9 @@ Route::middleware(['firebase.auth', 'role:1,2,3'])->group(function () {
 
     //Emergency contact
     Route::get('/emergency-contacts/location/{location_id}', [EmergencyContactController::class, 'getByLocationId']);
-});
 
+    //FLAGS
+    Route::post('/comments/{commentId}/flag', [FlagCommentController::class, 'store']);
+    Route::post('/flood-paths/{floodPathId}/flag', [FlagFloodController::class, 'store']);
+    Route::get('/flag-reasons', [FlagCommentController::class, 'reasons']);
+});

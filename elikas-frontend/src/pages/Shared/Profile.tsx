@@ -9,6 +9,8 @@ import { useNavigate } from "react-router";
 import { toast } from "sonner";
 import SelectDropdown from "@/components/SelectDropdown";
 import FormSkeleton from "@/pages/Skeletons/FormSkeleton";
+import { UserIcon } from "lucide-react";
+import brgyProfile from "@/assets/brgyProfile.svg";
 
 type Barangays = {
   id: number;
@@ -36,9 +38,10 @@ function randomSeed(): string {
 
 function Profile() {
   const [isEditable, setIsEditable] = useState(false);
-  const [seed, setSeed] = useState("Felix");
+  const [seed, setSeed] = useState<string | null>("");
   const [errors, setErrors] = useState("");
   const [username, setUsername] = useState("");
+  const [newUsername, setNewUsername] = useState<string | null>(null);
   const [firstName, setFirstName] = useState("");
   const [lastName, setLastName] = useState("");
   const [email, setEmail] = useState("");
@@ -53,7 +56,7 @@ function Profile() {
   const [brgyLoad, setBrgyLoad] = useState(false);
   const [cityLoad, setCityLoad] = useState(false);
 
-  const { token } = useUserContext();
+  const { token, role } = useUserContext();
 
   const navigate = useNavigate();
 
@@ -76,6 +79,7 @@ function Profile() {
       setAddress(userData.location);
       setUserId(userData.id);
       setContact(userData.phone || "No Registered Number");
+      setSeed(userData?.avatar_seed);
 
       return userData;
     } catch (err: string | any) {
@@ -100,15 +104,16 @@ function Profile() {
         contact,
       });
 
-      const response = await api.put(
+      const response = api.put(
         "/profile",
         {
-          username: username,
+          username: newUsername,
           first_name: firstName,
           last_name: lastName,
           email: email,
           location_id: brgyId,
           phone: contact,
+          avatar_seed: seed,
         },
         {
           headers: {
@@ -120,14 +125,13 @@ function Profile() {
 
       console.log(response);
 
-      const userDataUpdate = await response.data;
-
       if (!response) {
-        setErrors(userDataUpdate.error || "Update failed");
-      } else {
-        setIsEditable(false);
-        getProfile();
+        return;
       }
+
+      setIsEditable(false);
+      setNewUsername(null);
+      getProfile();
     } catch (err: string | any) {
       setErrors(err.message || "An error occurred during registration");
     }
@@ -208,7 +212,7 @@ function Profile() {
   }, []);
 
   const avatar = createAvatar(bigSmile, {
-    seed: seed,
+    seed: seed ? seed : undefined,
     backgroundColor: ["b6e3f4", "c0aede", "d1d4f9"],
     radius: 50,
     scale: 90,
@@ -227,18 +231,26 @@ function Profile() {
     <div className="min-h-screen flex justify-center p-6 pt-20">
       <div className="w-full max-w-sm flex flex-col gap-10 items-center">
         <div className="w-full flex justify-between flex-col">
-          <form onSubmit={putProfile} className="w-full flex gap-10 flex-col">
+          <div className="w-full flex gap-10 flex-col">
             <div>
               <div className="flex flex-col">
                 <div className="w-full flex flex-col items-center gap-2">
-                  <img src={dataUri} className="w-24" />
+                  {seed ? (
+                    <img src={dataUri} className="w-24" />
+                  ) : role === "indiv" ? (
+                    <UserIcon className="w-24" />
+                  ) : (
+                    <img src={brgyProfile} className="w-24" />
+                  )}
                   {isEditable ? (
-                    <ButtonComp
-                      text="Generate New Avatar"
-                      id="Profile_RandommAvatarBtn"
-                      variant="outline"
-                      onClick={() => setSeed(randomSeed())}
-                    />
+                    role === "indiv" && (
+                      <ButtonComp
+                        text="Generate New Avatar"
+                        id="Profile_RandommAvatarBtn"
+                        variant="outline"
+                        onClick={() => setSeed(randomSeed())}
+                      />
+                    )
                   ) : (
                     <ButtonComp
                       text="Edit Profile"
@@ -253,15 +265,27 @@ function Profile() {
                 </div>
               </div>
               <div className="flex flex-col gap-4">
-                <TextField
-                  label="User Name"
-                  placeholder={username}
-                  inputType="text"
-                  value={username}
-                  id="Profile_Username"
-                  readonly={!isEditable}
-                  onSubmit={(e) => setUsername(e.target.value)}
-                />
+                {isEditable ? (
+                  <TextField
+                    label="User Name"
+                    placeholder={username}
+                    inputType="text"
+                    id="Profile_Username"
+                    readonly={!isEditable}
+                    onSubmit={(e) => setNewUsername(e.target.value)}
+                  />
+                ) : (
+                  <TextField
+                    label="User Name"
+                    placeholder={username}
+                    inputType="text"
+                    value={username}
+                    id="Profile_Username"
+                    readonly={!isEditable}
+                    onSubmit={(e) => setUsername(e.target.value)}
+                  />
+                )}
+
                 <TextField
                   label="First Name"
                   placeholder={firstName}
@@ -350,10 +374,11 @@ function Profile() {
                   <ButtonComp
                     text="Update"
                     variant="primary"
-                    type="submit"
+                    type="button"
                     id="Profile_FormSubmitBtn"
                     heightSize="38px"
                     widthSize="100%"
+                    onClick={(e) => putProfile(e)}
                   ></ButtonComp>
                   <ButtonComp
                     text="Cancel"
@@ -390,7 +415,7 @@ function Profile() {
                 </>
               )}
             </div>
-          </form>
+          </div>
         </div>
       </div>
     </div>
