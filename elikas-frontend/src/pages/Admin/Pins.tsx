@@ -72,6 +72,7 @@ type FlaggedComms = {
   manual_count: number;
   moderation_count: number;
   total_flag_count: number;
+  evac_deactivated: boolean;
 };
 
 function Pins() {
@@ -699,6 +700,7 @@ function Pins() {
                         title={`Content: ${comment.content}`}
                         desc={`Total Number of Reports: ${comment.total_flag_count}`}
                         link={`/admin-flaggedComment/${comment.comment_id}`}
+                        isDeactivated={comment.evac_deactivated}
                         buttonId="History_ExpHazardDetailsBtn"
                         showBtn
                       >

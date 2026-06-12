@@ -100,7 +100,7 @@ function CommentDetails() {
               label="Comment ID"
               value={String(comment?.id)}
               inputType="text"
-              id="Admin_HazardId"
+              id="Admin_EvacCommentId"
               readonly
             />
             <Field>
@@ -110,14 +110,14 @@ function CommentDetails() {
                   label="Evacuation Pin ID"
                   value={String(comment?.evac_area.id)}
                   inputType="text"
-                  id="Admin_HazardId"
+                  id="Admin_EvacCommentPinId"
                   readonly
                 />
                 <TextField
                   label="Evacuation Pin Name"
                   value={String(comment?.evac_area.name)}
                   inputType="text"
-                  id="Admin_HazardId"
+                  id="Admin_EvacCommentPinName"
                   readonly
                 />
               </div>
@@ -126,13 +126,15 @@ function CommentDetails() {
               label="Content"
               value={comment?.content}
               inputType="text"
-              id="Admin_HazardId"
+              id="Admin_EvacCommentContent"
               readonly
             />
             <Field>
               <FieldLabel>Media Attached</FieldLabel>
               {comment?.media && comment.media.length > 0 ? (
-                comment?.media.map((media) => <img src={media} />)
+                comment?.media.map((media) => (
+                  <img src={media} id="Admin_EvacCommentMedia" />
+                ))
               ) : (
                 <p>No Media Attached</p>
               )}
@@ -143,14 +145,14 @@ function CommentDetails() {
                 label="Upvotes"
                 value={String(comment?.upvotes)}
                 inputType="text"
-                id="Admin_HazardId"
+                id="Admin_EvacCommentUpvotes"
                 readonly
               />
               <TextField
                 label="Downvotes"
                 value={String(comment?.downvotes)}
                 inputType="text"
-                id="Admin_HazardId"
+                id="Admin_EvacCommentDownvotes"
                 readonly
               />
             </div>
@@ -159,10 +161,10 @@ function CommentDetails() {
                 label="Posted at"
                 value={comment?.posted_at}
                 inputType="text"
-                id="Admin_HazardId"
+                id="Admin_EvacCommentPostedAt"
                 readonly
               />
-              <p className="text-xs italic" id="Admin_HazardIsDeac">
+              <p className="text-xs italic" id="Admin_EvacCommentHasDeac">
                 Has deactivated: {String(comment?.is_deactivated)}
               </p>
             </div>
