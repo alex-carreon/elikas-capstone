@@ -20,29 +20,26 @@ class AdminFlagController extends Controller
         $type     = $request->query('type');
         $reasonId = $request->query('reason_id');
 
-        $manualFlags = collect();
-        $moderationFlags = collect();
+        // Always fetch both counts
+        $manualFlags = Flag::whereNull('is_approved')
+            ->whereHas('social_element.comment')
+            ->when($reasonId, fn ($q) => $q->where('reason_id', $reasonId))
+            ->selectRaw('element_id, COUNT(*) as manual_count')
+            ->groupBy('element_id')
+            ->pluck('manual_count', 'element_id');
 
-        if (!$type || $type === 'manual') {
-            $manualFlags = Flag::whereNull('is_approved')
-                ->whereHas('social_element.comment')
-                ->when($reasonId, fn ($q) => $q->where('reason_id', $reasonId))
-                ->selectRaw('element_id, COUNT(*) as manual_count')
-                ->groupBy('element_id')
-                ->pluck('manual_count', 'element_id');
-        }
+        $moderationFlags = ModerationLog::whereNull('is_approved')
+            ->whereHas('socialElement.comment')
+            ->selectRaw('element_id, COUNT(*) as mod_count')
+            ->groupBy('element_id')
+            ->pluck('mod_count', 'element_id');
 
-        if (!$type || $type === 'moderation') {
-            $moderationFlags = ModerationLog::whereNull('is_approved')
-                ->whereHas('socialElement.comment')
-                ->selectRaw('element_id, COUNT(*) as mod_count')
-                ->groupBy('element_id')
-                ->pluck('mod_count', 'element_id');
-        }
-
-        $allElementIds = $manualFlags->keys()
-            ->merge($moderationFlags->keys())
-            ->unique();
+        // Filter which element_ids appear based on type
+        $allElementIds = match($type) {
+            'manual'     => $manualFlags->keys(),
+            'moderation' => $moderationFlags->keys(),
+            default      => $manualFlags->keys()->merge($moderationFlags->keys())->unique(),
+        };
 
         $elements = \App\Models\SocialElement::whereIn('id', $allElementIds)
             ->with('comment')
