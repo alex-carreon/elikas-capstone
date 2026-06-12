@@ -25,6 +25,7 @@ import {
   InputGroupInput,
   InputGroupAddon,
 } from "@/components/ui/input-group";
+import colors from "@/constants/colors";
 
 type FlaggedPaths = {
   flag_id: number;
@@ -63,6 +64,16 @@ type EvacPins = {
   my_pin: boolean;
 };
 
+type FlaggedComms = {
+  moderation_id: number;
+  comment_id: number;
+  element_id: number;
+  content: string;
+  manual_count: number;
+  moderation_count: number;
+  total_flag_count: number;
+};
+
 function Pins() {
   const [isEvac, setIsEvac] = useState(true);
   const [activeEvac, setActiveEvac] = useState(true);
@@ -87,6 +98,10 @@ function Pins() {
   const [inactivePinCount, setInactivePinCount] = useState(0);
   const [pinCountLoad, setPinCountLoad] = useState(false);
   const [searchFor, setSearchFor] = useState<string | null>(null);
+  const [flaggedComms, setFlaggedComms] = useState<FlaggedComms[]>([]);
+  const [flaggedComCount, setFlaggedComCount] = useState(0);
+  const [flagType, setFlagType] = useState<"AI" | "Manual" | null>();
+  const [filterLoad, setFilterLoad] = useState(false);
 
   const params = new URLSearchParams();
 
@@ -169,17 +184,29 @@ function Pins() {
   const getPinCounts = async (signal?: AbortSignal) => {
     try {
       setPinCountLoad(true);
-      const response = await api.get(`/admin/pins`, { signal });
-      const inactiveCount = response.data.pins.filter(
+      const [pinResponse, flaggedComms] = await Promise.all([
+        api.get(`/admin/pins`, {
+          signal,
+        }),
+        api.get(`/admin/comments/flags`, {
+          signal,
+        }),
+      ]);
+      const inactiveCount = pinResponse.data.pins.filter(
         (pin: EvacPins) => pin.is_deactivated || pin.is_expired,
       ).length;
 
-      const activeCount = response.data.pins.filter(
+      const activeCount = pinResponse.data.pins.filter(
         (pin: EvacPins) => !pin.is_deactivated && !pin.is_expired,
       ).length;
 
+      const flaggedCount = flaggedComms.data.count;
+      console.log(flaggedComms.data.count);
+      console.log(flaggedComms.data);
+
       setActivePinCount(activeCount);
       setInactivePinCount(inactiveCount);
+      setFlaggedComCount(flaggedCount);
       setPinCountLoad(false);
     } catch (err: any) {
       if (err.name === "CanceledError") {
@@ -220,6 +247,31 @@ function Pins() {
     }
   };
 
+  const getFlaggedComments = async (signal?: AbortSignal) => {
+    try {
+      if (flagType == "AI") {
+        params.set("type", "moderation");
+      }
+
+      if (flagType == "Manual") {
+        params.set("type", "manual");
+      }
+
+      const parameters = params.toString();
+
+      const response = await api.get(
+        `/admin/comments/flags${parameters ? `?${parameters}` : ""}`,
+        { signal },
+      );
+      setFlaggedComms(response.data.flags);
+    } catch (err: any) {
+      if (err.name === "CanceledError") {
+        return;
+      }
+      console.log(err.response?.data);
+    }
+  };
+
   const getLevels = async (signal?: AbortSignal) => {
     try {
       const response = await api.get("/flood-levels", { signal });
@@ -244,6 +296,7 @@ function Pins() {
         getHazardCounts(controller.signal),
         getPins(controller.signal),
         getPinCounts(controller.signal),
+        getFlaggedComments(controller.signal),
       ]);
     } catch (err: any) {
       if (err.name === "CanceledError") return;
@@ -267,8 +320,12 @@ function Pins() {
     if (isEvac) {
       getPins(controller.signal);
     }
+
+    if (flaggedCom) {
+      getFlaggedComments(controller.signal);
+    }
     return () => controller.abort();
-  }, [levelFilter, status]);
+  }, [levelFilter, status, flagType]);
 
   return (
     <>
@@ -278,15 +335,21 @@ function Pins() {
             {isEvac ? (
               <>
                 <CountRow
-                  title="Active Pins"
-                  lastUpdated="Last updated 3 minutes ago"
+                  title="Active Evacuation Pins"
+                  lastUpdated="Not yet deactivated or expired"
                   count={activePinCount}
                   loading={pinCountLoad}
                 />
                 <CountRow
-                  title="Flagged Comments"
-                  lastUpdated="Last updated 3 minutes ago"
+                  title="Inactive Evacuation Pins"
+                  lastUpdated="Both deactivated and expired"
                   count={inactivePinCount}
+                  loading={pinCountLoad}
+                />
+                <CountRow
+                  title="Flagged Evacuation Comments"
+                  lastUpdated="Both deactivated and expired"
+                  count={flaggedComCount}
                   loading={pinCountLoad}
                 />
               </>
@@ -377,7 +440,7 @@ function Pins() {
                       setFlaggedCom(true);
                     }}
                   >
-                    Flagged
+                    Flagged Comments
                   </TabsTrigger>
                 </TabsList>
               ) : (
@@ -498,68 +561,102 @@ function Pins() {
             {isEvac && (
               <Collapsible className="w-full flex-col items-center gap-2 mt-2">
                 <div className="w-full flex justify-between">
-                  <InputGroup className="w-2/3">
-                    <InputGroupInput
-                      className="text-sm h-8"
-                      id="Admin_IndivSearchField"
-                      onChange={(e) => setSearchFor(e.target.value)}
-                    ></InputGroupInput>
-                    <InputGroupAddon align="inline-end">
-                      <Search onClick={() => getPins()} />
-                    </InputGroupAddon>
-                  </InputGroup>
-                  <CollapsibleTrigger
-                    onClick={() => setOpenCollapse(!openCollapse)}
-                    id="History_FiltersTrigger"
-                  >
-                    <div className="w-full flex flex-row justify-end mb-2">
-                      Filters
-                      {openCollapse ? (
-                        <ChevronUpIcon className="ml-2 group-data-[state=open]:rotate-180" />
-                      ) : (
-                        <ChevronDownIcon className="ml-2 group-data-[state=open]:rotate-180" />
-                      )}
-                    </div>
-                  </CollapsibleTrigger>
-                </div>
-                <CollapsibleContent
-                  id="History_FiltersContent"
-                  className="bg-gray-300/50 p-2 rounded-lg flex flex-row items-center justify-end gap-2 px-2.5 mt-2 text-sm"
-                >
-                  {!activeEvac && !flaggedCom && (
-                    <>
-                      <Toggle
-                        size="sm"
-                        variant="outline"
-                        className="aria-pressed:bg-gray-500/50 aria-pressed:text-white border-gray-400"
-                        onPressedChange={(pressed) =>
-                          setStatus(pressed ? "Expiry" : null)
-                        }
-                        pressed={status == "Expiry"}
-                        id="History_InactiveFilter"
-                      >
-                        <AlarmClockOff className="group-aria-pressed/toggle:stroke-white" />
-                      </Toggle>
-                      <Toggle
-                        size="sm"
-                        variant="outline"
-                        className="aria-pressed:bg-gray-500/50 aria-pressed:text-white border-gray-400"
-                        onPressedChange={(pressed) =>
-                          setStatus(pressed ? "Deactivated" : null)
-                        }
-                        pressed={status == "Deactivated"}
-                        id="History_InactiveFilter"
-                      >
-                        <MapPinMinusInside className="group-aria-pressed/toggle:stroke-white" />
-                      </Toggle>
-                    </>
+                  {!flaggedCom && (
+                    <InputGroup className="w-2/3">
+                      <InputGroupInput
+                        className="text-sm h-8"
+                        id="Admin_IndivSearchField"
+                        onChange={(e) => setSearchFor(e.target.value)}
+                      ></InputGroupInput>
+                      <InputGroupAddon align="inline-end">
+                        <Search onClick={() => getPins()} />
+                      </InputGroupAddon>
+                    </InputGroup>
                   )}
-                </CollapsibleContent>
+                  {!activeEvac && (
+                    <CollapsibleTrigger
+                      onClick={() => setOpenCollapse(!openCollapse)}
+                      id="History_FiltersTrigger"
+                    >
+                      <div className="w-full flex flex-row justify-end mb-2">
+                        Filters
+                        {openCollapse ? (
+                          <ChevronUpIcon className="ml-2 group-data-[state=open]:rotate-180" />
+                        ) : (
+                          <ChevronDownIcon className="ml-2 group-data-[state=open]:rotate-180" />
+                        )}
+                      </div>
+                    </CollapsibleTrigger>
+                  )}
+                </div>
+                {!activeEvac && (
+                  <CollapsibleContent
+                    id="History_FiltersContent"
+                    className="bg-gray-300/50 p-2 rounded-lg flex flex-row items-center justify-end gap-2 px-2.5 mt-2 text-sm"
+                  >
+                    {!activeEvac && !flaggedCom && (
+                      <>
+                        <Toggle
+                          size="sm"
+                          variant="outline"
+                          className="aria-pressed:bg-gray-500/50 aria-pressed:text-white border-gray-400"
+                          onPressedChange={(pressed) =>
+                            setStatus(pressed ? "Expiry" : null)
+                          }
+                          pressed={status == "Expiry"}
+                          id="History_InactiveFilter"
+                        >
+                          <AlarmClockOff className="group-aria-pressed/toggle:stroke-white" />
+                        </Toggle>
+                        <Toggle
+                          size="sm"
+                          variant="outline"
+                          className="aria-pressed:bg-gray-500/50 aria-pressed:text-white border-gray-400"
+                          onPressedChange={(pressed) =>
+                            setStatus(pressed ? "Deactivated" : null)
+                          }
+                          pressed={status == "Deactivated"}
+                          id="History_InactiveFilter"
+                        >
+                          <MapPinMinusInside className="group-aria-pressed/toggle:stroke-white" />
+                        </Toggle>
+                      </>
+                    )}
+                    {flaggedCom && (
+                      <>
+                        <Toggle
+                          size="sm"
+                          variant="outline"
+                          className="aria-pressed:bg-gray-500/50 aria-pressed:text-white border-gray-400"
+                          onPressedChange={(pressed) =>
+                            setFlagType(pressed ? "AI" : null)
+                          }
+                          pressed={flagType == "AI"}
+                          id="History_InactiveFilter"
+                        >
+                          AI Moderator
+                        </Toggle>
+                        <Toggle
+                          size="sm"
+                          variant="outline"
+                          className="aria-pressed:bg-gray-500/50 aria-pressed:text-white border-gray-400"
+                          onPressedChange={(pressed) =>
+                            setFlagType(pressed ? "Manual" : null)
+                          }
+                          pressed={flagType == "Manual"}
+                          id="History_InactiveFilter"
+                        >
+                          Manual
+                        </Toggle>
+                      </>
+                    )}
+                  </CollapsibleContent>
+                )}
               </Collapsible>
             )}
 
             <div className="flex flex-col gap-2">
-              {loading && (
+              {loading ? (
                 <>
                   <div className="w-full flex flex-col items-center">
                     <div className="flex w-full max-w-sm flex-col gap-7 pt-4">
@@ -575,80 +672,105 @@ function Pins() {
                     </div>
                   </div>
                 </>
-              )}
-              {isEvac ? (
-                !loading && activeEvac ? (
+              ) : isEvac ? (
+                activeEvac ? (
                   pins.map((pin) => {
                     if (!pin.is_deactivated && !pin.is_expired) {
                       return (
-                        <Row
-                          postId={String(pin.id)}
-                          title={pin.name}
-                          address={pin.address}
-                          datePosted={pin.posted_at}
-                          link="{`/admin-hazardDetails/${path.id}`}"
-                          isExpired={pin.is_expired}
-                          buttonId="History_ExpHazardDetailsBtn"
-                          showBtn
-                        ></Row>
+                        <Fragment key={pin.id}>
+                          <Row
+                            postId={String(pin.id)}
+                            title={pin.name}
+                            address={pin.address}
+                            datePosted={pin.posted_at}
+                            link={`/admin-evacDetails/${pin.id}`}
+                            buttonId="History_ExpHazardDetailsBtn"
+                            showBtn
+                          ></Row>
+                        </Fragment>
                       );
                     }
                   })
                 ) : flaggedCom ? (
-                  <></>
+                  flaggedComms.map((comment, index) => (
+                    <Fragment key={index}>
+                      <Row
+                        postId={String(comment.comment_id)}
+                        title={`Content: ${comment.content}`}
+                        desc={`Total Number of Reports: ${comment.total_flag_count}`}
+                        link={`/admin-flaggedComment/${comment.comment_id}`}
+                        buttonId="History_ExpHazardDetailsBtn"
+                        showBtn
+                      >
+                        <p
+                          className="text-sm"
+                          style={{ color: colors.heading }}
+                        >{`Manual Reports: ${comment.manual_count}`}</p>
+                        <p
+                          className="text-sm"
+                          style={{ color: colors.heading }}
+                        >{`Moderation Reports: ${comment.moderation_count}`}</p>
+                      </Row>
+                    </Fragment>
+                  ))
                 ) : (
                   pins.map((pin) => {
                     if (pin.is_deactivated || pin.is_expired) {
                       return (
-                        <Row
-                          postId={String(pin.id)}
-                          title={pin.name}
-                          address={pin.address}
-                          datePosted={pin.posted_at}
-                          link="{`/admin-hazardDetails/${path.id}`}"
-                          isExpired={pin.is_expired}
-                          buttonId="History_ExpHazardDetailsBtn"
-                          showBtn
-                        ></Row>
+                        <Fragment key={pin.id}>
+                          <Row
+                            postId={String(pin.id)}
+                            title={pin.name}
+                            address={pin.address}
+                            datePosted={pin.posted_at}
+                            link={`/admin-evacDetails/${pin.id}`}
+                            isExpired={pin.is_expired}
+                            isDeactivated={pin.is_deactivated}
+                            buttonId="History_ExpHazardDetailsBtn"
+                            showBtn
+                          ></Row>
+                        </Fragment>
                       );
                     }
                   })
                 )
-              ) : !loading && !isEvac && activeHaz ? (
+              ) : !isEvac && activeHaz ? (
                 activeHazards.map((path) => {
                   if (!path.is_expired && !path.is_deactivated) {
                     return (
-                      <Row
-                        postId={String(path.id)}
-                        title="Flood"
-                        desc={path.level}
-                        address={path.description}
-                        datePosted={path.posted_at}
-                        link={`/admin-hazardDetails/${path.id}`}
-                        isExpired={path.is_expired}
-                        buttonId="History_ExpHazardDetailsBtn"
-                        showBtn
-                      >
-                        <div
-                          className={`mt-2 px-2 py-1 rounded-3xl w-fit text-sm`}
-                          style={{
-                            backgroundColor:
-                              path.level === "Gutter" ||
-                              path.level === "Half Knee"
-                                ? colorHazard.lightBlue
-                                : path.level === "Half Tire" ||
-                                    path.level === "Knee"
-                                  ? colorHazard.darkBlue
-                                  : path.level === "Tire" ||
-                                      path.level === "Waist" ||
-                                      path.level === "chest"
-                                    ? colorHazard.red
-                                    : colorHazard.fallback,
-                          }}
+                      <Fragment key={path.id}>
+                        <Row
+                          postId={String(path.id)}
+                          title="Flood"
+                          desc={path.level}
+                          address={path.description}
+                          datePosted={path.posted_at}
+                          link={`/admin-hazardDetails/${path.id}`}
+                          isExpired={path.is_expired}
+                          buttonId="History_ExpHazardDetailsBtn"
+                          showBtn
                         >
-                          {path.level}
-                        </div>
-                      </Row>
+                          <div
+                            className={`mt-2 px-2 py-1 rounded-3xl w-fit text-sm`}
+                            style={{
+                              backgroundColor:
+                                path.level === "Gutter" ||
+                                path.level === "Half Knee"
+                                  ? colorHazard.lightBlue
+                                  : path.level === "Half Tire" ||
+                                      path.level === "Knee"
+                                    ? colorHazard.darkBlue
+                                    : path.level === "Tire" ||
+                                        path.level === "Waist" ||
+                                        path.level === "chest"
+                                      ? colorHazard.red
+                                      : colorHazard.fallback,
+                            }}
+                          >
+                            {path.level}
+                          </div>
+                        </Row>
+                      </Fragment>
                     );
                   }
                 })
@@ -669,36 +791,38 @@ function Pins() {
                 activeHazards.map((path) => {
                   if (path.is_expired || path.is_deactivated) {
                     return (
-                      <Row
-                        postId={String(path.id)}
-                        title="Flood"
-                        address={path.description}
-                        datePosted={path.posted_at}
-                        link={`/admin-hazardDetails/${path.id}`}
-                        isExpired={path.is_expired}
-                        buttonId="History_ExpHazardDetailsBtn"
-                        showBtn
-                      >
-                        <div
-                          className={`mt-2 px-2 py-1 rounded-3xl w-fit text-sm`}
-                          style={{
-                            backgroundColor:
-                              path.level === "Gutter" ||
-                              path.level === "Half Knee"
-                                ? colorHazard.lightBlue
-                                : path.level === "Half Tire" ||
-                                    path.level === "Knee"
-                                  ? colorHazard.darkBlue
-                                  : path.level === "Tire" ||
-                                      path.level === "Waist" ||
-                                      path.level === "chest"
-                                    ? colorHazard.red
-                                    : colorHazard.fallback,
-                          }}
+                      <Fragment key={path.id}>
+                        <Row
+                          postId={String(path.id)}
+                          title="Flood"
+                          address={path.description}
+                          datePosted={path.posted_at}
+                          link={`/admin-hazardDetails/${path.id}`}
+                          isExpired={path.is_expired}
+                          buttonId="History_ExpHazardDetailsBtn"
+                          showBtn
                         >
-                          {path.level}
-                        </div>
-                      </Row>
+                          <div
+                            className={`mt-2 px-2 py-1 rounded-3xl w-fit text-sm`}
+                            style={{
+                              backgroundColor:
+                                path.level === "Gutter" ||
+                                path.level === "Half Knee"
+                                  ? colorHazard.lightBlue
+                                  : path.level === "Half Tire" ||
+                                      path.level === "Knee"
+                                    ? colorHazard.darkBlue
+                                    : path.level === "Tire" ||
+                                        path.level === "Waist" ||
+                                        path.level === "chest"
+                                      ? colorHazard.red
+                                      : colorHazard.fallback,
+                            }}
+                          >
+                            {path.level}
+                          </div>
+                        </Row>
+                      </Fragment>
                     );
                   }
                 })

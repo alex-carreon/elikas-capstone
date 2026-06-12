@@ -419,7 +419,7 @@ function EvacPin() {
   };
 
   const deac = () => {
-    handleDelete({ id: id, navigate: navigate });
+    handleDelete({ id: id, navigate: navigate, redirect: "/History" });
   };
 
   const reOpen = (e: React.FormEvent) => {
@@ -436,6 +436,7 @@ function EvacPin() {
       ),
       id: id,
       navigate: navigate,
+      redirect: "/History",
     });
   };
 
@@ -464,7 +465,7 @@ function EvacPin() {
 
       response.then(() => {
         getEvacDetails();
-        setIsFull(!isFull); // ✅ toggle instead of always true
+        setIsFull(!isFull);
       });
     } catch (err: any) {
       console.log(err.response.data);
@@ -945,19 +946,21 @@ function EvacPin() {
               readonly={!id || isEditable ? false : true}
               isRequired={!id}
             ></TextField>
-            <DatePickerInput
-              label="Expiry Date"
-              idField="EvacPin_ExpiryField"
-              idBtn="EvacPin_CalendarBtn"
-              placeholder={
-                !id || isEditable ? "Enter Expiration Date" : String(expiry)
-              }
-              value={expiry}
-              onChange={setExpiry}
-              readonly={!id || isEditable ? false : true}
-              edit={isEditable || !id}
-              showTime
-            />
+            {role === "brgy_op" && (
+              <DatePickerInput
+                label="Expiry Date"
+                idField="EvacPin_ExpiryField"
+                idBtn="EvacPin_CalendarBtn"
+                placeholder={
+                  !id || isEditable ? "Enter Expiration Date" : String(expiry)
+                }
+                value={expiry}
+                onChange={setExpiry}
+                readonly={!id || isEditable ? false : true}
+                edit={isEditable || !id}
+                showTime
+              />
+            )}
             {id ? (
               !isEditable ? (
                 <>
@@ -982,27 +985,28 @@ function EvacPin() {
                     ></ButtonComp>
                   </div>
                   <div className="w-full max-w-md flex justify-center">
-                    {isFull ? (
-                      <ButtonComp
-                        text="Mark as Open"
-                        id="EvacPin_OpenPinBtn"
-                        variant="important"
-                        heightSize="38px"
-                        widthSize="100%"
-                        type="button"
-                        onClick={() => setWillOpen(true)}
-                      ></ButtonComp>
-                    ) : (
-                      <ButtonComp
-                        text="Mark as Full"
-                        id="EvacPin_FullPinBtn"
-                        variant="important"
-                        heightSize="38px"
-                        widthSize="100%"
-                        type="button"
-                        onClick={(e) => markFull(e)}
-                      ></ButtonComp>
-                    )}
+                    {!isExpired &&
+                      (isFull ? (
+                        <ButtonComp
+                          text="Mark as Open"
+                          id="EvacPin_OpenPinBtn"
+                          variant="important"
+                          heightSize="38px"
+                          widthSize="100%"
+                          type="button"
+                          onClick={() => setWillOpen(true)}
+                        ></ButtonComp>
+                      ) : (
+                        <ButtonComp
+                          text="Mark as Full"
+                          id="EvacPin_FullPinBtn"
+                          variant="important"
+                          heightSize="38px"
+                          widthSize="100%"
+                          type="button"
+                          onClick={(e) => markFull(e)}
+                        ></ButtonComp>
+                      ))}
                   </div>
                 </>
               ) : (
