@@ -1,11 +1,12 @@
 <?php
 
 use App\Http\Controllers\AdminController;
+use App\Http\Controllers\AuditLogController;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\CapacityLevelController;
+use App\Http\Controllers\Comments\EvacComments;
 use App\Http\Controllers\Dashboards\AdminFlagController;
 use App\Http\Controllers\Dashboards\CommentsAdminController;
-use App\Http\Controllers\Comments\EvacComments;
 use App\Http\Controllers\Dashboards\FloodPathAdminController;
 use App\Http\Controllers\Dashboards\UserController;
 use App\Http\Controllers\EmergencyContactController;
@@ -15,7 +16,9 @@ use App\Http\Controllers\Flags\FlagCommentController;
 use App\Http\Controllers\Flags\FlagFloodController;
 use App\Http\Controllers\Hazards\FloodLevelController;
 use App\Http\Controllers\Hazards\FloodPathController;
+use App\Http\Controllers\Hazards\FloodReminderController;
 use App\Http\Controllers\LocationsController;
+use App\Http\Controllers\OtpController;
 use App\Http\Controllers\PinControllers\DeleteEvacuationAreaController;
 use App\Http\Controllers\PinControllers\GetEvacAreaDetailsController;
 use App\Http\Controllers\PinControllers\GetEvacAreasController;
@@ -27,14 +30,12 @@ use App\Http\Controllers\PinControllers\VerifyEvacuationAreaController;
 use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\SensorControllers\PublicSensorController;
 use App\Http\Controllers\SensorControllers\SensorController;
-use App\Http\Controllers\SMSController;
-use App\Http\Controllers\Votes\VoteController;
-use App\Http\Controllers\Votes\VoteCommentController;
-use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\SensorControllers\SensorLogController;
-use App\Http\Controllers\AuditLogController;
-use App\Http\Controllers\OtpController;
+use App\Http\Controllers\SMSController;
 use App\Http\Controllers\TargetTableController;
+use App\Http\Controllers\Votes\VoteCommentController;
+use App\Http\Controllers\Votes\VoteController;
+use Illuminate\Support\Facades\Route;
 
 Route::get('/test', function () {
     return response()->json([
@@ -177,8 +178,15 @@ Route::middleware(['firebase.auth', 'role:1,2'])->group(function () {
 // ALL ROLES EXCEPT GUEST
 Route::middleware(['firebase.auth', 'role:1,2,3'])->group(function () {
 
+    //REMINDERS
+   Route::get('flood-reminders', [FloodReminderController::class, 'index']);
+    Route::post('flood-reminders/remind-later', [FloodReminderController::class, 'remindLater']);
+    Route::post('flood-reminders/dismiss', [FloodReminderController::class, 'dismissReminder']);
+
+    //AUTH
     Route::post('/auth/logout', [AuthController::class, 'logout']);
 
+    //FEEDBACK
     Route::post('/feedback', [FeedbackController::class, 'store']);
 
     //PROFILE
