@@ -64,6 +64,30 @@ class GetEvacAreaDetailsController extends Controller
                 'expiry' => $pin->expiry
                     ? $pin->expiry->timezone('Asia/Manila')->toDateTimeString()
                     : null,
+                'expiry_label' => (function () use ($pin) {
+                    if ($pin->expiry === null) {
+                        return null;
+                    }
+
+                    $now = now('Asia/Manila');
+                    $expiry = $pin->expiry->clone()->timezone('Asia/Manila');
+
+                    if ($expiry->lte($now)) {
+                        return 'Expired';
+                    }
+
+                    $hoursLeft = $expiry->diffInHours($now);
+
+                    if ($hoursLeft < 24) {
+                        return $hoursLeft <= 0
+                            ? 'Expires in less than an hour'
+                            : 'Expires in ' . $hoursLeft . ' hour' . ($hoursLeft === 1 ? '' : 's');
+                    }
+
+                    $daysLeft = $expiry->diffInDays($now);
+
+                    return 'Expires in ' . $daysLeft . ' day' . ($daysLeft === 1 ? '' : 's');
+                })(),
 
                 'deactivated_at' => $pin->social_element?->deactivated_at
                     ? $pin->social_element->deactivated_at->timezone('Asia/Manila')->toDateTimeString()
@@ -77,8 +101,8 @@ class GetEvacAreaDetailsController extends Controller
                     'username' => $pin->gov_op?->user?->username,
                 ],
                 'posted_by' => [
-                    'user_id' => $user?->id ?? null,
-                    'username' => $user?->username ?? null,
+                    'user_id' => $pin->social_element?->user_id,
+                    'username' => $pin->social_element?->user?->username,
                     'posted_at' => $pin->social_element?->posted_at
                         ? $pin->social_element->posted_at->timezone('Asia/Manila')->toDateTimeString()
                         : null,

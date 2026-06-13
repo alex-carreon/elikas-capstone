@@ -29,6 +29,7 @@ class SMSController extends Controller
                 'first_name'    => $pn->user?->name?->first_name,
                 'last_name'     => $pn->user?->name?->last_name,
                 'phone_no'      => $pn->phone_no,
+                'is_verified'   => (bool) $pn->is_verified,
                 'location_id'   => $pn->user?->indivAcc?->location_id,
                 'location_name' => $pn->user?->indivAcc?->location?->name,
             ])->values(),
@@ -69,40 +70,41 @@ class SMSController extends Controller
         }
     }
 
-    public function history(Request $request): JsonResponse
-    {
-        try {
-            $govOp = $this->resolveGovOp($request);
-            if ($govOp instanceof JsonResponse) {
-                return $govOp;
-            }
-
-            $locationId = (int) $request->query('location_id', $govOp->location_id);
-            if ($locationId !== (int) $govOp->location_id) {
-                return response()->json(['message' => 'You may only view broadcasts for your own location.'], 403);
-            }
-
-            $limit     = min(max((int) $request->query('limit', 15), 1), 100);
-            $paginated = $this->smsService->getHistory($locationId, $limit);
-
-            return response()->json([
-                'location_id' => $locationId,
-                'broadcasts'  => collect($paginated->items())
-                    ->map(fn ($b) => $this->smsService->formatBroadcast($b))
-                    ->values(),
-                'pagination'  => [
-                    'current_page' => $paginated->currentPage(),
-                    'last_page'    => $paginated->lastPage(),
-                    'per_page'     => $paginated->perPage(),
-                    'total'        => $paginated->total(),
-                ],
-            ]);
-        } catch (\Exception $e) {
-            Log::error('SMSController@history', ['error' => $e->getMessage()]);
-            return response()->json(['error' => 'Failed to fetch broadcast history.', 'details' => $e->getMessage()], 500);
+        public function history(Request $request): JsonResponse
+{
+    try {
+        $govOp = $this->resolveGovOp($request);
+        if ($govOp instanceof JsonResponse) {
+            return $govOp;
         }
-    }
 
+        $locationId = (int) $request->query('location_id', $govOp->location_id);
+        if ($locationId !== (int) $govOp->location_id) {
+            return response()->json(['message' => 'You may only view broadcasts for your own location.'], 403);
+        }
+
+        $limit   = min(max((int) $request->query('limit', 15), 1), 100);
+        $filters = $request->only(['id', 'message_content']);
+
+        $paginated = $this->smsService->getHistory($locationId, $limit, $filters);
+
+        return response()->json([
+            'location_id' => $locationId,
+            'broadcasts'  => collect($paginated->items())
+                ->map(fn ($b) => $this->smsService->formatBroadcast($b))
+                ->values(),
+            'pagination'  => [
+                'current_page' => $paginated->currentPage(),
+                'last_page'    => $paginated->lastPage(),
+                'per_page'     => $paginated->perPage(),
+                'total'        => $paginated->total(),
+            ],
+        ]);
+    } catch (\Exception $e) {
+        Log::error('SMSController@history', ['error' => $e->getMessage()]);
+        return response()->json(['error' => 'Failed to fetch broadcast history.', 'details' => $e->getMessage()], 500);
+    }
+}
     public function sendImmediate(Request $request): JsonResponse
     {
         try {
