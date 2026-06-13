@@ -176,7 +176,14 @@ class GetEvacAreasController extends Controller
                 ->with([
                     'social_element:id,user_id,deactivated_at',
                     'location_info:id,name',
-                ]);
+                ])
+                ->whereHas('social_element', function ($q) {
+                    $q->whereNull('deactivated_at');
+                })
+                ->where(function ($q) {
+                    $q->whereNull('expiry')
+                      ->orWhere('expiry', '>', now('UTC'));
+                });
 
             $this->applySearchFilter($query, $request);
 
