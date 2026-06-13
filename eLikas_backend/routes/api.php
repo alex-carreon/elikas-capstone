@@ -88,7 +88,9 @@ Route::prefix('admin')->middleware(['firebase.auth', 'role:1'])->group(function 
 
     Route::post('/create-govop', [AdminController::class, 'createGovOp']);
 
-    Route::get('/pins', [GetEvacAreasController::class, 'getAdminEvacAreas']); //Admin pins showing all pins regardless of status
+    Route::get('/pins', [GetEvacAreasController::class, 'getAdminEvacAreas']);
+
+    Route::get('/emergency-contacts', [EmergencyContactController::class, 'indexAdmin']);
 
     Route::get('flood-paths', [FloodPathAdminController::class, 'index']);
 
