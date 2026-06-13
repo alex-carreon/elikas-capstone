@@ -5,13 +5,12 @@ import CSIcon from "@/assets/Map/CrowdsourceIcon.svg";
 import PostRow from "@/components/PostRow";
 import { Link } from "react-router";
 import { Skeleton } from "@/components/ui/skeleton";
-import { useEffect, useState, type SetStateAction } from "react";
+import { useEffect, useState } from "react";
 import { differenceInDays } from "date-fns";
 import api from "@/api";
 import { toZonedTime } from "date-fns-tz";
 import { format } from "date-fns";
 import { cn } from "@/lib/utils";
-import { type Dispatch } from "react";
 
 type FloodLevel = {
   id: number;

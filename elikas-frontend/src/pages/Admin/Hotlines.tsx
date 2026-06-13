@@ -23,13 +23,13 @@ function Hotlines() {
         <DashboardHeader title="Hotlines">
           <CountRow
             title="Active Hotlines"
-            lastUpdated="Last updated 3 minutes ago"
+            lastUpdated="Not Deactivated and Not Expired"
             count={3}
             // loading={loading}
           />
           <CountRow
-            title="Deactivated Hotlines"
-            lastUpdated="Last updated 3 minutes ago"
+            title="Inactive Hotlines"
+            lastUpdated="Deactivated and Expired"
             count={3}
             // loading={loading}
           />

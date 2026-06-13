@@ -44,6 +44,7 @@ import EvacDetails from "./pages/Admin/Forms/EvacDetails.tsx";
 import EvacComments from "./pages/Admin/EvacComments.tsx";
 import CommentDetails from "./pages/Admin/Forms/CommentDetails.tsx";
 import FlaggedCommentDetails from "./pages/Admin/Forms/FlaggedCommentDetails.tsx";
+import AuditLogs from "./pages/Admin/AuditLogs.tsx";
 
 function App() {
   return (
@@ -96,6 +97,7 @@ function App() {
               <Route path="/admin-pins" element={<Pins />} />
               <Route path="/admin-sensors" element={<Sensors />} />
               <Route path="/admin-hotlines" element={<HotlinesAdmin />} />
+              <Route path="/admin-logs" element={<AuditLogs />} />
             </Route>
 
             <Route path="/admin-userDetails/:id" element={<UserDetails />} />
@@ -127,6 +129,7 @@ function App() {
               path="/admin-flaggedComment/:id"
               element={<FlaggedCommentDetails />}
             />
+            {/* <Route path="/admin-logs/:id" element={<AuditLogDetails />} /> */}
           </Route>
 
           <Route element={<ProtectedRoute />}>
