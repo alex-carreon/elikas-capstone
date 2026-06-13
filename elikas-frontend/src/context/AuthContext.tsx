@@ -1,5 +1,4 @@
 import api from "@/api";
-import ProtectedRoute from "@/components/ProtectedRoutes";
 import { auth } from "@/firebase";
 import { onAuthStateChanged, type User } from "firebase/auth";
 import {
@@ -38,17 +37,12 @@ export function AuthProvider({ children }: AuthProviderProps) {
   const [token, setToken] = useState<string | null>(null);
 
   const publicRoutes = [
-    "/Login",
     "/Registration",
     "/ResetPassword",
     "/Loading",
     "/Hotlines",
     "/TermsConditions",
   ];
-
-  const isPublicRoute = publicRoutes.some((path) =>
-    location.pathname.startsWith(path),
-  );
 
   const roleDefault: Record<string, string> = {
     indiv: "/map",
@@ -63,6 +57,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
     setRole(null);
     setToken(null);
     setUser(null);
+    localStorage.removeItem("userRole");
     navigate("/Login");
   };
 
@@ -98,28 +93,54 @@ export function AuthProvider({ children }: AuthProviderProps) {
 
         const currentToken = t.token;
 
-        if (!role || !isPublicRoute) {
-          const loginResponse = await api.post(
-            "/auth/login",
-            {},
-            { headers: { Authorization: `Bearer ${currentToken}` } },
-          );
-          const userRole = loginResponse.data.role;
+        const cachedRole = localStorage.getItem("userRole");
 
-          setRole(userRole);
+        if (cachedRole) {
+          setRole(cachedRole);
           setUser(firebaseUser);
           setToken(currentToken);
-          navigate(roleDefault[userRole] ?? "/Login");
+          setLoading(false);
 
-          // if (isPublicRoute) {
-          //   // only redirect if coming from a public route
-          // }
+          const isOnPublicOrLogin = [...publicRoutes, "/Login"].some((path) =>
+            location.pathname.startsWith(path),
+          );
+
+          if (isOnPublicOrLogin) {
+            navigate(roleDefault[cachedRole] ?? "/Login");
+          }
+        }
+
+        const loginResponse = await api.post(
+          "/auth/login",
+          {},
+          { headers: { Authorization: `Bearer ${currentToken}` } },
+        );
+        const userRole = loginResponse.data.role;
+
+        console.log("Setting userRole in localStorage:", userRole);
+        localStorage.setItem("userRole", userRole);
+
+        setRole(userRole);
+        setUser(firebaseUser);
+        setToken(currentToken);
+        // navigate(roleDefault[userRole] ?? "/Login");
+
+        if (!cachedRole) {
+          const isOnPublicOrLogin = [...publicRoutes, "/Login", "/"].some(
+            (path) =>
+              location.pathname === path || location.pathname.startsWith(path),
+          );
+          if (isOnPublicOrLogin) {
+            navigate(roleDefault[userRole] ?? "/Login");
+          }
         }
       } catch (err: any) {
+        console.error("Auth error:", err);
         await auth.signOut();
         navigate("/Login");
         setRole(null);
         setToken(null);
+        localStorage.removeItem("userRole");
       }
 
       setLoading(false);

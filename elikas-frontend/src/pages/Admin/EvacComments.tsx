@@ -56,6 +56,8 @@ function EvacComments() {
     } finally {
       setLoading(false);
     }
+
+    return () => controller.abort();
   };
 
   useEffect(() => {
@@ -97,12 +99,13 @@ function EvacComments() {
                       desc={`Commented by: ${comment.commented_by.username}`}
                       datePosted={comment.posted_at}
                       link={`/admin-pins/comments/${comment.id}`}
+                      buttonId="Admin_EvacComments"
                       showBtn
                     ></Row>
                     {comment.media.length > 0 && (
                       <Collapsible className="rounded-sm data-[state=open]:bg-red p-1 outline">
                         <CollapsibleTrigger
-                          id="Drawer_FacilitiesTrigger"
+                          id="Admin_EvacCommentsMediaTrigger"
                           className="group w-full flex flex-col items-start"
                           onClick={() => {
                             setOpenCollapse(!openCollapse);
@@ -119,7 +122,7 @@ function EvacComments() {
                         </CollapsibleTrigger>
                         <CollapsibleContent>
                           {comment.media.map((media) => (
-                            <img src={media} />
+                            <img src={media} id="Admin_EvacCommentsMedia" />
                           ))}
                         </CollapsibleContent>
                       </Collapsible>

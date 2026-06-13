@@ -206,18 +206,24 @@ function Sensors() {
   };
 
   const getAll = async () => {
+    const controller = new AbortController();
+
     try {
       setLoading(true);
-      const controller = new AbortController();
       getSensors(controller.signal);
       getBarangays(controller.signal);
       return () => controller.abort();
     } catch (err: any) {
-      if (err.name === "CanceledError") return;
+      if (err.name === "CanceledError") {
+        setLoading(false);
+        return;
+      }
       console.log(err);
     } finally {
       setLoading(false);
     }
+
+    return () => controller.abort();
   };
 
   useEffect(() => {
@@ -248,13 +254,13 @@ function Sensors() {
         <DashboardHeader title="Sensors">
           <CountRow
             title="Active Sensors"
-            lastUpdated="Last updated 3 minutes ago"
+            lastUpdated="Not Deactivated or Expired"
             count={activeSensorsCount}
             loading={loading}
           />
           <CountRow
             title="Inactive Sensors"
-            lastUpdated="Last updated 3 minutes ago"
+            lastUpdated="Both Deactivated or Expired"
             count={inactiveSensorsCount}
             loading={loading}
           />
