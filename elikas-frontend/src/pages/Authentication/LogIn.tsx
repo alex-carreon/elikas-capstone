@@ -6,7 +6,7 @@ import CheckBox from "@/components/CheckBox";
 import ButtonComp from "@/components/Button";
 import { Mail } from "lucide-react";
 import { Lock } from "lucide-react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link } from "react-router-dom";
 import { useState } from "react";
 import { auth } from "@/firebase";
 import { signInWithEmailAndPassword } from "@firebase/auth";
@@ -21,7 +21,6 @@ function LogIn() {
     password: "",
     general: "",
   });
-  const navigate = useNavigate();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
