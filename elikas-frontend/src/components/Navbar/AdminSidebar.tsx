@@ -88,7 +88,7 @@ function AdminSidebar() {
       label: "Audit Logs",
       description: "See each admin's activity",
       icon: ScrollText,
-      link: "",
+      link: "/admin-logs",
       testId: "Admin_BurgerNavLogs",
     },
   ];
