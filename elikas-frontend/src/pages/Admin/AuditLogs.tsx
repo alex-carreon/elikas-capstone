@@ -50,6 +50,9 @@ function AuditLogs() {
   const [targetTables, setTargetTables] = useState<Table[]>([]);
   const [tableFilter, setTableFilter] = useState(0);
   const [isAsc, setIsAsc] = useState(false);
+  const [isCreated, setIsCreated] = useState(false);
+  const [isUpdated, setIsUpdated] = useState(false);
+  const [isDeleted, setIsDeleted] = useState(false);
 
   const convertDateTime = (utcString: string) => {
     const zoned = toZonedTime(new Date(utcString), "Asia/Manila");
@@ -96,16 +99,24 @@ function AuditLogs() {
         params.set("sort_order", "asc");
       }
 
-      const parameters = params.toString();
+      if (isCreated) {
+        params.append("event[]", "created");
+      }
 
-      const endpoint = `/admin/audit-logs${parameters ? `?${parameters}` : ""}`;
+      if (isUpdated) {
+        params.append("event[]", "updated");
+      }
+
+      if (isDeleted) {
+        params.append("event[]", "deleted");
+      }
+
+      const parameters = params.toString();
 
       const response = await api.get(
         `/admin/audit-logs${parameters ? `?${parameters}` : ""}`,
         { signal },
       );
-
-      console.log(endpoint);
 
       setLogs(response.data.data);
     } catch (err: any) {
@@ -131,17 +142,39 @@ function AuditLogs() {
     }
   };
 
+  const getFiltered = async () => {
+    const controller = new AbortController();
+
+    try {
+      setLoading(true);
+      await getLogs(controller.signal);
+    } catch (err: any) {
+      if (err.name === "CanceledError") {
+        setLoading(false);
+        return;
+      }
+      console.log(err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   useEffect(() => {
     getAll();
   }, []);
 
   useEffect(() => {
-    const controller = new AbortController();
-
-    getLogs(controller.signal);
-
-    return () => controller.abort();
-  }, [isAdmin, isIndiv, isBrgy, searchFor, tableFilter, isAsc]);
+    getFiltered();
+  }, [
+    isAdmin,
+    isIndiv,
+    isBrgy,
+    tableFilter,
+    isAsc,
+    isCreated,
+    isUpdated,
+    isDeleted,
+  ]);
 
   return (
     <>
@@ -162,7 +195,7 @@ function AuditLogs() {
                     <InputGroupAddon align="inline-end">
                       <Search
                         onClick={() => {
-                          getLogs();
+                          getFiltered();
                         }}
                       />
                     </InputGroupAddon>
@@ -207,6 +240,44 @@ function AuditLogs() {
                         <X size={14} />
                       </button>
                     ) : null}
+                    <div className="flex flex-row gap-2">
+                      <Toggle
+                        size="sm"
+                        variant="outline"
+                        className="aria-pressed:bg-gray-500/50 aria-pressed:text-white border-gray-400"
+                        onPressedChange={setIsCreated}
+                        pressed={isCreated}
+                        id="Admin_LogCreatedFilter"
+                      >
+                        <p className="m-2 group-aria-pressed/toggle:text-black">
+                          Created
+                        </p>
+                      </Toggle>
+                      <Toggle
+                        size="sm"
+                        variant="outline"
+                        className="aria-pressed:bg-gray-500/50 aria-pressed:text-white border-gray-400"
+                        onPressedChange={setIsUpdated}
+                        pressed={isUpdated}
+                        id="Admin_LogUpdatedFilter"
+                      >
+                        <p className="m-2 group-aria-pressed/toggle:text-black">
+                          Updated
+                        </p>
+                      </Toggle>
+                      <Toggle
+                        size="sm"
+                        variant="outline"
+                        className="aria-pressed:bg-gray-500/50 aria-pressed:text-white border-gray-400"
+                        onPressedChange={setIsDeleted}
+                        pressed={isDeleted}
+                        id="Admin_LogDeletedFilter"
+                      >
+                        <p className="m-2 group-aria-pressed/toggle:text-black">
+                          Deleted
+                        </p>
+                      </Toggle>
+                    </div>
                     <div className="flex flex-row gap-2">
                       <Toggle
                         size="sm"
