@@ -45,6 +45,8 @@ class FloodPath extends Model
         'upvotes'        => 'int',
         'downvotes'      => 'int',
         'expiry'         => 'datetime',
+        'reminder_sent_at' => 'datetime',
+        'dismissed_at'     => 'datetime',
     ];
 
     protected $fillable = [
@@ -56,6 +58,8 @@ class FloodPath extends Model
         'upvotes',
         'downvotes',
         'expiry',
+        'reminder_sent_at',
+        'dismissed_at',
     ];
 
     public function socialElement()
