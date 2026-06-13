@@ -12,6 +12,7 @@ interface handleActionProps {
   brgyId?: number;
   navigate?: NavigateFunction;
   id?: string;
+  redirect?: string;
 }
 
 export const handleSubmit = ({
@@ -65,6 +66,7 @@ export const handleUpdate = ({
   brgyId,
   navigate,
   id,
+  redirect,
 }: handleActionProps) => {
   e?.preventDefault();
 
@@ -92,14 +94,14 @@ export const handleUpdate = ({
     });
 
     response.then(() => {
-      navigate?.("/Hotlines");
+      navigate?.(redirect ? redirect : "");
     });
   } catch (err: any) {
     console.log(err.response);
   }
 };
 
-export const handleDeac = ({ id, navigate }: handleActionProps) => {
+export const handleDeac = ({ id, navigate, redirect }: handleActionProps) => {
   try {
     const response = api.patch(`/emergency-contacts/${id}/deactivate`);
 
@@ -118,7 +120,7 @@ export const handleDeac = ({ id, navigate }: handleActionProps) => {
     });
 
     response.then(() => {
-      navigate?.("/Hotlines");
+      navigate?.(redirect ? redirect : "");
     });
   } catch (err: any) {
     console.log(err.response.data);
