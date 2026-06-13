@@ -33,6 +33,8 @@ use App\Http\Controllers\Votes\VoteCommentController;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\SensorControllers\SensorLogController;
 use App\Http\Controllers\AuditLogController;
+use App\Http\Controllers\OtpController;
+use App\Http\Controllers\TargetTableController;
 
 Route::get('/test', function () {
     return response()->json([
@@ -87,7 +89,9 @@ Route::prefix('admin')->middleware(['firebase.auth', 'role:1'])->group(function 
 
     Route::post('/create-govop', [AdminController::class, 'createGovOp']);
 
-    Route::get('/pins', [GetEvacAreasController::class, 'getAdminEvacAreas']); //Admin pins showing all pins regardless of status
+    Route::get('/pins', [GetEvacAreasController::class, 'getAdminEvacAreas']);
+
+    Route::get('/emergency-contacts', [EmergencyContactController::class, 'indexAdmin']);
 
     Route::get('flood-paths', [FloodPathAdminController::class, 'index']);
 
@@ -115,6 +119,8 @@ Route::prefix('admin')->middleware(['firebase.auth', 'role:1'])->group(function 
     Route::post('/create-admin', [AdminController::class, 'createUser']);
 
     Route::apiResource('audit-logs', AuditLogController::class)->only(['index', 'show']);
+
+    Route::get('/target-tables', [TargetTableController::class, 'index']);
 });
 
 // ---------------------------------------------------------------
@@ -226,4 +232,8 @@ Route::middleware(['firebase.auth', 'role:1,2,3'])->group(function () {
     Route::post('/comments/{commentId}/flag', [FlagCommentController::class, 'store']);
     Route::post('/flood-paths/{floodPathId}/flag', [FlagFloodController::class, 'store']);
     Route::get('/flag-reasons', [FlagCommentController::class, 'reasons']);
+
+    //OTPsms
+    Route::post('/otp/send', [OtpController::class, 'send']);
+    Route::post('/otp/verify', [OtpController::class, 'verify']);
 });
