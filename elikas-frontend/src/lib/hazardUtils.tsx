@@ -86,7 +86,7 @@ export const handleSubmit = async ({
         return;
       }
 
-      const expDate = addDays(dateTime, 7);
+      const expDate = addDays(dateTime, 3);
 
       formData.append("expiry", format(expDate, "yyyy-MM-dd"));
       routePoints.forEach((point, index) => {
@@ -104,12 +104,6 @@ export const handleSubmit = async ({
           "Content-Type": "undefined",
         },
       });
-
-      console.log(response);
-
-      if (!response) {
-        console.log("No response from server");
-      }
 
       toast.promise(response, {
         loading: "Adding your pin to the map...",

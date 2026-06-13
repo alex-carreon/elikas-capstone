@@ -85,8 +85,6 @@ function Pins() {
   const [hazardCountLoad, setHazardCountLoad] = useState(false);
   const [openCollapse, setOpenCollapse] = useState(false);
   const [status, setStatus] = useState<"Deactivated" | "Expiry" | null>();
-  // const [barangays, setBarangays] = useState<Barangays[]>([]);
-  // const [brgyFilter, setBrgyFilter] = useState(0);
   const [flaggedPaths, setFlaggedPaths] = useState<FlaggedPaths[]>([]);
   const [flaggedPathsCount, setFlaggedPathsCount] = useState(0);
   const [activeHazards, setActiveHazards] = useState<Hazards[]>([]);
@@ -102,7 +100,6 @@ function Pins() {
   const [flaggedComms, setFlaggedComms] = useState<FlaggedComms[]>([]);
   const [flaggedComCount, setFlaggedComCount] = useState(0);
   const [flagType, setFlagType] = useState<"AI" | "Manual" | null>();
-  const [filterLoad, setFilterLoad] = useState(false);
 
   const params = new URLSearchParams();
 
@@ -358,7 +355,7 @@ function Pins() {
               <>
                 <CountRow
                   title="Active Hazard Paths"
-                  lastUpdated="Last updated 3 minutes ago"
+                  lastUpdated="Not yet deactivated or expired"
                   count={activeHazCount}
                   loading={loading}
                 />
@@ -370,7 +367,7 @@ function Pins() {
                 />
                 <CountRow
                   title="Flagged Hazard Paths"
-                  lastUpdated="Last updated 3 minutes ago"
+                  lastUpdated="Both deactivated and expired"
                   count={flaggedPathsCount}
                   loading={hazardCountLoad}
                 />
@@ -382,13 +379,16 @@ function Pins() {
               defaultValue="overview"
               className="w-full max-w-md flex items-center"
             >
-              <TabsList className="w-full flex justify-between">
+              <TabsList
+                className="w-full flex justify-between"
+                id="Admin_PinTabs"
+              >
                 <TabsTrigger
                   value="Evacuation"
                   onClick={() => {
                     setIsEvac(true);
                   }}
-                  id="History_EvacTrigger"
+                  id="Admin_PinEvacTrigger"
                 >
                   Evacuation Pins
                 </TabsTrigger>
@@ -397,7 +397,7 @@ function Pins() {
                   onClick={() => {
                     setIsEvac(false);
                   }}
-                  id="History_HazardTrigger"
+                  id="Admin_PinHazardTrigger"
                 >
                   Hazard Pins
                 </TabsTrigger>
@@ -411,11 +411,11 @@ function Pins() {
                 <TabsList
                   variant="line"
                   className="w-full flex justify-between"
-                  id="History_EvacTabs"
+                  id="Admin_PinEvacTabs"
                 >
                   <TabsTrigger
                     value="ActiveEvac"
-                    id="Admin_PinsActivePins"
+                    id="Admin_PinsEvacActiveTigger"
                     onClick={() => {
                       setActiveEvac(true);
                       setFlaggedCom(false);
@@ -424,8 +424,8 @@ function Pins() {
                     Active Pins
                   </TabsTrigger>
                   <TabsTrigger
-                    value="ExpiredEvac"
-                    id="Admin_PinsInactivePins"
+                    value="InactiveEvac"
+                    id="Admin_PinsEvacInactiveTigger"
                     onClick={() => {
                       setActiveEvac(false);
                       setFlaggedCom(false);
@@ -435,7 +435,7 @@ function Pins() {
                   </TabsTrigger>
                   <TabsTrigger
                     value="FlaggedComms"
-                    id="Admin_PinsFlaggedComms"
+                    id="Admin_PinsEvacFlaggedComTrigger"
                     onClick={() => {
                       setActiveEvac(false);
                       setFlaggedCom(true);
@@ -448,11 +448,11 @@ function Pins() {
                 <TabsList
                   variant="line"
                   className="w-full flex justify-between"
-                  id="History_HazardTabs"
+                  id="Admin_PinsHazardsTabs"
                 >
                   <TabsTrigger
                     value="ActiveHaz"
-                    id="History_ActiveHazardTrigger"
+                    id="Admin_PinsHazardsActiveTrigger"
                     onClick={() => {
                       setActiveHaz(true);
                       setFlaggedHaz(false);
@@ -461,8 +461,8 @@ function Pins() {
                     Active Pins
                   </TabsTrigger>
                   <TabsTrigger
-                    value="ExpiredHaz"
-                    id="History_ExpiredHazardTrigger"
+                    value="InactiveHaz"
+                    id="Admin_PinsHazardsInactiveTrigger"
                     onClick={() => {
                       setActiveHaz(false);
                       setFlaggedHaz(false);
@@ -472,7 +472,7 @@ function Pins() {
                   </TabsTrigger>
                   <TabsTrigger
                     value="FlaggedHaz"
-                    id="History_FlaggedHazardTrigger"
+                    id="Admin_PinsHazardsFlaggedTrigger"
                     onClick={() => {
                       setActiveHaz(false);
                       setFlaggedHaz(true);
@@ -488,7 +488,7 @@ function Pins() {
                 <div className="w-full flex justify-between">
                   <CollapsibleTrigger
                     onClick={() => setOpenCollapse(!openCollapse)}
-                    id="History_FiltersTrigger"
+                    id="Admin_PinsHazardFiltersTrigger"
                   >
                     <div className="w-full flex flex-row justify-end mb-2">
                       Filters
@@ -501,7 +501,7 @@ function Pins() {
                   </CollapsibleTrigger>
                 </div>
                 <CollapsibleContent
-                  id="History_FiltersContent"
+                  id="Admin_PinsHazardFiltersContent"
                   className="bg-gray-300/50 p-2 rounded-lg flex flex-row items-center justify-end gap-2 px-2.5 mt-2 text-sm"
                 >
                   {!activeHaz && !flaggedHaz && (
@@ -514,7 +514,7 @@ function Pins() {
                           setStatus(pressed ? "Expiry" : null)
                         }
                         pressed={status == "Expiry"}
-                        id="History_InactiveFilter"
+                        id="Admin_PinsHazardExpiryFilter"
                       >
                         <AlarmClockOff className="group-aria-pressed/toggle:stroke-white" />
                       </Toggle>
@@ -526,7 +526,7 @@ function Pins() {
                           setStatus(pressed ? "Deactivated" : null)
                         }
                         pressed={status == "Deactivated"}
-                        id="History_InactiveFilter"
+                        id="Admin_PinsHazardDeacFilter"
                       >
                         <MapPinMinusInside className="group-aria-pressed/toggle:stroke-white" />
                       </Toggle>
@@ -537,7 +537,7 @@ function Pins() {
                       value={String(levelFilter)}
                       onValueChange={(val) => setLevelFilter(Number(val))}
                       placeholder="Flood Level"
-                      id="Admin_HazardLevelFilter"
+                      id="Admin_PinsHazardFloodLevelFilter"
                       options={[
                         { label: "All", value: "0" },
                         ...floodLevels?.map((level) => ({
@@ -550,7 +550,7 @@ function Pins() {
                   {levelFilter ? (
                     <button
                       onClick={() => setLevelFilter(0)}
-                      id="History_ClearBrgyFilter"
+                      id="Admin_PinsHazardFloodLevelClearFilter"
                     >
                       <X size={14} />
                     </button>
@@ -566,18 +566,21 @@ function Pins() {
                     <InputGroup className="w-2/3">
                       <InputGroupInput
                         className="text-sm h-8"
-                        id="Admin_IndivSearchField"
+                        id="Admin_PinsEvacSearchField"
                         onChange={(e) => setSearchFor(e.target.value)}
                       ></InputGroupInput>
                       <InputGroupAddon align="inline-end">
-                        <Search onClick={() => getPins()} />
+                        <Search
+                          onClick={() => getPins()}
+                          id="Admin_PinsEvacSearchBtn"
+                        />
                       </InputGroupAddon>
                     </InputGroup>
                   )}
                   {!activeEvac && (
                     <CollapsibleTrigger
                       onClick={() => setOpenCollapse(!openCollapse)}
-                      id="History_FiltersTrigger"
+                      id="Admin_PinsEvacFiltersTrigger"
                     >
                       <div className="w-full flex flex-row justify-end mb-2">
                         Filters
@@ -592,7 +595,7 @@ function Pins() {
                 </div>
                 {!activeEvac && (
                   <CollapsibleContent
-                    id="History_FiltersContent"
+                    id="Admin_PinsEvacFiltersContent"
                     className="bg-gray-300/50 p-2 rounded-lg flex flex-row items-center justify-end gap-2 px-2.5 mt-2 text-sm"
                   >
                     {!activeEvac && !flaggedCom && (
@@ -605,7 +608,7 @@ function Pins() {
                             setStatus(pressed ? "Expiry" : null)
                           }
                           pressed={status == "Expiry"}
-                          id="History_InactiveFilter"
+                          id="Admin_PinsEvacExpiryFilter"
                         >
                           <AlarmClockOff className="group-aria-pressed/toggle:stroke-white" />
                         </Toggle>
@@ -617,7 +620,7 @@ function Pins() {
                             setStatus(pressed ? "Deactivated" : null)
                           }
                           pressed={status == "Deactivated"}
-                          id="History_InactiveFilter"
+                          id="Admin_PinsEvacDeacFilter"
                         >
                           <MapPinMinusInside className="group-aria-pressed/toggle:stroke-white" />
                         </Toggle>
@@ -633,7 +636,7 @@ function Pins() {
                             setFlagType(pressed ? "AI" : null)
                           }
                           pressed={flagType == "AI"}
-                          id="History_InactiveFilter"
+                          id="Admin_PinsFlagComAIFilter"
                         >
                           AI Moderator
                         </Toggle>
@@ -645,7 +648,7 @@ function Pins() {
                             setFlagType(pressed ? "Manual" : null)
                           }
                           pressed={flagType == "Manual"}
-                          id="History_InactiveFilter"
+                          id="Admin_PinsFlagComManualFilter"
                         >
                           Manual
                         </Toggle>
@@ -685,7 +688,7 @@ function Pins() {
                             address={pin.address}
                             datePosted={pin.posted_at}
                             link={`/admin-evacDetails/${pin.id}`}
-                            buttonId="History_ExpHazardDetailsBtn"
+                            buttonId="Admin_PinsActiveEvacDetailsBtn"
                             showBtn
                           ></Row>
                         </Fragment>
@@ -701,16 +704,18 @@ function Pins() {
                         desc={`Total Number of Reports: ${comment.total_flag_count}`}
                         link={`/admin-flaggedComment/${comment.comment_id}`}
                         isDeactivated={comment.evac_deactivated}
-                        buttonId="History_ExpHazardDetailsBtn"
+                        buttonId="Admin_PinsFlagComEvacDetailsBtn"
                         showBtn
                       >
                         <p
                           className="text-sm"
                           style={{ color: colors.heading }}
+                          id="Admin_PinsFlagComEvacManualCount"
                         >{`Manual Reports: ${comment.manual_count}`}</p>
                         <p
                           className="text-sm"
                           style={{ color: colors.heading }}
+                          id="Admin_PinsFlagComEvacAICount"
                         >{`Moderation Reports: ${comment.moderation_count}`}</p>
                       </Row>
                     </Fragment>
@@ -728,7 +733,7 @@ function Pins() {
                             link={`/admin-evacDetails/${pin.id}`}
                             isExpired={pin.is_expired}
                             isDeactivated={pin.is_deactivated}
-                            buttonId="History_ExpHazardDetailsBtn"
+                            buttonId="Admin_PinsInactiveEvacDetailsBtn"
                             showBtn
                           ></Row>
                         </Fragment>
@@ -749,11 +754,12 @@ function Pins() {
                           datePosted={path.posted_at}
                           link={`/admin-hazardDetails/${path.id}`}
                           isExpired={path.is_expired}
-                          buttonId="History_ExpHazardDetailsBtn"
+                          buttonId="Admin_PinsActiveHazDetailsBtn"
                           showBtn
                         >
                           <div
                             className={`mt-2 px-2 py-1 rounded-3xl w-fit text-sm`}
+                            id="Admin_PinsActiveHazLevel"
                             style={{
                               backgroundColor:
                                 path.level === "Gutter" ||
@@ -784,7 +790,7 @@ function Pins() {
                       title={paths.reason}
                       desc={`On Comment ID: ${paths.flood_path_id}`}
                       link={`/admin-flagged/${paths.flood_path_id}`}
-                      buttonId="Admin_ActiveIndivDetailsBtn"
+                      buttonId="Admin_PinsFlagHazDetailsBtn"
                       showBtn
                     />
                   </Fragment>
@@ -801,11 +807,12 @@ function Pins() {
                           datePosted={path.posted_at}
                           link={`/admin-hazardDetails/${path.id}`}
                           isExpired={path.is_expired}
-                          buttonId="History_ExpHazardDetailsBtn"
+                          buttonId="Admin_PinsInactiveHazDetailsBtn"
                           showBtn
                         >
                           <div
                             className={`mt-2 px-2 py-1 rounded-3xl w-fit text-sm`}
+                            id="Admin_PinsInactiveHazLevel"
                             style={{
                               backgroundColor:
                                 path.level === "Gutter" ||

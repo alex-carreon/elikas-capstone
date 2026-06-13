@@ -140,6 +140,8 @@ function AuditLogs() {
     } finally {
       setLoading(false);
     }
+
+    return () => controller.abort();
   };
 
   const getFiltered = async () => {
@@ -157,6 +159,8 @@ function AuditLogs() {
     } finally {
       setLoading(false);
     }
+
+    return () => controller.abort();
   };
 
   useEffect(() => {
@@ -223,7 +227,7 @@ function AuditLogs() {
                       value={String(tableFilter)}
                       onValueChange={(val) => setTableFilter(Number(val))}
                       placeholder="Table"
-                      id="Admin_BrgyCityFilter"
+                      id="Admin_LogTableFilter"
                       options={[
                         { label: "All", value: "0" },
                         ...(targetTables?.map((table) => ({
@@ -235,7 +239,7 @@ function AuditLogs() {
                     {tableFilter ? (
                       <button
                         onClick={() => setTableFilter(0)}
-                        id="History_ClearBrgyFilter"
+                        id="Admin_LogTableFilterClear"
                       >
                         <X size={14} />
                       </button>

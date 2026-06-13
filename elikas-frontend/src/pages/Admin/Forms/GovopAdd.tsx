@@ -45,13 +45,6 @@ function BrgyAdd() {
   const [confirmPw, setConfirmPw] = useState("");
   const [errors, setErrors] = useState({ email: "", pw: "", confirmPw: "" });
 
-  // useEffect(() => {
-  //   if (!adminPw) {
-  //     setEnterPw(true);
-  //     return;
-  //   }
-  // }, []);
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
@@ -105,7 +98,6 @@ function BrgyAdd() {
         });
       }
     }
-    // Get token immediately after signing back in
   };
 
   useEffect(() => {
@@ -156,7 +148,6 @@ function BrgyAdd() {
   return (
     <>
       <FormLayout
-        // isAvatar
         updateId="Admin_NewSubmitBtn"
         updBtnLabel="Create"
         btnType="submit"

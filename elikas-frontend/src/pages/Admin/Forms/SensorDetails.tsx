@@ -31,41 +31,50 @@ function SensorDetails() {
 
   const { id } = useParams();
 
-  useEffect(() => {
-    if (id) {
-      const getSensorDetails = async () => {
-        try {
-          setLoading(true);
-          const response = await api.get(`/sensors/${id}`);
-          const details = await response.data.data;
+  const getSensorDetails = async (signal?: AbortSignal) => {
+    try {
+      const response = await api.get(`/sensors/${id}`, { signal });
+      const details = await response.data.data;
 
-          if (!response) {
-            console.log("Error getting details");
-          }
-
-          console.log(response.data.data.mountLocation);
-
-          setSensorCode(details.sensorCode);
-          setName(details.name);
-          setMountHeight(details.mountHeight);
-          setLatitude(details.location[0]);
-          setLongitude(details.location[1]);
-          setAddress(details.address);
-          setYellowLevel(details.yellowLevel);
-          setOrangeLevel(details.orangeLevel);
-          setRedLevel(details.redLevel);
-          setMountLocation(details.mountLocation);
-          setRegisteredBy(details.registeredBy);
-          setDeactivatedAt(details.deactivatedAt);
-        } catch (err: any) {
-          console.log(err.response.data);
-        } finally {
-          setLoading(false);
-        }
-      };
-
-      getSensorDetails();
+      setSensorCode(details.sensorCode);
+      setName(details.name);
+      setMountHeight(details.mountHeight);
+      setLatitude(details.location[0]);
+      setLongitude(details.location[1]);
+      setAddress(details.address);
+      setYellowLevel(details.yellowLevel);
+      setOrangeLevel(details.orangeLevel);
+      setRedLevel(details.redLevel);
+      setMountLocation(details.mountLocation);
+      setRegisteredBy(details.registeredBy);
+      setDeactivatedAt(details.deactivatedAt);
+    } catch (err: any) {
+      if (err.name === "CanceledError") return;
+      console.log(err);
     }
+  };
+
+  useEffect(() => {
+    const controller = new AbortController();
+
+    const getAll = async () => {
+      try {
+        setLoading(true);
+        await getSensorDetails(controller.signal);
+      } catch (err: any) {
+        if (err.name === "CanceledError") {
+          setLoading(false);
+          return;
+        }
+        console.log(err);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    getAll();
+
+    return () => controller.abort();
   }, []);
 
   return (
@@ -89,7 +98,7 @@ function SensorDetails() {
                 label="Sensor Code"
                 value={sensorCode}
                 inputType="text"
-                id="Sensor_SensorCode"
+                id="Admin_SensorDetailsCode"
                 readonly
               />
               <TextField
@@ -97,7 +106,7 @@ function SensorDetails() {
                 description="This is what will appear on the map"
                 value={name}
                 inputType="text"
-                id="Sensor_NameField"
+                id="Admin_SensorDetailsName"
                 readonly
               />
               <TextField
@@ -105,7 +114,7 @@ function SensorDetails() {
                 description="This refers to the meters of the sensor from the ground"
                 value={String(mountHeight)}
                 inputType="number"
-                id="Sensor_MountHeightField"
+                id="Admin_SensorDetailsMountHeight"
                 readonly
               />
               <TextField
@@ -113,7 +122,7 @@ function SensorDetails() {
                 description="The latitude of the sensor's location"
                 value={String(latitude)}
                 inputType="number"
-                id="Sensor_LatitudeField"
+                id="Admin_SensorDetailsLat"
                 readonly
               />
               <TextField
@@ -121,7 +130,7 @@ function SensorDetails() {
                 description="The longitude of the sensor's location"
                 value={String(longitude)}
                 inputType="number"
-                id="Sensor_LongitudeField"
+                id="Admin_SensorDetailsLong"
                 readonly
               />
 
@@ -129,7 +138,7 @@ function SensorDetails() {
                 label="Mount Location"
                 value={mountLocation}
                 inputType="string"
-                id="Sensor_MountLoc"
+                id="Admin_SensorDetailsMountLoc"
                 readonly
               />
 
@@ -138,31 +147,31 @@ function SensorDetails() {
                 description="The address of the sensor"
                 value={address}
                 inputType="string"
-                id="Sensor_AddressField"
+                id="Admin_SensorDetailsAddress"
                 readonly
               />
               <TextField
                 label="Yellow Level in Meters"
-                description="Set the yellow level of the sensor. This will be the basis of how high the river should be to have a yellow alert. This must be greater than 0"
+                description="This is be the basis of how high the river should be to have a yellow alert. This must be greater than 0"
                 value={String(yellowLevel)}
                 inputType="number"
-                id="Sensor_YellowField"
+                id="Admin_SensorDetailsYellow"
                 readonly
               />
               <TextField
                 label="Orange Level in Meters"
-                description="Set the orange level of the sensor. This will be the basis of how high the river should be to have an orange alert. This must be greater than yellow level and less than red level"
+                description="This is be the basis of how high the river should be to have an orange alert. This must be greater than yellow level and less than red level"
                 value={String(orangeLevel)}
                 inputType="number"
-                id="Sensor_OrangeField"
+                id="Admin_SensorDetailsOrange"
                 readonly
               />
               <TextField
                 label="Red Level in Meters"
-                description="Set the red level of the sensor. This will be the basis of how high the river should be to have a red alert. It must be greater than orange level and less than the mount height."
+                description="This is be the basis of how high the river should be to have a red alert. It must be greater than orange level and less than the mount height."
                 value={String(redLevel)}
                 inputType="number"
-                id="Sensor_RedField"
+                id="Admin_SensorDetailsRed"
                 readonly
               />
 
@@ -170,7 +179,7 @@ function SensorDetails() {
                 label="Registered by"
                 value={registeredBy}
                 inputType="text"
-                id="Sensor_RegisteredBy"
+                id="Admin_SensorDetailsRegisteredBy"
                 readonly
               />
               {deactivatedAt && (
@@ -178,7 +187,7 @@ function SensorDetails() {
                   label="Deactivated at"
                   value={convertDateTime(deactivatedAt)}
                   inputType="text"
-                  id="Sensor_RegisteredBy"
+                  id="Admin_SensorDetailsDeacAt"
                   readonly
                 />
               )}

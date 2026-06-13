@@ -82,16 +82,33 @@ function FlaggedDetails() {
     iconAnchor: [18, 20],
   });
 
-  const getFloodDetails = async () => {
+  const getFloodDetails = async (signal?: AbortSignal) => {
     try {
-      setLoading(true);
-      const response = await api.get(`/admin/flood-paths/flags/${id}`);
+      const response = await api.get(`/admin/flood-paths/flags/${id}`, {
+        signal,
+      });
       setPathDetails(response.data.flood_path);
 
       const midpoint = getMidpoint(response.data.flood_path.path);
       setMidpoint(midpoint);
     } catch (err: any) {
-      console.log(err.response.data);
+      if (err.name === "CanceledError") return;
+      console.log(err);
+    }
+  };
+
+  const getAll = async () => {
+    const controller = new AbortController();
+
+    try {
+      setLoading(true);
+      await getFloodDetails(controller.signal);
+    } catch (err: any) {
+      if (err.name === "CanceledError") {
+        setLoading(false);
+        return;
+      }
+      console.log(err);
     } finally {
       setLoading(false);
     }
@@ -146,7 +163,7 @@ function FlaggedDetails() {
   };
 
   useEffect(() => {
-    getFloodDetails();
+    getAll();
   }, []);
 
   return (

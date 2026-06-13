@@ -67,7 +67,10 @@ function FlaggedCommentDetails() {
       setLoading(true);
       await getFlaggedDetails(controller.signal);
     } catch (err: any) {
-      if (err.name === "CanceledError") return;
+      if (err.name === "CanceledError") {
+        setLoading(false);
+        return;
+      }
       console.log(err);
     } finally {
       setLoading(false);
@@ -149,14 +152,14 @@ function FlaggedCommentDetails() {
                 label="Flag Type"
                 value={String(flagDetails?.flag_info.type)}
                 inputType="text"
-                id="Admin_FlaggedPathType"
+                id="Admin_EvacFlaggedFlagType"
                 readonly
               />
               <TextField
                 label="Flag Count"
                 value={String(flagDetails?.flag_info.flag_count)}
                 inputType="text"
-                id="Admin_FlaggedPathCount"
+                id="Admin_EvacFlaggedFlagCount"
                 readonly
               />
               {flagDetails?.flag_info.reasons.map((reason) => (
@@ -165,31 +168,31 @@ function FlaggedCommentDetails() {
                     label="Flag Reason"
                     value={reason.reason}
                     inputType="text"
-                    id="Admin_FlaggedPathReason"
+                    id="Admin_EvacFlaggedReason"
                     readonly
                   />
                   <TextField
                     label="Count"
                     value={String(reason.flag_count)}
                     inputType="text"
-                    id="Admin_FlaggedPathReasonCount"
+                    id="Admin_EvacFlaggedReasonCount"
                     readonly
                   />
                 </div>
               ))}
 
               <TextField
-                label="Flood Path Id"
+                label="Flag Id"
                 value={String(flagDetails?.id)}
                 inputType="text"
-                id="Admin_FlaggedPathId"
+                id="Admin_EvacFlaggedId"
                 readonly
               />
               <TextField
                 label="Element Id"
                 value={String(flagDetails?.element_id)}
                 inputType="text"
-                id="Admin_FlaggedPathElementId"
+                id="Admin_EvacFlaggedElementId"
                 readonly
               />
               <Field>
@@ -204,7 +207,7 @@ function FlaggedCommentDetails() {
                 label="Posted By"
                 value={String(flagDetails?.posted_by.username)}
                 inputType="text"
-                id="Admin_FlaggedPathPostedBy"
+                id="Admin_EvacFlaggedPostedBy"
                 readonly
               />
               <div className="flex gap-2">
@@ -212,14 +215,14 @@ function FlaggedCommentDetails() {
                   label="Upvotes"
                   value={String(flagDetails?.upvotes)}
                   inputType="text"
-                  id="Admin_FlaggedPathUpvotes"
+                  id="Admin_EvacFlaggedUpvotes"
                   readonly
                 />
                 <TextField
                   label="Downvotes"
                   value={String(flagDetails?.downvotes)}
                   inputType="text"
-                  id="Admin_FlaggedPathDownvotes"
+                  id="Admin_EvacFlaggedDownvotes"
                   readonly
                 />
               </div>
@@ -228,11 +231,11 @@ function FlaggedCommentDetails() {
                   label="Posted at"
                   value={String(flagDetails?.posted_at)}
                   inputType="text"
-                  id="Admin_FlaggedPathExpiry"
+                  id="Admin_EvacFlaggedPostedAt"
                   readonly
                 />
                 <div className="flex gap-4">
-                  <p className="text-xs italic" id="Admin_FlaggedIsDeac">
+                  <p className="text-xs italic" id="Admin_EvacFlaggedIsDeac">
                     Has deactivated: {String(flagDetails?.is_deactivated)}
                   </p>
                 </div>

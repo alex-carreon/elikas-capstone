@@ -3,7 +3,6 @@ import FormLayout from "./FormLayout";
 import TextField from "@/components/TextField";
 import { useNavigate, useParams } from "react-router";
 import React, { useEffect, useState } from "react";
-import { useUserContext } from "@/context/AuthContext";
 import FormSkeleton from "@/pages/Skeletons/FormSkeleton";
 import { toast } from "sonner";
 import AlertDialogue from "@/components/AlertDialogue";
@@ -48,7 +47,7 @@ type Province = {
 
 function UserDetails() {
   const { id } = useParams();
-  const { token } = useUserContext();
+
   const navigate = useNavigate();
 
   const [seed, setSeed] = useState("");
@@ -65,24 +64,14 @@ function UserDetails() {
   const [isEditable, setIsEditable] = useState(false);
   const [userData, setUserData] = useState<UserData>();
   const [barangays, setBarangays] = useState<Barangays[]>([]);
+  const [brgyLoad, setBrgyLoad] = useState(false);
   const [cities, setCities] = useState<Cities[]>([]);
   const [cityId, setCityId] = useState(0);
 
-  //   Get Details
-  const getIndivDetails = async () => {
+  const getIndivDetails = async (signal?: AbortSignal) => {
     try {
       setLoading(true);
-      const response = await api.get(`/admin/users/${id}`, {
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-      });
-      console.log("response", response);
-
-      if (!response) {
-        return new Error("Failed to retrieve data");
-      }
+      const response = await api.get(`/admin/users/${id}`, { signal });
 
       const userDetails = response.data;
       setSeed(userDetails.avatar_seed);
@@ -95,10 +84,9 @@ function UserDetails() {
       setLocationId(String(userDetails.indiv_location_id));
       setPhone(userDetails.phone);
       setCreatedAt(userDetails.created_at);
-    } catch (err: string | any) {
-      Error(err.message || "An error occurred");
-    } finally {
-      setLoading(false);
+    } catch (err: any) {
+      if (err.name === "CanceledError") return;
+      console.log(err);
     }
   };
 
@@ -116,24 +104,6 @@ function UserDetails() {
     }
   };
 
-  useEffect(() => {
-    if (!cityId) return;
-
-    const getBrgy = async () => {
-      try {
-        const brgyRes = await api.get(`/locations/barangays?city_id=${cityId}`);
-
-        const barangays = brgyRes.data.Barangays;
-        console.log(barangays);
-        setBarangays(barangays);
-      } catch (err: any) {
-        console.log(err.message);
-      }
-    };
-
-    getBrgy();
-  }, [cityId]);
-
   const updateIndiv = async (e: React.FormEvent) => {
     e.preventDefault();
 
@@ -147,72 +117,99 @@ function UserDetails() {
     });
 
     try {
-      const response = await api.patch(
-        `/admin/users/${id}`,
-        {
-          username: username,
-          email: email,
-          first_name: firstname,
-          last_name: lastname,
-          ...(phone ? { phone } : {}),
-          // indiv_location_id: location,
-          indiv_location_id: locationId,
-        },
-        {
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
-          },
-        },
-      );
+      const response = await api.patch(`/admin/users/${id}`, {
+        username: username,
+        email: email,
+        first_name: firstname,
+        last_name: lastname,
+        ...(phone ? { phone } : {}),
+        // indiv_location_id: location,
+        indiv_location_id: locationId,
+      });
+
       if (!response) {
-        new Error(response || "Update failed");
         return;
       } else {
         setIsEditable(false);
         getIndivDetails();
       }
-    } catch (err: string | any) {
+    } catch (err: any) {
       console.log(err.response?.data);
     }
   };
 
   const deacIndiv = async () => {
     try {
-      const deacPromise = new Promise(async (resolve, reject) => {
-        const response = await api.patch(`/admin/users/${id}/deactivate`, {
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
-          },
-        });
+      const response = api.patch(`/admin/users/${id}/deactivate`);
 
-        console.log(response);
-
-        const userDataDelete = await response.data;
-
-        if (!response) {
-          reject(new Error(userDataDelete.error || "Deactivation failed"));
-        } else resolve(userDataDelete);
-      });
-
-      toast.promise(deacPromise, {
+      toast.promise(response, {
         loading: "Deactivating this account...",
         success: "Account Deactivated!",
         position: "top-center",
       });
 
-      deacPromise.then(() => {
+      response.then(() => {
         navigate("/admin-indiv");
       });
-    } catch (error) {
-      console.error("Error during logout:", error);
+    } catch (err: any) {
+      console.log(err.response.message);
     }
   };
 
   useEffect(() => {
-    getIndivDetails();
+    const controller = new AbortController();
 
+    const getAll = async () => {
+      try {
+        setLoading(true);
+        await getIndivDetails(controller.signal);
+      } catch (err: any) {
+        if (err.name === "CanceledError") {
+          setLoading(false);
+          return;
+        }
+        console.log(err);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    getAll();
+
+    return () => controller.abort();
+  });
+
+  useEffect(() => {
+    const controller = new AbortController();
+
+    if (!cityId) return;
+
+    const getBrgy = async () => {
+      try {
+        setBrgyLoad(true);
+        const brgyRes = await api.get(
+          `/locations/barangays?city_id=${cityId}`,
+          { signal: controller.signal },
+        );
+        const barangays = brgyRes.data.Barangays;
+        setBarangays(barangays);
+      } catch (err: any) {
+        if (err.name === "CanceledError") {
+          setBrgyLoad(false);
+          return;
+        }
+        console.log(err);
+      } finally {
+        setBrgyLoad(false);
+      }
+    };
+
+    getBrgy();
+
+    return () => controller.abort();
+  }, [cityId]);
+
+  useEffect(() => {
     if (isEditable) {
       getCity();
     }
@@ -325,13 +322,6 @@ function UserDetails() {
                 readonly={!isEditable}
                 onSubmit={(e) => setEmail(e.target.value)}
               />
-              {/* <TextField
-                label="Address"
-                inputType="text"
-                id="Admin_IndivAddressField"
-                value={location}
-                readonly
-              /> */}
               {!isEditable ? (
                 <TextField
                   label="Address"
@@ -370,6 +360,7 @@ function UserDetails() {
                       value: String(brgy.id),
                     }))}
                     isRequired={!id ? true : false}
+                    loading={brgyLoad}
                   />
                 </>
               )}
