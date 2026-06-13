@@ -34,6 +34,7 @@ use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\SensorControllers\SensorLogController;
 use App\Http\Controllers\AuditLogController;
 use App\Http\Controllers\OtpController;
+use App\Http\Controllers\TargetTableController;
 
 Route::get('/test', function () {
     return response()->json([
@@ -116,6 +117,8 @@ Route::prefix('admin')->middleware(['firebase.auth', 'role:1'])->group(function 
     Route::post('/create-admin', [AdminController::class, 'createUser']);
 
     Route::apiResource('audit-logs', AuditLogController::class)->only(['index', 'show']);
+
+    Route::get('/target-tables', [TargetTableController::class, 'index']);
 });
 
 // ---------------------------------------------------------------
