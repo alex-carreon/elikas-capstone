@@ -155,10 +155,7 @@ function LogIn() {
                 ></TextField>
               </div>
               <div className="flex mt-2 flex-row justify-between">
-                <CheckBox
-                  text="Remember for 30 days"
-                  id="LogIn_RememberChckbox"
-                />
+                <CheckBox text="Remember Me" id="LogIn_RememberChckbox" />
                 <Link
                   to="/ResetPassword"
                   className={"text-xs underline"}
