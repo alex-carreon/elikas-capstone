@@ -51,6 +51,58 @@ class EmergencyContactController extends Controller
         }
     }
 
+    public function indexAdmin(Request $request)
+    {
+        try {
+            $query = EmergencyContact::with(['social_element.user', 'location:id,name']);
+
+            if ($request->filled('location_id')) {
+                $query->where('location_id', $request->query('location_id'));
+            }
+
+            if ($request->filled('location_name')) {
+                $locationName = '%' . $this->escapeLike($request->query('location_name')) . '%';
+                $query->whereHas('location', function ($q) use ($locationName) {
+                    $q->where('name', 'LIKE', $locationName);
+                });
+            }
+
+            if ($request->filled('is_deactivated')) {
+                $isDeactivated = filter_var($request->query('is_deactivated'), FILTER_VALIDATE_BOOLEAN, FILTER_NULL_ON_FAILURE);
+
+                if ($isDeactivated === null) {
+                    return response()->json([
+                        'error' => 'Invalid is_deactivated value. Use true or false.',
+                    ], 422);
+                }
+
+                $query->whereHas('social_element', function ($q) use ($isDeactivated) {
+                    if ($isDeactivated) {
+                        $q->whereNotNull('deactivated_at');
+                    } else {
+                        $q->whereNull('deactivated_at');
+                    }
+                });
+            }
+
+            $contacts = $query->orderByDesc('updated_at')
+                ->get()
+                ->map(function ($contact) {
+                    return $this->formatContact($contact);
+                });
+
+            return response()->json([
+                'emergency_contacts' => $contacts,
+            ], 200);
+
+        } catch (\Exception $e) {
+            return response()->json([
+                'error' => 'Failed to fetch emergency contacts',
+                'details' => $e->getMessage(),
+            ], 500);
+        }
+    }
+
     public function show(int $id)
     {
         try {
