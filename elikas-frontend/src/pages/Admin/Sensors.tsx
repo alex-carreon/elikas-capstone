@@ -227,8 +227,10 @@ function Sensors() {
   useEffect(() => {
     const controller = new AbortController();
 
-    getFilteredActive(controller.signal);
-    toast.success("Sensors filtered!");
+    if (activeBrgyFilter || yellow || red || orange) {
+      getFilteredActive(controller.signal);
+      toast.success("Sensors filtered!");
+    }
 
     return () => controller.abort();
   }, [activeBrgyFilter, yellow, red, orange]);

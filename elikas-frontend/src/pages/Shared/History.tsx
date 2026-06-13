@@ -222,7 +222,7 @@ function History() {
         await Promise.all([
           api.get(endpointHazard),
           api.get(endpointEvac),
-          api.get("/locations/barangays?city_id=10"),
+          api.get("/locations/barangays?city_id=2"),
           api.get("/flood-levels"),
         ]);
 
