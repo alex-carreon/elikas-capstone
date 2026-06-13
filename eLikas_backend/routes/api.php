@@ -33,6 +33,7 @@ use App\Http\Controllers\Votes\VoteCommentController;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\SensorControllers\SensorLogController;
 use App\Http\Controllers\AuditLogController;
+use App\Http\Controllers\OtpController;
 
 Route::get('/test', function () {
     return response()->json([
@@ -226,4 +227,8 @@ Route::middleware(['firebase.auth', 'role:1,2,3'])->group(function () {
     Route::post('/comments/{commentId}/flag', [FlagCommentController::class, 'store']);
     Route::post('/flood-paths/{floodPathId}/flag', [FlagFloodController::class, 'store']);
     Route::get('/flag-reasons', [FlagCommentController::class, 'reasons']);
+
+    //OTPsms
+    Route::post('/otp/send', [OtpController::class, 'send']);
+    Route::post('/otp/verify', [OtpController::class, 'verify']);
 });

@@ -24,20 +24,22 @@ class PhoneNumber extends Model implements Auditable
 {
     use \App\Services\Audit\CustomAuditable;
 
-	protected $table = 'PhoneNumbers';
-	public $timestamps = false;
+    protected $table = 'PhoneNumbers';
+    public $timestamps = false;
 
-	protected $casts = [
-		'user_id' => 'int'
-	];
+    protected $casts = [
+        'user_id'     => 'int',
+        'is_verified' => 'boolean',
+    ];
 
-	protected $fillable = [
-		'user_id',
-		'phone_no'
-	];
+    protected $fillable = [
+        'user_id',
+        'phone_no',
+        'is_verified',
+    ];
 
-	public function user()
-	{
-		return $this->belongsTo(User::class, 'user_id');
-	}
+    public function user()
+    {
+        return $this->belongsTo(User::class, 'user_id');
+    }
 }
