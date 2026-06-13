@@ -1,11 +1,9 @@
 import colors from "@/constants/colors";
-import { Field } from "@/components/ui/field";
 import CheckBox from "@/components/CheckBox";
 import TextField from "@/components/TextField";
 import { useState, useEffect } from "react";
 import ButtonComp from "@/components/Button";
 import api from "@/api";
-import { toast } from "sonner";
 import { useNavigate, useParams } from "react-router";
 import SelectDropdown from "@/components/SelectDropdown";
 import { handleDeac, handleSubmit, handleUpdate } from "@/lib/hotlineUtils";
@@ -47,7 +45,6 @@ function HotlinesForm() {
   const [address, setAddress] = useState("");
   const [primaryNo, setPrimaryNo] = useState("");
   const [secondaryNo, setSecondaryNo] = useState("");
-  const [postedBy, setPostedBy] = useState("");
   const [cityLoad, setCityLoad] = useState(false);
   const [brgyLoad, setBrgyLoad] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -152,6 +149,7 @@ function HotlinesForm() {
       brgyId: brgyId,
       navigate: navigate,
       id: id,
+      redirect: "/Hotlines",
     });
   };
 
@@ -159,6 +157,7 @@ function HotlinesForm() {
     handleDeac({
       id: id,
       navigate: navigate,
+      redirect: "/Hotlines",
     });
   };
 
@@ -264,7 +263,7 @@ function HotlinesForm() {
             )}
 
             <TextField
-              label="Official Contact Number*"
+              label="Primary Contact Number*"
               description="This will be the number the citizens will copy."
               placeholder="Enter official phone number"
               id="Hotline_OfficialNumberField"
@@ -275,7 +274,7 @@ function HotlinesForm() {
               readonly={!isEditable}
             ></TextField>
             <TextField
-              label="Second Contact Number (optional)"
+              label="Secondary Contact Number (optional)"
               description="This will be the number citizens will use in case the official number is unreachable."
               placeholder="Enter second phone number"
               id="Hotline_SecondNumberField"
