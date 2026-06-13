@@ -3,12 +3,7 @@ import CountRow from "@/components/Admin/CountRow";
 import DashboardHeader from "@/components/Admin/DashboardHeader";
 import { useState, useEffect } from "react";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import {
-  InputGroup,
-  InputGroupInput,
-  InputGroupAddon,
-} from "@/components/ui/input-group";
-import { X, Search } from "lucide-react";
+import { X } from "lucide-react";
 import Row from "@/components/Row";
 import { Skeleton } from "@/components/ui/skeleton";
 import ButtonComp from "@/components/Button";
@@ -73,11 +68,6 @@ function BrgyUsers() {
         api.get("/admin/users?role=brgy_op&active=false", { signal }),
       ]);
 
-      const endpoint = `/admin/users?role=brgy_op&active=true${parameter ? `&${parameter}` : ""}`;
-
-      console.log("active", endpoint);
-      console.log("Active", activeResponse);
-
       setActiveUsers(activeResponse.data.users);
       setDeacUsers(deacResponse.data.users);
     } catch (err: string | any) {
@@ -95,9 +85,6 @@ function BrgyUsers() {
         api.get(`/admin/users?role=brgy_op&active=true`, { signal }),
         api.get("/admin/users?role=brgy_op&active=false", { signal }),
       ]);
-
-      console.log("active", activeResponse);
-      console.log("deac", deacResponse);
 
       setActiveCount(activeResponse.data.count);
       setDeacCount(deacResponse.data.count);
@@ -170,14 +157,14 @@ function BrgyUsers() {
         <div className="w-full max-w-md">
           <DashboardHeader title="Barangay Users">
             <CountRow
-              title="Active Users"
-              lastUpdated="Last updated 3 minutes ago"
+              title="Active Barangay Users"
+              lastUpdated="Barangay Users that are not Deactivated"
               count={activeCount}
               loading={countLoad}
             />
             <CountRow
-              title="Deactivated Users"
-              lastUpdated="Last updated 3 minutes ago"
+              title="Deactivated Barangay Users"
+              lastUpdated="Barangay Users that are Deactivated"
               count={deacCount}
               loading={countLoad}
             />
@@ -187,7 +174,10 @@ function BrgyUsers() {
               defaultValue="overview"
               className="w-full max-w-md flex items-center"
             >
-              <TabsList className="w-full flex justify-between">
+              <TabsList
+                className="w-full flex justify-between"
+                id="Admin_BrgyTabs"
+              >
                 <TabsTrigger
                   value="Active"
                   onClick={() => {
@@ -204,7 +194,7 @@ function BrgyUsers() {
                     setIsActiveUsers(false);
                     setIsSMS(false);
                   }}
-                  id="Admin_BrgyNotActiveTrigger"
+                  id="Admin_BrgyInactiveTrigger"
                 >
                   Deactivated
                 </TabsTrigger>
@@ -214,7 +204,7 @@ function BrgyUsers() {
                     setIsActiveUsers(false);
                     setIsSMS(true);
                   }}
-                  id="Admin_BrgyFeedbackTrigger"
+                  id="Admin_BrgySMSTrigger"
                 >
                   SMS
                 </TabsTrigger>
@@ -265,7 +255,7 @@ function BrgyUsers() {
               </div>
               <CollapsibleTrigger
                 onClick={() => setOpenCollapse(!openCollapse)}
-                id="History_FiltersTrigger"
+                id="Admin_BrgyFiltersTrigger"
                 className="mt-2 flex justify-self-end"
               >
                 <div className="w-full flex flex-row justify-end mb-2">
@@ -298,7 +288,7 @@ function BrgyUsers() {
                   {cityFilter ? (
                     <button
                       onClick={() => setCityFilter(0)}
-                      id="History_ClearBrgyFilter"
+                      id="Admin_BrgyCityClearFilter"
                     >
                       <X size={14} />
                     </button>
@@ -332,7 +322,7 @@ function BrgyUsers() {
                       title={user.location}
                       address="San Juan city, Manila"
                       link={`/admin-brgyDetails/${user.id}`}
-                      buttonId="Admin_ActiveIndivDetailsBtn"
+                      buttonId="Admin_ActiveBrgyDetailsBtn"
                       showBtn
                     />
                   );
@@ -348,7 +338,7 @@ function BrgyUsers() {
                       title={user.location}
                       address="San Juan city, Manila"
                       link={`/admin-brgyDetails/${user.id}`}
-                      buttonId="Admin_ActiveIndivDetailsBtn"
+                      buttonId="Admin_InactiveBrgyDetailsBtn"
                       showBtn
                     />
                   );

@@ -19,27 +19,6 @@ export const roleDefault: Record<string, string> = {
 
 export default function ProtectedRoute({ userRole }: ProtectedRouteProps) {
   const { user, loading, role } = useUserContext();
-  const navigate = useNavigate();
-
-  // useEffect(() => {
-  //   // if (loading) {
-  //   //   navigate("/");
-  //   // }
-
-  //   if (loading) return;
-
-  //   if (!loading) {
-  //     if (!user) {
-  //       navigate("/");
-  //     }
-  //   }
-  //   if (userRole && role) {
-  //     if (userRole && role !== userRole) {
-  //       const fallback = roleDefault[role] ?? "/";
-  //       navigate(fallback);
-  //     }
-  //   }
-  // }, [loading, role, user]);
 
   if (loading) {
     return (
@@ -69,11 +48,15 @@ export default function ProtectedRoute({ userRole }: ProtectedRouteProps) {
     return <Navigate to={fallback} replace />;
   }
 
-  if (!user) {
-    return;
+  if (userRole && role) {
+    const allowed = Array.isArray(userRole) ? userRole : [userRole];
+    if (!allowed.includes(role)) {
+      const fallback = roleDefault[role ?? ""] ?? "/Login";
+      return <Navigate to={fallback} replace />;
+    }
   }
 
-  if (userRole && role !== userRole) {
+  if (!user) {
     return;
   }
 
