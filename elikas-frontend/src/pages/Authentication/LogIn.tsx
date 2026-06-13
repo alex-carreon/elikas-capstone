@@ -9,13 +9,20 @@ import { Lock } from "lucide-react";
 import { Link } from "react-router-dom";
 import { useState } from "react";
 import { auth } from "@/firebase";
-import { signInWithEmailAndPassword } from "@firebase/auth";
+import {
+  signInWithEmailAndPassword,
+  setPersistence,
+  browserLocalPersistence,
+  browserSessionPersistence,
+} from "firebase/auth";
 import { toast } from "sonner";
 import api from "@/api";
 
 function LogIn() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [remember, setRemember] = useState(false);
+
   const [errors, setErrors] = useState({
     email: "",
     password: "",
@@ -27,7 +34,12 @@ function LogIn() {
 
     try {
       await auth.signOut();
-      // Step 1: Sign in with Firebase — checks email + password
+
+      await setPersistence(
+        auth,
+        remember ? browserLocalPersistence : browserSessionPersistence,
+      );
+
       const userCredential = await signInWithEmailAndPassword(
         auth,
         email,
@@ -45,9 +57,6 @@ function LogIn() {
         return;
       }
 
-      // Step 2: Get the ID token — this is proof of identity sent to Laravel
-
-      // Step 3: Send token to Laravel to get the user's role
       const token = await userCredential.user.getIdToken(true);
       const response = api.post(
         "/auth/login",
@@ -58,9 +67,6 @@ function LogIn() {
           },
         },
       );
-      // // Step 4: Save user info so other pages can access it
-      // localStorage.setItem("user", JSON.stringify(userData));
-      console.log(response);
 
       toast.promise(response, {
         loading: "Logging you in...",
@@ -68,18 +74,6 @@ function LogIn() {
         error: "User not found",
         position: "top-center",
       });
-
-      const userData = await response;
-
-      console.log(userData.data.role);
-
-      // Step 5: Redirect based on role
-
-      // if (userData.data.role === "admin") {
-      //   navigate("/admin-map");
-      // } else {
-      //   navigate("/map");
-      // }
     } catch (err: string | any) {
       if (
         err.code === "auth/user-not-found" ||
@@ -154,7 +148,12 @@ function LogIn() {
                 ></TextField>
               </div>
               <div className="flex mt-2 flex-row justify-between">
-                <CheckBox text="Remember Me" id="LogIn_RememberChckbox" />
+                <CheckBox
+                  text="Remember Me"
+                  id="LogIn_RememberChckbox"
+                  checked={remember}
+                  onCheckedChange={setRemember}
+                />
                 <Link
                   to="/ResetPassword"
                   className={"text-xs underline"}

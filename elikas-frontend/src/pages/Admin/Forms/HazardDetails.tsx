@@ -71,34 +71,47 @@ function HazardDetails() {
     } else return colorHazard.fallback;
   };
 
-  const getFloodDetails = async () => {
+  const getFloodDetails = async (signal?: AbortSignal) => {
     try {
-      //   setHasUpdated(false);
-      setLoading(true);
-      const response = await api.get(`/flood-paths/${id}`);
+      const response = await api.get(`/flood-paths/${id}`, { signal });
       const floodDetails = await response.data.flood_path;
       console.log("Details", floodDetails);
       setFloodDetails(floodDetails);
 
       const midpoint = getMidpoint(floodDetails.path);
       setMidpoint(midpoint);
-    } catch (err: string | any) {
-      console.log(err.message || "An error occurred");
-    } finally {
-      setLoading(false);
+    } catch (err: any) {
+      if (err.name === "CanceledError") return;
+      console.log(err);
     }
   };
 
-  const getFloodLevels = async () => {
+  const getFloodLevels = async (signal?: AbortSignal) => {
     try {
       setLoading(true);
-      const response = await api.get("/flood-levels");
+      const response = await api.get("/flood-levels", { signal });
 
       const levelData = await response.data.flood_levels;
 
       setLevels(levelData);
-    } catch (err: string | any) {
-      Error(err.message || "An error occurred");
+    } catch (err: any) {
+      if (err.name === "CanceledError") return;
+      console.log(err);
+    }
+  };
+
+  const getAll = async () => {
+    const controller = new AbortController();
+
+    try {
+      setLoading(true);
+      await getFloodDetails(controller.signal);
+    } catch (err: any) {
+      if (err.name === "CanceledError") {
+        setLoading(false);
+        return;
+      }
+      console.log(err);
     } finally {
       setLoading(false);
     }
@@ -133,13 +146,32 @@ function HazardDetails() {
   };
 
   useEffect(() => {
-    getFloodDetails();
+    getAll();
   }, []);
 
   useEffect(() => {
+    const controller = new AbortController();
+
     if (isEditable) {
-      getFloodLevels();
+      const getLevels = async () => {
+        try {
+          setLoading(true);
+          await getFloodLevels(controller.signal);
+        } catch (err: any) {
+          if (err.name === "CanceledError") {
+            setLoading(false);
+            return;
+          }
+          console.log(err);
+        } finally {
+          setLoading(false);
+        }
+      };
+
+      getLevels();
     }
+
+    return () => controller.abort();
   }, [isEditable]);
 
   return (

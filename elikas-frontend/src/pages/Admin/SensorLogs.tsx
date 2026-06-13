@@ -40,7 +40,24 @@ function SensorLogs() {
 
   useEffect(() => {
     const controller = new AbortController();
-    getSensorLogs(controller.signal);
+
+    const getAll = async () => {
+      try {
+        setLoading(true);
+        await getSensorLogs(controller.signal);
+      } catch (err: any) {
+        if (err.name === "CanceledError") {
+          setLoading(false);
+          return;
+        }
+        console.log(err);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    getAll();
+
     return () => controller.abort();
   }, []);
 

@@ -47,6 +47,25 @@ import FlaggedCommentDetails from "./pages/Admin/Forms/FlaggedCommentDetails.tsx
 import AuditLogs from "./pages/Admin/AuditLogs.tsx";
 import AuditLogDetails from "./pages/Admin/Forms/AuditLogDetails.tsx";
 import HotlineDetails from "./pages/Admin/Forms/HotlineDetails.tsx";
+import { useUserContext } from "./context/AuthContext.tsx";
+import { Navigate } from "react-router-dom";
+
+function RootRedirect() {
+  const { role, loading } = useUserContext();
+
+  if (loading) return null;
+
+  if (role) {
+    const roleDefault: Record<string, string> = {
+      indiv: "/map",
+      brgy_op: "/map",
+      admin: "/admin-map",
+    };
+    return <Navigate to={roleDefault[role] ?? "/Login"} replace />;
+  }
+
+  return <Map />;
+}
 
 function App() {
   return (
@@ -66,7 +85,7 @@ function App() {
             <Route path="Finish" element={<Finish />} />
           </Route>
           <Route element={<GuestNavbar />}>
-            <Route path="/" element={<Map />} />
+            <Route path="/" element={<RootRedirect />} />
           </Route>
 
           <Route element={<ConstNavbar />}>
@@ -135,7 +154,7 @@ function App() {
             <Route path="/admin-hotlines/:id" element={<HotlineDetails />} />
           </Route>
 
-          <Route element={<ProtectedRoute />}>
+          <Route element={<ProtectedRoute userRole={["indiv", "brgy_op"]} />}>
             <Route element={<ConstNavbar />}>
               <Route path="/Settings" element={<Settings />} />
               <Route path="/Profile" element={<Profile />} />

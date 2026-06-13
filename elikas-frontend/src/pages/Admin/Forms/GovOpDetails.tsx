@@ -66,16 +66,9 @@ function BrgyDetails() {
   const [brgyLoad, setBrgyLoad] = useState(false);
   const [isCity, setIsCity] = useState(false);
 
-  //   Get Details
-  const getGovopDetails = async () => {
+  const getGovopDetails = async (signal?: AbortSignal) => {
     try {
-      setLoading(true);
-      const response = await api.get(`/admin/users/${id}`, {
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-      });
+      const response = await api.get(`/admin/users/${id}`, { signal });
       console.log("response", response);
 
       if (!response) {
@@ -92,55 +85,45 @@ function BrgyDetails() {
       setPointPerson(userDetails.point_person);
       setPointPosition(userDetails.point_position);
       setLocLevel(userDetails.govop_level);
-    } catch (err: string | any) {
-      Error(err.message || "An error occurred");
-    } finally {
-      setLoading(false);
+    } catch (err: any) {
+      if (err.name === "CanceledError") {
+        return;
+      }
+      console.log(err);
     }
   };
 
-  useEffect(() => {
-    if (locLevel === "city") {
-      setIsCity(true);
-    }
-  }, [locLevel]);
-
-  const getCity = async () => {
+  const getCity = async (signal?: AbortSignal) => {
     try {
-      setLoading(true);
-      const cityRes = await api.get("/locations/cities");
+      const cityRes = await api.get("/locations/cities", { signal });
 
       const cities = cityRes.data.Cities;
       setCities(cities);
     } catch (err: any) {
-      console.log(err.message);
+      if (err.name === "CanceledError") {
+        return;
+      }
+      console.log(err);
+    }
+  };
+
+  const getAll = async () => {
+    const controller = new AbortController();
+
+    try {
+      setLoading(true);
+      await getCity(controller.signal);
+      await getGovopDetails(controller.signal);
+    } catch (err: any) {
+      if (err.name === "CanceledError") {
+        setLoading(false);
+        return;
+      }
+      console.log(err);
     } finally {
       setLoading(false);
     }
   };
-
-  useEffect(() => {
-    if (!cityId) {
-      return;
-    }
-
-    const getBrgy = async () => {
-      try {
-        setBrgyLoad(true);
-        const brgyRes = await api.get(`/locations/barangays?city_id=${cityId}`);
-
-        const barangays = brgyRes.data.Barangays;
-        console.log(barangays);
-        setBarangays(barangays);
-      } catch (err: any) {
-        console.log(err.message);
-      } finally {
-        setBrgyLoad(false);
-      }
-    };
-
-    getBrgy();
-  }, [cityId]);
 
   const updateGovop = (e: React.FormEvent) => {
     e.preventDefault();
@@ -219,12 +202,68 @@ function BrgyDetails() {
   };
 
   useEffect(() => {
-    getGovopDetails();
+    const controller = new AbortController();
+
+    if (!cityId) {
+      return;
+    }
+
+    const getBrgy = async () => {
+      try {
+        setBrgyLoad(true);
+        const brgyRes = await api.get(
+          `/locations/barangays?city_id=${cityId}`,
+          { signal: controller.signal },
+        );
+
+        const barangays = brgyRes.data.Barangays;
+        console.log(barangays);
+        setBarangays(barangays);
+      } catch (err: any) {
+        console.log(err.message);
+      } finally {
+        setBrgyLoad(false);
+      }
+    };
+
+    getBrgy();
+
+    return () => controller.abort();
+  }, [cityId]);
+
+  useEffect(() => {
+    if (locLevel === "city") {
+      setIsCity(true);
+    }
+  }, [locLevel]);
+
+  useEffect(() => {
+    getAll();
+  }, []);
+
+  useEffect(() => {
+    const controller = new AbortController();
 
     if (isEditable) {
-      console.log(locLevel);
-      getCity();
+      const getCityAll = async () => {
+        try {
+          setLoading(true);
+          await getCity(controller.signal);
+        } catch (err: any) {
+          if (err.name === "CanceledError") {
+            setLoading(false);
+            return;
+          }
+          console.log(err);
+        } finally {
+          setLoading(false);
+        }
+      };
+
+      getCityAll();
     }
+
+    return () => controller.abort();
   }, [isEditable]);
 
   useEffect(() => {
