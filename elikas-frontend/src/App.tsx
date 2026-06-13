@@ -45,6 +45,8 @@ import EvacComments from "./pages/Admin/EvacComments.tsx";
 import CommentDetails from "./pages/Admin/Forms/CommentDetails.tsx";
 import FlaggedCommentDetails from "./pages/Admin/Forms/FlaggedCommentDetails.tsx";
 import AuditLogs from "./pages/Admin/AuditLogs.tsx";
+import AuditLogDetails from "./pages/Admin/Forms/AuditLogDetails.tsx";
+import HotlineDetails from "./pages/Admin/Forms/HotlineDetails.tsx";
 
 function App() {
   return (
@@ -129,7 +131,8 @@ function App() {
               path="/admin-flaggedComment/:id"
               element={<FlaggedCommentDetails />}
             />
-            {/* <Route path="/admin-logs/:id" element={<AuditLogDetails />} /> */}
+            <Route path="/admin-logs/:id" element={<AuditLogDetails />} />
+            <Route path="/admin-hotlines/:id" element={<HotlineDetails />} />
           </Route>
 
           <Route element={<ProtectedRoute />}>
