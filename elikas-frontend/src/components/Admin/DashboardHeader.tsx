@@ -7,7 +7,7 @@ function DashboardHeader({
   children,
   title,
 }: {
-  children: React.ReactNode;
+  children?: React.ReactNode;
   title: string;
 }) {
   const [username, setUsername] = useState("");
