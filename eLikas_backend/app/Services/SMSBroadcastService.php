@@ -27,6 +27,22 @@ class SMSBroadcastService
                     });
             })
             ->whereNotNull('phone_no')
+            ->where('is_verified', true)
+            ->get();
+    }
+    public function getAllUsersForLocation(int $locationId): Collection
+    {
+        return PhoneNumber::with([
+                'user.name',
+                'user.indivAcc.location',
+            ])
+            ->whereHas('user', function ($query) use ($locationId) {
+                $query->whereNull('deactivated_at')
+                    ->whereHas('indivAcc', function ($indivAccQuery) use ($locationId) {
+                        $indivAccQuery->where('location_id', $locationId);
+                    });
+            })
+            ->whereNotNull('phone_no')
             ->get();
     }
 
@@ -49,12 +65,20 @@ class SMSBroadcastService
         ]);
     }
 
-    public function getHistory(int $locationId, int $limit): LengthAwarePaginator
+        public function getHistory(int $locationId, int $limit, array $filters = []): LengthAwarePaginator
     {
-        return SMSBroadcast::with(['gov_op.user', 'location', 'broadcast_status'])
-            ->where('location_id', $locationId)
-            ->orderByDesc('scheduled_for')
-            ->paginate($limit);
+        $query = SMSBroadcast::with(['gov_op.user', 'location', 'broadcast_status'])
+            ->where('location_id', $locationId);
+
+        if (!empty($filters['id'])) {
+            $query->where('id', (int) $filters['id']);
+        }
+
+        if (!empty($filters['message_content'])) {
+            $query->where('message_content', 'LIKE', '%' . $filters['message_content'] . '%');
+        }
+
+        return $query->orderByDesc('scheduled_for')->paginate($limit);
     }
 
     public function sendImmediate(int $govOpId, int $locationId, string $messageContent): array
@@ -84,16 +108,19 @@ class SMSBroadcastService
 
     public function scheduleBroadcast(int $govOpId, int $locationId, string $messageContent, string $scheduledFor): array
     {
-        $scheduledAt = Carbon::parse($scheduledFor);
-        $broadcast = $this->createDraft($govOpId, $locationId, $messageContent, $scheduledAt->toDateTimeString());
-        $delaySeconds = max(now()->diffInSeconds($scheduledAt, false), 0);
+        $scheduledAt = Carbon::parse($scheduledFor, 'Asia/Manila');
+        $scheduledAtUtc = $scheduledAt->copy()->setTimezone('UTC');
 
-        SendScheduledSMSBroadcast::dispatch($broadcast->id)->delay($scheduledAt);
+        $broadcast = $this->createDraft($govOpId, $locationId, $messageContent, $scheduledAtUtc->toDateTimeString());
+
+        $delaySeconds = now('Asia/Manila')->diffInSeconds($scheduledAt, false);
+        $finalDelay = $delaySeconds > 0 ? $delaySeconds : 0;
+        SendScheduledSMSBroadcast::dispatch($broadcast->id)->delay($finalDelay);
 
         return [
             'broadcast'      => $broadcast->fresh(['gov_op.user', 'location', 'broadcast_status']),
-            'scheduled_for'  => $scheduledAt->timezone('Asia/Manila')->toDateTimeString(),
-            'delay_seconds'  => $delaySeconds,
+            'scheduled_for'  => $scheduledAt->toDateTimeString(),
+            'delay_seconds'  => $finalDelay,
         ];
     }
 
@@ -283,7 +310,7 @@ class SMSBroadcastService
                 'id'   => $broadcast->status,
                 'name' => $broadcast->broadcast_status?->status_name ?? 'Unknown',
             ],
-            'scheduled_for'    => $broadcast->scheduled_for ? Carbon::parse($broadcast->scheduled_for)->timezone('Asia/Manila')->toDateTimeString() : null,
+            'scheduled_for' => Carbon::parse($broadcast->scheduled_for)->timezone('Asia/Manila')->toDateTimeString(),
             'sent_at'          => $broadcast->sent_at ? Carbon::parse($broadcast->sent_at)->timezone('Asia/Manila')->toDateTimeString() : null,
             'total_recipients' => $broadcast->total_recipients,
             'sender'           => [

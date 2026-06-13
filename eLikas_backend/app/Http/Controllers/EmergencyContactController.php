@@ -29,6 +29,9 @@ class EmergencyContactController extends Controller
                     $q->where('name', 'LIKE', $locationName);
                 });
             }
+            if ($request->filled('location_id')) {
+                $query->where('location_id', $request->query('location_id'));
+            }
 
             $contacts = $query->orderByDesc('updated_at')
                 ->get()
@@ -242,6 +245,7 @@ class EmergencyContactController extends Controller
                 'deactivated_at' => $contact->social_element->deactivated_at
                     ? $contact->social_element->deactivated_at->timezone('Asia/Manila')->toDateTimeString()
                     : null,
+                'is_deactivated' => $contact->social_element->deactivated_at !== null,
             ], 200);
 
         } catch (\Exception $e) {
@@ -313,6 +317,10 @@ class EmergencyContactController extends Controller
             'posted_by' => $contact->social_element?->user?->role_id === 1
                 ? 'Admin'
                 : 'GovOp',
+            'is_deactivated' => $contact->social_element?->deactivated_at !== null,
+            'deactivated_at' => $contact->social_element?->deactivated_at
+                ? $contact->social_element->deactivated_at->timezone('Asia/Manila')->toDateTimeString()
+                : null,
         ];
     }
 
