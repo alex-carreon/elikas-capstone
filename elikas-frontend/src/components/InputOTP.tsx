@@ -7,11 +7,17 @@ import { REGEXP_ONLY_DIGITS } from "input-otp";
 
 interface InputOTPProps {
   id: string;
+  onChange: (e?: any) => void;
 }
 
-function InputOTPComp({ id }: InputOTPProps) {
+function InputOTPComp({ id, onChange }: InputOTPProps) {
   return (
-    <InputOTP maxLength={6} pattern={REGEXP_ONLY_DIGITS} id={id}>
+    <InputOTP
+      maxLength={6}
+      pattern={REGEXP_ONLY_DIGITS}
+      id={id}
+      onChange={onChange}
+    >
       <InputOTPGroup className="*:data-[slot=input-otp-slot]:h-12 *:data-[slot=input-otp-slot]:w-11 *:data-[slot=input-otp-slot]:text-xl">
         <InputOTPSlot
           index={0}
