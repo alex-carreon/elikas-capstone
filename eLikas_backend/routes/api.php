@@ -61,6 +61,8 @@ Route::get('/capacity-levels', [CapacityLevelController::class, 'index']);
 
 Route::post('/sensor-logs', [SensorLogController::class, 'store']);
 
+Route::post('/email/resend-verification', [AuthController::class, 'resendVerification']);
+
 // ---------------------------------------------------------------
 // PIN ROUTES
 // ---------------------------------------------------------------
@@ -194,6 +196,7 @@ Route::middleware(['firebase.auth', 'role:1,2,3'])->group(function () {
     Route::put('/profile', [ProfileController::class, 'updateProfile']);
     Route::patch('/profile/deactivate', [ProfileController::class, 'deactivateSelf']);
     Route::post('/profile/email-sync', [ProfileController::class, 'syncEmail']);
+    Route::patch('/profile/change-email', [ProfileController::class, 'changeEmail']);
 
     //FLOOD LEVELS
     Route::get('flood-levels', [FloodLevelController::class, 'index']);

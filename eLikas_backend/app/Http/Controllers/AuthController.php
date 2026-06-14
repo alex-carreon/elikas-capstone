@@ -2,13 +2,14 @@
 
 namespace App\Http\Controllers;
 
-use Illuminate\Http\Request;
-use Illuminate\Support\Facades\DB;
-use Kreait\Firebase\Contract\Auth as FirebaseAuth;
-
-// models
+use App\Jobs\SendVerificationEmailJob;
+use App\Mail\VerifyEmailMail;
 use App\Models\User;
 use App\Models\UserAuth;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Mail;
+use Kreait\Firebase\Contract\Auth as FirebaseAuth;
 
 class AuthController extends Controller
 {
@@ -34,18 +35,16 @@ class AuthController extends Controller
         
 
         // Step 2: Verify the Firebase UID actually exists in Firebase
-        // This prevents anyone from sending a fake UID
         try {
             $this->firebaseAuth->getUser($request->firebase_uid);
         } catch (\Exception $e) {
             return response()->json(['error' => 'Invalid Firebase user'], 401);
         }
 
-        // Step 3: Save everything to the database inside a transaction
         try {
             DB::beginTransaction();
 
-            // Insert into users table role_id 3 = 'indiv'
+            // Step 3: Insert into users table role_id 3 = 'indiv'
             $user = User::create([
                 'username'   => $request->username,
                 'email'      => $request->email,
@@ -55,31 +54,40 @@ class AuthController extends Controller
             ]);
 
 
-            // Link the Firebase UID to this user
+            // Step 4: Link the Firebase UID to this user
             $user->userAuth()->create([
                 'identity_uid' => $request->firebase_uid,
             ]);
 
-            // Save the user's name
+            // Step 5: Save the user's name
             $user->name()->create([
                 'first_name' => $request->first_name,
                 'last_name'  => $request->last_name,
             ]);
 
-            // Save phone number if provided
+            // Step 6: Save phone number if provided
             if ($request->phone) {
                 $user->phoneNumber()->create([
                     'phone_no' => $request->phone,
                 ]);
             }
 
-            // Create the citizen profile record
-            // $user->indivAcc()->create([]);
-
+            // Step 7: Create the citizen profile record
             $user->indivAcc()->create([
                 'location_id' => $request->location_id,
             ]);
 
+            // Step 8: Generate Firebase verification link
+            $verificationLink = $this->firebaseAuth
+                ->getEmailVerificationLink($request->email);
+
+            // Step 9:  email sending 
+            Mail::to($user->email)->send(
+                new VerifyEmailMail(
+                    $user->username,
+                    $verificationLink
+                )
+            );
 
             DB::commit(); // Everything succeeded — save it all
 
@@ -117,9 +125,11 @@ class AuthController extends Controller
             $verifiedToken = $this->firebaseAuth->verifyIdToken($token, true);
 
             // Check if the user's email is verified in Firebase
-            $emailVerified = $verifiedToken->claims()->get('email_verified');
+            $firebaseUid = $verifiedToken->claims()->get('sub');
 
-            if (!$emailVerified) {
+            $firebaseUser = $this->firebaseAuth->getUser($firebaseUid);
+
+            if (!$firebaseUser->emailVerified) {
                 return response()->json([
                     'error' => 'Email not verified'
                 ], 403);
@@ -195,6 +205,57 @@ class AuthController extends Controller
             return response()->json([
                 'error' => 'Logout failed',
                 'details' => $e->getMessage()
+            ], 500);
+        }
+    }
+
+    public function resendVerification(Request $request)
+    {
+        $request->validate([
+            'email' => 'required|email',
+        ]);
+
+        try {
+
+            $user = User::where('email', $request->email)
+                ->first();
+
+            if (!$user) {
+                return response()->json([
+                    'error' => 'User not found.',
+                ], 404);
+            }
+
+            $firebaseUid = $user->userAuth->identity_uid;
+
+            $firebaseUser = $this->firebaseAuth
+                ->getUser($firebaseUid);
+
+            if ($firebaseUser->emailVerified) {
+                return response()->json([
+                    'message' => 'Email is already verified.',
+                ]);
+            }
+
+            $verificationLink = $this->firebaseAuth
+                ->getEmailVerificationLink($firebaseUser->email);
+
+            Mail::to($firebaseUser->email)->send(
+                new VerifyEmailMail(
+                    $user->username,
+                    $verificationLink
+                )
+            );
+
+            return response()->json([
+                'message' => 'Verification email resent successfully.',
+            ]);
+
+        } catch (\Exception $e) {
+
+            return response()->json([
+                'error' => 'Failed to resend verification email.',
+                'details' => $e->getMessage(),
             ], 500);
         }
     }
