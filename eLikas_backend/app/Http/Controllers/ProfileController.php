@@ -28,6 +28,7 @@ class ProfileController extends Controller
                 'last_name'  => $user->name?->last_name,
 
                 'phone' => $user->phoneNumber?->phone_no,
+                'is_verified' => $user->phoneNumber?->is_verified,
                 'location' => $user->indivAcc?->location?->full_location
                     ?? $user->govOp?->location?->full_location,
 
@@ -78,10 +79,16 @@ class ProfileController extends Controller
             // Update phone number table
             if ($user->phoneNumber) {
 
-                $user->phoneNumber->update([
-                    'phone_no' => $request->phone ?? $user->phoneNumber->phone_no,
-                ]);
+                $data = [];
 
+                if ($request->filled('phone')) {
+                    $data['phone_no'] = $request->phone;
+                    $data['is_verified'] = false;
+                }
+
+                if (!empty($data)) {
+                    $user->phoneNumber->update($data);
+                }
             }
 
             // Update individual account table
