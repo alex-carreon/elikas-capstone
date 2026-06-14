@@ -1,0 +1,35 @@
+name: Build, test, and deploy
+
+on:
+  push:
+    branches: [
+      main
+    ]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v6
+
+    - name: Set Up PHP
+      uses: shivammathur/setup-php@v2
+      with:
+        php-version: 8.3
+
+    # name: Create database
+
+    - name: Copy .env
+      run: cp .env.test .env
+
+    - name: Install app
+      run: composer install
+
+    # name: Build database
+
+    - name: Test PHPStan
+      run: ./vendor/bin/phpstan analyse
+
+    - name: TestPHPUnit
+      run: ./vendor/bin/phpunit
