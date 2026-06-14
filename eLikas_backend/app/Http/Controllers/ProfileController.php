@@ -2,8 +2,10 @@
 
 namespace App\Http\Controllers;
 
-use Illuminate\Http\Request;
+use App\Mail\VerifyEmailMail;
 use App\Models\User;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Mail;
 use Kreait\Firebase\Contract\Auth as FirebaseAuth;
 
 class ProfileController extends Controller
@@ -137,6 +139,61 @@ class ProfileController extends Controller
             return response()->json([
                 'error' => 'Failed to deactivate account',
                 'details' => $e->getMessage()
+            ], 500);
+        }
+    }
+
+    public function changeEmail(Request $request)
+    {
+        $request->validate([
+            'email' => 'required|email|max:50|unique:Users,email',
+        ]);
+        
+        try {
+
+            $user = $request->attributes->get('firebase_user');
+
+            if (strtolower($user->email) === strtolower($request->email)) {
+                return response()->json([
+                    'error' => 'The new email must be different from your current email.'
+                ], 422);
+            }
+
+            $firebaseUid = $user->userAuth->identity_uid;
+
+            // Update Firebase email
+           $this->firebaseAuth->updateUser($firebaseUid, [
+                'email' => $request->email,
+                'emailVerified' => false,
+            ]);
+
+            // Update Laravel email
+            $user->update([
+                'email' => $request->email,
+            ]);
+
+            // Generate verification link
+            $verificationLink = $this->firebaseAuth
+                ->getEmailVerificationLink($request->email);
+
+            // Send custom email
+            Mail::to($request->email)->send(
+                new VerifyEmailMail(
+                    $user->username,
+                    $verificationLink
+                )
+            );
+
+            return response()->json([
+                'message' => 'Email updated successfully. Verification email sent.',
+                'email' => $user->email,
+            ]);
+
+        } catch (\Exception $e) {
+
+            return response()->json([
+                'error' => 'Failed to update email.',
+                'details' => $e->getMessage(),
             ], 500);
         }
     }
