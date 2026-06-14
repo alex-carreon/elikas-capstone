@@ -3,7 +3,7 @@ name: Build, test, and deploy
 on:
   push:
     branches: [
-      main
+      # main
       feat/deployment
     ]
 
