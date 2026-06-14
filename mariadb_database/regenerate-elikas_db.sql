@@ -73,7 +73,7 @@ CREATE TABLE `AuditLogs` (
   KEY `AuditLogs_TargetTables_FK` (`target_table_id`),
   CONSTRAINT `AuditLogs_TargetTables_FK` FOREIGN KEY (`target_table_id`) REFERENCES `TargetTables` (`id`),
   CONSTRAINT `AuditLogs_Users_FK` FOREIGN KEY (`user_id`) REFERENCES `Users` (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=3 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=52 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 /*!50003 SET @saved_cs_client      = @@character_set_client */ ;
 /*!50003 SET @saved_cs_results     = @@character_set_results */ ;
@@ -165,7 +165,7 @@ CREATE TABLE `Comments` (
   KEY `parent_id` (`parent_id`),
   CONSTRAINT `Comments_ibfk_1` FOREIGN KEY (`element_id`) REFERENCES `SocialElements` (`id`),
   CONSTRAINT `Comments_ibfk_2` FOREIGN KEY (`parent_id`) REFERENCES `SocialElements` (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=9 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=10 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -316,7 +316,7 @@ CREATE TABLE `Flags` (
   CONSTRAINT `Flags_ibfk_2` FOREIGN KEY (`element_id`) REFERENCES `SocialElements` (`id`),
   CONSTRAINT `Flags_ibfk_3` FOREIGN KEY (`reason_id`) REFERENCES `FlagReasons` (`id`),
   CONSTRAINT `Flags_ibfk_4` FOREIGN KEY (`reviewed_by`) REFERENCES `Admins` (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=9 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=11 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -352,12 +352,14 @@ CREATE TABLE `FloodPaths` (
   `upvotes` int(11) NOT NULL DEFAULT 0,
   `downvotes` int(11) NOT NULL DEFAULT 0,
   `expiry` datetime NOT NULL,
+  `reminder_sent_at` datetime DEFAULT NULL,
+  `dismissed_at` datetime DEFAULT NULL,
   PRIMARY KEY (`id`),
   KEY `element_id` (`element_id`),
   KEY `level_id` (`level_id`),
   CONSTRAINT `FloodPaths_ibfk_1` FOREIGN KEY (`element_id`) REFERENCES `SocialElements` (`id`),
   CONSTRAINT `FloodPaths_ibfk_2` FOREIGN KEY (`level_id`) REFERENCES `FloodLevels` (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=18 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=20 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -400,7 +402,7 @@ CREATE TABLE `IndivAccs` (
   KEY `location_id` (`location_id`),
   CONSTRAINT `IndivAccs_ibfk_1` FOREIGN KEY (`user_id`) REFERENCES `Users` (`id`),
   CONSTRAINT `IndivAccs_ibfk_2` FOREIGN KEY (`location_id`) REFERENCES `Locations` (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=9 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=16 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -497,7 +499,7 @@ CREATE TABLE `Names` (
   PRIMARY KEY (`id`),
   KEY `user_id` (`user_id`),
   CONSTRAINT `Names_ibfk_1` FOREIGN KEY (`user_id`) REFERENCES `Users` (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=10 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=17 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -511,10 +513,11 @@ CREATE TABLE `PhoneNumbers` (
   `id` int(11) NOT NULL AUTO_INCREMENT,
   `user_id` int(11) NOT NULL,
   `phone_no` varchar(15) NOT NULL,
+  `is_verified` tinyint(1) NOT NULL DEFAULT 0,
   PRIMARY KEY (`id`),
   KEY `user_id` (`user_id`),
   CONSTRAINT `PhoneNumbers_ibfk_1` FOREIGN KEY (`user_id`) REFERENCES `Users` (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=6 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=13 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -555,7 +558,7 @@ CREATE TABLE `SMSBroadcasts` (
   CONSTRAINT `SMSBroadcasts_ibfk_1` FOREIGN KEY (`sender_id`) REFERENCES `GovOps` (`id`),
   CONSTRAINT `SMSBroadcasts_ibfk_2` FOREIGN KEY (`location_id`) REFERENCES `Locations` (`id`),
   CONSTRAINT `SMSBroadcasts_ibfk_3` FOREIGN KEY (`status`) REFERENCES `BroadcastStatus` (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=13 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=15 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -623,7 +626,7 @@ CREATE TABLE `Sensors` (
   KEY `element_id` (`element_id`),
   CONSTRAINT `Sensors_Locations_FK` FOREIGN KEY (`id`) REFERENCES `Locations` (`id`),
   CONSTRAINT `Sensors_ibfk_1` FOREIGN KEY (`element_id`) REFERENCES `SocialElements` (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=22 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=24 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -645,7 +648,7 @@ CREATE TABLE `SocialElements` (
   KEY `type_id` (`type_id`),
   CONSTRAINT `SocialElements_ibfk_1` FOREIGN KEY (`user_id`) REFERENCES `Users` (`id`),
   CONSTRAINT `SocialElements_ibfk_2` FOREIGN KEY (`type_id`) REFERENCES `TargetTables` (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=60 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=65 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -660,7 +663,7 @@ CREATE TABLE `TargetTables` (
   `table_name` varchar(20) NOT NULL,
   PRIMARY KEY (`id`),
   UNIQUE KEY `table_name` (`table_name`)
-) ENGINE=InnoDB AUTO_INCREMENT=6 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=13 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -678,7 +681,7 @@ CREATE TABLE `UserAuth` (
   UNIQUE KEY `identity_uid` (`identity_uid`),
   KEY `user_id` (`user_id`),
   CONSTRAINT `UserAuth_ibfk_1` FOREIGN KEY (`user_id`) REFERENCES `Users` (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=17 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=25 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -701,7 +704,7 @@ CREATE TABLE `Users` (
   UNIQUE KEY `email` (`email`),
   KEY `role_id` (`role_id`),
   CONSTRAINT `Users_ibfk_1` FOREIGN KEY (`role_id`) REFERENCES `Roles` (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=17 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=24 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -721,7 +724,7 @@ CREATE TABLE `Votes` (
   KEY `element_id` (`element_id`),
   CONSTRAINT `Votes_ibfk_1` FOREIGN KEY (`user_id`) REFERENCES `Users` (`id`),
   CONSTRAINT `Votes_ibfk_2` FOREIGN KEY (`element_id`) REFERENCES `SocialElements` (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=9 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=11 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_general_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -783,7 +786,7 @@ CREATE TABLE `jobs` (
   `created_at` int(10) unsigned NOT NULL,
   PRIMARY KEY (`id`),
   KEY `jobs_queue_index` (`queue`)
-) ENGINE=InnoDB AUTO_INCREMENT=8 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=9 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -798,7 +801,7 @@ CREATE TABLE `migrations` (
   `migration` varchar(255) NOT NULL,
   `batch` int(11) NOT NULL,
   PRIMARY KEY (`id`)
-) ENGINE=InnoDB AUTO_INCREMENT=8 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
+) ENGINE=InnoDB AUTO_INCREMENT=11 DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 /*!40101 SET character_set_client = @saved_cs_client */;
 
 --
@@ -814,4 +817,4 @@ CREATE TABLE `migrations` (
 /*!40101 SET COLLATION_CONNECTION=@OLD_COLLATION_CONNECTION */;
 /*M!100616 SET NOTE_VERBOSITY=@OLD_NOTE_VERBOSITY */;
 
--- Dump completed on 2026-06-12 18:48:32
+-- Dump completed on 2026-06-15  6:15:57
