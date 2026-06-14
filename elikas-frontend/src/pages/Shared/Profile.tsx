@@ -11,6 +11,7 @@ import SelectDropdown from "@/components/SelectDropdown";
 import FormSkeleton from "@/pages/Skeletons/FormSkeleton";
 import { UserIcon } from "lucide-react";
 import brgyProfile from "@/assets/brgyProfile.svg";
+import { Separator } from "@/components/ui/separator";
 
 type Barangays = {
   id: number;
@@ -51,6 +52,8 @@ function Profile() {
   const [barangays, setBarangays] = useState<Barangays[]>([]);
   const [brgyId, setBrgyId] = useState(0);
   const [contact, setContact] = useState("");
+  const [newContact, setNewContact] = useState<string | null>(null);
+  const [isVerified, setIsVerified] = useState(false);
   const [userId, setUserId] = useState(0);
   const [loading, setLoading] = useState(false);
   const [brgyLoad, setBrgyLoad] = useState(false);
@@ -60,17 +63,11 @@ function Profile() {
 
   const navigate = useNavigate();
 
-  const getProfile = async () => {
+  const getProfile = async (signal?: AbortSignal) => {
     try {
-      setLoading(true);
-      const response = await api.get("/profile", {
-        headers: {
-          Authorization: `Bearer ${token}`,
-        },
-      });
+      const response = await api.get("/profile", { signal });
 
       const userData = response.data;
-      console.log(userData);
 
       setUsername(userData.username);
       setFirstName(userData.first_name);
@@ -80,15 +77,14 @@ function Profile() {
       setUserId(userData.id);
       setContact(userData.phone || "No Registered Number");
       setSeed(userData?.avatar_seed);
+      setIsVerified(userData?.is_verified);
 
       return userData;
     } catch (err: string | any) {
-      setErrors(err.message || "An error occurred during registration");
-      console.error("Status:", err.response?.status);
-      console.error("Data:", err.response?.data); // ← server's error body
-      console.error("Message:", err.message);
-    } finally {
-      setLoading(false);
+      if (err.name === "CanceledError") {
+        return;
+      }
+      console.log(err.response?.data);
     }
   };
 
@@ -111,8 +107,8 @@ function Profile() {
           first_name: firstName,
           last_name: lastName,
           email: email,
-          location_id: brgyId,
-          phone: contact,
+          ...(brgyId && { location_id: brgyId }),
+          ...(newContact && { phone: newContact }),
           avatar_seed: seed,
         },
         {
@@ -168,48 +164,90 @@ function Profile() {
     }
   };
 
-  useEffect(() => {
-    const getCity = async () => {
-      try {
-        setCityLoad(true);
-        const cityRes = await api.get("/locations/cities");
+  const sendOTP = async (e: React.FormEvent) => {
+    e.preventDefault();
 
-        const cities = cityRes.data.Cities;
-        setCities(cities);
-      } catch (err: any) {
-        console.log(err.message);
-      } finally {
-        setCityLoad(false);
+    try {
+      const response = api.post("/otp/send", {
+        phone_number: contact,
+        message: `Hi ${username}! Do not share this OTP with others. Here is your code: :otp`,
+      });
+
+      toast.promise(response, { success: "OTP has been sent to your number." });
+
+      response.then(() => {
+        localStorage.setItem("phone_number", contact);
+        navigate("/VerifyOTP");
+      });
+    } catch (err: any) {
+      if (err.name === "CanceledError") {
+        return;
       }
-    };
+      console.log(err.response?.data);
+    }
+  };
 
+  const getCity = async () => {
+    try {
+      setCityLoad(true);
+      const cityRes = await api.get("/locations/cities");
+
+      const cities = cityRes.data.Cities;
+      setCities(cities);
+    } catch (err: any) {
+      console.log(err.message);
+    } finally {
+      setCityLoad(false);
+    }
+  };
+
+  const getBrgy = async () => {
+    try {
+      setBrgyLoad(true);
+      const brgyRes = await api.get(`/locations/barangays?city_id=${cityId}`);
+
+      const barangays = brgyRes.data.Barangays;
+      console.log(barangays);
+      setBarangays(barangays);
+    } catch (err: any) {
+      console.log(err.message);
+    } finally {
+      setBrgyLoad(false);
+    }
+  };
+
+  const getData = async () => {
+    const controller = new AbortController();
+
+    try {
+      setLoading(true);
+      await getProfile(controller.signal);
+    } catch (err: any) {
+      if (err.name === "CanceledError") {
+        setLoading(false);
+        return;
+      }
+      console.log(err.response?.data);
+    } finally {
+      setLoading(false);
+    }
+
+    return () => controller.abort();
+  };
+
+  useEffect(() => {
     getCity();
 
     if (!cityId) {
       return;
     }
 
-    const getBrgy = async () => {
-      try {
-        setBrgyLoad(true);
-        const brgyRes = await api.get(`/locations/barangays?city_id=${cityId}`);
-
-        const barangays = brgyRes.data.Barangays;
-        console.log(barangays);
-        setBarangays(barangays);
-      } catch (err: any) {
-        console.log(err.message);
-      } finally {
-        setBrgyLoad(false);
-      }
-    };
-
     getBrgy();
   }, [cityId]);
 
   useEffect(() => {
-    getProfile();
-  }, []);
+    getData();
+  }, [isEditable]);
 
   const avatar = createAvatar(bigSmile, {
     seed: seed ? seed : undefined,
@@ -281,8 +319,7 @@ function Profile() {
                     inputType="text"
                     value={username}
                     id="Profile_Username"
-                    readonly={!isEditable}
-                    onSubmit={(e) => setUsername(e.target.value)}
+                    readonly
                   />
                 )}
 
@@ -354,20 +391,32 @@ function Profile() {
                     />
                   </>
                 )}
-                <TextField
-                  label="Contact Number"
-                  description={
-                    isEditable ? "Please use (639#########) format" : ""
-                  }
-                  placeholder={contact}
-                  inputType="text"
-                  id="Profile_ContactNo"
-                  readonly={!isEditable}
-                  value={contact}
-                  onSubmit={(e) => setContact(e.target.value)}
-                />
+                <div className="flex flex-col gap-2">
+                  <TextField
+                    label="Contact Number"
+                    description={
+                      isEditable ? "Please use (639#########) format" : ""
+                    }
+                    placeholder={contact}
+                    inputType="text"
+                    id="Profile_ContactNo"
+                    readonly={!isEditable}
+                    value={newContact !== null ? newContact : (contact ?? "")}
+                    onSubmit={(e) => setNewContact(e.target.value)}
+                  />
+                  {contact === "No Registered Number" || isVerified ? null : (
+                    <ButtonComp
+                      text="Verify"
+                      variant="primary"
+                      id="Profile_VerifyBtnNumberBtn"
+                      onClick={(e) => sendOTP(e)}
+                      widthSize="1/2"
+                    />
+                  )}
+                </div>
               </div>
             </div>
+            <Separator />
             <div className="flex flex-col gap-2 items-center">
               {isEditable ? (
                 <>
@@ -389,7 +438,7 @@ function Profile() {
                     widthSize="100%"
                     onClick={() => {
                       setIsEditable(false);
-                      getProfile();
+                      setNewContact(null);
                     }}
                   ></ButtonComp>
                 </>
