@@ -20,6 +20,8 @@ export const roleDefault: Record<string, string> = {
 export default function ProtectedRoute({ userRole }: ProtectedRouteProps) {
   const { user, loading, role } = useUserContext();
 
+  console.log("ProtectedRoute:", { loading, user, role, userRole });
+
   if (loading) {
     return (
       <div className="min-h-screen w-full flex justify-center">
@@ -43,10 +45,10 @@ export default function ProtectedRoute({ userRole }: ProtectedRouteProps) {
     return <Navigate to="/Login" replace />;
   }
 
-  if (userRole && role !== userRole) {
-    const fallback = roleDefault[role ?? ""] ?? "/Login";
-    return <Navigate to={fallback} replace />;
-  }
+  // if (userRole && role !== userRole) {
+  //   const fallback = roleDefault[role ?? ""] ?? "/Login";
+  //   return <Navigate to={fallback} replace />;
+  // }
 
   if (userRole && role) {
     const allowed = Array.isArray(userRole) ? userRole : [userRole];

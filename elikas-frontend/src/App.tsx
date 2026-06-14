@@ -166,7 +166,7 @@ function App() {
             </Route>
 
             <Route element={<AuthNavbar />}>
-              <Route path="/Map" element={<Map />} />
+              <Route path="/map" element={<Map />} />
             </Route>
           </Route>
         </Routes>
