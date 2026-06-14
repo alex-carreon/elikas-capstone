@@ -30,7 +30,7 @@ jobs:
     # name: Build database
 
     - name: Test PHPStan
-      run: ./vendor/bin/phpstan analyse
+      run: ./eLikas_backend/vendor/bin/phpstan analyse
 
     - name: TestPHPUnit
-      run: ./vendor/bin/phpunit
+      run: ./eLikas_backend/vendor/bin/phpunit
