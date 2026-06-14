@@ -9,6 +9,7 @@ import AlertDialogue from "@/components/AlertDialogue";
 import SelectDropdown from "@/components/SelectDropdown";
 import { bigSmile } from "@dicebear/collection";
 import { createAvatar } from "@dicebear/core";
+import { User } from "lucide-react";
 
 type UserData = {
   created_at: string;
@@ -177,7 +178,7 @@ function UserDetails() {
     getAll();
 
     return () => controller.abort();
-  });
+  }, []);
 
   useEffect(() => {
     const controller = new AbortController();
@@ -227,7 +228,7 @@ function UserDetails() {
   }, [isEditable]);
 
   const avatar = createAvatar(bigSmile, {
-    seed: seed,
+    seed: seed ? seed : undefined,
     backgroundColor: ["b6e3f4", "c0aede", "d1d4f9"],
     radius: 50,
     scale: 90,
@@ -281,7 +282,11 @@ function UserDetails() {
               id="Admin_IndivUpdateForm"
             >
               <div className="w-full flex justify-center">
-                <img src={dataUri} className="w-24" />
+                {seed ? (
+                  <img src={dataUri} className="w-24" />
+                ) : (
+                  <User className="w-24" />
+                )}
               </div>
               <TextField
                 label="User ID"

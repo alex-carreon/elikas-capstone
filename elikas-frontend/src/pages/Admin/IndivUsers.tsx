@@ -198,7 +198,6 @@ function IndivUsers() {
       });
 
       const barangays = brgyRes.data.Barangays;
-      console.log(barangays);
       setBarangays(barangays);
     } catch (err: any) {
       if (err.name === "CanceledError") {
