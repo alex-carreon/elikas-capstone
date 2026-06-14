@@ -14,7 +14,8 @@ class FloodReminderController extends Controller
 
         $floodPaths = FloodPath::ownedBy($user->id)
             ->whereNull('dismissed_at')
-            // ->notDeactivated()
+            ->notExpired()
+            ->notDeactivated()
             ->where(function ($q) {
                 $q->whereNull('reminder_sent_at')
                   ->orWhere('reminder_sent_at', '<=', now()->subHour());
