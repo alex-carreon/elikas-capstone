@@ -4,7 +4,12 @@ on:
   push:
     branches: [
       # main
-      feat/deployment
+      deployment
+    ]
+  pull_request: 
+    branches: [
+      # main
+      deployment
     ]
 
 jobs:
@@ -24,13 +29,13 @@ jobs:
       with:
         php-version: 8.5
 
-    # name: Create database
-
     - name: Copy .env
       run: cp .env.testing .env
 
-    - name: Install app
+    - name: Install app (Test Build)
       run: composer install
+
+    # name: Create database
 
     # name: Build database
 
@@ -39,3 +44,35 @@ jobs:
 
     # name: TestPHPUnit
     # run: ./vendor/bin/phpunit
+
+  deploy: 
+    runs-on: ubuntu-latest
+    needs: build
+    steps:
+      - name: Connect Tailscale
+        uses: tailscale/github-action@v4
+        with:
+          oauth-client-id: ${{ secrets.TS_OAUTH_CLIENT_ID }}
+          oauth-secret: ${{ secrets.TS_OAUTH_SECRET }}
+          tags: tag:ci
+
+      - name: Deploy to Server
+        uses: appleboy/ssh-action@v1
+        with:
+          host: ${{ secrets.HOST }}
+          username: ${{ secrets.USERNAME }}
+          port: 22
+          key: ${{ secrets.SSHKEY }}
+          script: |
+            # Navigate to the monorepo root folder on the server
+            cd /var/www/elikas-capstone
+            
+            # Fetch changes across the monorepo
+            git fetch origin deployment
+            git checkout deployment
+            git pull origin deployment
+            
+            # Target the script inside the subfolder, make it executable, and run it
+            cd eLikas_backend
+            chmod +x ./.scripts/deploy.sh
+            ./.scripts/deploy.sh
