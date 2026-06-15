@@ -7,6 +7,10 @@ on:
       feat/deployment
     ]
 
+defaults:
+  run:
+    working-directory: ./eLikas_backend
+
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -30,7 +34,7 @@ jobs:
     # name: Build database
 
     - name: Test PHPStan
-      run: ./eLikas_backend/vendor/bin/phpstan analyse
+      run: ./vendor/bin/phpstan analyse
 
     - name: TestPHPUnit
-      run: ./eLikas_backend/vendor/bin/phpunit
+      run: ./vendor/bin/phpunit
