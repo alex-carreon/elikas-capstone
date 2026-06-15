@@ -26,11 +26,16 @@ class SendFloodReminders implements ShouldQueue
             ->notDeactivated()
             ->where(function ($q) {
                 $q->whereNull('reminder_sent_at')
-                ->orWhere('reminder_sent_at', '<=', now()->subHour());
+                  ->orWhere('reminder_sent_at', '<=', now()->subHour());
             })
             ->get();
 
-        Log::info('Flood reminder job ran. Paths found: ' . $floodPaths->count());
+        Log::info('Found Active FloodPaths: ' . $floodPaths->count());
+
+        $total = $floodPaths->count();
+        $eligible = 0;
+        $sent = 0;
+        $skipped = 0;
 
         foreach ($floodPaths as $fp) {
 
@@ -39,25 +44,41 @@ class SendFloodReminders implements ShouldQueue
 
             $totalSeconds = $start->diffInSeconds($end);
 
-            $halfway = $start
-                ->copy()
+            $halfway = $start->copy()
                 ->addSeconds(floor($totalSeconds / 2));
 
             if (now()->gte($halfway)) {
 
-                $owner = $fp->socialElement->user;
+                $eligible++; 
+
+                $owner = $fp->socialElement?->user;
+
+                if (!$owner || !$owner->email) {
+                    $skipped++;
+                    continue;
+                }
 
                 try {
                     Mail::to($owner->email)
                         ->send(new FloodPathReminderMail($fp));
-                
 
                     $fp->update(['reminder_sent_at' => now()]);
+
+                    $sent++;
+
                     Log::info("Flood reminder sent to {$owner->email} for flood path {$fp->id}.");
+
                 } catch (\Exception $e) {
                     Log::error("Failed to send flood reminder for flood path {$fp->id}: " . $e->getMessage());
                 }
+
+            } else {
+                $skipped++;
             }
         }
+
+        Log::info(
+            "Flood reminder summary | Total={$total}, Eligible={$eligible}, Sent={$sent}, Skipped={$skipped}"
+        );
     }
 }
