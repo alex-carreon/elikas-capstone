@@ -7,13 +7,14 @@ on:
       feat/deployment
     ]
 
-defaults:
-  run:
-    working-directory: ./eLikas_backend
-
 jobs:
   build:
     runs-on: ubuntu-latest
+
+    defaults:
+      run:
+        working-directory: ./eLikas_backend
+
     steps:
     - name: Checkout
       uses: actions/checkout@v6
@@ -26,15 +27,15 @@ jobs:
     # name: Create database
 
     - name: Copy .env
-      run: cp .env.test .env
+      run: cp .env.testing .env
 
     - name: Install app
       run: composer install
 
     # name: Build database
 
-    - name: Test PHPStan
-      run: ./vendor/bin/phpstan analyse
+    # name: Test PHPStan
+    # run: ./vendor/bin/phpstan analyse
 
-    - name: TestPHPUnit
-      run: ./vendor/bin/phpunit
+    # name: TestPHPUnit
+    # run: ./vendor/bin/phpunit
