@@ -346,6 +346,8 @@ function SMS() {
             onChange={setSchedSend}
             isRequired={schedSend ? true : false}
             value={schedSend}
+            clearDate
+            clearTime
           />
           <div className="w-full flex flex-col items-center gap-2">
             {schedSend === undefined ? (

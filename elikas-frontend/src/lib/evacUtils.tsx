@@ -35,6 +35,7 @@ interface handleActionProps {
   setHasUpdated?: React.Dispatch<React.SetStateAction<boolean>>;
   formData?: FormData;
   redirect?: string;
+  role?: string;
 }
 
 export const handleSubmit = async ({
@@ -110,6 +111,7 @@ export const handleUpdate = async ({
   expiry,
   setIsEditable,
   setHasUpdated,
+  role,
 }: handleActionProps) => {
   // e?.preventDefault();
 
@@ -137,7 +139,7 @@ export const handleUpdate = async ({
       other_facilities: other_facilities,
       contact_person: contact_person,
       contact_number: contact_number,
-      expiry: expiry,
+      ...(role === "brgy_op" && { expiry: expiry }),
     });
 
     toast.promise(responsePromise, {

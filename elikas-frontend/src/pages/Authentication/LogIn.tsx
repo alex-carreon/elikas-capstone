@@ -29,6 +29,27 @@ function LogIn() {
     general: "",
   });
 
+  const handleVerify = (e: React.FormEvent) => {
+    e.preventDefault();
+
+    try {
+      const response = api.post("/email/resend-verification", {
+        email: email,
+      });
+
+      toast.promise(response, {
+        loading: "Sending you your verification email...",
+        success: "Email verification has been sent.",
+        error: (err: any) => {
+          return err.response.message;
+        },
+        position: "top-center",
+      });
+    } catch (err: any) {
+      console.log(err.response.message);
+    }
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
@@ -123,7 +144,21 @@ function LogIn() {
             <div className="w-full max-w-xs flex justify-start flex-col content-center mx-auto">
               <div className="flex justify-start flex-col content-center gap-5">
                 <p className="text-sm text-center text-red-500">
-                  {errors.general}
+                  {errors.general ===
+                  "Please verify your email before logging in." ? (
+                    <span>
+                      Please verify your email.{" "}
+                      <span
+                        onClick={(e) => handleVerify(e)}
+                        className="underline italic"
+                        id="LogIn_VerifyEmail"
+                      >
+                        Verify here.
+                      </span>
+                    </span>
+                  ) : (
+                    errors.general
+                  )}
                 </p>
                 <TextField
                   label="Email"

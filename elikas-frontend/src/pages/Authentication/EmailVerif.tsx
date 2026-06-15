@@ -5,10 +5,12 @@ import { auth } from "@/firebase";
 import { sendEmailVerification } from "firebase/auth";
 import { useState } from "react";
 import RegisterHeader from "@/components/RegisterHeader";
+import { toast } from "sonner";
 
 function EmailVerif() {
-  const emailData = localStorage.getItem("email");
   const navigate = useNavigate();
+
+  const email = auth.currentUser?.email;
 
   const [message, setMessage] = useState("");
 
@@ -21,7 +23,7 @@ function EmailVerif() {
       }
 
       await sendEmailVerification(user);
-      setMessage("Verification email sent again. Check your inbox/spam.");
+      toast.info("Verification email sent again. Check your inbox/spam.");
     } catch (err: string | any) {
       setMessage(err.message);
     }
@@ -32,9 +34,9 @@ function EmailVerif() {
       await auth.currentUser.reload();
 
       if (auth.currentUser.emailVerified) {
-        navigate("/Registration/Contact");
+        navigate("/Registration/Finish");
       } else {
-        setMessage("Still not verified.");
+        toast.error("Still not verified.");
       }
     }
   };
@@ -49,14 +51,14 @@ function EmailVerif() {
               className="BeVietnamPro text-2xl text-center font-bold"
               style={{ color: colors.heading }}
             >
-              Check your email for your account verification!
+              Almost there! Check your email for your account verification.
             </h1>
             <p
               className="text-sm text-center p-1"
               style={{ color: colors.heading }}
             >
-              An email was sent to <b>{emailData}</b>. Copy the code and enter
-              it below to verify your account!
+              An email was sent to <b>{email}</b>. Make sure to check the spam.
+              Click the link and you're good to go!
             </p>
           </div>
           <div className="flex justify-center items-center flex-col gap-2">
@@ -77,7 +79,6 @@ function EmailVerif() {
               heightSize="38px"
               widthSize="100%"
             />
-
             <ButtonComp
               text="Resend Email Verification"
               variant="outline"
