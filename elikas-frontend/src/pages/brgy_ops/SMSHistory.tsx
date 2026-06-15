@@ -1,11 +1,6 @@
 import colors from "@/constants/colors";
-import {
-  Collapsible,
-  CollapsibleContent,
-  CollapsibleTrigger,
-} from "@/components/ui/collapsible";
 import { useEffect, useState } from "react";
-import { ChevronDownIcon, ChevronUpIcon, Clock, Send } from "lucide-react";
+import { Clock, Send } from "lucide-react";
 import { Toggle } from "@/components/ui/toggle";
 import Row from "@/components/Row";
 import api from "@/api";
@@ -120,19 +115,27 @@ function SMSHistory() {
                 </div>
               </div>
               <div className="flex flex-col gap-2 overflow-y-auto max-h-screen">
-                {broadcasts.map((broadcast) => (
-                  <Row
-                    postId={String(broadcast.id)}
-                    title={`Sent to: ${broadcast.total_recipients} recipient/s`}
-                    desc={`Send/t on: ${convertDateTime(broadcast.scheduled_for)}`}
-                    link=""
-                    buttonId="SMSHistory_CancelSend"
-                    btnText="Cancel Send"
-                    showBtn
-                    showCollapsible
-                    collapseContent={broadcast.message_content}
-                  />
-                ))}
+                {broadcasts.length > 0 ? (
+                  broadcasts.map((broadcast) => (
+                    <Row
+                      postId={String(broadcast.id)}
+                      title={`Sent to: ${broadcast.total_recipients} recipient/s`}
+                      desc={
+                        broadcast.status.name === "Scheduled"
+                          ? `Sending on: ${convertDateTime(broadcast.scheduled_for)}`
+                          : `Sent on: ${convertDateTime(broadcast.scheduled_for)}`
+                      }
+                      link=""
+                      buttonId="SMSHistory_CancelSend"
+                      btnText="Cancel Send"
+                      showBtn={broadcast.status.name === "Scheduled"}
+                      showCollapsible
+                      collapseContent={broadcast.message_content}
+                    />
+                  ))
+                ) : (
+                  <p>You haven't sent any SMS yet!</p>
+                )}
               </div>
             </div>
           )}
