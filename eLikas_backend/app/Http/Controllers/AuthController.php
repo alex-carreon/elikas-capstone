@@ -13,12 +13,8 @@ use Kreait\Firebase\Contract\Auth as FirebaseAuth;
 
 class AuthController extends Controller
 {
-    // Laravel will automatically inject the Firebase Auth service here
     public function __construct(protected FirebaseAuth $firebaseAuth) {}
 
-    // ---------------------------------------------------------------
-    // REGISTER — called when a Citizen signs up
-    // ---------------------------------------------------------------
     public function register(Request $request)
     {
         // Step 1: Validate that the required fields were sent
@@ -89,7 +85,7 @@ class AuthController extends Controller
                 )
             );
 
-            DB::commit(); // Everything succeeded — save it all
+            DB::commit(); 
 
             return response()->json([
                 'message' => 'User registered successfully',
@@ -98,7 +94,7 @@ class AuthController extends Controller
 
         } catch (\Exception $e) {
 
-            DB::rollBack(); // Something failed — undo everything
+            DB::rollBack(); 
 
             return response()->json([
                 'message' => 'Registration failed',
@@ -108,9 +104,6 @@ class AuthController extends Controller
         }
     }
 
-    // ---------------------------------------------------------------
-    // LOGIN — called after Firebase login to get the user's role
-    // ---------------------------------------------------------------
     public function login(Request $request)
     {
         // The React app sends the Firebase ID token in the Authorization header
@@ -169,11 +162,7 @@ class AuthController extends Controller
             'role'     => $user->role->role_name,
         ]);
     }
-    
 
-    // ---------------------------------------------------------------
-    // LOGOUT
-    // ---------------------------------------------------------------
     public function logout(Request $request)
     {
         try {
@@ -192,8 +181,6 @@ class AuthController extends Controller
             // Get Firebase UID
             $firebaseUid = $verifiedToken->claims()->get('sub');
 
-            // Optional:
-            // revoke all refresh tokens for this Firebase user
             // this forces re-login on all devices
             $this->firebaseAuth->revokeRefreshTokens($firebaseUid);
 
