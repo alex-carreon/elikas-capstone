@@ -3,4 +3,4 @@
 use App\Jobs\SendFloodReminders;
 use Illuminate\Support\Facades\Schedule;
 
-// Schedule::job(new SendFloodReminders)->hourly();
+Schedule::job(new SendFloodReminders)->everyMinute();
