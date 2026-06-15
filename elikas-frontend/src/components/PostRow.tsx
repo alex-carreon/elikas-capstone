@@ -17,7 +17,6 @@ import ButtonComp from "./Button";
 import { Link } from "react-router";
 import { toast } from "sonner";
 import { Skeleton } from "./ui/skeleton";
-import { useUserContext } from "@/context/AuthContext";
 import brgyProfile from "@/assets/brgyProfile.svg";
 import adminProfile from "@/assets/adminProfile.svg";
 
@@ -359,7 +358,7 @@ function PostRow({
           {children}
         </div>
 
-        <Collapsible className="">
+        <Collapsible className="flex flex-col gap-4">
           <div className="px-2 flex flex-row gap-4">
             <div
               className="flex flex-row items-center gap-1"
