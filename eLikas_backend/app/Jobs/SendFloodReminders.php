@@ -24,10 +24,6 @@ class SendFloodReminders implements ShouldQueue
             ->whereNull('dismissed_at')
             ->notExpired()
             ->notDeactivated()
-            ->where(function ($q) {
-                $q->whereNull('reminder_sent_at')
-                  ->orWhere('reminder_sent_at', '<=', now()->subHour());
-            })
             ->get();
 
         Log::info('Found Active FloodPaths: ' . $floodPaths->count());
@@ -62,7 +58,7 @@ class SendFloodReminders implements ShouldQueue
                     Mail::to($owner->email)
                         ->send(new FloodPathReminderMail($fp));
 
-                    $fp->update(['reminder_sent_at' => now()]);
+                    // $fp->update(['reminder_sent_at' => now()]);
 
                     $sent++;
 
