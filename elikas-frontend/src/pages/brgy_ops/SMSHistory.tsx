@@ -18,6 +18,7 @@ type BroadcastsType = {
   message_content: string;
   status: StatusType;
   scheduled_for: string;
+  sent_at: string;
   total_recipients: number;
 };
 
@@ -123,7 +124,7 @@ function SMSHistory() {
                       desc={
                         broadcast.status.name === "Scheduled"
                           ? `Sending on: ${convertDateTime(broadcast.scheduled_for)}`
-                          : `Sent on: ${convertDateTime(broadcast.scheduled_for)}`
+                          : `Sent on: ${convertDateTime(broadcast.sent_at)}`
                       }
                       link=""
                       buttonId="SMSHistory_CancelSend"
