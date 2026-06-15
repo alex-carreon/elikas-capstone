@@ -70,6 +70,7 @@ function CustomizeProfile() {
                 text="Generate New Avatar"
                 id="Profile_RandommAvatarBtn"
                 variant="outline"
+                type="button"
                 onClick={() => setSeed(randomSeed())}
               />
             </div>

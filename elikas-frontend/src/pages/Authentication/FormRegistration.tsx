@@ -4,11 +4,6 @@ import TextField from "@/components/TextField";
 import ButtonComp from "@/components/Button";
 import Select from "@/components/SelectDropdown";
 import { useEffect, useState } from "react";
-import {
-  createUserWithEmailAndPassword,
-  sendEmailVerification,
-} from "@firebase/auth";
-import { auth } from "@/firebase";
 import RegisterHeader from "@/components/RegisterHeader";
 import api from "@/api";
 import SelectDropdown from "@/components/SelectDropdown";
@@ -95,24 +90,13 @@ function FormRegistration() {
         throw new Error("Passwords do not match");
       }
 
-      const userCredential = await createUserWithEmailAndPassword(
-        auth,
-        email,
-        pw,
-      );
-
-      const firebaseUser = userCredential.user;
-
-      await sendEmailVerification(firebaseUser);
-
-      localStorage.setItem("firebaseUser", firebaseUser.uid);
-
       localStorage.setItem("last_name", last_name);
       localStorage.setItem("first_name", first_name);
       localStorage.setItem("email", email);
       localStorage.setItem("brgy", brgy);
+      localStorage.setItem("pw", pw);
 
-      navigate("/Registration/Verify");
+      navigate("/Registration/Contact");
     } catch (err: string | any) {
       if (err.code === "auth/email-already-in-use") {
         setErrors({

@@ -46,6 +46,8 @@ interface DatePickerProps {
   showTime?: boolean;
   edit?: boolean;
   timeNow?: boolean;
+  clearDate?: boolean;
+  clearTime?: boolean;
 }
 
 function DatePickerInput({
@@ -62,6 +64,8 @@ function DatePickerInput({
   timeNow,
   desc,
   idTime,
+  clearDate,
+  clearTime,
 }: DatePickerProps) {
   const [open, setOpen] = useState(false);
   const [month, setMonth] = useState<Date | undefined>(value);
@@ -225,7 +229,7 @@ function DatePickerInput({
             </InputGroupAddon>
           ) : null}
         </InputGroup>
-        {inputValue && <X size={18} onClick={handleDateClear} />}
+        {inputValue && clearDate && <X size={18} onClick={handleDateClear} />}
       </div>
       <div className="flex items-center gap-2">
         {showTime && (
@@ -241,7 +245,7 @@ function DatePickerInput({
             />
           </InputGroup>
         )}
-        {time && <X size={18} onClick={handleTimeClear} />}
+        {time && clearTime && <X size={18} onClick={handleTimeClear} />}
       </div>
     </Field>
   );

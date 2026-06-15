@@ -10,9 +10,7 @@ import {
   File,
   Camera,
   ChevronUpIcon,
-  Form,
   X,
-  User,
   UserIcon,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -357,14 +355,14 @@ function EvacPinDrawer({
 
         const available = facilities.filter((facilities) =>
           facilities.type === "count"
-            ? response.data[facilities.key] !== null
+            ? response.data[facilities.key] > 0
             : response.data[facilities.key] === true,
         );
         setAvailable(available);
 
         const unavailable = facilities.filter((facilities) =>
           facilities.type === "count"
-            ? response.data[facilities.key] === null
+            ? !response.data[facilities.key]
             : response.data[facilities.key] === false,
         );
         setUnavailable(unavailable);
@@ -516,7 +514,18 @@ function EvacPinDrawer({
                 <b>Area Type</b>: {evacPinDetails?.area_type}
               </li>
               <li>
-                <b>Capacity</b>: {evacPinDetails?.capacity_name}
+                {evacPinDetails?.capacity_name === "Full" ? (
+                  <>
+                    <b>Capacity</b>:{" "}
+                    <b className="text-red-500">
+                      {evacPinDetails?.capacity_name}
+                    </b>
+                  </>
+                ) : (
+                  <>
+                    <b>Capacity</b>: {evacPinDetails?.capacity_name}
+                  </>
+                )}
               </li>
             </ul>
           </div>
