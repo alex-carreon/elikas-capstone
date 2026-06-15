@@ -10,7 +10,6 @@ import { MapContainer, TileLayer } from "react-leaflet";
 import { useLocation, useNavigate, useParams } from "react-router";
 import CheckBox from "@/components/CheckBox";
 import { InputGroupTextarea } from "@/components/ui/input-group";
-import { Camera } from "lucide-react";
 import {
   handleDelete,
   handleReOpen,
@@ -333,9 +332,16 @@ function EvacPin() {
   useEffect(() => {
     setExpiry(defaultExpiry);
   }, [willReopen]);
+
   const submit = (e: React.FormEvent) => {
     // const dateTime = formatInTimeZone(new Date(), "Asia/Manila", "yyyy-MM-dd");
     e.preventDefault();
+
+    if (!regFlood && !heavyFlood) {
+      toast.error("Please check either regular or heavy flooding");
+      return;
+    }
+
     const formData = new FormData();
 
     const expDate = expiry ?? addDays(new Date(), 7);
@@ -383,6 +389,11 @@ function EvacPin() {
   };
 
   const update = (e: React.FormEvent) => {
+    if (!regFlood && !heavyFlood) {
+      toast.error("Please check either regular or heavy flooding");
+      return;
+    }
+
     handleUpdate({
       e: e,
       id: id,
@@ -406,13 +417,8 @@ function EvacPin() {
       other_facilities: other,
       contact_person: contactPerson,
       contact_number: contactNumber,
-      expiry: format(
-        toZonedTime(expiry!, "Asia/Manila"),
-        "yyyy-MM-dd HH:mm:ss",
-        {
-          timeZone: "Asia/Manila",
-        },
-      ),
+      role: role ? role : "",
+      expiry: String(expiry),
       setIsEditable: setIsEditable,
       setHasUpdated: setHasUpdated,
     });
@@ -494,6 +500,7 @@ function EvacPin() {
         >
           <DatePickerInput
             label="Expiry Date"
+            desc="The default date is 7 days from now"
             idField="EvacPin_ReopenExpiryField"
             idBtn="EvacPin_ReopenCalendarBtn"
             placeholder="Enter Expiration Date"
@@ -621,7 +628,6 @@ function EvacPin() {
                     onSubmit={fileOnChange}
                     ref={inputRef}
                     accept="image/png, image/jpeg, image/heic"
-                    endIcon={Camera}
                   />
                   {fileName && (
                     <>
@@ -958,7 +964,21 @@ function EvacPin() {
                 onChange={setExpiry}
                 readonly={!id || isEditable ? false : true}
                 edit={isEditable || !id}
-                showTime
+                desc="The default expiration date is 7 days from now"
+                clearDate={!id}
+              />
+            )}
+            {role === "indiv" && (
+              <DatePickerInput
+                label="Expiry Date"
+                idField="EvacPin_ExpiryField"
+                idBtn="EvacPin_CalendarBtn"
+                value={expiry}
+                onChange={setExpiry}
+                readonly={!id ? false : true}
+                edit={!id}
+                desc="The default expiration date is 7 days from now"
+                clearDate={!id}
               />
             )}
             {id ? (

@@ -3,7 +3,6 @@ import { useState } from "react";
 import TextField from "@/components/TextField";
 import ButtonComp from "@/components/Button";
 import { getAuth, sendPasswordResetEmail } from "firebase/auth";
-import { Toaster } from "sonner";
 import { EmailToast } from "@/components/ToastSuccess";
 import RegisterHeader from "@/components/RegisterHeader";
 
