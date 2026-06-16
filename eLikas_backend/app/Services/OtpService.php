@@ -127,7 +127,12 @@ class OtpService
 
     private function markPhoneVerified(string $phoneNumber): void
     {
-        PhoneNumber::where('phone_no', $phoneNumber)
-            ->update(['is_verified' => true]);
+        $updated = PhoneNumber::where('phone_no', $phoneNumber)
+        ->update(['is_verified' => true]);
+
+        Log::info('markPhoneVerified', [
+        'phone_number' => $phoneNumber,
+        'rows_updated' => $updated,
+        ]);
     }
 }
