@@ -9,6 +9,7 @@ import {
   type ReactNode,
 } from "react";
 import { useNavigate } from "react-router";
+import { type Dispatch, type SetStateAction } from "react";
 
 interface AuthContextProps {
   user: User | null;
@@ -16,6 +17,7 @@ interface AuthContextProps {
   role: string | null;
   token: string | null;
   logout: () => Promise<void>;
+  setIsLoginReady: Dispatch<SetStateAction<boolean>>;
 }
 
 const AuthContext = createContext<AuthContextProps>({
@@ -24,6 +26,7 @@ const AuthContext = createContext<AuthContextProps>({
   role: null,
   token: null,
   logout: async () => {},
+  setIsLoginReady: () => {},
 });
 
 interface AuthProviderProps {
@@ -35,6 +38,7 @@ export function AuthProvider({ children }: AuthProviderProps) {
   const [loading, setLoading] = useState(true);
   const [role, setRole] = useState<string | null>(null);
   const [token, setToken] = useState<string | null>(null);
+  const [isLoginReady, setIsLoginReady] = useState(false);
 
   const publicRoutes = [
     "/Registration",
@@ -64,9 +68,11 @@ export function AuthProvider({ children }: AuthProviderProps) {
   // Find user in firebase while loading, when user is found loading stops
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {
+      const cachedRole = localStorage.getItem("userRole");
+      const isSessionStore = !!cachedRole;
       // if (skipAuthContext.current) return;
 
-      if (!firebaseUser) {
+      if (!firebaseUser || (!isLoginReady && !isSessionStore)) {
         setUser(null);
         setRole(null);
         setToken(null);
@@ -92,8 +98,6 @@ export function AuthProvider({ children }: AuthProviderProps) {
         }
 
         const currentToken = t.token;
-
-        const cachedRole = localStorage.getItem("userRole");
 
         if (cachedRole) {
           setRole(cachedRole);
@@ -146,10 +150,12 @@ export function AuthProvider({ children }: AuthProviderProps) {
       setLoading(false);
     });
     return unsubscribe;
-  }, []);
+  }, [isLoginReady]);
 
   return (
-    <AuthContext.Provider value={{ user, loading, role, token, logout }}>
+    <AuthContext.Provider
+      value={{ user, loading, role, token, logout, setIsLoginReady }}
+    >
       {children}
     </AuthContext.Provider>
   );
