@@ -1,4 +1,4 @@
-import { Fragment, useEffect, useRef, useState } from "react";
+import { Fragment, useEffect, useState } from "react";
 import { useMap, Marker, Polyline } from "react-leaflet";
 import leaflet, { point, type LeafletMouseEvent } from "leaflet";
 import { LatLng, divIcon } from "leaflet";
@@ -18,6 +18,7 @@ import { toast } from "sonner";
 import api from "@/api";
 import { useMapFilterContext } from "@/context/MapFilterContext";
 import { type Dispatch, type SetStateAction } from "react";
+import { useUserContext } from "@/context/AuthContext";
 
 type EvacPin = {
   id: number;
@@ -70,11 +71,13 @@ let evacPinData: EvacPin[] = [];
 
 const getBrgyPins = async ({
   setBrgyPins,
+  signal,
 }: {
   setBrgyPins?: Dispatch<SetStateAction<EvacPin[]>>;
+  signal?: AbortSignal;
 }) => {
   try {
-    const BrgyResponse = await api.get("/pins?role=govop");
+    const BrgyResponse = await api.get("/pins?role=govop", { signal });
     const brgyPins = await BrgyResponse.data.pins;
     setBrgyPins?.(brgyPins);
   } catch (err: string | any) {
@@ -84,11 +87,13 @@ const getBrgyPins = async ({
 
 const getAllIndivPins = async ({
   setIndivPins,
+  signal,
 }: {
   setIndivPins?: Dispatch<SetStateAction<EvacPin[]>>;
+  signal?: AbortSignal;
 }) => {
   try {
-    const IndivResponse = await api.get("/pins?role=indiv");
+    const IndivResponse = await api.get("/pins?role=indiv", { signal });
     const indivPins = await IndivResponse.data.pins;
     setIndivPins?.(indivPins);
   } catch (err: string | any) {
@@ -98,13 +103,14 @@ const getAllIndivPins = async ({
 
 const getMyPins = async ({
   setOwnPins,
+  signal,
 }: {
   setOwnPins?: Dispatch<SetStateAction<MyEvacPin[]>>;
+  signal?: AbortSignal;
 }) => {
   try {
-    const IndivResponse = await api.get("/pins/my-coords");
+    const IndivResponse = await api.get("/pins/my-coords", { signal });
     const myPins = await IndivResponse.data.pins;
-    console.log("MINE", myPins);
 
     setOwnPins?.(myPins);
   } catch (err: any) {
@@ -114,11 +120,13 @@ const getMyPins = async ({
 
 const getEvacPins = async ({
   setEvacPins,
+  signal,
 }: {
   setEvacPins?: Dispatch<SetStateAction<EvacPin[]>>;
+  signal?: AbortSignal;
 }) => {
   try {
-    const GenResponse = await api.get("/pins");
+    const GenResponse = await api.get("/pins", { signal });
     evacPinData = await GenResponse.data.pins;
     setEvacPins?.(evacPinData);
   } catch (err: string | any) {
@@ -129,11 +137,13 @@ const getEvacPins = async ({
 let sensorData: Sensors[];
 const getSensors = async ({
   setSensors,
+  signal,
 }: {
   setSensors: Dispatch<SetStateAction<Sensors[]>>;
+  signal?: AbortSignal;
 }) => {
   try {
-    const response = await api.get("/public/sensors");
+    const response = await api.get("/public/sensors", { signal });
     sensorData = await response.data;
     setSensors(sensorData);
   } catch (error) {
@@ -178,41 +188,39 @@ export function NearestRouting({
   const [evacPins, setEvacPins] = useState<EvacPin[]>([]);
 
   useEffect(() => {
-    getEvacPins({ setEvacPins });
-  }, []);
+    const controller = new AbortController();
 
-  console.log("Before useEffect");
+    try {
+      getEvacPins({ setEvacPins, signal: controller.signal });
+    } catch (err: any) {
+      if (err.name === "CanceledError") return;
+      console.log(err);
+    }
+
+    return () => controller.abort();
+  }, []);
 
   //   For Routing
   useEffect(() => {
     if (nearestRouteTrigger === 0) return;
     if (!userPosition || !evacPins) return;
-
-    console.log("After useEffect");
-    console.log("evacPins", evacPins);
     if (!userPosition || !evacPins) return;
-    console.log("user position", userPosition);
-    console.log("evacPins", evacPins);
 
     const nearest = getNearestWaypoint(userPosition, evacPins);
     if (!nearest) return;
     onPinSelected(nearest);
-    console.log(nearest);
 
     const getRoutes = async () => {
       try {
         const destination = [nearest.lng, nearest.lat];
         const user = [userPosition.lng, userPosition.lat];
 
-        console.log("destination", destination);
-        console.log("user", user);
         const response = await fetch(
           `http://brouter:17777/brouter?lonlats=${user}|${destination}&profile=trekking&format=geojson`,
           { method: "GET" },
         );
 
         if (!response) {
-          console.error("Fetch failed");
           toast.error("Failed to find route");
           return;
         } else toast.success("Found you a route!");
@@ -295,6 +303,7 @@ export function PinMarking({ onPinClick }: { onPinClick: (pin: any) => void }) {
   const [indivPins, setIndivPins] = useState<EvacPin[]>([]);
 
   const { showGovPins, showOtherPins } = useMapFilterContext();
+  const { user } = useUserContext();
 
   const createClusterCustomIcon = (cluster: any) => {
     return divIcon({
@@ -320,20 +329,39 @@ export function PinMarking({ onPinClick }: { onPinClick: (pin: any) => void }) {
   // const showBrgyPins = showGovPins ? brgyPins : null;
   // const showUserPins = showOtherPins ? indivPins : myPins;
 
-  useEffect(() => {
-    getBrgyPins({ setBrgyPins });
-    getEvacPins({ setEvacPins });
-    getMyPins({ setOwnPins: setMyPins });
-    getAllIndivPins({ setIndivPins });
-  }, []);
+  const getData = async () => {
+    const controller = new AbortController();
+
+    const getAll = Promise.all([
+      getBrgyPins({ setBrgyPins, signal: controller.signal }),
+      getAllIndivPins({ setIndivPins, signal: controller.signal }),
+      ...(user
+        ? [getMyPins({ setOwnPins: setMyPins, signal: controller.signal })]
+        : []),
+    ]);
+
+    toast.promise(getAll, {
+      loading: "Generating the pins! Hold on tight...",
+      success: "Pins Generated!",
+      error: (err: any) => {
+        return err.response.message;
+      },
+      position: "top-center",
+    });
+
+    try {
+      await getAll;
+    } catch (err: any) {
+      if (err.name === "CanceledError") return;
+      console.log(err);
+    }
+
+    return () => controller.abort();
+  };
 
   useEffect(() => {
-    console.log("myPins", myPins);
-    // console.log("indivPins", allIndivPins);
-    console.log("brgyPins", brgyPins);
-    console.log("showGovPins", showGovPins);
-    console.log("showOtherPins", showOtherPins);
-  }, [brgyPins, myPins]);
+    getData();
+  }, []);
 
   return (
     <MarkerClusterGroup
@@ -361,7 +389,8 @@ export function PinMarking({ onPinClick }: { onPinClick: (pin: any) => void }) {
               eventHandlers={{ click: () => onPinClick(pin) }}
             />
           ))
-        : myPins.map((pin) => {
+        : user &&
+          myPins.map((pin) => {
             if (pin.my_pin && pin.status == "active") {
               return (
                 <Marker
@@ -418,7 +447,16 @@ export function SensorMarking({
     });
 
   useEffect(() => {
-    getSensors({ setSensors });
+    const controller = new AbortController();
+
+    try {
+      getSensors({ setSensors, signal: controller.signal });
+    } catch (err: any) {
+      if (err.name === "CanceledError") return;
+      console.log(err);
+    }
+
+    return () => controller.abort();
   }, []);
 
   useEffect(() => {
@@ -459,9 +497,6 @@ export function FlyToLocation({
       } else {
         coords = [position.lat, position.long];
       }
-
-      console.log("position", position);
-      console.log("coords", coords);
 
       if (coords[0] === undefined || coords[1] === undefined) return;
 
@@ -589,19 +624,29 @@ export function RoadMapping({ onPinClick }: RoadMappingProps) {
 
   let floodData;
 
-  const getFloodPaths = async () => {
+  const getFloodPaths = async (signal?: AbortSignal) => {
     try {
-      const response = await api.get("/flood-paths");
+      const response = await api.get("/flood-paths", { signal });
 
       floodData = await response.data.flood_paths;
       setFloodPaths(floodData);
     } catch (err: string | any) {
-      Error(err.message || "An error occurred");
+      if (err.name === "CanceledError") return;
+      console.log(err);
     }
   };
 
   useEffect(() => {
-    getFloodPaths();
+    const controller = new AbortController();
+
+    try {
+      getFloodPaths(controller.signal);
+    } catch (err: any) {
+      if (err.name === "CanceledError") return;
+      console.log(err);
+    }
+
+    return () => controller.abort();
   }, []);
 
   return (
@@ -643,8 +688,17 @@ export function RoadMapping({ onPinClick }: RoadMappingProps) {
   );
 }
 
-// Add properties based on the pin info from db
-export function MapClickHandler({ onPinClick, clickedLoc, setClickedLoc }) {
+interface MapClickHandlerProps {
+  onPinClick: (coords: { lat: number; long: number }) => void;
+  clickedLoc: [number, number] | null;
+  setClickedLoc: Dispatch<SetStateAction<[number, number] | null>>;
+}
+
+export function MapClickHandler({
+  onPinClick,
+  clickedLoc,
+  setClickedLoc,
+}: MapClickHandlerProps) {
   // const [clickedLoc, setClickedLoc] = useState<[number, number] | null>(null);
   const map = useMap();
   const icon = divIcon({
@@ -715,9 +769,6 @@ export const snapAllPointsToRoads = async (
     );
     const data = await res.json();
 
-    console.log("OSRM response:", data);
-    console.log("OSRM code:", data.code);
-
     if (data.code !== "Ok" || !data.matchings?.length) {
       return null;
     }
@@ -765,12 +816,6 @@ export function FormMapClickHandler({
 }) {
   // const [clickedLoc, setClickedLoc] = useState<[number, number] | null>(null);
   const map = useMap();
-
-  const icon = divIcon({
-    html: renderToString(<BlankPin width={50} height={50} />),
-    className: "",
-    iconAnchor: [25, 50],
-  });
 
   const maxRadius = 500;
 

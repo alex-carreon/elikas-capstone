@@ -17,17 +17,19 @@ import {
 } from "firebase/auth";
 import { toast } from "sonner";
 import api from "@/api";
+import { useUserContext } from "@/context/AuthContext";
 
 function LogIn() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [remember, setRemember] = useState(false);
-
   const [errors, setErrors] = useState({
     email: "",
     password: "",
     general: "",
   });
+
+  const { setIsLoginReady } = useUserContext();
 
   const handleVerify = (e: React.FormEvent) => {
     e.preventDefault();
@@ -36,8 +38,6 @@ function LogIn() {
       const response = api.post("/email/resend-verification", {
         email: email,
       });
-
-      // console.log(response);
 
       toast.promise(response, {
         loading: "Sending you your verification email...",
@@ -81,6 +81,7 @@ function LogIn() {
       }
 
       const token = await userCredential.user.getIdToken(true);
+
       const response = api.post(
         "/auth/login",
         {},
@@ -91,12 +92,19 @@ function LogIn() {
         },
       );
 
+      console.log(response);
+
       toast.promise(response, {
         loading: "Logging you in...",
         success: "You're logged in!",
         error: "User not found",
         position: "top-center",
       });
+
+      await response;
+      await new Promise((resolve) => setTimeout(resolve, 1000));
+
+      setIsLoginReady(true);
     } catch (err: string | any) {
       if (
         err.code === "auth/user-not-found" ||

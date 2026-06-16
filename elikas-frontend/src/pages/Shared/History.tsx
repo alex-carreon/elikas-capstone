@@ -531,7 +531,7 @@ function History() {
                       ) : (
                         <ChevronDownIcon className="ml-2 group-data-[state=open]:rotate-180" />
                       )}
-                    </div>{" "}
+                    </div>
                   </CollapsibleTrigger>
                   <CollapsibleContent
                     id="History_FiltersContent"

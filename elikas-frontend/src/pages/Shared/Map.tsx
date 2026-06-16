@@ -41,6 +41,10 @@ function Map() {
 
   const mapRef = useRef<LeafletMap | null>(null);
 
+  let authorized = false;
+  let admin = false;
+  const { role } = useUserContext();
+
   const getFloodExpired = async () => {
     try {
       const response = await api.get("/flood-reminders");
@@ -52,7 +56,7 @@ function Map() {
         setShowReminder(true);
       }
     } catch (err: any) {
-      console.log(err.response.message);
+      console.log(err.response.data);
     }
   };
 
@@ -91,6 +95,7 @@ function Map() {
       });
 
       toast.success("Flood Path snoozed!");
+      setShowReminder(false);
     } catch (err: any) {
       console.log(err.response.message);
     }
@@ -121,6 +126,7 @@ function Map() {
       });
 
       toast.success("Flood Paths dismissed!");
+      setShowReminder(false);
     } catch (err: any) {
       console.log(err.response.message);
     }
@@ -140,18 +146,12 @@ function Map() {
   const daysLeft = Math.ceil(diffMs / (1000 * 60 * 60 * 24));
 
   useEffect(() => {
-    if (openDialog.current) return;
-    openDialog.current = true;
-    getFloodExpired();
+    if (role) {
+      if (openDialog.current) return;
+      openDialog.current = true;
+      getFloodExpired();
+    }
   }, []);
-
-  useEffect(() => {
-    console.log("trigger", showNearestRouteTrigger);
-  }, [showNearestRouteTrigger]);
-
-  let authorized = false;
-  let admin = false;
-  const { role } = useUserContext();
 
   if (role) {
     authorized = true;
