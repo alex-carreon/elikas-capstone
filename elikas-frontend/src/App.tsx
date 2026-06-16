@@ -158,7 +158,6 @@ function App() {
 
           <Route element={<ProtectedRoute userRole={["indiv", "brgy_op"]} />}>
             <Route element={<ConstNavbar />}>
-              <Route path="/Settings" element={<Settings />} />
               <Route path="/EvacForm" element={<EvacForm />} />
               <Route path="/EvacForm/:id" element={<EvacForm />} />
               <Route path="/HazardForm" element={<HazardForm />} />
@@ -171,6 +170,9 @@ function App() {
             </Route>
             <Route element={<ConstNavbar redirect="/Settings" />}>
               <Route path="/Profile" element={<Profile />} />
+            </Route>
+            <Route element={<ConstNavbar redirect="/Map" />}>
+              <Route path="/Settings" element={<Settings />} />
             </Route>
             <Route element={<AuthNavbar />}>
               <Route path="/map" element={<Map />} />
