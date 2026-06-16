@@ -2,14 +2,185 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\BroadcastStatus;
 use App\Services\SMSBroadcastService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 
 class SMSController extends Controller
 {
     public function __construct(private readonly SMSBroadcastService $smsService) {}
+
+    // ── A — GET /api/sms/statuses ────────────────────────────────────────────
+
+    public function statuses(): JsonResponse
+    {
+        $statuses = BroadcastStatus::orderBy('id')
+            ->get(['id', 'status_name'])
+            ->map(fn ($s) => ['id' => $s->id, 'name' => $s->status_name])
+            ->values();
+
+        return response()->json(['statuses' => $statuses]);
+    }
+
+    // ── B-1 — GET /api/sms/broadcasts ───────────────────────────────────────
+
+    public function history(Request $request): JsonResponse
+    {
+        try {
+            $validated = $request->validate([
+                'search' => 'nullable|string|max:255',
+                'status' => 'nullable|integer|in:1,2,3,4',
+                'limit'  => 'nullable|integer|min:1|max:100',
+                'state'  => 'nullable|string|in:active,inactive',
+            ]);
+
+            $govOp = $this->resolveGovOp($request);
+            if ($govOp instanceof JsonResponse) {
+                return $govOp;
+            }
+
+            $locationId = (int) $request->query('location_id', $govOp->location_id);
+            if ($locationId !== (int) $govOp->location_id) {
+                return response()->json(
+                    ['message' => 'You may only view broadcasts for your own location.'],
+                    403
+                );
+            }
+
+            $limit   = min(max((int) ($validated['limit'] ?? 15), 1), 100);
+            $filters = array_filter([
+                'search' => $validated['search'] ?? null,
+                'status' => isset($validated['status']) ? (int) $validated['status'] : null,
+                'state'  => $validated['state'] ?? null,
+            ], fn ($v) => $v !== null);
+
+            $paginated = $this->smsService->getHistory($locationId, $limit, $filters);
+
+            return response()->json([
+                'location_id' => $locationId,
+                'broadcasts'  => collect($paginated->items())
+                    ->map(fn ($b) => $this->smsService->formatBroadcast($b))
+                    ->values(),
+                'pagination'  => [
+                    'current_page' => $paginated->currentPage(),
+                    'last_page'    => $paginated->lastPage(),
+                    'per_page'     => $paginated->perPage(),
+                    'total'        => $paginated->total(),
+                ],
+            ]);
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            return response()->json(['message' => 'Validation failed.', 'errors' => $e->errors()], 422);
+        } catch (\Exception $e) {
+            Log::error('SMSController@history', ['error' => $e->getMessage()]);
+            return response()->json(['error' => 'Failed to fetch broadcast history.', 'details' => $e->getMessage()], 500);
+        }
+    }
+
+    // ── B-2 — PATCH /api/sms/broadcasts/{broadcastId}/cancel ────────────────
+
+    public function cancel(Request $request, int $broadcastId): JsonResponse
+    {
+        try {
+            $govOp = $this->resolveGovOp($request);
+            if ($govOp instanceof JsonResponse) {
+                return $govOp;
+            }
+
+            $result = $this->smsService->cancelBroadcast($broadcastId, $govOp->id);
+
+            return match ($result) {
+                'not_found' => response()->json(
+                    ['message' => 'Broadcast not found or you do not have permission to cancel it.'],
+                    404
+                ),
+                'not_pending' => response()->json(
+                    ['message' => 'Only pending or scheduled broadcasts can be cancelled.'],
+                    409
+                ),
+                'window_passed' => response()->json([
+                    'message' => 'Validation failed.',
+                    'errors'  => [
+                        'scheduled_for' => [
+                            'The broadcast execution window has already started. Cancellation is no longer possible.',
+                        ],
+                    ],
+                ], 422),
+                default => response()->json([
+                    'message'      => 'Broadcast cancelled successfully.',
+                    'broadcast_id' => $broadcastId,
+                    'status'       => ['id' => 4, 'name' => 'Cancelled'],
+                ]),
+            };
+        } catch (\Exception $e) {
+            Log::error('SMSController@cancel', ['error' => $e->getMessage()]);
+            return response()->json(['error' => 'Failed to cancel broadcast.', 'details' => $e->getMessage()], 500);
+        }
+    }
+
+    // ── D — POST /api/sms/verify-token ──────────────────────────────────────
+
+    public function verifyToken(Request $request): JsonResponse
+    {
+        try {
+            $validated = $request->validate([
+                'api_token' => 'required|string|min:8|max:255',
+            ]);
+
+            if (config('services.iprogsms.mock', true)) {
+                return response()->json([
+                    'message' => 'Token is valid (mock).',
+                    'gateway' => ['http_status' => 200],
+                ]);
+            }
+
+            $token   = $validated['api_token'];
+            $baseUrl = rtrim(config('services.iprogsms.otp_base_url', 'https://sms.iprogtech.com/api/v1'), '/');
+
+            $response = Http::timeout(10)
+                ->withHeaders(['Accept' => 'application/json'])
+                ->get("{$baseUrl}/otp", ['api_token' => $token]);
+
+            $httpStatus = $response->status();
+
+            if ($response->status() === 401 || $response->status() === 403) {
+                return response()->json([
+                    'message' => 'Token verification failed. The gateway rejected the provided token.',
+                    'gateway' => ['http_status' => $httpStatus],
+                ], 401);
+            }
+
+            if (!$response->successful()) {
+                return response()->json([
+                    'message' => 'Gateway probe failed. The iPROG API returned an unexpected error.',
+                    'gateway' => [
+                        'http_status' => $httpStatus,
+                        'body'        => $response->json() ?? $response->body(),
+                    ],
+                ], 502);
+            }
+
+            return response()->json([
+                'message' => 'Token is valid.',
+                'gateway' => ['http_status' => $httpStatus],
+            ]);
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            return response()->json(['message' => 'Validation failed.', 'errors' => $e->errors()], 422);
+        } catch (\Illuminate\Http\Client\ConnectionException $e) {
+            Log::error('SMSController@verifyToken – connection failed', ['error' => $e->getMessage()]);
+            return response()->json([
+                'message' => 'Gateway probe failed. The iPROG API could not be reached.',
+                'details' => $e->getMessage(),
+            ], 502);
+        } catch (\Exception $e) {
+            Log::error('SMSController@verifyToken', ['error' => $e->getMessage()]);
+            return response()->json(['error' => 'Token verification encountered an internal error.', 'details' => $e->getMessage()], 500);
+        }
+    }
+
+    // ── Existing methods (copy these in exactly as-is) ───────────────────────
 
     public function recipients(Request $request): JsonResponse
     {
@@ -70,47 +241,16 @@ class SMSController extends Controller
         }
     }
 
-        public function history(Request $request): JsonResponse
-{
-    try {
-        $govOp = $this->resolveGovOp($request);
-        if ($govOp instanceof JsonResponse) {
-            return $govOp;
-        }
-
-        $locationId = (int) $request->query('location_id', $govOp->location_id);
-        if ($locationId !== (int) $govOp->location_id) {
-            return response()->json(['message' => 'You may only view broadcasts for your own location.'], 403);
-        }
-
-        $limit   = min(max((int) $request->query('limit', 15), 1), 100);
-        $filters = $request->only(['id', 'message_content']);
-
-        $paginated = $this->smsService->getHistory($locationId, $limit, $filters);
-
-        return response()->json([
-            'location_id' => $locationId,
-            'broadcasts'  => collect($paginated->items())
-                ->map(fn ($b) => $this->smsService->formatBroadcast($b))
-                ->values(),
-            'pagination'  => [
-                'current_page' => $paginated->currentPage(),
-                'last_page'    => $paginated->lastPage(),
-                'per_page'     => $paginated->perPage(),
-                'total'        => $paginated->total(),
-            ],
-        ]);
-    } catch (\Exception $e) {
-        Log::error('SMSController@history', ['error' => $e->getMessage()]);
-        return response()->json(['error' => 'Failed to fetch broadcast history.', 'details' => $e->getMessage()], 500);
-    }
-}
     public function sendImmediate(Request $request): JsonResponse
     {
         try {
             $validated = $request->validate([
                 'message_content' => 'required|string|max:600',
             ]);
+
+            if ($token = $request->header('X-iPROG-API-Token')) {
+                config(['services.iprogsms.api_token' => $token]);
+            }
 
             $govOp = $this->resolveGovOp($request);
             if ($govOp instanceof JsonResponse) {
@@ -149,6 +289,7 @@ class SMSController extends Controller
             return response()->json(['error' => 'Failed to dispatch SMS.', 'details' => $e->getMessage()], 500);
         }
     }
+
     public function schedule(Request $request): JsonResponse
     {
         try {
@@ -156,6 +297,10 @@ class SMSController extends Controller
                 'message_content' => 'required|string|max:600',
                 'scheduled_for'   => 'required|date|after:now',
             ]);
+
+            if ($token = $request->header('X-iPROG-API-Token')) {
+                config(['services.iprogsms.api_token' => $token]);
+            }
 
             $govOp = $this->resolveGovOp($request);
             if ($govOp instanceof JsonResponse) {
@@ -258,7 +403,7 @@ class SMSController extends Controller
                 return $govOp;
             }
 
-            $filters = $request->only(['search', 'name']);
+            $filters   = $request->only(['search', 'name']);
             $templates = $this->smsService->getTemplatesForOperator($govOp->id, $filters)
                 ->map(fn ($t) => $this->smsService->formatTemplate($t));
 
