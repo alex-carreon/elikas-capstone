@@ -196,13 +196,9 @@ function Map({ onLocationFound, showLocation, nearestRouteTrigger }: MapProps) {
   };
 
   const handleDrawerClose = (isOpen: boolean) => {
-    console.log("drawer closing, isOpen:", isOpen);
-
     setOpen(isOpen);
 
     if (!isOpen) {
-      console.log("clearing routes...");
-
       setShowRoute(false);
       setShowNearestRoute(false);
       setSelectedPin(null);
@@ -213,8 +209,6 @@ function Map({ onLocationFound, showLocation, nearestRouteTrigger }: MapProps) {
 
   // Open drawer on pin click
   useEffect(() => {
-    console.log("selectedPin changed:", selectedPin);
-    console.log("openFromRoute:", openFromRoute);
     if (selectedPin && openFromRoute) {
       setOpen(true);
       setOpenFromRoute(false);
