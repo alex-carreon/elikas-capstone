@@ -63,6 +63,8 @@ function LogIn() {
         remember ? browserLocalPersistence : browserSessionPersistence,
       );
 
+      localStorage.removeItem("userRole");
+
       const userCredential = await signInWithEmailAndPassword(
         auth,
         email,
