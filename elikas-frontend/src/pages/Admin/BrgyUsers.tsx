@@ -23,6 +23,11 @@ type BrgyUser = {
   role: string;
 };
 
+type Barangays = {
+  id: number;
+  name: string;
+};
+
 type Cities = {
   id: number;
   name: string;
@@ -36,6 +41,40 @@ type Province = {
   name: string;
 };
 
+type Status = {
+  id: number;
+  name: string;
+};
+
+type Sender = {
+  govop_id: number;
+  user_id: number;
+  username: string;
+  point_person: string;
+  point_position: string;
+};
+
+type Location = {
+  id: number;
+  name: string;
+};
+
+type SMS = {
+  id: number;
+  message_content: string;
+  status: Status;
+  scheduled_for: string;
+  sent_at: string | null;
+  total_recipients: number;
+  sender: Sender;
+  location: Location;
+};
+
+type SmsStatus = {
+  id: number;
+  name: string;
+};
+
 function BrgyUsers() {
   const [loading, setLoading] = useState(true);
   const [countLoad, setCountLoad] = useState(false);
@@ -45,21 +84,19 @@ function BrgyUsers() {
   const [deacUsers, setDeacUsers] = useState<BrgyUser[]>([]);
   const [isActiveUsers, setIsActiveUsers] = useState(true);
   const [isSMS, setIsSMS] = useState(false);
-  const [sentMessages, setSentMessages] = useState(true);
+  const [brgyFilter, setBrgyFilter] = useState(0);
+  const [barangays, setBarangays] = useState<Barangays[]>([]);
   const [cityFilter, setCityFilter] = useState(0);
   const [cities, setCities] = useState<Cities[]>([]);
+  const [statuses, setStatuses] = useState<SmsStatus[]>([]);
+  const [statusFilter, setStatusFilter] = useState(0);
   const [openCollapse, setOpenCollapse] = useState(false);
+  const [sms, setSMS] = useState<SMS[]>([]);
 
   const params = new URLSearchParams();
 
-  const getBrgyData = async (signal?: AbortSignal) => {
+  const getBrgyData = async (signal?: AbortSignal, parameter?: string) => {
     try {
-      if (cityFilter && cityFilter !== 0) {
-        params.set("city_id", String(cityFilter));
-      }
-
-      const parameter = params.toString();
-
       const [activeResponse, deacResponse] = await Promise.all([
         api.get(
           `/admin/users?role=brgy_op&active=true${parameter ? `&${parameter}` : ""}`,
@@ -119,18 +156,60 @@ function BrgyUsers() {
     }
   };
 
+  const getBrgy = async (signal?: AbortSignal) => {
+    try {
+      const response = await api.get("/locations/barangays", { signal });
+      setBarangays(response.data.Barangays);
+    } catch (err: any) {
+      if (err.name === "CanceledError") return;
+      console.log(err);
+    }
+  };
+
+  const getSMS = async (signal?: AbortSignal, parameter?: string) => {
+    try {
+      const response = await api.get(
+        `/admin/sms/broadcasts${parameter ? `?${parameter}` : ""}`,
+        { signal },
+      );
+      setSMS(response.data.broadcasts);
+    } catch (err: any) {
+      if (err.name === "CanceledError") {
+        return;
+      }
+      console.log(err.response?.data);
+    }
+  };
+
+  const getSmsStatus = async (signal?: AbortSignal) => {
+    try {
+      const response = await api.get("/sms/statuses", { signal });
+      setStatuses(response.data.statuses);
+    } catch (err: any) {
+      if (err.name === "CanceledError") return;
+      console.log(err);
+    }
+  };
+
   const getAll = async () => {
     const controller = new AbortController();
 
     try {
       setLoading(true);
+
       await Promise.all([
         getCity(controller.signal),
         getBrgyData(controller.signal),
         getBrgyCount(controller.signal),
+        getSMS(controller.signal),
+        getBrgy(controller.signal),
+        getSmsStatus(controller.signal),
       ]);
     } catch (err: any) {
-      if (err.name === "CanceledError") return;
+      if (err.name === "CanceledError") {
+        setLoading(false);
+        return;
+      }
       console.log(err);
     } finally {
       setLoading(false);
@@ -139,17 +218,65 @@ function BrgyUsers() {
     return () => controller.abort();
   };
 
+  const getSMSFilter = async () => {
+    const controller = new AbortController();
+
+    try {
+      setLoading(true);
+
+      if (brgyFilter && brgyFilter !== 0) {
+        params.set("location_id", String(brgyFilter));
+      }
+      if (statusFilter && statusFilter !== 0) {
+        params.set("status", String(statusFilter));
+      }
+
+      const smsParameter = params.toString();
+      await getSMS(controller.signal, smsParameter);
+    } catch (err: any) {
+      if (err.name === "CanceledError") {
+        setLoading(false);
+        return;
+      }
+      console.log(err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const getBrgyUsersFilter = async () => {
+    const controller = new AbortController();
+
+    try {
+      setLoading(true);
+      if (cityFilter && cityFilter !== 0) {
+        params.set("city_id", String(cityFilter));
+      }
+
+      const parameter = params.toString();
+
+      await getBrgyData(controller.signal, parameter);
+    } catch (err: any) {
+      if (err.name === "CanceledError") {
+        setLoading(false);
+        return;
+      }
+      console.log(err);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   useEffect(() => {
     getAll();
   }, []);
 
   useEffect(() => {
-    const controller = new AbortController();
-
-    getBrgyData(controller.signal);
-
-    return () => controller.abort();
-  }, [cityFilter]);
+    if (isSMS) {
+      getSMSFilter();
+    }
+    getBrgyUsersFilter();
+  }, [cityFilter, brgyFilter]);
 
   return (
     <>
@@ -210,33 +337,6 @@ function BrgyUsers() {
                 </TabsTrigger>
               </TabsList>
             </Tabs>
-            {isSMS && (
-              <Tabs
-                defaultValue="overview"
-                className="w-full max-w-md flex items-center"
-              >
-                <TabsList
-                  variant="line"
-                  className="w-full flex justify-between"
-                  id="Admin_BrgySMSTabs"
-                >
-                  <TabsTrigger
-                    value="ActiveEvac"
-                    id="Admin_BrgySMSSent"
-                    onClick={() => setSentMessages(true)}
-                  >
-                    SMS Messages
-                  </TabsTrigger>
-                  <TabsTrigger
-                    value="ExpiredEvac"
-                    id="Admin_BrgySMSTemplates"
-                    onClick={() => setSentMessages(false)}
-                  >
-                    Templates
-                  </TabsTrigger>
-                </TabsList>
-              </Tabs>
-            )}
             <Collapsible className="w-full flex-col items-center">
               <div className="w-full flex justify-between gap-2">
                 {!isSMS && (
@@ -272,27 +372,80 @@ function BrgyUsers() {
                 className="flex flex-col items-center px-2.5 text-sm"
               >
                 <div className="w-full gap-2 bg-gray-300/50 p-4 rounded-lg flex">
-                  <SelectDropdown
-                    value={String(cityFilter)}
-                    onValueChange={(val) => setCityFilter(Number(val))}
-                    placeholder="City"
-                    id="Admin_BrgyCityFilter"
-                    options={[
-                      { label: "All", value: "0" },
-                      ...(cities?.map((city) => ({
-                        label: city.name,
-                        value: String(city.id),
-                      })) ?? []),
-                    ]}
-                  />
-                  {cityFilter ? (
-                    <button
-                      onClick={() => setCityFilter(0)}
-                      id="Admin_BrgyCityClearFilter"
-                    >
-                      <X size={14} />
-                    </button>
-                  ) : null}
+                  {isSMS ? (
+                    <div className="w-full flex flex-row gap-2">
+                      <div className="flex flex-row gap-2 w-full">
+                        <SelectDropdown
+                          value={String(brgyFilter)}
+                          onValueChange={(val) => setBrgyFilter(Number(val))}
+                          placeholder="Barangay"
+                          id="Admin_SMSBrgyFilter"
+                          options={[
+                            { label: "All", value: "0" },
+                            ...(barangays?.map((brgy) => ({
+                              label: brgy.name,
+                              value: String(brgy.id),
+                            })) ?? []),
+                          ]}
+                        />
+                        {brgyFilter ? (
+                          <button
+                            onClick={() => setBrgyFilter(0)}
+                            id="Admin_BrgyBrgyClearFilter"
+                          >
+                            <X size={14} />
+                          </button>
+                        ) : null}
+                      </div>
+                      <div className="flex flex-row gap-2 w-full">
+                        <SelectDropdown
+                          value={String(statusFilter)}
+                          onValueChange={(val) => setStatusFilter(Number(val))}
+                          placeholder="Status"
+                          id="Admin_SMSStatusFilter"
+                          options={[
+                            { label: "All", value: "0" },
+                            ...(statuses?.map((status) => ({
+                              label: status.name,
+                              value: String(status.id),
+                            })) ?? []),
+                          ]}
+                        />
+                        {statusFilter ? (
+                          <button
+                            onClick={() => setStatusFilter(0)}
+                            id="Admin_BrgyStatusClearFilter"
+                          >
+                            <X size={14} />
+                          </button>
+                        ) : null}
+                      </div>
+                    </div>
+                  ) : (
+                    <>
+                      <SelectDropdown
+                        value={String(cityFilter)}
+                        onValueChange={(val) => setCityFilter(Number(val))}
+                        placeholder="City"
+                        id="Admin_BrgyCityFilter"
+                        options={[
+                          { label: "All", value: "0" },
+                          ...(cities?.map((city) => ({
+                            label: city.name,
+                            value: String(city.id),
+                          })) ?? []),
+                        ]}
+                      />
+                      {cityFilter ? (
+                        <button
+                          onClick={() => setCityFilter(0)}
+                          id="Admin_BrgyCityClearFilter"
+                        >
+                          <X size={14} />
+                        </button>
+                      ) : null}
+                    </>
+                  )}
                 </div>
               </CollapsibleContent>
             </Collapsible>
@@ -328,7 +481,23 @@ function BrgyUsers() {
                   );
                 })
               ) : isSMS ? (
-                <></>
+                sms?.map((sms, index) => {
+                  return (
+                    <Row
+                      key={index}
+                      postId={String(sms.id)}
+                      title={`Sent to: ${sms.total_recipients} recipient/s`}
+                      address={`Sender: ${sms.sender.point_person} - ${sms.sender.username}`}
+                      desc={
+                        sms.status.name === "Scheduled"
+                          ? `Sending on: ${sms.scheduled_for}`
+                          : `Sent on: ${sms.sent_at ? sms.sent_at : "Not sent"}`
+                      }
+                      showCollapsible
+                      collapseContent={sms.message_content}
+                    />
+                  );
+                })
               ) : (
                 deacUsers.map((user, index) => {
                   return (
@@ -344,7 +513,6 @@ function BrgyUsers() {
                   );
                 })
               )}
-              {}
             </div>
           </div>
         </div>
