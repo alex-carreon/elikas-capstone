@@ -137,6 +137,26 @@ function SMSHistory() {
     return () => controller.abort();
   };
 
+  const cancelSend = ({ id }: { id: number }) => {
+    try {
+      const response = api.patch(`/sms/broadcasts/${id}/cancel `);
+      console.log(response);
+      toast.promise(response, {
+        loading: "Canceling this message...",
+        success: "Message canceled!",
+        error: (err: any) =>
+          err.response.message ? err.response.message : err.response.data,
+        position: "top-center",
+      });
+
+      getFiltered();
+    } catch (err: any) {
+      toast.error(
+        "An error occurred when canceling your message. Please try again in a bit!",
+      );
+    }
+  };
+
   useEffect(() => {
     getAll();
   }, []);
@@ -245,8 +265,8 @@ function SMSHistory() {
           </>
         ) : (
           <>
-            <Separator />
-            <div className="flex flex-col gap-2 overflow-y-auto flex-1 min-h-0 pb-10">
+            <Separator className="mt-6" />
+            <div className="flex flex-col gap-2 overflow-y-auto flex-1 min-h-0 pb-10 pt-6">
               {broadcasts.length > 0 ? (
                 broadcasts.map((broadcast) => (
                   <Row
@@ -257,7 +277,7 @@ function SMSHistory() {
                         ? `Sending on: ${convertDateTime(broadcast.scheduled_for)}`
                         : `Sent on: ${convertDateTime(broadcast.sent_at)}`
                     }
-                    link=""
+                    onClick={() => cancelSend({ id: broadcast.id })}
                     buttonId="SMSHistory_CancelSend"
                     btnText="Cancel Send"
                     showBtn={broadcast.status.name === "Scheduled"}
