@@ -29,6 +29,7 @@ class OtpController extends Controller
             if (!$result['success']) {
                 return response()->json([
                     'message' => $result['message'],
+                    'debug'   => $result,
                 ], 502);
             }
 
