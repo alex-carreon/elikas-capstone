@@ -373,14 +373,14 @@ class SMSBroadcastService
             return 'not_pending';
         }
 
-        if ($broadcast->scheduled_for->lte(now())) {
+        if ($broadcast->scheduled_for !== null && $broadcast->scheduled_for->lte(now())) {
             return 'window_passed';
         }
 
-        $broadcast->update(['status' => 4]);
+    $broadcast->update(['status' => 4]);
 
-        return 'cancelled';
-    }
+    return 'cancelled';
+}
 
     public function getAllBroadcasts(int $limit, array $filters = []): LengthAwarePaginator
     {
