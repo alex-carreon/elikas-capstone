@@ -1,0 +1,1531 @@
+parameters:
+	ignoreErrors:
+		-
+			message: '#^Call to an undefined method Illuminate\\Pagination\\LengthAwarePaginator\<int, Illuminate\\Database\\Eloquent\\Model\>\:\:loadMissing\(\)\.$#'
+			identifier: method.notFound
+			count: 1
+			path: app/Http/Controllers/AuditLogController.php
+
+		-
+			message: '#^Negated boolean expression is always false\.$#'
+			identifier: booleanNot.alwaysFalse
+			count: 1
+			path: app/Http/Controllers/AuthController.php
+
+		-
+			message: '#^Relation ''user'' is not found in App\\Models\\UserAuth model\.$#'
+			identifier: larastan.relationExistence
+			count: 1
+			path: app/Http/Controllers/AuthController.php
+
+		-
+			message: '#^Access to an undefined property App\\Models\\Comment\:\:\$element\.$#'
+			identifier: property.notFound
+			count: 9
+			path: app/Http/Controllers/Comments/EvacComments.php
+
+		-
+			message: '#^Access to an undefined property App\\Models\\EvacArea\:\:\$element_id\.$#'
+			identifier: property.notFound
+			count: 2
+			path: app/Http/Controllers/Comments/EvacComments.php
+
+		-
+			message: '#^Relation ''element'' is not found in App\\Models\\Comment model\.$#'
+			identifier: larastan.relationExistence
+			count: 2
+			path: app/Http/Controllers/Comments/EvacComments.php
+
+		-
+			message: '#^Relation ''social_element'' is not found in App\\Models\\EvacArea model\.$#'
+			identifier: larastan.relationExistence
+			count: 1
+			path: app/Http/Controllers/Comments/EvacComments.php
+
+		-
+			message: '#^Access to an undefined property App\\Models\\Comment\:\:\$element\.$#'
+			identifier: property.notFound
+			count: 4
+			path: app/Http/Controllers/Dashboards/AdminFlagController.php
+
+		-
+			message: '#^Access to an undefined property App\\Models\\EvacArea\:\:\$name\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Controllers/Dashboards/AdminFlagController.php
+
+		-
+			message: '#^Access to an undefined property App\\Models\\EvacArea\:\:\$social_element\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Controllers/Dashboards/AdminFlagController.php
+
+		-
+			message: '#^Access to an undefined property App\\Models\\Flag\:\:\$flag_count\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Controllers/Dashboards/AdminFlagController.php
+
+		-
+			message: '#^Access to an undefined property App\\Models\\FloodPath\:\:\$floodLevel\.$#'
+			identifier: property.notFound
+			count: 2
+			path: app/Http/Controllers/Dashboards/AdminFlagController.php
+
+		-
+			message: '#^Access to an undefined property App\\Models\\FloodPath\:\:\$socialElement\.$#'
+			identifier: property.notFound
+			count: 4
+			path: app/Http/Controllers/Dashboards/AdminFlagController.php
+
+		-
+			message: '#^Access to an undefined property App\\Models\\ModerationLog\:\:\$socialElement\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Controllers/Dashboards/AdminFlagController.php
+
+		-
+			message: '#^Access to an undefined property App\\Models\\SocialElement\:\:\$comment\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Controllers/Dashboards/AdminFlagController.php
+
+		-
+			message: '#^Access to an undefined property App\\Models\\SocialElement\:\:\$floodPath\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Controllers/Dashboards/AdminFlagController.php
+
+		-
+			message: '#^Parameter \#1 \$callback of method Illuminate\\Database\\Eloquent\\Collection\<int,App\\Models\\Flag\>\:\:map\(\) contains unresolvable type\.$#'
+			identifier: argument.unresolvableType
+			count: 1
+			path: app/Http/Controllers/Dashboards/AdminFlagController.php
+
+		-
+			message: '#^Relation ''comment'' is not found in App\\Models\\SocialElement model\.$#'
+			identifier: larastan.relationExistence
+			count: 1
+			path: app/Http/Controllers/Dashboards/AdminFlagController.php
+
+		-
+			message: '#^Relation ''element'' is not found in App\\Models\\Comment model\.$#'
+			identifier: larastan.relationExistence
+			count: 1
+			path: app/Http/Controllers/Dashboards/AdminFlagController.php
+
+		-
+			message: '#^Relation ''flag_reason'' is not found in App\\Models\\Flag model\.$#'
+			identifier: larastan.relationExistence
+			count: 2
+			path: app/Http/Controllers/Dashboards/AdminFlagController.php
+
+		-
+			message: '#^Relation ''socialElement'' is not found in App\\Models\\FloodPath model\.$#'
+			identifier: larastan.relationExistence
+			count: 1
+			path: app/Http/Controllers/Dashboards/AdminFlagController.php
+
+		-
+			message: '#^Relation ''socialElement'' is not found in App\\Models\\ModerationLog model\.$#'
+			identifier: larastan.relationExistence
+			count: 3
+			path: app/Http/Controllers/Dashboards/AdminFlagController.php
+
+		-
+			message: '#^Relation ''social_element'' is not found in App\\Models\\EvacArea model\.$#'
+			identifier: larastan.relationExistence
+			count: 1
+			path: app/Http/Controllers/Dashboards/AdminFlagController.php
+
+		-
+			message: '#^Relation ''social_element'' is not found in App\\Models\\Flag model\.$#'
+			identifier: larastan.relationExistence
+			count: 3
+			path: app/Http/Controllers/Dashboards/AdminFlagController.php
+
+		-
+			message: '#^Using nullsafe method call on non\-nullable type Carbon\\Carbon\. Use \-\> instead\.$#'
+			identifier: nullsafe.neverNull
+			count: 2
+			path: app/Http/Controllers/Dashboards/AdminFlagController.php
+
+		-
+			message: '#^Access to an undefined property App\\Models\\Comment\:\:\$element\.$#'
+			identifier: property.notFound
+			count: 12
+			path: app/Http/Controllers/Dashboards/CommentsAdminController.php
+
+		-
+			message: '#^Access to an undefined property App\\Models\\EvacArea\:\:\$element_id\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Controllers/Dashboards/CommentsAdminController.php
+
+		-
+			message: '#^Access to an undefined property App\\Models\\EvacArea\:\:\$name\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Controllers/Dashboards/CommentsAdminController.php
+
+		-
+			message: '#^Relation ''element'' is not found in App\\Models\\Comment model\.$#'
+			identifier: larastan.relationExistence
+			count: 4
+			path: app/Http/Controllers/Dashboards/CommentsAdminController.php
+
+		-
+			message: '#^Relation ''social_element'' is not found in App\\Models\\EvacArea model\.$#'
+			identifier: larastan.relationExistence
+			count: 1
+			path: app/Http/Controllers/Dashboards/CommentsAdminController.php
+
+		-
+			message: '#^Access to an undefined property App\\Models\\FloodPath\:\:\$floodLevel\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Controllers/Dashboards/FloodPathAdminController.php
+
+		-
+			message: '#^Access to an undefined property App\\Models\\FloodPath\:\:\$socialElement\.$#'
+			identifier: property.notFound
+			count: 3
+			path: app/Http/Controllers/Dashboards/FloodPathAdminController.php
+
+		-
+			message: '#^Relation ''floodLevel'' is not found in App\\Models\\FloodPath model\.$#'
+			identifier: larastan.relationExistence
+			count: 1
+			path: app/Http/Controllers/Dashboards/FloodPathAdminController.php
+
+		-
+			message: '#^Relation ''socialElement'' is not found in App\\Models\\FloodPath model\.$#'
+			identifier: larastan.relationExistence
+			count: 3
+			path: app/Http/Controllers/Dashboards/FloodPathAdminController.php
+
+		-
+			message: '#^Access to an undefined property App\\Models\\User\:\:\$govOp\.$#'
+			identifier: property.notFound
+			count: 2
+			path: app/Http/Controllers/Dashboards/UserController.php
+
+		-
+			message: '#^Access to an undefined property App\\Models\\User\|Illuminate\\Database\\Eloquent\\Collection\<int, App\\Models\\User\>\:\:\$govOp\.$#'
+			identifier: property.notFound
+			count: 6
+			path: app/Http/Controllers/Dashboards/UserController.php
+
+		-
+			message: '#^Access to an undefined property App\\Models\\User\|Illuminate\\Database\\Eloquent\\Collection\<int, App\\Models\\User\>\:\:\$indivAcc\.$#'
+			identifier: property.notFound
+			count: 3
+			path: app/Http/Controllers/Dashboards/UserController.php
+
+		-
+			message: '#^Access to an undefined property App\\Models\\User\|Illuminate\\Database\\Eloquent\\Collection\<int, App\\Models\\User\>\:\:\$name\.$#'
+			identifier: property.notFound
+			count: 3
+			path: app/Http/Controllers/Dashboards/UserController.php
+
+		-
+			message: '#^Access to an undefined property App\\Models\\User\|Illuminate\\Database\\Eloquent\\Collection\<int, App\\Models\\User\>\:\:\$phoneNumber\.$#'
+			identifier: property.notFound
+			count: 2
+			path: app/Http/Controllers/Dashboards/UserController.php
+
+		-
+			message: '#^Relation ''govOp'' is not found in App\\Models\\User model\.$#'
+			identifier: larastan.relationExistence
+			count: 3
+			path: app/Http/Controllers/Dashboards/UserController.php
+
+		-
+			message: '#^Relation ''indivAcc'' is not found in App\\Models\\User model\.$#'
+			identifier: larastan.relationExistence
+			count: 4
+			path: app/Http/Controllers/Dashboards/UserController.php
+
+		-
+			message: '#^Relation ''name'' is not found in App\\Models\\User model\.$#'
+			identifier: larastan.relationExistence
+			count: 2
+			path: app/Http/Controllers/Dashboards/UserController.php
+
+		-
+			message: '#^Relation ''phoneNumber'' is not found in App\\Models\\User model\.$#'
+			identifier: larastan.relationExistence
+			count: 2
+			path: app/Http/Controllers/Dashboards/UserController.php
+
+		-
+			message: '#^Relation ''role'' is not found in App\\Models\\User model\.$#'
+			identifier: larastan.relationExistence
+			count: 2
+			path: app/Http/Controllers/Dashboards/UserController.php
+
+		-
+			message: '#^Using nullsafe property access "\?\-\>city_location" on left side of \?\? is unnecessary\. Use \-\> instead\.$#'
+			identifier: nullsafe.neverNull
+			count: 1
+			path: app/Http/Controllers/Dashboards/UserController.php
+
+		-
+			message: '#^Using nullsafe property access "\?\-\>first_name" on left side of \?\? is unnecessary\. Use \-\> instead\.$#'
+			identifier: nullsafe.neverNull
+			count: 1
+			path: app/Http/Controllers/Dashboards/UserController.php
+
+		-
+			message: '#^Using nullsafe property access "\?\-\>last_name" on left side of \?\? is unnecessary\. Use \-\> instead\.$#'
+			identifier: nullsafe.neverNull
+			count: 1
+			path: app/Http/Controllers/Dashboards/UserController.php
+
+		-
+			message: '#^Using nullsafe property access on non\-nullable type App\\Models\\Role\. Use \-\> instead\.$#'
+			identifier: nullsafe.neverNull
+			count: 6
+			path: app/Http/Controllers/Dashboards/UserController.php
+
+		-
+			message: '#^Negated boolean expression is always false\.$#'
+			identifier: booleanNot.alwaysFalse
+			count: 2
+			path: app/Http/Controllers/EmergencyContactController.php
+
+		-
+			message: '#^Relation ''location'' is not found in App\\Models\\EmergencyContact model\.$#'
+			identifier: larastan.relationExistence
+			count: 2
+			path: app/Http/Controllers/EmergencyContactController.php
+
+		-
+			message: '#^Relation ''social_element'' is not found in App\\Models\\EmergencyContact model\.$#'
+			identifier: larastan.relationExistence
+			count: 13
+			path: app/Http/Controllers/EmergencyContactController.php
+
+		-
+			message: '#^Strict comparison using \!\=\= between Carbon\\Carbon and null will always evaluate to true\.$#'
+			identifier: notIdentical.alwaysTrue
+			count: 1
+			path: app/Http/Controllers/EmergencyContactController.php
+
+		-
+			message: '#^Ternary operator condition is always true\.$#'
+			identifier: ternary.alwaysTrue
+			count: 2
+			path: app/Http/Controllers/EmergencyContactController.php
+
+		-
+			message: '#^Using nullsafe property access "\?\-\>id" on left side of \?\? is unnecessary\. Use \-\> instead\.$#'
+			identifier: nullsafe.neverNull
+			count: 1
+			path: app/Http/Controllers/EmergencyContactController.php
+
+		-
+			message: '#^Using nullsafe property access on non\-nullable type App\\Models\\Location\. Use \-\> instead\.$#'
+			identifier: nullsafe.neverNull
+			count: 1
+			path: app/Http/Controllers/EmergencyContactController.php
+
+		-
+			message: '#^Using nullsafe property access on non\-nullable type App\\Models\\SocialElement\. Use \-\> instead\.$#'
+			identifier: nullsafe.neverNull
+			count: 4
+			path: app/Http/Controllers/EmergencyContactController.php
+
+		-
+			message: '#^Expression on left side of \?\? is not nullable\.$#'
+			identifier: nullCoalesce.expr
+			count: 1
+			path: app/Http/Controllers/FeedbackController.php
+
+		-
+			message: '#^Relation ''user'' is not found in App\\Models\\Feedback model\.$#'
+			identifier: larastan.relationExistence
+			count: 4
+			path: app/Http/Controllers/FeedbackController.php
+
+		-
+			message: '#^Ternary operator condition is always true\.$#'
+			identifier: ternary.alwaysTrue
+			count: 2
+			path: app/Http/Controllers/FeedbackController.php
+
+		-
+			message: '#^Access to an undefined property App\\Models\\Comment\:\:\$element\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Controllers/Flags/FlagCommentController.php
+
+		-
+			message: '#^Access to an undefined property App\\Models\\FloodPath\:\:\$socialElement\.$#'
+			identifier: property.notFound
+			count: 2
+			path: app/Http/Controllers/Flags/FlagFloodController.php
+
+		-
+			message: '#^Relation ''socialElement'' is not found in App\\Models\\FloodPath model\.$#'
+			identifier: larastan.relationExistence
+			count: 1
+			path: app/Http/Controllers/Flags/FlagFloodController.php
+
+		-
+			message: '#^Access to an undefined property App\\Models\\FloodPath\:\:\$floodLevel\.$#'
+			identifier: property.notFound
+			count: 4
+			path: app/Http/Controllers/Hazards/FloodPathController.php
+
+		-
+			message: '#^Access to an undefined property App\\Models\\FloodPath\:\:\$socialElement\.$#'
+			identifier: property.notFound
+			count: 13
+			path: app/Http/Controllers/Hazards/FloodPathController.php
+
+		-
+			message: '#^Parameter \#1 \$callback of method Illuminate\\Database\\Eloquent\\Collection\<int,App\\Models\\FloodPath\>\:\:map\(\) contains unresolvable type\.$#'
+			identifier: argument.unresolvableType
+			count: 1
+			path: app/Http/Controllers/Hazards/FloodPathController.php
+
+		-
+			message: '#^Relation ''floodLevel'' is not found in App\\Models\\FloodPath model\.$#'
+			identifier: larastan.relationExistence
+			count: 2
+			path: app/Http/Controllers/Hazards/FloodPathController.php
+
+		-
+			message: '#^Relation ''socialElement'' is not found in App\\Models\\FloodPath model\.$#'
+			identifier: larastan.relationExistence
+			count: 12
+			path: app/Http/Controllers/Hazards/FloodPathController.php
+
+		-
+			message: '#^Ternary operator condition is always true\.$#'
+			identifier: ternary.alwaysTrue
+			count: 3
+			path: app/Http/Controllers/Hazards/FloodPathController.php
+
+		-
+			message: '#^Relation ''socialElement'' is not found in App\\Models\\FloodPath model\.$#'
+			identifier: larastan.relationExistence
+			count: 2
+			path: app/Http/Controllers/Hazards/FloodReminderController.php
+
+		-
+			message: '#^Relation ''locationLevel'' is not found in App\\Models\\Location model\.$#'
+			identifier: larastan.relationExistence
+			count: 2
+			path: app/Http/Controllers/LocationsController.php
+
+		-
+			message: '#^Relation ''parentLocation'' is not found in App\\Models\\Location model\.$#'
+			identifier: larastan.relationExistence
+			count: 2
+			path: app/Http/Controllers/LocationsController.php
+
+		-
+			message: '#^Access to an undefined property App\\Models\\EvacArea\|Illuminate\\Database\\Eloquent\\Collection\<int, App\\Models\\EvacArea\>\:\:\$social_element\.$#'
+			identifier: property.notFound
+			count: 3
+			path: app/Http/Controllers/PinControllers/DeleteEvacuationAreaController.php
+
+		-
+			message: '#^Relation ''social_element'' is not found in App\\Models\\EvacArea model\.$#'
+			identifier: larastan.relationExistence
+			count: 3
+			path: app/Http/Controllers/PinControllers/DeleteEvacuationAreaController.php
+
+		-
+			message: '#^Ternary operator condition is always false\.$#'
+			identifier: ternary.alwaysFalse
+			count: 1
+			path: app/Http/Controllers/PinControllers/DeleteEvacuationAreaController.php
+
+		-
+			message: '#^Ternary operator condition is always true\.$#'
+			identifier: ternary.alwaysTrue
+			count: 1
+			path: app/Http/Controllers/PinControllers/DeleteEvacuationAreaController.php
+
+		-
+			message: '#^Using nullsafe property access "\?\-\>first_name" on left side of \?\? is unnecessary\. Use \-\> instead\.$#'
+			identifier: nullsafe.neverNull
+			count: 1
+			path: app/Http/Controllers/PinControllers/DeleteEvacuationAreaController.php
+
+		-
+			message: '#^Using nullsafe property access "\?\-\>last_name" on left side of \?\? is unnecessary\. Use \-\> instead\.$#'
+			identifier: nullsafe.neverNull
+			count: 1
+			path: app/Http/Controllers/PinControllers/DeleteEvacuationAreaController.php
+
+		-
+			message: '#^Access to an undefined property App\\Models\\EvacArea\|Illuminate\\Database\\Eloquent\\Collection\<int, App\\Models\\EvacArea\>\:\:\$address\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Controllers/PinControllers/GetEvacAreaDetailsController.php
+
+		-
+			message: '#^Access to an undefined property App\\Models\\EvacArea\|Illuminate\\Database\\Eloquent\\Collection\<int, App\\Models\\EvacArea\>\:\:\$area_type\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Controllers/PinControllers/GetEvacAreaDetailsController.php
+
+		-
+			message: '#^Access to an undefined property App\\Models\\EvacArea\|Illuminate\\Database\\Eloquent\\Collection\<int, App\\Models\\EvacArea\>\:\:\$breastfeed_count\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Controllers/PinControllers/GetEvacAreaDetailsController.php
+
+		-
+			message: '#^Access to an undefined property App\\Models\\EvacArea\|Illuminate\\Database\\Eloquent\\Collection\<int, App\\Models\\EvacArea\>\:\:\$capacity_level\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Controllers/PinControllers/GetEvacAreaDetailsController.php
+
+		-
+			message: '#^Access to an undefined property App\\Models\\EvacArea\|Illuminate\\Database\\Eloquent\\Collection\<int, App\\Models\\EvacArea\>\:\:\$capacity_level_info\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Controllers/PinControllers/GetEvacAreaDetailsController.php
+
+		-
+			message: '#^Access to an undefined property App\\Models\\EvacArea\|Illuminate\\Database\\Eloquent\\Collection\<int, App\\Models\\EvacArea\>\:\:\$child_prayer_count\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Controllers/PinControllers/GetEvacAreaDetailsController.php
+
+		-
+			message: '#^Access to an undefined property App\\Models\\EvacArea\|Illuminate\\Database\\Eloquent\\Collection\<int, App\\Models\\EvacArea\>\:\:\$contact_number\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Controllers/PinControllers/GetEvacAreaDetailsController.php
+
+		-
+			message: '#^Access to an undefined property App\\Models\\EvacArea\|Illuminate\\Database\\Eloquent\\Collection\<int, App\\Models\\EvacArea\>\:\:\$contact_person\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Controllers/PinControllers/GetEvacAreaDetailsController.php
+
+		-
+			message: '#^Access to an undefined property App\\Models\\EvacArea\|Illuminate\\Database\\Eloquent\\Collection\<int, App\\Models\\EvacArea\>\:\:\$description\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Controllers/PinControllers/GetEvacAreaDetailsController.php
+
+		-
+			message: '#^Access to an undefined property App\\Models\\EvacArea\|Illuminate\\Database\\Eloquent\\Collection\<int, App\\Models\\EvacArea\>\:\:\$evac_type\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Controllers/PinControllers/GetEvacAreaDetailsController.php
+
+		-
+			message: '#^Access to an undefined property App\\Models\\EvacArea\|Illuminate\\Database\\Eloquent\\Collection\<int, App\\Models\\EvacArea\>\:\:\$expiry\.$#'
+			identifier: property.notFound
+			count: 2
+			path: app/Http/Controllers/PinControllers/GetEvacAreaDetailsController.php
+
+		-
+			message: '#^Access to an undefined property App\\Models\\EvacArea\|Illuminate\\Database\\Eloquent\\Collection\<int, App\\Models\\EvacArea\>\:\:\$for_heavy_flood\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Controllers/PinControllers/GetEvacAreaDetailsController.php
+
+		-
+			message: '#^Access to an undefined property App\\Models\\EvacArea\|Illuminate\\Database\\Eloquent\\Collection\<int, App\\Models\\EvacArea\>\:\:\$for_reg_flood\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Controllers/PinControllers/GetEvacAreaDetailsController.php
+
+		-
+			message: '#^Access to an undefined property App\\Models\\EvacArea\|Illuminate\\Database\\Eloquent\\Collection\<int, App\\Models\\EvacArea\>\:\:\$gov_op\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Controllers/PinControllers/GetEvacAreaDetailsController.php
+
+		-
+			message: '#^Access to an undefined property App\\Models\\EvacArea\|Illuminate\\Database\\Eloquent\\Collection\<int, App\\Models\\EvacArea\>\:\:\$has_DRRMO\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Controllers/PinControllers/GetEvacAreaDetailsController.php
+
+		-
+			message: '#^Access to an undefined property App\\Models\\EvacArea\|Illuminate\\Database\\Eloquent\\Collection\<int, App\\Models\\EvacArea\>\:\:\$has_accom\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Controllers/PinControllers/GetEvacAreaDetailsController.php
+
+		-
+			message: '#^Access to an undefined property App\\Models\\EvacArea\|Illuminate\\Database\\Eloquent\\Collection\<int, App\\Models\\EvacArea\>\:\:\$has_catchment\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Controllers/PinControllers/GetEvacAreaDetailsController.php
+
+		-
+			message: '#^Access to an undefined property App\\Models\\EvacArea\|Illuminate\\Database\\Eloquent\\Collection\<int, App\\Models\\EvacArea\>\:\:\$has_health\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Controllers/PinControllers/GetEvacAreaDetailsController.php
+
+		-
+			message: '#^Access to an undefined property App\\Models\\EvacArea\|Illuminate\\Database\\Eloquent\\Collection\<int, App\\Models\\EvacArea\>\:\:\$is_persistent\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Controllers/PinControllers/GetEvacAreaDetailsController.php
+
+		-
+			message: '#^Access to an undefined property App\\Models\\EvacArea\|Illuminate\\Database\\Eloquent\\Collection\<int, App\\Models\\EvacArea\>\:\:\$kitchen_count\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Controllers/PinControllers/GetEvacAreaDetailsController.php
+
+		-
+			message: '#^Access to an undefined property App\\Models\\EvacArea\|Illuminate\\Database\\Eloquent\\Collection\<int, App\\Models\\EvacArea\>\:\:\$last_updated\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Controllers/PinControllers/GetEvacAreaDetailsController.php
+
+		-
+			message: '#^Access to an undefined property App\\Models\\EvacArea\|Illuminate\\Database\\Eloquent\\Collection\<int, App\\Models\\EvacArea\>\:\:\$location\.$#'
+			identifier: property.notFound
+			count: 2
+			path: app/Http/Controllers/PinControllers/GetEvacAreaDetailsController.php
+
+		-
+			message: '#^Access to an undefined property App\\Models\\EvacArea\|Illuminate\\Database\\Eloquent\\Collection\<int, App\\Models\\EvacArea\>\:\:\$location_id\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Controllers/PinControllers/GetEvacAreaDetailsController.php
+
+		-
+			message: '#^Access to an undefined property App\\Models\\EvacArea\|Illuminate\\Database\\Eloquent\\Collection\<int, App\\Models\\EvacArea\>\:\:\$name\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Controllers/PinControllers/GetEvacAreaDetailsController.php
+
+		-
+			message: '#^Access to an undefined property App\\Models\\EvacArea\|Illuminate\\Database\\Eloquent\\Collection\<int, App\\Models\\EvacArea\>\:\:\$other_facilities\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Controllers/PinControllers/GetEvacAreaDetailsController.php
+
+		-
+			message: '#^Access to an undefined property App\\Models\\EvacArea\|Illuminate\\Database\\Eloquent\\Collection\<int, App\\Models\\EvacArea\>\:\:\$pwd_friendly\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Controllers/PinControllers/GetEvacAreaDetailsController.php
+
+		-
+			message: '#^Access to an undefined property App\\Models\\EvacArea\|Illuminate\\Database\\Eloquent\\Collection\<int, App\\Models\\EvacArea\>\:\:\$social_element\.$#'
+			identifier: property.notFound
+			count: 6
+			path: app/Http/Controllers/PinControllers/GetEvacAreaDetailsController.php
+
+		-
+			message: '#^Access to an undefined property App\\Models\\EvacArea\|Illuminate\\Database\\Eloquent\\Collection\<int, App\\Models\\EvacArea\>\:\:\$toilet_count\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Controllers/PinControllers/GetEvacAreaDetailsController.php
+
+		-
+			message: '#^Access to an undefined property App\\Models\\EvacArea\|Illuminate\\Database\\Eloquent\\Collection\<int, App\\Models\\EvacArea\>\:\:\$verified_at\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Controllers/PinControllers/GetEvacAreaDetailsController.php
+
+		-
+			message: '#^Access to an undefined property App\\Models\\EvacArea\|Illuminate\\Database\\Eloquent\\Collection\<int, App\\Models\\EvacArea\>\:\:\$verified_by\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Controllers/PinControllers/GetEvacAreaDetailsController.php
+
+		-
+			message: '#^Relation ''social_element'' is not found in App\\Models\\EvacArea model\.$#'
+			identifier: larastan.relationExistence
+			count: 1
+			path: app/Http/Controllers/PinControllers/GetEvacAreaDetailsController.php
+
+		-
+			message: '#^Access to an undefined property App\\Models\\EvacArea\:\:\$address\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Controllers/PinControllers/GetEvacAreasController.php
+
+		-
+			message: '#^Access to an undefined property App\\Models\\EvacArea\:\:\$expiry\.$#'
+			identifier: property.notFound
+			count: 2
+			path: app/Http/Controllers/PinControllers/GetEvacAreasController.php
+
+		-
+			message: '#^Access to an undefined property App\\Models\\EvacArea\:\:\$is_persistent\.$#'
+			identifier: property.notFound
+			count: 2
+			path: app/Http/Controllers/PinControllers/GetEvacAreasController.php
+
+		-
+			message: '#^Access to an undefined property App\\Models\\EvacArea\:\:\$location\.$#'
+			identifier: property.notFound
+			count: 4
+			path: app/Http/Controllers/PinControllers/GetEvacAreasController.php
+
+		-
+			message: '#^Access to an undefined property App\\Models\\EvacArea\:\:\$location_id\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Controllers/PinControllers/GetEvacAreasController.php
+
+		-
+			message: '#^Access to an undefined property App\\Models\\EvacArea\:\:\$location_info\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Controllers/PinControllers/GetEvacAreasController.php
+
+		-
+			message: '#^Access to an undefined property App\\Models\\EvacArea\:\:\$name\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Controllers/PinControllers/GetEvacAreasController.php
+
+		-
+			message: '#^Access to an undefined property App\\Models\\EvacArea\:\:\$social_element\.$#'
+			identifier: property.notFound
+			count: 5
+			path: app/Http/Controllers/PinControllers/GetEvacAreasController.php
+
+		-
+			message: '#^Relation ''location_info'' is not found in App\\Models\\EvacArea model\.$#'
+			identifier: larastan.relationExistence
+			count: 2
+			path: app/Http/Controllers/PinControllers/GetEvacAreasController.php
+
+		-
+			message: '#^Relation ''social_element'' is not found in App\\Models\\EvacArea model\.$#'
+			identifier: larastan.relationExistence
+			count: 14
+			path: app/Http/Controllers/PinControllers/GetEvacAreasController.php
+
+		-
+			message: '#^Access to an undefined property App\\Models\\EvacArea\:\:\$address\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Controllers/PinControllers/GetEvacuationRoutesController.php
+
+		-
+			message: '#^Access to an undefined property App\\Models\\EvacArea\:\:\$capacity_level\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Controllers/PinControllers/GetEvacuationRoutesController.php
+
+		-
+			message: '#^Access to an undefined property App\\Models\\EvacArea\:\:\$distance_meters\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Controllers/PinControllers/GetEvacuationRoutesController.php
+
+		-
+			message: '#^Access to an undefined property App\\Models\\EvacArea\:\:\$location\.$#'
+			identifier: property.notFound
+			count: 2
+			path: app/Http/Controllers/PinControllers/GetEvacuationRoutesController.php
+
+		-
+			message: '#^Access to an undefined property App\\Models\\EvacArea\:\:\$name\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Controllers/PinControllers/GetEvacuationRoutesController.php
+
+		-
+			message: '#^Access to an undefined property App\\Models\\EvacArea\:\:\$verified_by\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Controllers/PinControllers/GetEvacuationRoutesController.php
+
+		-
+			message: '#^Parameter \#1 \$callback of method Illuminate\\Database\\Eloquent\\Collection\<int,App\\Models\\EvacArea\>\:\:map\(\) contains unresolvable type\.$#'
+			identifier: argument.unresolvableType
+			count: 1
+			path: app/Http/Controllers/PinControllers/GetEvacuationRoutesController.php
+
+		-
+			message: '#^Relation ''social_element'' is not found in App\\Models\\EvacArea model\.$#'
+			identifier: larastan.relationExistence
+			count: 2
+			path: app/Http/Controllers/PinControllers/GetEvacuationRoutesController.php
+
+		-
+			message: '#^Access to an undefined property App\\Models\\EvacArea\:\:\$address\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Controllers/PinControllers/GetNearbyEvacuationAreasController.php
+
+		-
+			message: '#^Access to an undefined property App\\Models\\EvacArea\:\:\$area_type\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Controllers/PinControllers/GetNearbyEvacuationAreasController.php
+
+		-
+			message: '#^Access to an undefined property App\\Models\\EvacArea\:\:\$capacity_level\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Controllers/PinControllers/GetNearbyEvacuationAreasController.php
+
+		-
+			message: '#^Access to an undefined property App\\Models\\EvacArea\:\:\$distance_meters\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Controllers/PinControllers/GetNearbyEvacuationAreasController.php
+
+		-
+			message: '#^Access to an undefined property App\\Models\\EvacArea\:\:\$expiry\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Controllers/PinControllers/GetNearbyEvacuationAreasController.php
+
+		-
+			message: '#^Access to an undefined property App\\Models\\EvacArea\:\:\$location\.$#'
+			identifier: property.notFound
+			count: 2
+			path: app/Http/Controllers/PinControllers/GetNearbyEvacuationAreasController.php
+
+		-
+			message: '#^Access to an undefined property App\\Models\\EvacArea\:\:\$name\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Controllers/PinControllers/GetNearbyEvacuationAreasController.php
+
+		-
+			message: '#^Access to an undefined property App\\Models\\EvacArea\:\:\$verified_by\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Controllers/PinControllers/GetNearbyEvacuationAreasController.php
+
+		-
+			message: '#^Parameter \#1 \$callback of method Illuminate\\Database\\Eloquent\\Collection\<int,App\\Models\\EvacArea\>\:\:map\(\) contains unresolvable type\.$#'
+			identifier: argument.unresolvableType
+			count: 1
+			path: app/Http/Controllers/PinControllers/GetNearbyEvacuationAreasController.php
+
+		-
+			message: '#^Relation ''social_element'' is not found in App\\Models\\EvacArea model\.$#'
+			identifier: larastan.relationExistence
+			count: 2
+			path: app/Http/Controllers/PinControllers/GetNearbyEvacuationAreasController.php
+
+		-
+			message: '#^Using nullsafe property access "\?\-\>id" on left side of \?\? is unnecessary\. Use \-\> instead\.$#'
+			identifier: nullsafe.neverNull
+			count: 2
+			path: app/Http/Controllers/PinControllers/StoreEvacuationAreaController.php
+
+		-
+			message: '#^Access to an undefined property App\\Models\\EvacArea\|Illuminate\\Database\\Eloquent\\Collection\<int, App\\Models\\EvacArea\>\:\:\$address\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Controllers/PinControllers/UpdateEvacuationAreaController.php
+
+		-
+			message: '#^Access to an undefined property App\\Models\\EvacArea\|Illuminate\\Database\\Eloquent\\Collection\<int, App\\Models\\EvacArea\>\:\:\$area_type\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Controllers/PinControllers/UpdateEvacuationAreaController.php
+
+		-
+			message: '#^Access to an undefined property App\\Models\\EvacArea\|Illuminate\\Database\\Eloquent\\Collection\<int, App\\Models\\EvacArea\>\:\:\$breastfeed_count\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Controllers/PinControllers/UpdateEvacuationAreaController.php
+
+		-
+			message: '#^Access to an undefined property App\\Models\\EvacArea\|Illuminate\\Database\\Eloquent\\Collection\<int, App\\Models\\EvacArea\>\:\:\$capacity_level\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Controllers/PinControllers/UpdateEvacuationAreaController.php
+
+		-
+			message: '#^Access to an undefined property App\\Models\\EvacArea\|Illuminate\\Database\\Eloquent\\Collection\<int, App\\Models\\EvacArea\>\:\:\$child_prayer_count\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Controllers/PinControllers/UpdateEvacuationAreaController.php
+
+		-
+			message: '#^Access to an undefined property App\\Models\\EvacArea\|Illuminate\\Database\\Eloquent\\Collection\<int, App\\Models\\EvacArea\>\:\:\$contact_number\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Controllers/PinControllers/UpdateEvacuationAreaController.php
+
+		-
+			message: '#^Access to an undefined property App\\Models\\EvacArea\|Illuminate\\Database\\Eloquent\\Collection\<int, App\\Models\\EvacArea\>\:\:\$contact_person\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Controllers/PinControllers/UpdateEvacuationAreaController.php
+
+		-
+			message: '#^Access to an undefined property App\\Models\\EvacArea\|Illuminate\\Database\\Eloquent\\Collection\<int, App\\Models\\EvacArea\>\:\:\$description\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Controllers/PinControllers/UpdateEvacuationAreaController.php
+
+		-
+			message: '#^Access to an undefined property App\\Models\\EvacArea\|Illuminate\\Database\\Eloquent\\Collection\<int, App\\Models\\EvacArea\>\:\:\$expiry\.$#'
+			identifier: property.notFound
+			count: 2
+			path: app/Http/Controllers/PinControllers/UpdateEvacuationAreaController.php
+
+		-
+			message: '#^Access to an undefined property App\\Models\\EvacArea\|Illuminate\\Database\\Eloquent\\Collection\<int, App\\Models\\EvacArea\>\:\:\$for_heavy_flood\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Controllers/PinControllers/UpdateEvacuationAreaController.php
+
+		-
+			message: '#^Access to an undefined property App\\Models\\EvacArea\|Illuminate\\Database\\Eloquent\\Collection\<int, App\\Models\\EvacArea\>\:\:\$for_reg_flood\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Controllers/PinControllers/UpdateEvacuationAreaController.php
+
+		-
+			message: '#^Access to an undefined property App\\Models\\EvacArea\|Illuminate\\Database\\Eloquent\\Collection\<int, App\\Models\\EvacArea\>\:\:\$has_DRRMO\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Controllers/PinControllers/UpdateEvacuationAreaController.php
+
+		-
+			message: '#^Access to an undefined property App\\Models\\EvacArea\|Illuminate\\Database\\Eloquent\\Collection\<int, App\\Models\\EvacArea\>\:\:\$has_accom\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Controllers/PinControllers/UpdateEvacuationAreaController.php
+
+		-
+			message: '#^Access to an undefined property App\\Models\\EvacArea\|Illuminate\\Database\\Eloquent\\Collection\<int, App\\Models\\EvacArea\>\:\:\$has_catchment\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Controllers/PinControllers/UpdateEvacuationAreaController.php
+
+		-
+			message: '#^Access to an undefined property App\\Models\\EvacArea\|Illuminate\\Database\\Eloquent\\Collection\<int, App\\Models\\EvacArea\>\:\:\$has_health\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Controllers/PinControllers/UpdateEvacuationAreaController.php
+
+		-
+			message: '#^Access to an undefined property App\\Models\\EvacArea\|Illuminate\\Database\\Eloquent\\Collection\<int, App\\Models\\EvacArea\>\:\:\$is_persistent\.$#'
+			identifier: property.notFound
+			count: 3
+			path: app/Http/Controllers/PinControllers/UpdateEvacuationAreaController.php
+
+		-
+			message: '#^Access to an undefined property App\\Models\\EvacArea\|Illuminate\\Database\\Eloquent\\Collection\<int, App\\Models\\EvacArea\>\:\:\$kitchen_count\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Controllers/PinControllers/UpdateEvacuationAreaController.php
+
+		-
+			message: '#^Access to an undefined property App\\Models\\EvacArea\|Illuminate\\Database\\Eloquent\\Collection\<int, App\\Models\\EvacArea\>\:\:\$last_updated\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Controllers/PinControllers/UpdateEvacuationAreaController.php
+
+		-
+			message: '#^Access to an undefined property App\\Models\\EvacArea\|Illuminate\\Database\\Eloquent\\Collection\<int, App\\Models\\EvacArea\>\:\:\$location\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Controllers/PinControllers/UpdateEvacuationAreaController.php
+
+		-
+			message: '#^Access to an undefined property App\\Models\\EvacArea\|Illuminate\\Database\\Eloquent\\Collection\<int, App\\Models\\EvacArea\>\:\:\$location_id\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Controllers/PinControllers/UpdateEvacuationAreaController.php
+
+		-
+			message: '#^Access to an undefined property App\\Models\\EvacArea\|Illuminate\\Database\\Eloquent\\Collection\<int, App\\Models\\EvacArea\>\:\:\$name\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Controllers/PinControllers/UpdateEvacuationAreaController.php
+
+		-
+			message: '#^Access to an undefined property App\\Models\\EvacArea\|Illuminate\\Database\\Eloquent\\Collection\<int, App\\Models\\EvacArea\>\:\:\$other_facilities\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Controllers/PinControllers/UpdateEvacuationAreaController.php
+
+		-
+			message: '#^Access to an undefined property App\\Models\\EvacArea\|Illuminate\\Database\\Eloquent\\Collection\<int, App\\Models\\EvacArea\>\:\:\$pwd_friendly\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Controllers/PinControllers/UpdateEvacuationAreaController.php
+
+		-
+			message: '#^Access to an undefined property App\\Models\\EvacArea\|Illuminate\\Database\\Eloquent\\Collection\<int, App\\Models\\EvacArea\>\:\:\$social_element\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Controllers/PinControllers/UpdateEvacuationAreaController.php
+
+		-
+			message: '#^Access to an undefined property App\\Models\\EvacArea\|Illuminate\\Database\\Eloquent\\Collection\<int, App\\Models\\EvacArea\>\:\:\$toilet_count\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Controllers/PinControllers/UpdateEvacuationAreaController.php
+
+		-
+			message: '#^Relation ''social_element'' is not found in App\\Models\\EvacArea model\.$#'
+			identifier: larastan.relationExistence
+			count: 1
+			path: app/Http/Controllers/PinControllers/UpdateEvacuationAreaController.php
+
+		-
+			message: '#^Using nullsafe property access "\?\-\>id" on left side of \?\? is unnecessary\. Use \-\> instead\.$#'
+			identifier: nullsafe.neverNull
+			count: 1
+			path: app/Http/Controllers/PinControllers/UpdateEvacuationAreaController.php
+
+		-
+			message: '#^Access to an undefined property App\\Models\\EvacArea\|Illuminate\\Database\\Eloquent\\Collection\<int, App\\Models\\EvacArea\>\:\:\$gov_op\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Controllers/PinControllers/VerifyEvacuationAreaController.php
+
+		-
+			message: '#^Access to an undefined property App\\Models\\EvacArea\|Illuminate\\Database\\Eloquent\\Collection\<int, App\\Models\\EvacArea\>\:\:\$last_updated\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Controllers/PinControllers/VerifyEvacuationAreaController.php
+
+		-
+			message: '#^Access to an undefined property App\\Models\\EvacArea\|Illuminate\\Database\\Eloquent\\Collection\<int, App\\Models\\EvacArea\>\:\:\$verified_by\.$#'
+			identifier: property.notFound
+			count: 2
+			path: app/Http/Controllers/PinControllers/VerifyEvacuationAreaController.php
+
+		-
+			message: '#^Method App\\Http\\Controllers\\PinControllers\\VerifyEvacuationAreaController\:\:displayName\(\) is unused\.$#'
+			identifier: method.unused
+			count: 1
+			path: app/Http/Controllers/PinControllers/VerifyEvacuationAreaController.php
+
+		-
+			message: '#^Relation ''gov_op'' is not found in App\\Models\\EvacArea model\.$#'
+			identifier: larastan.relationExistence
+			count: 1
+			path: app/Http/Controllers/PinControllers/VerifyEvacuationAreaController.php
+
+		-
+			message: '#^Relation ''social_element'' is not found in App\\Models\\EvacArea model\.$#'
+			identifier: larastan.relationExistence
+			count: 1
+			path: app/Http/Controllers/PinControllers/VerifyEvacuationAreaController.php
+
+		-
+			message: '#^Using nullsafe property access "\?\-\>first_name" on left side of \?\? is unnecessary\. Use \-\> instead\.$#'
+			identifier: nullsafe.neverNull
+			count: 1
+			path: app/Http/Controllers/PinControllers/VerifyEvacuationAreaController.php
+
+		-
+			message: '#^Using nullsafe property access "\?\-\>last_name" on left side of \?\? is unnecessary\. Use \-\> instead\.$#'
+			identifier: nullsafe.neverNull
+			count: 1
+			path: app/Http/Controllers/PinControllers/VerifyEvacuationAreaController.php
+
+		-
+			message: '#^Using nullsafe property access "\?\-\>full_location" on left side of \?\? is unnecessary\. Use \-\> instead\.$#'
+			identifier: nullsafe.neverNull
+			count: 1
+			path: app/Http/Controllers/ProfileController.php
+
+		-
+			message: '#^Expression on left side of \?\? is not nullable\.$#'
+			identifier: nullCoalesce.expr
+			count: 1
+			path: app/Http/Controllers/SMSController.php
+
+		-
+			message: '#^Using nullsafe method call on non\-nullable type Carbon\\Carbon\. Use \-\> instead\.$#'
+			identifier: nullsafe.neverNull
+			count: 1
+			path: app/Http/Controllers/SMSController.php
+
+		-
+			message: '#^Using nullsafe property access "\?\-\>status_name" on left side of \?\? is unnecessary\. Use \-\> instead\.$#'
+			identifier: nullsafe.neverNull
+			count: 1
+			path: app/Http/Controllers/SMSController.php
+
+		-
+			message: '#^Using nullsafe property access on non\-nullable type App\\Models\\Location\. Use \-\> instead\.$#'
+			identifier: nullsafe.neverNull
+			count: 2
+			path: app/Http/Controllers/SMSController.php
+
+		-
+			message: '#^Access to an undefined property App\\Models\\Sensor\:\:\$address\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Controllers/SensorControllers/PublicSensorController.php
+
+		-
+			message: '#^Access to an undefined property App\\Models\\Sensor\:\:\$current_status\.$#'
+			identifier: property.notFound
+			count: 2
+			path: app/Http/Controllers/SensorControllers/PublicSensorController.php
+
+		-
+			message: '#^Access to an undefined property App\\Models\\Sensor\:\:\$latest_log\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Controllers/SensorControllers/PublicSensorController.php
+
+		-
+			message: '#^Access to an undefined property App\\Models\\Sensor\:\:\$mount_location\.$#'
+			identifier: property.notFound
+			count: 2
+			path: app/Http/Controllers/SensorControllers/PublicSensorController.php
+
+		-
+			message: '#^Parameter \#1 \$callback of method Illuminate\\Database\\Eloquent\\Collection\<int,App\\Models\\Sensor\>\:\:map\(\) contains unresolvable type\.$#'
+			identifier: argument.unresolvableType
+			count: 1
+			path: app/Http/Controllers/SensorControllers/PublicSensorController.php
+
+		-
+			message: '#^Relation ''mount_location'' is not found in App\\Models\\Sensor model\.$#'
+			identifier: larastan.relationExistence
+			count: 1
+			path: app/Http/Controllers/SensorControllers/PublicSensorController.php
+
+		-
+			message: '#^Relation ''social_element'' is not found in App\\Models\\Sensor model\.$#'
+			identifier: larastan.relationExistence
+			count: 1
+			path: app/Http/Controllers/SensorControllers/PublicSensorController.php
+
+		-
+			message: '#^Ternary operator condition is always true\.$#'
+			identifier: ternary.alwaysTrue
+			count: 2
+			path: app/Http/Controllers/SensorControllers/PublicSensorController.php
+
+		-
+			message: '#^Using nullsafe property access on non\-nullable type App\\Models\\SocialElement\. Use \-\> instead\.$#'
+			identifier: nullsafe.neverNull
+			count: 1
+			path: app/Http/Controllers/SensorControllers/PublicSensorController.php
+
+		-
+			message: '#^Call to an undefined method Illuminate\\Pagination\\LengthAwarePaginator\<int, Illuminate\\Database\\Eloquent\\Model\>\:\:loadMissing\(\)\.$#'
+			identifier: method.notFound
+			count: 1
+			path: app/Http/Controllers/SensorControllers/SensorController.php
+
+		-
+			message: '#^Relation ''social_element'' is not found in App\\Models\\Sensor model\.$#'
+			identifier: larastan.relationExistence
+			count: 1
+			path: app/Http/Controllers/SensorControllers/SensorController.php
+
+		-
+			message: '#^Access to an undefined property App\\Models\\Comment\:\:\$element\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Controllers/Votes/VoteCommentController.php
+
+		-
+			message: '#^Relation ''element'' is not found in App\\Models\\Comment model\.$#'
+			identifier: larastan.relationExistence
+			count: 1
+			path: app/Http/Controllers/Votes/VoteCommentController.php
+
+		-
+			message: '#^Negated boolean expression is always false\.$#'
+			identifier: booleanNot.alwaysFalse
+			count: 1
+			path: app/Http/Middleware/FirebaseAuthMiddleware.php
+
+		-
+			message: '#^Relation ''user'' is not found in App\\Models\\UserAuth model\.$#'
+			identifier: larastan.relationExistence
+			count: 1
+			path: app/Http/Middleware/FirebaseAuthMiddleware.php
+
+		-
+			message: '#^Relation ''user'' is not found in App\\Models\\UserAuth model\.$#'
+			identifier: larastan.relationExistence
+			count: 1
+			path: app/Http/Middleware/OptionalFirebaseAuthMiddleware.php
+
+		-
+			message: '#^Right side of && is always true\.$#'
+			identifier: booleanAnd.rightAlwaysTrue
+			count: 1
+			path: app/Http/Middleware/OptionalFirebaseAuthMiddleware.php
+
+		-
+			message: '#^Access to an undefined property App\\Http\\Resources\\AuditLogResource\:\:\$created_at\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Resources/AuditLogResource.php
+
+		-
+			message: '#^Access to an undefined property App\\Http\\Resources\\AuditLogResource\:\:\$event\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Resources/AuditLogResource.php
+
+		-
+			message: '#^Access to an undefined property App\\Http\\Resources\\AuditLogResource\:\:\$id\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Resources/AuditLogResource.php
+
+		-
+			message: '#^Access to an undefined property App\\Http\\Resources\\AuditLogResource\:\:\$log_id\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Resources/AuditLogResource.php
+
+		-
+			message: '#^Access to an undefined property App\\Http\\Resources\\AuditLogResource\:\:\$target_table\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Resources/AuditLogResource.php
+
+		-
+			message: '#^Access to an undefined property App\\Http\\Resources\\AuditLogResource\:\:\$user\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Resources/AuditLogResource.php
+
+		-
+			message: '#^Access to an undefined property App\\Http\\Resources\\AuditLogResource\:\:\$user_id\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Resources/AuditLogResource.php
+
+		-
+			message: '#^Access to an undefined property App\\Http\\Resources\\AuditLogResource\:\:\$user_type\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Resources/AuditLogResource.php
+
+		-
+			message: '#^Access to an undefined property App\\Http\\Resources\\AuditLogShowResource\:\:\$created_at\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Resources/AuditLogShowResource.php
+
+		-
+			message: '#^Access to an undefined property App\\Http\\Resources\\AuditLogShowResource\:\:\$event\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Resources/AuditLogShowResource.php
+
+		-
+			message: '#^Access to an undefined property App\\Http\\Resources\\AuditLogShowResource\:\:\$id\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Resources/AuditLogShowResource.php
+
+		-
+			message: '#^Access to an undefined property App\\Http\\Resources\\AuditLogShowResource\:\:\$ip_address\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Resources/AuditLogShowResource.php
+
+		-
+			message: '#^Access to an undefined property App\\Http\\Resources\\AuditLogShowResource\:\:\$log_id\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Resources/AuditLogShowResource.php
+
+		-
+			message: '#^Access to an undefined property App\\Http\\Resources\\AuditLogShowResource\:\:\$new_values\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Resources/AuditLogShowResource.php
+
+		-
+			message: '#^Access to an undefined property App\\Http\\Resources\\AuditLogShowResource\:\:\$old_values\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Resources/AuditLogShowResource.php
+
+		-
+			message: '#^Access to an undefined property App\\Http\\Resources\\AuditLogShowResource\:\:\$target_id\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Resources/AuditLogShowResource.php
+
+		-
+			message: '#^Access to an undefined property App\\Http\\Resources\\AuditLogShowResource\:\:\$target_table\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Resources/AuditLogShowResource.php
+
+		-
+			message: '#^Access to an undefined property App\\Http\\Resources\\AuditLogShowResource\:\:\$user\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Resources/AuditLogShowResource.php
+
+		-
+			message: '#^Access to an undefined property App\\Http\\Resources\\AuditLogShowResource\:\:\$user_agent\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Resources/AuditLogShowResource.php
+
+		-
+			message: '#^Access to an undefined property App\\Http\\Resources\\AuditLogShowResource\:\:\$user_id\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Resources/AuditLogShowResource.php
+
+		-
+			message: '#^Access to an undefined property App\\Http\\Resources\\AuditLogShowResource\:\:\$user_type\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Resources/AuditLogShowResource.php
+
+		-
+			message: '#^Access to an undefined property App\\Http\\Resources\\SensorLogResource\:\:\$log_time\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Resources/SensorLogResource.php
+
+		-
+			message: '#^Access to an undefined property App\\Http\\Resources\\SensorLogResource\:\:\$sensor_code\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Resources/SensorLogResource.php
+
+		-
+			message: '#^Access to an undefined property App\\Http\\Resources\\SensorLogResource\:\:\$sensor_timestamp\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Resources/SensorLogResource.php
+
+		-
+			message: '#^Access to an undefined property App\\Http\\Resources\\SensorLogResource\:\:\$status_level\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Resources/SensorLogResource.php
+
+		-
+			message: '#^Access to an undefined property App\\Http\\Resources\\SensorLogResource\:\:\$water_level\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Resources/SensorLogResource.php
+
+		-
+			message: '#^Access to an undefined property App\\Http\\Resources\\SensorLogShowResource\:\:\$log_time\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Resources/SensorLogShowResource.php
+
+		-
+			message: '#^Access to an undefined property App\\Http\\Resources\\SensorLogShowResource\:\:\$sensor_timestamp\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Resources/SensorLogShowResource.php
+
+		-
+			message: '#^Access to an undefined property App\\Http\\Resources\\SensorLogShowResource\:\:\$status_level\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Resources/SensorLogShowResource.php
+
+		-
+			message: '#^Access to an undefined property App\\Http\\Resources\\SensorLogShowResource\:\:\$water_level\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Resources/SensorLogShowResource.php
+
+		-
+			message: '#^Access to an undefined property App\\Http\\Resources\\SensorResource\:\:\$address\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Resources/SensorResource.php
+
+		-
+			message: '#^Access to an undefined property App\\Http\\Resources\\SensorResource\:\:\$current_status\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Resources/SensorResource.php
+
+		-
+			message: '#^Access to an undefined property App\\Http\\Resources\\SensorResource\:\:\$id\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Resources/SensorResource.php
+
+		-
+			message: '#^Access to an undefined property App\\Http\\Resources\\SensorResource\:\:\$last_online\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Resources/SensorResource.php
+
+		-
+			message: '#^Access to an undefined property App\\Http\\Resources\\SensorResource\:\:\$latest_log\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Resources/SensorResource.php
+
+		-
+			message: '#^Access to an undefined property App\\Http\\Resources\\SensorResource\:\:\$location\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Resources/SensorResource.php
+
+		-
+			message: '#^Access to an undefined property App\\Http\\Resources\\SensorResource\:\:\$mount_height\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Resources/SensorResource.php
+
+		-
+			message: '#^Access to an undefined property App\\Http\\Resources\\SensorResource\:\:\$mount_location\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Resources/SensorResource.php
+
+		-
+			message: '#^Access to an undefined property App\\Http\\Resources\\SensorResource\:\:\$name\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Resources/SensorResource.php
+
+		-
+			message: '#^Access to an undefined property App\\Http\\Resources\\SensorResource\:\:\$orange_level\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Resources/SensorResource.php
+
+		-
+			message: '#^Access to an undefined property App\\Http\\Resources\\SensorResource\:\:\$red_level\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Resources/SensorResource.php
+
+		-
+			message: '#^Access to an undefined property App\\Http\\Resources\\SensorResource\:\:\$sensor_code\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Resources/SensorResource.php
+
+		-
+			message: '#^Access to an undefined property App\\Http\\Resources\\SensorResource\:\:\$social_element\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Resources/SensorResource.php
+
+		-
+			message: '#^Access to an undefined property App\\Http\\Resources\\SensorResource\:\:\$yellow_level\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Http/Resources/SensorResource.php
+
+		-
+			message: '#^Call to an undefined method App\\Http\\Resources\\SensorResource\:\:relationLoaded\(\)\.$#'
+			identifier: method.notFound
+			count: 1
+			path: app/Http/Resources/SensorResource.php
+
+		-
+			message: '#^Using nullsafe property access "\?\-\>name" on left side of \?\? is unnecessary\. Use \-\> instead\.$#'
+			identifier: nullsafe.neverNull
+			count: 1
+			path: app/Http/Resources/SensorResource.php
+
+		-
+			message: '#^Access to an undefined property App\\Models\\FloodPath\:\:\$socialElement\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Jobs/SendFloodReminders.php
+
+		-
+			message: '#^Relation ''socialElement'' is not found in App\\Models\\FloodPath model\.$#'
+			identifier: larastan.relationExistence
+			count: 1
+			path: app/Jobs/SendFloodReminders.php
+
+		-
+			message: '#^Expression on left side of \?\? is not nullable\.$#'
+			identifier: nullCoalesce.expr
+			count: 1
+			path: app/Services/SMSBroadcastService.php
+
+		-
+			message: '#^Relation ''broadcast_status'' is not found in App\\Models\\SMSBroadcast model\.$#'
+			identifier: larastan.relationExistence
+			count: 1
+			path: app/Services/SMSBroadcastService.php
+
+		-
+			message: '#^Relation ''gov_op'' is not found in App\\Models\\SMSBroadcast model\.$#'
+			identifier: larastan.relationExistence
+			count: 1
+			path: app/Services/SMSBroadcastService.php
+
+		-
+			message: '#^Relation ''gov_op'' is not found in App\\Models\\SMSTemplate model\.$#'
+			identifier: larastan.relationExistence
+			count: 1
+			path: app/Services/SMSBroadcastService.php
+
+		-
+			message: '#^Relation ''location'' is not found in App\\Models\\SMSBroadcast model\.$#'
+			identifier: larastan.relationExistence
+			count: 1
+			path: app/Services/SMSBroadcastService.php
+
+		-
+			message: '#^Relation ''user'' is not found in App\\Models\\PhoneNumber model\.$#'
+			identifier: larastan.relationExistence
+			count: 4
+			path: app/Services/SMSBroadcastService.php
+
+		-
+			message: '#^Ternary operator condition is always true\.$#'
+			identifier: ternary.alwaysTrue
+			count: 1
+			path: app/Services/SMSBroadcastService.php
+
+		-
+			message: '#^Using nullsafe property access on non\-nullable type App\\Models\\GovOp\. Use \-\> instead\.$#'
+			identifier: nullsafe.neverNull
+			count: 8
+			path: app/Services/SMSBroadcastService.php
+
+		-
+			message: '#^Using nullsafe property access on non\-nullable type App\\Models\\Location\. Use \-\> instead\.$#'
+			identifier: nullsafe.neverNull
+			count: 2
+			path: app/Services/SMSBroadcastService.php
+
+		-
+			message: '#^Using nullsafe property access on non\-nullable type App\\Models\\User\. Use \-\> instead\.$#'
+			identifier: nullsafe.neverNull
+			count: 2
+			path: app/Services/SMSBroadcastService.php
+
+		-
+			message: '#^Access to an undefined property App\\Models\\Sensor\:\:\$orange_level\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Services/SensorLogService.php
+
+		-
+			message: '#^Access to an undefined property App\\Models\\Sensor\:\:\$red_level\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Services/SensorLogService.php
+
+		-
+			message: '#^Access to an undefined property App\\Models\\Sensor\:\:\$yellow_level\.$#'
+			identifier: property.notFound
+			count: 1
+			path: app/Services/SensorLogService.php
