@@ -124,8 +124,10 @@ Route::prefix('admin')->middleware(['firebase.auth', 'role:1'])->group(function 
     Route::apiResource('audit-logs', AuditLogController::class)->only(['index', 'show']);
 
     Route::get('/target-tables', [TargetTableController::class, 'index']);
+
     //SMS
     Route::get('/sms/broadcasts', [AdminSMSController::class, 'index']);
+
 
 });
 
@@ -148,7 +150,6 @@ Route::middleware(['firebase.auth', 'role:2'])->group(function () {
     Route::post('/sms-broadcasts/schedule', [SMSController::class, 'schedule']);
     Route::get('/sms/broadcasts/{broadcastId}/status', [SMSController::class, 'status'])->whereNumber('broadcastId');
     Route::delete('/sms/broadcasts/{broadcastId}', [SMSController::class, 'destroy'])->whereNumber('broadcastId');
-    Route::get('/sms/statuses', [SMSController::class, 'statuses']);
     Route::patch('/sms/broadcasts/{broadcastId}/cancel', [SMSController::class, 'cancel'])
         ->whereNumber('broadcastId');
     Route::post('/sms/verify-token', [SMSController::class, 'verifyToken']);
@@ -183,6 +184,10 @@ Route::middleware(['firebase.auth', 'role:1,2'])->group(function () {
     Route::patch('/emergency-contacts/{id}', [EmergencyContactController::class, 'update']);
     Route::patch('/emergency-contacts/{id}/deactivate', [EmergencyContactController::class, 'destroy']);
     Route::patch('/emergency-contacts/{id}/restore', [EmergencyContactController::class, 'restore']);
+
+    //SMS
+    Route::get('/sms/statuses', [SMSController::class, 'statuses']);
+
 });
 
 // ALL ROLES EXCEPT GUEST
