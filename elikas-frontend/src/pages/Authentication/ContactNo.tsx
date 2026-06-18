@@ -34,7 +34,7 @@ function ContactNo() {
     <div className="min-h-screen flex justify-center p-6">
       <div className="w-full max-w-sm flex flex-col">
         <div className="mb-6">
-          <Link to="/Registration/Verify" id="R-BackSplash">
+          <Link to="/Registration/Form" id="R-BackSplash">
             <ArrowLeftIcon />
           </Link>
         </div>
