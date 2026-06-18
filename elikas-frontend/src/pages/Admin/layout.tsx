@@ -6,13 +6,13 @@ import { Outlet } from "react-router";
 function Layout() {
   return (
     <SidebarProvider
-      className="min-h-screen max-w-3xl mx-auto"
+      className="min-h-screen max-w-3xl mx-auto flex justify-center"
       style={{ "--sidebar-width": "16rem" } as React.CSSProperties}
     >
       <AdminSidebar />
-      <div className="flex flex-col flex-1">
+      <div className="flex flex-1 flex-col max-w-md">
         <AdminNavbar />
-        <main>
+        <main className="">
           <Outlet />
         </main>
       </div>

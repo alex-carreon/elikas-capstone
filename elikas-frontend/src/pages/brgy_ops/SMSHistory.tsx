@@ -54,6 +54,9 @@ function SMSHistory() {
     return format(zoned, "MMM d, yyyy h:mm a");
   };
 
+  const now = new Date();
+  const manilaNow = toZonedTime(now, "Asia/Manila");
+
   const getSMSBroadcasts = async (
     signal?: AbortSignal,
     parameters?: string,
@@ -64,6 +67,7 @@ function SMSHistory() {
         { signal },
       );
       setBroadcasts(response.data.broadcasts);
+      console.log(response.data.broadcasts);
     } catch (err: any) {
       console.log(err.response.data);
     }
@@ -270,17 +274,23 @@ function SMSHistory() {
               {broadcasts.length > 0 ? (
                 broadcasts.map((broadcast) => (
                   <Row
+                    key={broadcast.id}
                     postId={String(broadcast.id)}
                     title={`Sent to: ${broadcast.total_recipients} recipient/s`}
                     desc={
                       broadcast.status.name === "Scheduled"
                         ? `Sending on: ${convertDateTime(broadcast.scheduled_for)}`
-                        : `Sent on: ${convertDateTime(broadcast.sent_at)}`
+                        : broadcast.status.name === "Cancelled"
+                          ? "Canceled"
+                          : `Sent on: ${convertDateTime(broadcast.sent_at)}`
                     }
                     onClick={() => cancelSend({ id: broadcast.id })}
                     buttonId="SMSHistory_CancelSend"
                     btnText="Cancel Send"
-                    showBtn={broadcast.status.name === "Scheduled"}
+                    showBtn={
+                      broadcast.status.name === "Scheduled" &&
+                      new Date(broadcast.scheduled_for) > manilaNow
+                    }
                     showCollapsible
                     collapseContent={broadcast.message_content}
                   />
