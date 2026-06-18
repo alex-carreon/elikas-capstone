@@ -67,6 +67,9 @@ jobs:
             # Add GitHub's public SSH key to known hosts 
             ssh-keyscan -t ed25519 github.com >> ~/.ssh/known_hosts 2>/dev/null
 
+            # Navigate to repository directory
+            cd /var/www/elikas-capstone
+
             # Securely overwrite tracking files with the latest deployment branch
             git fetch origin
             git reset --hard origin/deployment
@@ -85,6 +88,9 @@ jobs:
           script: |
             # Add GitHub's public SSH key to known hosts
             ssh-keyscan -t ed25519 github.com >> ~/.ssh/known_hosts 2>/dev/null
+
+            # Navigate to repository directory
+            cd /var/www/elikas-capstone
 
             # Securely overwrite tracking files with the latest deployment branch
             git fetch origin
