@@ -4,11 +4,12 @@ import ButtonComp from "@/components/Button";
 import CheckBox from "@/components/CheckBox";
 import { useState } from "react";
 import { auth } from "../../firebase";
-import RegisterHeader from "@/components/RegisterHeader";
 import { Link } from "react-router";
 import { toast } from "sonner";
 import { createUserWithEmailAndPassword } from "firebase/auth";
 import api from "@/api";
+import { ArrowLeftIcon } from "lucide-react";
+import Logo from "@/components/Logo";
 
 function Permissions() {
   const [checked, setChecked] = useState(false);
@@ -104,7 +105,14 @@ function Permissions() {
   return (
     <div className="min-h-screen flex justify-center p-6">
       <div className="w-full max-w-sm flex flex-col">
-        <RegisterHeader />
+        <div className="mb-6">
+          <Link to="/Registration/Form" id="R-BackSplash">
+            <ArrowLeftIcon />
+          </Link>
+        </div>
+        <div className="flex justify-center">
+          <Logo />
+        </div>
         <div className="h-full flex justify-evenly flex-col">
           <div className="h-1/2 flex gap-2 justify-center flex-col">
             <h1
