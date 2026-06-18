@@ -285,7 +285,8 @@ class SMSBroadcastService
     public function getTemplatesForOperator(int $govOpId, array $filters = []): Collection
     {
         $query = SMSTemplate::with('gov_op.user')
-            ->where('optr_id', $govOpId);
+            ->where('optr_id', $govOpId)
+            ->whereNull('deactivated_at');
 
         if (!empty($filters['search'])) {
             $term = '%' . $filters['search'] . '%';
@@ -399,6 +400,21 @@ class SMSBroadcastService
         }
 
         return $query->orderByDesc('scheduled_for')->paginate($limit);
+    }
+    public function softDeleteTemplate(int $templateId, int $govOpId): bool
+    {
+        $template = SMSTemplate::where('id', $templateId)
+            ->where('gov_op_id', $govOpId)
+            ->whereNull('deactivated_at')
+            ->first();
+
+        if (!$template) {
+            return false;
+        }
+
+        $template->update(['deactivated_at' => now()]);
+
+        return true;
     }
 
 }
