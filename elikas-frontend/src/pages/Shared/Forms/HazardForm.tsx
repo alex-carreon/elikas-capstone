@@ -28,6 +28,8 @@ import FormSkeleton from "../../Skeletons/FormSkeleton";
 import { Separator } from "@/components/ui/separator";
 import { toast } from "sonner";
 
+const brouterBaseUrl = import.meta.env.VITE_BROUTER_URL
+
 type FloodLevel = {
   id: number;
   level_name: string;
@@ -233,7 +235,7 @@ function HazardForm() {
 
       try {
         const response = await fetch(
-          `http://brouter:17777/brouter?lonlats=${lonlats}&profile=all&format=geojson`,
+          `${brouterBaseUrl}/brouter?lonlats=${lonlats}&profile=all&format=geojson`,
           { method: "GET" },
         );
 
@@ -264,7 +266,7 @@ function HazardForm() {
 
       try {
         const response = await fetch(
-          `http://brouter:17777/brouter?lonlats=${lonlats}&profile=all&format=geojson`,
+          `${brouterBaseUrl}/brouter?lonlats=${lonlats}&profile=all&format=geojson`,
           { method: "GET" },
         );
 
