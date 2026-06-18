@@ -30,26 +30,7 @@ type Province = {
   name: string;
 };
 
-type SensorsDetails = {
-  id: number;
-  sensorCode: string;
-  name: string;
-  waterLevel: any | null;
-  lastOnline: any | null;
-  mountHeight: number;
-  location: [number, number];
-  address: string;
-  yellowLevel: number;
-  orangeLevel: number;
-  redLevel: number;
-  currentStatus: string;
-  mountLocation: string;
-  deactivatedAt: any | null;
-  registeredBy: string;
-};
-
 function SensorForm() {
-  const [sensorDetails, setSensorDetails] = useState<SensorsDetails>();
   const [isEditable, setIsEditable] = useState(false);
   const [sensorCode, setSensorCode] = useState("");
   const [name, setName] = useState("");
@@ -92,8 +73,6 @@ function SensorForm() {
           }
 
           console.log(response.data.data.mountLocation);
-
-          setSensorDetails(details);
 
           setSensorCode(details.sensorCode);
           setName(details.name);

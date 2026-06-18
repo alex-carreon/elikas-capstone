@@ -5,7 +5,7 @@ import {
   DrawerDescription,
   DrawerTitle,
 } from "@/components/ui/drawer";
-import { CircleX, X } from "lucide-react";
+import { CircleX } from "lucide-react";
 import { useEffect, useState } from "react";
 import { cn } from "@/lib/utils";
 import ButtonComp from "./Button";
@@ -18,22 +18,6 @@ import SensorDrawer from "./DrawerContent/SensorDrawer";
 type FloodLevel = {
   id: number;
   level_name: string;
-};
-
-type FloodDetails = {
-  id: number;
-  element_id: number;
-  is_expired: boolean;
-  is_deactivated: boolean;
-  flood_levels: FloodLevel;
-  path: [number, number][];
-  posted_by: string;
-  description: string;
-  upvotes: number;
-  downvotes: number;
-  last_confirmed: string;
-  expiry: string;
-  posted_at: string;
 };
 
 type FloodPath = {
@@ -54,6 +38,7 @@ type postedBy = {
   username: string;
   posted_at: string;
   avatar_seed: string;
+  role: string;
 };
 
 type media = {

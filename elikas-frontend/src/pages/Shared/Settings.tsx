@@ -3,17 +3,13 @@ import ButtonComp from "@/components/Button";
 import colors from "@/constants/colors";
 import { auth } from "@/firebase";
 import { signOut } from "firebase/auth";
-import { useNavigate, Link } from "react-router-dom";
+import { Link } from "react-router-dom";
 import SettingsIcon from "@/assets/Settings/SettingsIcon.svg";
 import { UserCircle, Star, Text } from "lucide-react";
 import { Separator } from "@/components/ui/separator";
 import { toast } from "sonner";
-import { useState } from "react";
 
 function Settings() {
-  const navigate = useNavigate();
-  const [error, setError] = useState("");
-
   const handleLogout = async () => {
     try {
       localStorage.clear();
