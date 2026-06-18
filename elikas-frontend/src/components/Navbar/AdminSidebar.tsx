@@ -97,7 +97,7 @@ function AdminSidebar() {
       });
 
       response.then(() => {
-        navigate("/");
+        navigate("/Login");
       });
     } catch (error) {
       console.error("Error during logout:", error);

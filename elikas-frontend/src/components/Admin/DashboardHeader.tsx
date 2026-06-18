@@ -40,7 +40,7 @@ function DashboardHeader({
 
   return (
     <>
-      <div className="pt-16 bg-[#FFB13B] px-6 pb-12 flex flex-col gap-4">
+      <div className="pt-4 bg-[#FFB13B] px-6 pb-12 flex flex-col gap-4">
         <div className="flex flex-row justify-between items-center">
           <div className="w-1/2">
             <p className="text-white BeVietnamPro text-2xl font-bold">
