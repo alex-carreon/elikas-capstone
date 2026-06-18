@@ -30,7 +30,6 @@ function Hotlines() {
   const [searchFor, setSearchFor] = useState("");
   const { role } = useUserContext();
 
-  let message: string;
   const params = new URLSearchParams();
 
   const getHotlines = async (search = searchFor) => {

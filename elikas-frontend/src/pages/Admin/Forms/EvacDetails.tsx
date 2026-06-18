@@ -119,7 +119,6 @@ function EvacDetails() {
   const [isEditable, setIsEditable] = useState(false);
   const [capacityLevels, setCapacityLevels] = useState<CapacityLevel[]>([]);
   const [willOpen, setWillOpen] = useState(false);
-  const [hasUpdated, setHasUpdated] = useState(false);
   const [willReopen, setWillReopen] = useState(false);
 
   const toiletCount = Number(toilet);
@@ -269,7 +268,6 @@ function EvacDetails() {
         },
       ),
       setIsEditable: setIsEditable,
-      setHasUpdated: setHasUpdated,
     });
   };
 
@@ -556,8 +554,7 @@ function EvacDetails() {
                       url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
                     />
                     <MapClickHandler
-                      onPinClick={null}
-                      setClickedLoc={pinDetails?.coordinates}
+                      onPinClick={() => {}}
                       clickedLoc={pinDetails?.coordinates}
                     />
                   </MapContainer>

@@ -9,7 +9,7 @@ interface RadioProps {
   onSubmit?: (e: React.ChangeEvent<HTMLInputElement>) => void;
 }
 
-function Radio({ options, isRequired, onValueChange, onSubmit }: RadioProps) {
+function Radio({ options, isRequired, onValueChange }: RadioProps) {
   return (
     <Field>
       <RadioGroup

@@ -40,7 +40,6 @@ function randomSeed(): string {
 function Profile() {
   const [isEditable, setIsEditable] = useState(false);
   const [seed, setSeed] = useState<string | null>("");
-  const [errors, setErrors] = useState("");
   const [username, setUsername] = useState("");
   const [newUsername, setNewUsername] = useState<string | null>(null);
   const [firstName, setFirstName] = useState("");
@@ -54,7 +53,6 @@ function Profile() {
   const [contact, setContact] = useState("");
   const [newContact, setNewContact] = useState<string | null>(null);
   const [isVerified, setIsVerified] = useState(false);
-  const [userId, setUserId] = useState(0);
   const [loading, setLoading] = useState(false);
   const [brgyLoad, setBrgyLoad] = useState(false);
   const [cityLoad, setCityLoad] = useState(false);
@@ -74,7 +72,6 @@ function Profile() {
       setLastName(userData.last_name);
       setEmail(userData.email);
       setAddress(userData.location);
-      setUserId(userData.id);
       setContact(userData.phone || "No Registered Number");
       setSeed(userData?.avatar_seed);
       setIsVerified(userData?.is_verified);
@@ -129,34 +126,27 @@ function Profile() {
       setNewUsername(null);
       getProfile();
     } catch (err: string | any) {
-      setErrors(err.message || "An error occurred during registration");
+      console.log(err.response.data);
     }
   };
 
   const deleteProfile = async () => {
     try {
-      const deacPromise = new Promise(async (resolve, reject) => {
-        const response = await api.patch("/profile/deactivate", {
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
-          },
-        });
-        const userDataDelete = await response.data;
-
-        if (!response) {
-          reject(setErrors(userDataDelete.error || "Deactivation failed"));
-        } else resolve(userDataDelete);
+      const response = api.patch("/profile/deactivate", {
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
       });
 
-      toast.promise(deacPromise, {
+      toast.promise(response, {
         loading: "Deactivating your account...",
         success:
           "Account Deactivated! Please contact eLikas to reactivate your account",
         position: "top-center",
       });
 
-      deacPromise.then(() => {
+      response.then(() => {
         navigate("/");
       });
     } catch (error) {

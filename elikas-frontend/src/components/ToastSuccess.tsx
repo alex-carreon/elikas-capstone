@@ -12,7 +12,7 @@ interface ToastProps {
 }
 
 function Toast(props: ToastProps) {
-  const { title, description, button, id } = props;
+  const { title, description } = props;
 
   return (
     <div className="flex rounded-lg bg-[#FFF1DD] shadow-lg ring-1 ring-black/5 w-full md:max-w-[364px] items-center p-4">

@@ -1,6 +1,5 @@
 import { useUserContext } from "@/context/AuthContext";
-import { useEffect } from "react";
-import { useNavigate, Outlet, Navigate } from "react-router";
+import { Outlet, Navigate } from "react-router";
 import logo from "@/assets/logo.svg";
 import colors from "@/constants/colors";
 import { Spinner } from "./ui/spinner";

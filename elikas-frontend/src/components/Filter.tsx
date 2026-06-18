@@ -1,5 +1,4 @@
 import { ListFilterIcon } from "lucide-react";
-import { Button } from "@/components/ui/button";
 import {
   Collapsible,
   CollapsibleContent,
@@ -12,8 +11,6 @@ import { useMapFilterContext } from "@/context/MapFilterContext";
 
 function Filter() {
   const [isOpen, setIsOpen] = useState(false);
-  const [barangayFilter, setBarangayFilter] = useState(true);
-  const [userFilter, setUserFilter] = useState(true);
 
   const {
     showPaths,
@@ -23,14 +20,6 @@ function Filter() {
     setShowOtherPins,
     showOtherPins,
   } = useMapFilterContext();
-
-  const handleBarangayToggle = () => {
-    //Filter endpoint
-  };
-
-  const handleUserToggle = () => {
-    //Filter endpoint
-  };
 
   return (
     <Collapsible
