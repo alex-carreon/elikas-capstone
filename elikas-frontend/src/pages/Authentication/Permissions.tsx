@@ -1,6 +1,5 @@
 import { useNavigate } from "react-router";
 import colors from "@/constants/colors";
-import Switch from "@/components/Switch";
 import ButtonComp from "@/components/Button";
 import CheckBox from "@/components/CheckBox";
 import { useState } from "react";
@@ -8,10 +7,7 @@ import { auth } from "../../firebase";
 import RegisterHeader from "@/components/RegisterHeader";
 import { Link } from "react-router";
 import { toast } from "sonner";
-import {
-  createUserWithEmailAndPassword,
-  sendEmailVerification,
-} from "firebase/auth";
+import { createUserWithEmailAndPassword } from "firebase/auth";
 import api from "@/api";
 
 function Permissions() {

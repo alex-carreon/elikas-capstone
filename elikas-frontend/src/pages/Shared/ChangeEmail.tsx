@@ -2,14 +2,13 @@ import colors from "@/constants/colors";
 import ButtonComp from "@/components/Button";
 import TextField from "@/components/TextField";
 import { useEffect, useState } from "react";
-import { signOut, updateEmail } from "firebase/auth";
+import { signOut } from "firebase/auth";
 import { auth } from "@/firebase";
 import api from "@/api";
 import { toast } from "sonner";
 
 function ChangeEmail() {
   const [email, setEmail] = useState("");
-  const [error, setError] = useState("");
   const [success, setSuccess] = useState(false);
 
   const submitEmail = async (e: React.FormEvent) => {
@@ -65,7 +64,6 @@ function ChangeEmail() {
               you for verification.
             </p>
           </div>
-          <p className="text-red-500 text-xs text-center">{error}</p>
           <div className="flex flex-col gap-6">
             <TextField
               label="Email"

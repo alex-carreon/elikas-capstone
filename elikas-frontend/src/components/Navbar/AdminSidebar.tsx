@@ -17,22 +17,13 @@ import {
 import WhiteLogo from "../Admin/WhiteLogo";
 import SidebarRow from "../SidebarRow";
 import api from "@/api";
-import { useState } from "react";
 import { toast } from "sonner";
-import { signOut } from "firebase/auth";
-import { auth } from "@/firebase";
 import { useNavigate, useLocation } from "react-router";
 import ButtonComp from "@/components/Button";
-import { useUserContext } from "@/context/AuthContext";
 
 function AdminSidebar() {
   const navigate = useNavigate();
   const location = useLocation();
-
-  const [error, setError] = useState("");
-  const [activeLink, setActiveLink] = useState("map");
-
-  const { logout } = useUserContext();
 
   const navItems = [
     {
@@ -97,27 +88,15 @@ function AdminSidebar() {
     try {
       localStorage.clear();
 
-      const logoutPromise = new Promise(async (resolve, reject) => {
-        const response = await api.post("/auth/logout");
+      const response = api.post("/auth/logout");
 
-        const userData = await response;
-
-        if (!response) {
-          reject(setError("Logout failed"));
-        } else {
-          resolve(userData);
-          await signOut(auth);
-          await logout();
-        }
-      });
-
-      toast.promise(logoutPromise, {
+      toast.promise(response, {
         loading: "Logging you out...",
         success: "You're logged out!",
         position: "top-center",
       });
 
-      logoutPromise.then(() => {
+      response.then(() => {
         navigate("/");
       });
     } catch (error) {
@@ -144,7 +123,6 @@ function AdminSidebar() {
             icon={item.icon}
             link={item.link}
             id={item.testId}
-            onClick={() => setActiveLink(item.id)}
             clicked={location.pathname === item.link}
           />
         ))}

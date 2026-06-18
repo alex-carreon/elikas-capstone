@@ -1,4 +1,4 @@
-import { Phone, Search, Filter } from "lucide-react";
+import { Phone, Search } from "lucide-react";
 import { useEffect, useState } from "react";
 import {
   InputGroup,

@@ -48,8 +48,6 @@ function HazardDrawer({ selectedPin }: { selectedPin: FloodPath }) {
   const [loading, setLoading] = useState(false);
   const [floodDetails, setFloodDetails] = useState<FloodDetails | undefined>();
   const [daysLeft, setDaysleft] = useState(0);
-  const [upVote, setUpvote] = useState(0);
-  const [downVote, setDownvote] = useState(0);
   const [isMine, setIsMine] = useState(false);
   const [selectedImage, setSelectedImage] = useState<string | null>(null);
 
@@ -67,8 +65,6 @@ function HazardDrawer({ selectedPin }: { selectedPin: FloodPath }) {
         const response = await api.get(`/flood-paths/${selectedPin.id}`);
         const floodDetails = await response.data.flood_path;
         setFloodDetails(floodDetails);
-        setUpvote(floodDetails.upvotes);
-        setDownvote(floodDetails.downvotes);
         setIsMine(response.data.is_mine);
 
         const today = new Date();
