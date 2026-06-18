@@ -85,7 +85,7 @@ function SMS() {
 
   const handleTempleteDel = () => {
     try {
-      const response = api.patch(`/sms/templates/${templateId}/deactivate`);
+      const response = api.delete(`/sms/templates/${templateId}`);
 
       console.log(response);
 
