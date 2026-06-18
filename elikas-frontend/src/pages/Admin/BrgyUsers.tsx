@@ -276,7 +276,7 @@ function BrgyUsers() {
       getSMSFilter();
     }
     getBrgyUsersFilter();
-  }, [cityFilter, brgyFilter]);
+  }, [cityFilter, brgyFilter, statusFilter]);
 
   return (
     <>
