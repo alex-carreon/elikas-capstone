@@ -13,7 +13,8 @@ import { type CarouselApi } from "@/components/ui/carousel";
 import ButtonComp from "../../components/Button";
 import { Circle } from "lucide-react";
 import CarouselCard from "../../components/CarouselCard";
-import RegisterHeader from "@/components/RegisterHeader";
+import { ArrowLeftIcon } from "lucide-react";
+import Logo from "@/components/Logo";
 
 function SplashRegistration() {
   const [api, setApi] = useState<CarouselApi>();
@@ -34,7 +35,14 @@ function SplashRegistration() {
   return (
     <div className="min-h-screen flex justify-center">
       <div className="w-full max-w-sm flex justify-evenly flex-col p-6">
-        <RegisterHeader />
+        <div className="mb-6">
+          <Link to="/Login" id="R-BackSplash">
+            <ArrowLeftIcon />
+          </Link>
+        </div>
+        <div className="flex justify-center">
+          <Logo />
+        </div>{" "}
         <div className="w-full flex flex-col items-center">
           <Carousel
             setApi={setApi}
