@@ -8,6 +8,11 @@ import { auth } from "../../firebase";
 import RegisterHeader from "@/components/RegisterHeader";
 import { Link } from "react-router";
 import { toast } from "sonner";
+import {
+  createUserWithEmailAndPassword,
+  sendEmailVerification,
+} from "firebase/auth";
+import api from "@/api";
 
 function Permissions() {
   const [checked, setChecked] = useState(false);
@@ -16,79 +21,87 @@ function Permissions() {
   // const [success, setSuccess] = useState("");
   const navigate = useNavigate();
 
-  const formData = {
-    fn: localStorage.getItem("first_name") ?? "",
-    ln: localStorage.getItem("last_name") ?? "",
-    email: localStorage.getItem("email") ?? "",
-    // pw: localStorage.getItem("pw") ?? "",
-    username: localStorage.getItem("username") ?? "",
-    phone: localStorage.getItem("contact") ?? "",
-    loc: localStorage.getItem("brgy") ?? "",
-    firebase_uid: localStorage.getItem("firebaseUser") ?? "",
-    avatarSeed: localStorage.getItem("avatarSeed"),
-  };
-
-  // const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-  //   setFormData({ ...formData, [e.target.name]: e.target.value });
-  // };
-
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
     setError("");
 
+    const formData = {
+      fn: localStorage.getItem("first_name") ?? "",
+      ln: localStorage.getItem("last_name") ?? "",
+      email: localStorage.getItem("email") ?? "",
+      pw: localStorage.getItem("pw") ?? "",
+      username: localStorage.getItem("username") ?? "",
+      phone: localStorage.getItem("contact") ?? "",
+      loc: localStorage.getItem("brgy") ?? "",
+      firebase_uid: localStorage.getItem("firebaseUser") ?? "",
+      avatarSeed: localStorage.getItem("avatarSeed"),
+    };
+
     console.log("FORM DATA:", formData);
 
     try {
-      const registerPromise = new Promise(async (resolve, reject) => {
-        const response = await fetch(
-          "http://127.0.0.1:8000/api/auth/register",
-          {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-              Accept: "application/json",
-            },
-            body: JSON.stringify({
-              username: formData.username,
-              email: formData.email,
-              first_name: formData.fn,
-              last_name: formData.ln,
-              phone: formData.phone,
-              location_id: Number(formData.loc),
-              firebase_uid: localStorage.getItem("firebaseUser"),
-              avatar_seed: formData.avatarSeed,
-            }),
-          },
-        );
-        const result = await response.json();
+      const userCredential = await createUserWithEmailAndPassword(
+        auth,
+        formData.email,
+        formData.pw,
+      );
 
-        console.log("REGISTER RESULT:", result);
+      console.log(userCredential);
 
-        if (!response.ok) {
-          const firebaseUser = auth.currentUser;
-          if (firebaseUser) {
-            await firebaseUser.delete();
-          }
-          reject(setError(result.message));
-          navigate("/Login");
-          throw new Error(result.message || "Registration failed");
-        } else {
-          resolve(result);
-        }
-        localStorage.clear();
+      const firebaseUser = userCredential.user;
+
+      localStorage.setItem("firebaseUser", firebaseUser.uid);
+
+      const response = api.post("/auth/register", {
+        username: formData.username,
+        email: formData.email,
+        first_name: formData.fn,
+        last_name: formData.ln,
+        phone: formData.phone,
+        location_id: Number(formData.loc),
+        firebase_uid: localStorage.getItem("firebaseUser"),
+        avatar_seed: formData.avatarSeed,
       });
 
-      toast.promise(registerPromise, {
+      toast.promise(response, {
         loading: "Processing...",
-        success: "You are registered!",
+        success: "One last step!",
+        error: (err: any) => {
+          navigate("/Login");
+          return err.response.message;
+        },
         position: "top-center",
       });
 
-      registerPromise.then(() => {
-        navigate("/Registration/Finish");
+      if (!response) {
+        toast.error("Registration failed. Please try again.");
+        navigate("/Login");
+        return;
+      }
+
+      const result = response;
+
+      console.log("REGISTER RESULT:", result);
+
+      localStorage.clear();
+
+      response.then(() => {
+        navigate("/Registration/Verify");
       });
     } catch (err: string | any) {
-      setError(err.message || "An error occurred during registration");
+      const firebaseUser = auth.currentUser;
+      if (firebaseUser) {
+        try {
+          await firebaseUser.delete();
+        } catch (deleteErr: any) {
+          await auth.signOut();
+        }
+        toast.error("Registration failed. Please try again.");
+        navigate("/Login");
+      }
+
+      console.log(err.message);
+      toast.error(err.message);
     }
   };
 

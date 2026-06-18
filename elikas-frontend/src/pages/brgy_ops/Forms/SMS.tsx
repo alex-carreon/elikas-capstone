@@ -6,10 +6,11 @@ import colors from "@/constants/colors";
 import { useState, useEffect } from "react";
 import { Field, FieldLabel } from "@/components/ui/field";
 import SelectDropdown from "@/components/SelectDropdown";
-import { X } from "lucide-react";
 import { useNavigate } from "react-router";
 import api from "@/api";
 import { toast } from "sonner";
+import DatePickerInput from "@/components/DateField";
+import { format, toZonedTime } from "date-fns-tz";
 
 type templateType = {
   id: number;
@@ -22,18 +23,13 @@ function SMS() {
   const [templateId, setTemplateId] = useState("");
   const [templateTitle, setTemplateTitle] = useState("");
   const [message, setMessage] = useState<string | undefined>("");
-  const [schedSend, setSchedSend] = useState("");
+  const [schedSend, setSchedSend] = useState<Date | undefined>(undefined);
   const [error, setError] = useState({ title: "", message: "" });
   const [willDelete, setWillDelete] = useState(false);
   const [templateLoad, setTemplateLoad] = useState(false);
   const [templates, setTemplates] = useState<templateType[]>([]);
 
   const navigate = useNavigate();
-
-  useEffect(() => {
-    getTemplates();
-    console.log(templates);
-  }, []);
 
   const getTemplates = async () => {
     try {
@@ -89,12 +85,6 @@ function SMS() {
     (message) => String(message.id) === String(templateId),
   );
 
-  useEffect(() => {
-    if (templateId) {
-      setMessage(templateMessage?.message_content);
-    }
-  }, [templateId]);
-
   const handleSendNow = (e: React.FormEvent) => {
     e.preventDefault();
 
@@ -122,11 +112,54 @@ function SMS() {
     }
   };
 
+  const handleSchedSend = (e: React.FormEvent) => {
+    e.preventDefault();
+
+    if (schedSend) {
+      const dateTime = format(
+        toZonedTime(schedSend, "Asia/Manila"),
+        "yyyy-MM-dd HH:mm:ss",
+        {
+          timeZone: "Asia/Manila",
+        },
+      );
+
+      try {
+        const response = api.post("/sms-broadcasts/schedule", {
+          message_content: message,
+          scheduled_for: schedSend,
+        });
+
+        toast.promise(response, {
+          loading: "Scheduling your message now...",
+          success: `Message scheduled! Your message will be sent on ${dateTime}`,
+          error: (err: any) => err.response.data.details,
+        });
+      } catch (err: any) {
+        console.log(err.response.data);
+      }
+    } else {
+      toast.error("You are missing a field.");
+      return;
+    }
+  };
+
   const handleClear = () => {
     setMessage("");
     setTemplateTitle("");
     setTemplateId("");
   };
+
+  useEffect(() => {
+    if (templateId) {
+      setMessage(templateMessage?.message_content);
+    }
+  }, [templateId]);
+
+  useEffect(() => {
+    getTemplates();
+    console.log(templates);
+  }, []);
 
   return (
     <>
@@ -247,13 +280,15 @@ function SMS() {
             </div>
 
             <div>
-              <p className="font-semibold text-xs">Message (Max Words: 1000)</p>
+              <p className="font-semibold text-xs">
+                Message (Max Characters: 160)
+              </p>
               <div>
                 <p
                   className="italic text-xs justify-self-end"
                   style={{ color: colors.label }}
                 >
-                  Word Count: 23
+                  Character Count: {message?.length} / 160
                 </p>
               </div>
               <Textarea
@@ -262,6 +297,7 @@ function SMS() {
                 onChange={(e) => setMessage(e.target.value)}
                 value={message}
                 id="SMS_MessageField"
+                maxLength={160}
               />
               <p className="text-xs text-red-500">{error.message}</p>
             </div>
@@ -286,7 +322,7 @@ function SMS() {
               />
             </div>
           </div>
-          <SelectDropdown
+          {/* <SelectDropdown
             value={schedSend}
             onValueChange={setSchedSend}
             label="Schedule Send"
@@ -297,16 +333,42 @@ function SMS() {
               { label: "Send Now", value: "1" },
               { label: "in 10 Minutes", value: "2" },
             ]}
+          /> */}
+          <DatePickerInput
+            label="Schedule Send (Optional)"
+            desc="Enter a date and time to send your message."
+            idField="SMS_ScheduleDateField"
+            idTime="SMS_ScheduleTimeField"
+            idBtn="SMS_CalendarBtn"
+            showTime
+            edit
+            timeNow={false}
+            onChange={setSchedSend}
+            isRequired={schedSend ? true : false}
+            value={schedSend}
+            clearDate
+            clearTime
           />
           <div className="w-full flex flex-col items-center gap-2">
-            <ButtonComp
-              id="SMS_SendBtn"
-              text="Send Text"
-              variant="primary"
-              heightSize="38px"
-              widthSize="100%"
-              onClick={(e) => handleSendNow(e)}
-            />
+            {schedSend === undefined ? (
+              <ButtonComp
+                id="SMS_SendBtn"
+                text="Send Text"
+                variant="primary"
+                heightSize="38px"
+                widthSize="100%"
+                onClick={(e) => handleSendNow(e)}
+              />
+            ) : (
+              <ButtonComp
+                id="SMS_SchedBtn"
+                text="Schedule Send"
+                variant="primary"
+                heightSize="38px"
+                widthSize="100%"
+                onClick={(e) => handleSchedSend(e)}
+              />
+            )}
             <ButtonComp
               id="SMS_DeleteTemplate"
               text="Delete Template"

@@ -7,8 +7,7 @@ import {
   CollapsibleTrigger,
 } from "@/components/ui/collapsible";
 import { useState } from "react";
-import { ChevronDownIcon, ChevronUpIcon, Clock, Send } from "lucide-react";
-import { collapseClasses } from "@mui/material/Collapse";
+import { ChevronDownIcon, ChevronUpIcon } from "lucide-react";
 
 interface rowProps {
   postId?: string;
@@ -27,6 +26,7 @@ interface rowProps {
   showBtn?: boolean;
   showCollapsible?: boolean;
   collapseContent?: any;
+  onClick?: (e?: any) => void;
 }
 
 function Row({
@@ -46,6 +46,7 @@ function Row({
   showBtn,
   showCollapsible,
   collapseContent,
+  onClick,
 }: rowProps) {
   const [openCollapse, setOpenCollapse] = useState(false);
 
@@ -108,21 +109,33 @@ function Row({
           {datePosted}
         </p>
       </div>
-      {showBtn && (
-        <Link
-          to={link ? link : ""}
-          state={{ from: location.pathname }}
-          className="ml-2"
-        >
-          <ButtonComp
-            variant="important"
-            text={btnText ? btnText : "Details"}
-            id={buttonId ? buttonId : ""}
-            heightSize="45px"
-            widthSize="100%"
-          ></ButtonComp>
-        </Link>
-      )}
+      {showBtn &&
+        (link ? (
+          <Link
+            to={link ? link : ""}
+            state={{ from: location.pathname }}
+            className="ml-2"
+          >
+            <ButtonComp
+              variant="important"
+              text={btnText ? btnText : "Details"}
+              id={buttonId ? buttonId : ""}
+              heightSize="45px"
+              widthSize="100%"
+            ></ButtonComp>
+          </Link>
+        ) : (
+          <div className="ml-2">
+            <ButtonComp
+              variant="important"
+              text={btnText ? btnText : "Details"}
+              id={buttonId ? buttonId : ""}
+              heightSize="45px"
+              widthSize="100%"
+              onClick={onClick}
+            ></ButtonComp>
+          </div>
+        ))}
     </div>
   );
 }

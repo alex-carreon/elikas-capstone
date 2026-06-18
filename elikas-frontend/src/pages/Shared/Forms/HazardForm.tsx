@@ -11,7 +11,7 @@ import { useNavigate, useParams } from "react-router";
 import CheckBox from "@/components/CheckBox";
 import { renderToString } from "react-dom/server";
 import BlankPin from "@/assets/Map/BlankPin.svg?react";
-import { divIcon, type LatLngExpression, type LatLngTuple } from "leaflet";
+import { divIcon, type LatLngExpression } from "leaflet";
 import { InputGroupTextarea } from "@/components/ui/input-group";
 import api from "@/api";
 import { useUserContext } from "@/context/AuthContext";

@@ -14,7 +14,8 @@
 ">
 
 @php
-    $daysRemaining = max(0, now()->diffInDays($floodPath->expiry, false));
+    $diffInHours = now()->diffInHours($floodPath->expiry, false);
+    $daysRemaining = max(0, floor($diffInHours / 24));
 @endphp
 
 <table width="100%" cellpadding="0" cellspacing="0" border="0">
@@ -93,16 +94,15 @@
                     font-size:14px;
                     display:inline-block;
                 ">
-                    @if($daysRemaining === 0)
-                        ⏳ Expires Today
-                    @elseif($daysRemaining === 1)
-                        ⏳ 1 Day Remaining
+                    @if($diffInHours <= 0)
+                        ⏳ Expired
+                    @elseif($diffInHours < 24)
+                        ⏳ {{ $diffInHours }} Hour{{ $diffInHours == 1 ? '' : 's' }} Remaining
                     @else
-                        ⏳ {{ $daysRemaining }} Days Remaining
+                        ⏳ {{ $daysRemaining }} Day{{ $daysRemaining == 1 ? '' : 's' }} Remaining
                     @endif
                 </span>
             </div>
-
             <!-- Action Needed -->
             <div style="
                 background:#FFF5E4;
@@ -170,7 +170,7 @@
             <!-- CTA Button -->
             <div style="text-align:center; margin:35px 0;">
 
-                <a href="http://localhost:5173/{{ $floodPath->id }}"
+                <a href="http://localhost:5173/"
                    style="
                    background:#6A2E0A;
                    color:#ffffff;

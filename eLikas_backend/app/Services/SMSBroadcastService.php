@@ -30,6 +30,7 @@ class SMSBroadcastService
             ->where('is_verified', true)
             ->get();
     }
+
     public function getAllUsersForLocation(int $locationId): Collection
     {
         return PhoneNumber::with([
@@ -65,7 +66,7 @@ class SMSBroadcastService
         ]);
     }
 
-        public function getHistory(int $locationId, int $limit, array $filters = []): LengthAwarePaginator
+    public function getHistory(int $locationId, int $limit, array $filters = []): LengthAwarePaginator
     {
         $query = SMSBroadcast::with(['gov_op.user', 'location', 'broadcast_status'])
             ->where('location_id', $locationId);
@@ -76,6 +77,22 @@ class SMSBroadcastService
 
         if (!empty($filters['message_content'])) {
             $query->where('message_content', 'LIKE', '%' . $filters['message_content'] . '%');
+        }
+
+        if (!empty($filters['search'])) {
+            $query->where('message_content', 'LIKE', '%' . $filters['search'] . '%');
+        }
+
+        if (isset($filters['status'])) {
+            $query->where('status', (int) $filters['status']);
+        }
+
+        if (!empty($filters['state'])) {
+            if ($filters['state'] === 'active') {
+                $query->where('status', 1);
+            } else {
+                $query->whereIn('status', [2, 3, 4]);
+            }
         }
 
         return $query->orderByDesc('scheduled_for')->paginate($limit);
@@ -310,7 +327,7 @@ class SMSBroadcastService
                 'id'   => $broadcast->status,
                 'name' => $broadcast->broadcast_status?->status_name ?? 'Unknown',
             ],
-            'scheduled_for' => Carbon::parse($broadcast->scheduled_for)->timezone('Asia/Manila')->toDateTimeString(),
+            'scheduled_for'    => Carbon::parse($broadcast->scheduled_for)->timezone('Asia/Manila')->toDateTimeString(),
             'sent_at'          => $broadcast->sent_at ? Carbon::parse($broadcast->sent_at)->timezone('Asia/Manila')->toDateTimeString() : null,
             'total_recipients' => $broadcast->total_recipients,
             'sender'           => [
@@ -320,7 +337,7 @@ class SMSBroadcastService
                 'point_person'   => $sender?->point_person,
                 'point_position' => $sender?->point_position,
             ],
-            'location' => [
+            'location'         => [
                 'id'   => $broadcast->location?->id,
                 'name' => $broadcast->location?->name,
             ],
@@ -341,4 +358,47 @@ class SMSBroadcastService
             ],
         ];
     }
+
+    public function cancelBroadcast(int $broadcastId, int $govOpId): string
+    {
+        $broadcast = SMSBroadcast::where('id', $broadcastId)
+            ->where('sender_id', $govOpId)
+            ->first();
+
+        if (!$broadcast) {
+            return 'not_found';
+        }
+
+        if ((int) $broadcast->status !== 1) {
+            return 'not_pending';
+        }
+
+        if ($broadcast->scheduled_for !== null && $broadcast->scheduled_for->lte(now())) {
+            return 'window_passed';
+        }
+
+    $broadcast->update(['status' => 4]);
+
+    return 'cancelled';
+}
+
+    public function getAllBroadcasts(int $limit, array $filters = []): LengthAwarePaginator
+    {
+        $query = SMSBroadcast::with(['gov_op.user', 'location', 'broadcast_status']);
+
+        if (!empty($filters['search'])) {
+            $query->where('message_content', 'LIKE', '%' . $filters['search'] . '%');
+        }
+
+        if (isset($filters['status'])) {
+            $query->where('status', (int) $filters['status']);
+        }
+
+        if (!empty($filters['location_id'])) {
+            $query->where('location_id', (int) $filters['location_id']);
+        }
+
+        return $query->orderByDesc('scheduled_for')->paginate($limit);
+    }
+
 }

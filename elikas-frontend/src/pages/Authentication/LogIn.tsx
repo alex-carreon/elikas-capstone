@@ -17,17 +17,40 @@ import {
 } from "firebase/auth";
 import { toast } from "sonner";
 import api from "@/api";
+import { useUserContext } from "@/context/AuthContext";
 
 function LogIn() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [remember, setRemember] = useState(false);
-
   const [errors, setErrors] = useState({
     email: "",
     password: "",
     general: "",
   });
+
+  const { setIsLoginReady } = useUserContext();
+
+  const handleVerify = (e: React.FormEvent) => {
+    e.preventDefault();
+
+    try {
+      const response = api.post("/email/resend-verification", {
+        email: email,
+      });
+
+      toast.promise(response, {
+        loading: "Sending you your verification email...",
+        success: "Email verification has been sent.",
+        error: (err: any) => {
+          return err.response.message;
+        },
+        position: "top-center",
+      });
+    } catch (err: any) {
+      console.log(err.response.message);
+    }
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -39,6 +62,8 @@ function LogIn() {
         auth,
         remember ? browserLocalPersistence : browserSessionPersistence,
       );
+
+      localStorage.removeItem("userRole");
 
       const userCredential = await signInWithEmailAndPassword(
         auth,
@@ -58,6 +83,7 @@ function LogIn() {
       }
 
       const token = await userCredential.user.getIdToken(true);
+
       const response = api.post(
         "/auth/login",
         {},
@@ -68,12 +94,19 @@ function LogIn() {
         },
       );
 
+      console.log(response);
+
       toast.promise(response, {
         loading: "Logging you in...",
         success: "You're logged in!",
         error: "User not found",
         position: "top-center",
       });
+
+      await response;
+      await new Promise((resolve) => setTimeout(resolve, 1000));
+
+      setIsLoginReady(true);
     } catch (err: string | any) {
       if (
         err.code === "auth/user-not-found" ||
@@ -123,7 +156,21 @@ function LogIn() {
             <div className="w-full max-w-xs flex justify-start flex-col content-center mx-auto">
               <div className="flex justify-start flex-col content-center gap-5">
                 <p className="text-sm text-center text-red-500">
-                  {errors.general}
+                  {errors.general ===
+                  "Please verify your email before logging in." ? (
+                    <span>
+                      Please verify your email.{" "}
+                      <span
+                        onClick={(e) => handleVerify(e)}
+                        className="underline italic"
+                        id="LogIn_VerifyEmail"
+                      >
+                        Verify here.
+                      </span>
+                    </span>
+                  ) : (
+                    errors.general
+                  )}
                 </p>
                 <TextField
                   label="Email"

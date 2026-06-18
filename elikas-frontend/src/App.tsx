@@ -50,6 +50,7 @@ import HotlineDetails from "./pages/Admin/Forms/HotlineDetails.tsx";
 import { useUserContext } from "./context/AuthContext.tsx";
 import { Navigate } from "react-router-dom";
 import VerifyOTP from "./pages/Indiv/VerifyOTP.tsx";
+import ChangeEmail from "./pages/Shared/ChangeEmail.tsx";
 
 function RootRedirect() {
   const { role, loading } = useUserContext();
@@ -157,17 +158,21 @@ function App() {
 
           <Route element={<ProtectedRoute userRole={["indiv", "brgy_op"]} />}>
             <Route element={<ConstNavbar />}>
-              <Route path="/Settings" element={<Settings />} />
               <Route path="/EvacForm" element={<EvacForm />} />
               <Route path="/EvacForm/:id" element={<EvacForm />} />
               <Route path="/HazardForm" element={<HazardForm />} />
               <Route path="/HazardForm/:id" element={<HazardForm />} />
-              <Route path="/History" element={<History />} />
               <Route path="/Feedback" element={<Feedback />} />
+              <Route path="/ChangeEmail" element={<ChangeEmail />} />
             </Route>
-
-            <Route element={<ConstNavbar />}>
+            <Route element={<ConstNavbar redirect="/map" />}>
+              <Route path="/History" element={<History />} />
+            </Route>
+            <Route element={<ConstNavbar redirect="/Settings" />}>
               <Route path="/Profile" element={<Profile />} />
+            </Route>
+            <Route element={<ConstNavbar redirect="/Map" />}>
+              <Route path="/Settings" element={<Settings />} />
             </Route>
             <Route element={<AuthNavbar />}>
               <Route path="/map" element={<Map />} />

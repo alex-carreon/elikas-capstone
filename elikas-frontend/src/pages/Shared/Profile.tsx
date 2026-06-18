@@ -341,15 +341,27 @@ function Profile() {
                   value={lastName}
                   onSubmit={(e) => setLastName(e.target.value)}
                 />
-                <TextField
-                  label="Email Address"
-                  placeholder={email}
-                  inputType="text"
-                  id="Profile_Email"
-                  readonly={!isEditable}
-                  value={email}
-                  onSubmit={(e) => setEmail(e.target.value)}
-                />
+                <div className="w-full flex flex-col gap-1">
+                  <TextField
+                    label="Email Address"
+                    placeholder={email}
+                    inputType="text"
+                    id="Profile_Email"
+                    readonly={!isEditable}
+                    value={email}
+                    onSubmit={(e) => setEmail(e.target.value)}
+                  />
+                  <ButtonComp
+                    text="Change Email"
+                    variant="outline"
+                    type="button"
+                    id="Profile_ChangeEmailBtn"
+                    heightSize="30px"
+                    widthSize="1/2"
+                    onClick={() => navigate("/ChangeEmail")}
+                  ></ButtonComp>
+                </div>
+
                 {isEditable ? (
                   <>
                     <SelectDropdown

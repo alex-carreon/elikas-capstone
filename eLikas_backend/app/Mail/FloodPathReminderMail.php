@@ -18,7 +18,7 @@ class FloodPathReminderMail extends Mailable
     public function build()
     {
         return $this
-            ->subject('🌊 Flood Path Confirmation Reminder')
+            ->subject('Flood Path Confirmation Reminder')
             ->view('flood-path-reminder');
     }
 }

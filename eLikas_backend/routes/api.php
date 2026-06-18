@@ -36,6 +36,7 @@ use App\Http\Controllers\TargetTableController;
 use App\Http\Controllers\Votes\VoteCommentController;
 use App\Http\Controllers\Votes\VoteController;
 use Illuminate\Support\Facades\Route;
+use App\Http\Controllers\AdminSMSController;
 
 Route::get('/test', function () {
     return response()->json([
@@ -61,6 +62,8 @@ Route::get('/capacity-levels', [CapacityLevelController::class, 'index']);
 
 Route::post('/sensor-logs', [SensorLogController::class, 'store']);
 
+Route::post('/email/resend-verification', [AuthController::class, 'resendVerification']);
+
 // ---------------------------------------------------------------
 // PIN ROUTES
 // ---------------------------------------------------------------
@@ -85,7 +88,6 @@ Route::middleware('optional.firebase.auth')->group(function () {
 Route::prefix('admin')->middleware(['firebase.auth', 'role:1'])->group(function () {
     Route::post('/create-admin', [AdminController::class, 'createUser']);
 
-    // Changed from deleteUser to match your controller naming preference
     Route::patch('/users/{id}/deactivate', [UserController::class, 'deactivateUser']);
 
     Route::post('/create-govop', [AdminController::class, 'createGovOp']);
@@ -122,6 +124,11 @@ Route::prefix('admin')->middleware(['firebase.auth', 'role:1'])->group(function 
     Route::apiResource('audit-logs', AuditLogController::class)->only(['index', 'show']);
 
     Route::get('/target-tables', [TargetTableController::class, 'index']);
+
+    //SMS
+    Route::get('/sms/broadcasts', [AdminSMSController::class, 'index']);
+
+
 });
 
 // ---------------------------------------------------------------
@@ -132,7 +139,7 @@ Route::middleware(['firebase.auth', 'role:2'])->group(function () {
     Route::patch('/sensors/{sensor}/deactivate', [SensorController::class, 'deactivate']);
 
     // ---------------------------------------------------------------
-    // SMS SYSTEM UPDATES
+    // SMS SYSTEM
     // ---------------------------------------------------------------
     Route::get('/sms/recipients', [SMSController::class, 'recipients']);
 
@@ -143,6 +150,10 @@ Route::middleware(['firebase.auth', 'role:2'])->group(function () {
     Route::post('/sms-broadcasts/schedule', [SMSController::class, 'schedule']);
     Route::get('/sms/broadcasts/{broadcastId}/status', [SMSController::class, 'status'])->whereNumber('broadcastId');
     Route::delete('/sms/broadcasts/{broadcastId}', [SMSController::class, 'destroy'])->whereNumber('broadcastId');
+    Route::patch('/sms/broadcasts/{broadcastId}/cancel', [SMSController::class, 'cancel'])
+        ->whereNumber('broadcastId');
+    Route::post('/sms/verify-token', [SMSController::class, 'verifyToken']);
+
 
     // SMS — Templates
     Route::post('/sms/templates', [SMSController::class, 'storeTemplate']);
@@ -173,6 +184,10 @@ Route::middleware(['firebase.auth', 'role:1,2'])->group(function () {
     Route::patch('/emergency-contacts/{id}', [EmergencyContactController::class, 'update']);
     Route::patch('/emergency-contacts/{id}/deactivate', [EmergencyContactController::class, 'destroy']);
     Route::patch('/emergency-contacts/{id}/restore', [EmergencyContactController::class, 'restore']);
+
+    //SMS
+    Route::get('/sms/statuses', [SMSController::class, 'statuses']);
+
 });
 
 // ALL ROLES EXCEPT GUEST
@@ -194,6 +209,7 @@ Route::middleware(['firebase.auth', 'role:1,2,3'])->group(function () {
     Route::put('/profile', [ProfileController::class, 'updateProfile']);
     Route::patch('/profile/deactivate', [ProfileController::class, 'deactivateSelf']);
     Route::post('/profile/email-sync', [ProfileController::class, 'syncEmail']);
+    Route::patch('/profile/change-email', [ProfileController::class, 'changeEmail']);
 
     //FLOOD LEVELS
     Route::get('flood-levels', [FloodLevelController::class, 'index']);
