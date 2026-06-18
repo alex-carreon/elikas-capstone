@@ -20,7 +20,7 @@ import { useMapFilterContext } from "@/context/MapFilterContext";
 import { type Dispatch, type SetStateAction } from "react";
 import { useUserContext } from "@/context/AuthContext";
 
-const brouterBaseUrl = import.meta.env.VITE_BROUTER_URL
+const brouterBaseUrl = import.meta.env.VITE_BROUTER_BASE_URL
 
 type EvacPin = {
   id: number;
