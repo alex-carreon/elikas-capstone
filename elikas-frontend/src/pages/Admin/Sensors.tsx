@@ -99,8 +99,6 @@ function Sensors() {
       const activeCount = activeSensors.length;
       const inactiveCount = inactiveSensors.length;
 
-      console.log(activeSensors);
-
       setActiveSensors(activeSensors);
       setInactiveSensors(inactiveSensors);
       setActiveSensorsCount(activeCount);
@@ -152,6 +150,7 @@ function Sensors() {
       console.log(activeSensors);
 
       setActiveSensors(activeSensors);
+      toast.success("Sensors filtered!");
     } catch (err: any) {
       if (err.name === "CanceledError") {
         return;
@@ -210,8 +209,11 @@ function Sensors() {
 
     try {
       setLoading(true);
-      getSensors(controller.signal);
-      getBarangays(controller.signal);
+      await Promise.all([
+        getSensors(controller.signal),
+        getBarangays(controller.signal),
+      ]);
+
       return () => controller.abort();
     } catch (err: any) {
       if (err.name === "CanceledError") {
@@ -235,7 +237,6 @@ function Sensors() {
 
     if (activeBrgyFilter || yellow || red || orange) {
       getFilteredActive(controller.signal);
-      toast.success("Sensors filtered!");
     }
 
     return () => controller.abort();

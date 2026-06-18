@@ -7,7 +7,6 @@ import { toast } from "sonner";
 import { useNavigate } from "react-router";
 
 function VerifyOTP() {
-  const [error, setError] = useState("");
   const [elapsed, setElapsed] = useState(60);
   const [running, setRunning] = useState(false);
   const [otp, setOtp] = useState(0);
@@ -113,7 +112,6 @@ function VerifyOTP() {
               barangay!
             </p>
           </div>
-          <p className="text-red-500 text-xs text-center">{error}</p>
           <div className="flex flex-col gap-6">
             <div className="w-full flex flex-col items-center gap-1">
               <InputOTPComp

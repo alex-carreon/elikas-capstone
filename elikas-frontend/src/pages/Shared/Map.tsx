@@ -41,7 +41,7 @@ function Map() {
 
   const mapRef = useRef<LeafletMap | null>(null);
 
-  let authorized = false;
+  // let authorized = false;
   let admin = false;
   const { role } = useUserContext();
 
@@ -153,9 +153,9 @@ function Map() {
     }
   }, []);
 
-  if (role) {
-    authorized = true;
-  }
+  // if (role) {
+  //   authorized = true;
+  // }
 
   if (role === "admin") {
     admin = true;

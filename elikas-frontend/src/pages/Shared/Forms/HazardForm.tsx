@@ -64,7 +64,6 @@ function HazardForm() {
   const [routePoints, setRoutePoints] = useState<[number, number][]>([]);
   const [newRoutePoints, setNewRoutePoints] = useState<[number, number][]>([]);
   const [newSnapped, setNewSnapped] = useState<[number, number][]>([]);
-  const [isFetchingRouter, setIsFetchingRouter] = useState(false);
   const [snapped, setSnapped] = useState<[number, number][]>([]);
   const [levels, setLevels] = useState<FloodLevel[]>();
   const [loading, setLoading] = useState(true);
@@ -227,7 +226,6 @@ function HazardForm() {
     }
 
     const getRoute = async () => {
-      setIsFetchingRouter(true);
       toast.info("Tip: Click on or near a road for accurate routing.");
       const allPoints: [number, number][] = [center, ...routePoints];
 

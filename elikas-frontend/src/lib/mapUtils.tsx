@@ -176,7 +176,6 @@ function getNearestWaypoint(
 export function NearestRouting({
   onPinSelected,
   userPosition,
-  showNearestRoute,
   nearestRouteTrigger,
 }: {
   onPinSelected: any;
@@ -297,7 +296,6 @@ export function Routing({
 
 // Add properties based on the pin info from db
 export function PinMarking({ onPinClick }: { onPinClick: (pin: any) => void }) {
-  const [evacPins, setEvacPins] = useState<EvacPin[]>([]);
   const [brgyPins, setBrgyPins] = useState<EvacPin[]>([]);
   const [myPins, setMyPins] = useState<MyEvacPin[]>([]);
   const [indivPins, setIndivPins] = useState<EvacPin[]>([]);
@@ -689,9 +687,9 @@ export function RoadMapping({ onPinClick }: RoadMappingProps) {
 }
 
 interface MapClickHandlerProps {
-  onPinClick: (coords: { lat: number; long: number }) => void;
-  clickedLoc: [number, number] | null;
-  setClickedLoc: Dispatch<SetStateAction<[number, number] | null>>;
+  onPinClick: (coords: { lat: number; long: number }) => void | null;
+  clickedLoc: [number, number] | undefined | null;
+  setClickedLoc?: Dispatch<SetStateAction<[number, number] | undefined | null>>;
 }
 
 export function MapClickHandler({
@@ -719,7 +717,7 @@ export function MapClickHandler({
     const handleClick = (e: any) => {
       const { lat, lng } = e.latlng;
       getLocationDescription(lat, lng);
-      setClickedLoc([lat, lng]);
+      setClickedLoc?.([lat, lng]);
       onPinClick({ lat, long: lng });
       // parse latlng to string for it to be stored in local storage
       localStorage.setItem("clickedPin", JSON.stringify([lat, lng]));

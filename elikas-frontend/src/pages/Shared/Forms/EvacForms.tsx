@@ -94,7 +94,6 @@ function EvacPin() {
   const [existingPin, setExistingPin] = useState(false);
   const [fileName, setFileName] = useState<File | undefined>();
   const [imagePreview, setImagePreview] = useState<undefined | string>();
-  const [locationType, setLocationType] = useState("");
   const [pinName, setPinName] = useState("");
   const [blkLot, setBlkLot] = useState<string>();
   const [houseNo, setHouseNo] = useState("");
@@ -728,11 +727,7 @@ function EvacPin() {
                   attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
                   url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
                 />
-                <MapClickHandler
-                  onPinClick={null}
-                  setClickedLoc={center}
-                  clickedLoc={center}
-                />
+                <MapClickHandler onPinClick={() => {}} clickedLoc={center} />
               </MapContainer>
               {id && <p className="text-sm">{address}</p>}
               {!id || isEditable ? (
@@ -772,7 +767,7 @@ function EvacPin() {
                 label="Capacity Level*"
                 placeholder="Select the capacity level"
                 id="EvacPin_CapacityField"
-                onSubmit={(e) => setLocationType(e.target.value)}
+                onSubmit={(e) => setCapacity(e.target.value)}
                 options={capacityLevels
                   ?.filter((level) => level.capacity_level !== "Full")
                   .map((level) => ({

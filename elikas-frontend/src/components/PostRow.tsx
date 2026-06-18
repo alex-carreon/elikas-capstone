@@ -50,9 +50,6 @@ function PostRow({
   timePosted,
   description,
   level,
-  locationVerified,
-  flagCount,
-  expiryDays,
   image,
   isSimple,
   children,
@@ -69,8 +66,6 @@ function PostRow({
   const [openDialog, setOpenDialog] = useState(false);
   const [reason, setReason] = useState("");
   const [voteLoad, setVoteLoad] = useState(false);
-  const [reasonId, setReasonId] = useState(0);
-  const [hasVoted, setHasVoted] = useState(false);
   const [reasons, setReasons] = useState<Reasons[]>([]);
   const [reasonLoad, setReasonLoad] = useState(false);
 
