@@ -28,7 +28,7 @@ import FormSkeleton from "../../Skeletons/FormSkeleton";
 import { Separator } from "@/components/ui/separator";
 import { toast } from "sonner";
 
-const brouterBaseUrl = import.meta.env.VITE_BROUTER_URL
+const brouterBaseUrl = import.meta.env.VITE_BROUTER_BASE_URL
 
 type FloodLevel = {
   id: number;
