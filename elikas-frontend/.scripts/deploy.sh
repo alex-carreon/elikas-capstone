@@ -11,12 +11,10 @@ sudo tailscale funnel reset
 cd /var/www/elikas-frontend
 
 # Install production dependencies
-# /root/.nvm/versions/node/v24.17.0/bin/npm ci 
-npm ci
+/root/.nvm/versions/node/v24.17.0/bin/npm ci 
 
 # Build app
-# /root/.nvm/versions/node/v24.17.0/bin/npm run build
-npm run build
+/root/.nvm/versions/node/v24.17.0/bin/npm run build
 
 # Reload 
 echo "🔄 Getting eLikas PWA online ..."
