@@ -5,7 +5,9 @@ import { useState } from "react";
 import ButtonComp from "@/components/Button";
 import { createAvatar } from "@dicebear/core";
 import { bigSmile } from "@dicebear/collection";
-import RegisterHeader from "@/components/RegisterHeader";
+import { Link } from "react-router";
+import { ArrowLeftIcon } from "lucide-react";
+import Logo from "@/components/Logo";
 
 function randomSeed(): string {
   return Math.random().toString(36).slice(2, 10);
@@ -40,7 +42,14 @@ function CustomizeProfile() {
   return (
     <div className="min-h-screen flex justify-center p-6">
       <div className="w-full max-w-sm flex flex-col">
-        <RegisterHeader />
+        <div className="mb-6">
+          <Link to="/Registration/Contact" id="R-BackSplash">
+            <ArrowLeftIcon />
+          </Link>
+        </div>
+        <div className="flex justify-center">
+          <Logo />
+        </div>
         <div className="h-1/2 flex justify-evenly flex-col">
           <div>
             <h1

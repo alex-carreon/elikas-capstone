@@ -1,10 +1,11 @@
-import { useNavigate } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
 import colors from "@/constants/colors";
 import TextField from "@/components/TextField";
 import ButtonComp from "@/components/Button";
 import Select from "@/components/SelectDropdown";
 import { useEffect, useState } from "react";
-import RegisterHeader from "@/components/RegisterHeader";
+import Logo from "@/components/Logo";
+import { ArrowLeftIcon } from "lucide-react";
 import api from "@/api";
 import SelectDropdown from "@/components/SelectDropdown";
 
@@ -123,7 +124,14 @@ function FormRegistration() {
   return (
     <div className="min-h-screen flex justify-center p-6">
       <div className="w-full max-w-sm flex justify-evenly flex-col">
-        <RegisterHeader />
+        <div className="mb-6">
+          <Link to="/Registration/Splash" id="R-BackSplash">
+            <ArrowLeftIcon />
+          </Link>
+        </div>
+        <div className="flex justify-center">
+          <Logo />
+        </div>{" "}
         <div className="flex justify-center flex-col">
           <h1
             className="BeVietnamPro text-2xl text-center font-bold"
