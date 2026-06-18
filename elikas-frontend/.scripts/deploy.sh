@@ -4,7 +4,7 @@ set -e
 echo "🚀 Deployment started ..."
 
 # Stop Tailscale Funnel
-sudo tailscale funnel reset
+sudo /usr/bin/tailscale tailscale funnel reset
 
 # Navigate to frontend directory
 cd /var/www/elikas-frontend
@@ -17,6 +17,6 @@ cd /var/www/elikas-frontend
 
 # Reload 
 echo "🔄 Getting eLikas PWA online ..."
-sudo tailscale funnel --bg 80
+sudo /usr/bin/tailscale funnel --bg 80
 
 echo "✅ Deployment finished successfully!"
