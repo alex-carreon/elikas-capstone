@@ -31,6 +31,7 @@ function Map() {
   const [selected, setSelected] = useState<
     Record<number, "Dismiss" | "Snooze" | null>
   >({});
+  const [decidedCount, setDecidedCount] = useState(0);
 
   const openDialog = useRef(false);
 
@@ -137,6 +138,8 @@ function Map() {
       ...prev,
       [itemId]: value,
     }));
+
+    setDecidedCount(+1);
   };
 
   const expiryDate = new Date(expiry);
@@ -153,9 +156,11 @@ function Map() {
     }
   }, []);
 
-  // if (role) {
-  //   authorized = true;
-  // }
+  useEffect(() => {
+    if (decidedCount === reminderCount) {
+      setShowReminder(false);
+    }
+  }, [selected]);
 
   if (role === "admin") {
     admin = true;
@@ -197,7 +202,7 @@ function Map() {
                         handleDismissSingle(path.floodpath_id, e);
                         handleSelect(path.floodpath_id, "Dismiss");
                       }}
-                      isDisabled={selected === "Snooze"}
+                      isDisabled={selected[path.floodpath_id] === "Snooze"}
                     />
                     <ButtonComp
                       text="Snooze"
@@ -209,7 +214,7 @@ function Map() {
                         handleSnoozeSingle(path.floodpath_id, e);
                         handleSelect(path.floodpath_id, "Snooze");
                       }}
-                      isDisabled={selected === "Dismissed"}
+                      isDisabled={selected[path.floodpath_id] === "Dismiss"}
                     />
                   </div>
                 </div>

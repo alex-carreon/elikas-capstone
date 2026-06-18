@@ -20,6 +20,8 @@ import { useMapFilterContext } from "@/context/MapFilterContext";
 import { type Dispatch, type SetStateAction } from "react";
 import { useUserContext } from "@/context/AuthContext";
 
+const brouterBaseUrl = import.meta.env.VITE_BROUTER_URL
+
 type EvacPin = {
   id: number;
   lat: number;
@@ -215,7 +217,7 @@ export function NearestRouting({
         const user = [userPosition.lng, userPosition.lat];
 
         const response = await fetch(
-          `http://brouter:17777/brouter?lonlats=${user}|${destination}&profile=trekking&format=geojson`,
+          `${brouterBaseUrl}/brouter?lonlats=${user}|${destination}&profile=trekking&format=geojson`,
           { method: "GET" },
         );
 
@@ -268,7 +270,7 @@ export function Routing({
         const user = [userPosition.lng, userPosition.lat];
 
         const response = await fetch(
-          `http://brouter:17777/brouter?lonlats=${user}|${destination}&profile=trekking&format=geojson`,
+          `${brouterBaseUrl}/brouter?lonlats=${user}|${destination}&profile=trekking&format=geojson`,
           { method: "GET" },
         );
 
@@ -543,7 +545,7 @@ function RouterHazard({
     const getRoutes = async () => {
       try {
         const response = await fetch(
-          `http://brouter:17777/brouter?lonlats=${lonlats}&profile=${profile}&format=geojson`,
+          `${brouterBaseUrl}/brouter?lonlats=${lonlats}&profile=${profile}&format=geojson`,
           { method: "GET" },
         );
 
