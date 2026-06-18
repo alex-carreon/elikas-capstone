@@ -12,6 +12,7 @@ import AlertDialogue from "@/components/AlertDialogue";
 import api from "@/api";
 import { Separator } from "@/components/ui/separator";
 import { toast } from "sonner";
+import { cn } from "@/lib/utils";
 
 type pathReminder = {
   floodpath_id: number;
@@ -224,8 +225,14 @@ function Map() {
         </AlertDialogue>
       )}
 
-      <div className="flex justify-center pt-13 w-full">
-        <div className="max-w-md w-full">
+      <div
+        className={cn(
+          role === "admin"
+            ? `flex justify-center w-full`
+            : `flex justify-center w-full pt-13`,
+        )}
+      >
+        <div className="relative max-w-md w-full">
           <MapContainer
             id="Map_Container"
             style={{ height: "94vh", width: "100%" }}
@@ -245,13 +252,13 @@ function Map() {
             className="absolute top-0 left-0 w-full pointer-events-none z-[1000]"
             style={{ height: "94vh" }}
           >
-            <div className="flex justify-center pt-13">
-              <div className="max-w-md w-full pointer-events-auto">
+            <div className="flex justify-center">
+              <div className="absolute max-w-md w-full pointer-events-auto">
                 <Filter />
               </div>
             </div>
           </div>
-          <div className="fixed bottom-0 left-0 w-full flex justify-center items-center pointer-events-none">
+          <div className="absolute bottom-0 left-0 w-full flex justify-center items-center pointer-events-none">
             <div className="flex flex-col w-full max-w-md items-center justify-center mb-8 pointer-events-auto">
               <CurrentLocation
                 className="w-14 h-14 self-end m-4 drop-shadow-xl"
