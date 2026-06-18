@@ -34,7 +34,7 @@ function isValidDate(date: Date | undefined) {
 
 interface DatePickerProps {
   label: string;
-  desc: string;
+  desc?: string;
   isRequired?: boolean;
   readonly?: boolean;
   idField: string;

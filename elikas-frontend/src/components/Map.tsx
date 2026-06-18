@@ -33,7 +33,9 @@ function Map({ onLocationFound, showLocation, nearestRouteTrigger }: MapProps) {
   // const [position, setPosition] = useState(null);
   const [flyTrigger, setFlyTrigger] = useState(0);
   const [newPin, setNewPin] = useState(false);
-  const [clickedLoc, setClickedLoc] = useState<[number, number] | null>(null);
+  const [clickedLoc, setClickedLoc] = useState<
+    [number, number] | undefined | null
+  >(null);
   // const [showLocation, setShowLocation] = useState(false);
   const [locationFound, setLocationFound] = useState(false);
   const [isSensor, setIsSensor] = useState(false);

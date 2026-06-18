@@ -1,6 +1,6 @@
 import api from "@/api";
 import { toast } from "sonner";
-import { redirect, type NavigateFunction } from "react-router-dom";
+import { type NavigateFunction } from "react-router-dom";
 
 interface handleActionProps {
   e?: React.FormEvent<Element>;

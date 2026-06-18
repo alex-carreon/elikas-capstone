@@ -4,7 +4,6 @@ import {
   SelectGroup,
   SelectItem,
   SelectTrigger,
-  SelectValue,
 } from "@/components/ui/select";
 import { Field, FieldLabel } from "./ui/field";
 import colors from "@/constants/colors";
@@ -36,7 +35,6 @@ function SelectDropdown({
   onValueChange,
   options,
   value,
-  onSubmit,
   isRequired,
   disabled,
   loading,
