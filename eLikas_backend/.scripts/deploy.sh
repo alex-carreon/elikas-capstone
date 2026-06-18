@@ -3,16 +3,10 @@ set -e
 
 echo "🚀 Deployment started ..."
 
-# Navigate to the app directory
-cd /var/www/elikas-capstone
-
 # Enter maintenance mode so users don't hit errors mid-update
 (/var/www/eLikas_backend/php artisan down) || true
 
-# Securely overwrite tracking files with the latest deployment branch
-git fetch origin
-git reset --hard origin/deployment
-
+# Navigate to backend directory
 cd /var/www/elikas-capstone/eLikas_backend
 
 # Install production dependencies
