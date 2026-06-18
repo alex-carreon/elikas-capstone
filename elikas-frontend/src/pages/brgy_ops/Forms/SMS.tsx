@@ -28,6 +28,8 @@ function SMS() {
   const [willDelete, setWillDelete] = useState(false);
   const [templateLoad, setTemplateLoad] = useState(false);
   const [templates, setTemplates] = useState<templateType[]>([]);
+  const [showDialog, setShowDialog] = useState(true);
+  const [smsToken, setSMSToken] = useState<string | null>(null);
 
   const navigate = useNavigate();
 
@@ -81,6 +83,26 @@ function SMS() {
     }
   };
 
+  const handleTempleteDel = () => {
+    try {
+      const response = api.patch(`/sms/templates/${templateId}/deactivate`);
+
+      console.log(response);
+
+      toast.promise(response, {
+        loading: "Deleting this template...",
+        success: "Template deleted!",
+        error: "An error occurred. Please try again.",
+        position: "top-center",
+      });
+
+      getTemplates();
+    } catch (err: any) {
+      toast.error("An unexpected error occurred. Please try again later.");
+      console.log(err.response.message);
+    }
+  };
+
   const templateMessage = templates.find(
     (message) => String(message.id) === String(templateId),
   );
@@ -93,9 +115,15 @@ function SMS() {
     }
 
     try {
-      const response = api.post("/sms/broadcasts/send-now", {
-        message_content: message,
-      });
+      const response = api.post(
+        "/sms/broadcasts/send-now",
+        { message_content: message },
+        {
+          headers: {
+            "X-iPROG-API-TOKEN": smsToken,
+          },
+        },
+      );
 
       console.log(response);
 
@@ -125,10 +153,18 @@ function SMS() {
       );
 
       try {
-        const response = api.post("/sms-broadcasts/schedule", {
-          message_content: message,
-          scheduled_for: schedSend,
-        });
+        const response = api.post(
+          "/sms-broadcasts/schedule",
+          {
+            message_content: message,
+            scheduled_for: schedSend,
+          },
+          {
+            headers: {
+              "X-iPROG-API-TOKEN": smsToken,
+            },
+          },
+        );
 
         toast.promise(response, {
           loading: "Scheduling your message now...",
@@ -150,6 +186,33 @@ function SMS() {
     setTemplateId("");
   };
 
+  const handleSubmitToken = (e: React.FormEvent) => {
+    e.preventDefault();
+
+    try {
+      const response = api.post("/sms/verify-token", {
+        api_token: smsToken,
+      });
+
+      toast.promise(response, {
+        loading: "Verifying your token...",
+        success: "Token verified!",
+        error: (err: any) => {
+          return err.response.message;
+        },
+      });
+
+      console.log(response);
+
+      response.then(() => {
+        setShowDialog(false);
+      });
+    } catch (err: any) {
+      console.log(err.response.data);
+      toast.error("An error ocurred. Please try again.");
+    }
+  };
+
   useEffect(() => {
     if (templateId) {
       setMessage(templateMessage?.message_content);
@@ -163,6 +226,33 @@ function SMS() {
 
   return (
     <>
+      {showDialog && (
+        <AlertDialogue
+          contentId="SMS_TokenContent"
+          actionId="SMS_TokenSubmit"
+          open={showDialog}
+          title="IPROGSMS Token"
+          description="Enter the IPROGSMS Token provided to you upon registering in their website."
+          buttonText="Verify"
+          onClick={(e) => handleSubmitToken(e)}
+        >
+          <TextField
+            label="Verify IPROGSMS Token"
+            inputType="text"
+            id="SMS_TokenField"
+            onSubmit={(e) => setSMSToken(e.target.value)}
+          />
+          <p className="text-xs text-center pl-4 pr-4">
+            <span>Haven't made an account in IPROGSMS yet? </span>
+            <a
+              href="https://www.iprogsms.com/register"
+              className="underline italic"
+            >
+              Register here!
+            </a>
+          </p>
+        </AlertDialogue>
+      )}
       {willDelete && (
         <AlertDialogue
           contentId="SMS_DeacContent"
@@ -175,7 +265,7 @@ function SMS() {
           onClose={() => {
             setWillDelete(false);
           }}
-          // onClick={deleteHazard}
+          onClick={handleTempleteDel}
         />
       )}
       {addTemplate && (
