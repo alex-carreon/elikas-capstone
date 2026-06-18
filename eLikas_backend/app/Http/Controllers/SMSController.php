@@ -463,4 +463,31 @@ class SMSController extends Controller
 
         return $govOp;
     }
+    public function softDestroyTemplate(Request $request, int $templateId): JsonResponse
+    {
+        try {
+            $govOp = $this->resolveGovOp($request);
+            if ($govOp instanceof JsonResponse) {
+                return $govOp;
+            }
+
+            $deleted = $this->smsService->softDeleteTemplate($templateId, $govOp->id);
+
+            if (!$deleted) {
+                return response()->json(
+                    ['message' => 'Template not found or already deactivated.'],
+                    404
+                );
+            }
+
+            return response()->json([
+                'message'     => 'Template deactivated successfully.',
+                'template_id' => $templateId,
+            ]);
+        } catch (\Exception $e) {
+            Log::error('SMSController@softDestroyTemplate', ['error' => $e->getMessage()]);
+            return response()->json(['error' => 'Failed to deactivate template.', 'details' => $e->getMessage()], 500);
+
+        }
+    }
 }
