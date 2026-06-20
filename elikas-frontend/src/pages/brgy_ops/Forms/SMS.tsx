@@ -220,6 +220,9 @@ function SMS() {
           if (err.response?.data.error == "Unauthorized") {
             return "Your session has expired. Please log in again.";
           }
+          if (err.response?.data.message == "Validation failed.") {
+            return "Verification failed. Please be sure that the token is from your IPROGSMS account.";
+          }
           return "An error occurred. Please try again.";
         },
       });
@@ -424,18 +427,6 @@ function SMS() {
               ) : null}
             </div>
           </div>
-          {/* <SelectDropdown
-            value={schedSend}
-            onValueChange={setSchedSend}
-            label="Schedule Send"
-            placeholder="Choose when to send this message"
-            id="SMS_SelectSchedField"
-            onSubmit={(e) => setSchedSend(e.target.value)}
-            options={[
-              { label: "Send Now", value: "1" },
-              { label: "in 10 Minutes", value: "2" },
-            ]}
-          /> */}
           <DatePickerInput
             label="Schedule Send (Optional)"
             desc="Enter a date and time to send your message."
