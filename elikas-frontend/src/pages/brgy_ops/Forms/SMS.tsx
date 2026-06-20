@@ -70,14 +70,27 @@ function SMS() {
         template_name: templateTitle,
       });
 
+      console.log(response);
+
       toast.promise(response, {
         loading: "Adding to your templates...",
         success: "Template added!",
         error: (err: any) => {
-          return err.response.data;
+          if (err.response?.data.error == "Unauthorized") {
+            return "Your session has expired. Please log in again.";
+          }
+          if (
+            err.response?.data.details ==
+            "SQLSTATE[23000]: Integrity constraint violation: 1062 Duplicate entry 'new' for key 'template_name' (Connection: mysql, Host: 100.124.244.40, Port: 3306, Database: elikas_db, SQL: insert into `SMSTemplates` (`optr_id`, `template_name`, `message_content`) values (6, new, bnew))"
+          ) {
+            return "This title already exists.";
+          }
+          return "An error occurred. Please try again.";
         },
         position: "top-center",
       });
+
+      getTemplates();
     } catch (err: any) {
       console.log(err.response.data);
     }
@@ -92,7 +105,13 @@ function SMS() {
       toast.promise(response, {
         loading: "Deleting this template...",
         success: "Template deleted!",
-        error: "An error occurred. Please try again.",
+        error: (err: any) => {
+          if (err.response?.data.error == "Unauthorized") {
+            return "Your session has expired. Please log in again.";
+          }
+
+          return "An error occurred. Please try again.";
+        },
         position: "top-center",
       });
 
@@ -198,7 +217,13 @@ function SMS() {
         loading: "Verifying your token...",
         success: "Token verified!",
         error: (err: any) => {
-          return err.response.message;
+          if (err.response?.data.error == "Unauthorized") {
+            return "Your session has expired. Please log in again.";
+          }
+          if (err.response?.data.message == "Validation failed.") {
+            return "Verification failed. Please be sure that the token is from your IPROGSMS account.";
+          }
+          return "An error occurred. Please try again.";
         },
       });
 
@@ -221,7 +246,7 @@ function SMS() {
 
   useEffect(() => {
     getTemplates();
-    console.log(templates);
+    setShowDialog(true);
   }, []);
 
   return (
@@ -230,11 +255,14 @@ function SMS() {
         <AlertDialogue
           contentId="SMS_TokenContent"
           actionId="SMS_TokenSubmit"
+          actionId2="SMS_TokenBack"
           open={showDialog}
           title="IPROGSMS Token"
           description="Enter the IPROGSMS Token provided to you upon registering in their website."
           buttonText="Verify"
+          buttonText2="Go Back"
           onClick={(e) => handleSubmitToken(e)}
+          onClick2={() => navigate("/map")}
         >
           <TextField
             label="Verify IPROGSMS Token"
@@ -324,21 +352,6 @@ function SMS() {
               Send verified announcements to registered contacts instantly.
             </p>
           </div>
-          {/* No Transaction */}
-          {/* <div className="h-90 w-full max-w-sm flex flex-col justify-center gap-2">
-            <p className="text-center">
-              This feature requires a purchase transaction. Please contact
-              eLikas support to avail this feature.
-            </p>
-            <a
-              href="mailto:elikasteam@gmail.com"
-              className="text-center underline"
-              style={{ color: colors.activeIcon }}
-            >
-              elikasteam@gmail.com
-            </a>
-          </div> */}
-          {/* With Transaction */}
           <div className="w-full max-w-sm flex flex-col gap-4">
             <div className="flex w-full h-fit items-center justify-between">
               <div className="w-58 min-w-0 mr-2">
@@ -402,28 +415,18 @@ function SMS() {
                 widthSize="70px"
                 onClick={handleClear}
               />
-              <ButtonComp
-                id="SMS_AddTemplateBtn"
-                text={templateId ? "Save Changes" : "Add to Templates"}
-                variant="outline"
-                heightSize="30px"
-                widthSize="140px"
-                onClick={() => setAddTemplate(!addTemplate)}
-              />
+              {!templateId ? (
+                <ButtonComp
+                  id="SMS_AddTemplateBtn"
+                  text="Add to Templates"
+                  variant="outline"
+                  heightSize="30px"
+                  widthSize="140px"
+                  onClick={() => setAddTemplate(!addTemplate)}
+                />
+              ) : null}
             </div>
           </div>
-          {/* <SelectDropdown
-            value={schedSend}
-            onValueChange={setSchedSend}
-            label="Schedule Send"
-            placeholder="Choose when to send this message"
-            id="SMS_SelectSchedField"
-            onSubmit={(e) => setSchedSend(e.target.value)}
-            options={[
-              { label: "Send Now", value: "1" },
-              { label: "in 10 Minutes", value: "2" },
-            ]}
-          /> */}
           <DatePickerInput
             label="Schedule Send (Optional)"
             desc="Enter a date and time to send your message."

@@ -182,7 +182,7 @@ function Map() {
           onClick={(e) => handleDismissAll(e)}
           onClick2={(e) => handleSnoozeAll(e)}
         >
-          <div className="flex flex-col gap-2">
+          <div className="flex flex-col gap-2 overflow-auto h-50">
             {pathReminder?.map((path) => (
               <>
                 <Separator />
