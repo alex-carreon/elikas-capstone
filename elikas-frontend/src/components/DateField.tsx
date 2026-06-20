@@ -200,17 +200,19 @@ function DatePickerInput({
           {edit ? (
             <InputGroupAddon align="inline-end">
               <Popover open={open} onOpenChange={setOpen}>
-                <PopoverTrigger>
-                  <InputGroupButton
-                    id={idBtn}
-                    variant="ghost"
-                    size="icon-xs"
-                    aria-label="Select date"
-                  >
-                    <CalendarIcon />
-                    <span className="sr-only">Select date</span>
-                  </InputGroupButton>
-                </PopoverTrigger>
+                <PopoverTrigger
+                  render={
+                    <InputGroupButton
+                      id={idBtn}
+                      variant="ghost"
+                      size="icon-xs"
+                      aria-label="Select date"
+                    >
+                      <CalendarIcon />
+                      <span className="sr-only">Select date</span>
+                    </InputGroupButton>
+                  }
+                />
                 <PopoverContent
                   className="w-auto overflow-hidden p-0 z-[600]"
                   align="end"
