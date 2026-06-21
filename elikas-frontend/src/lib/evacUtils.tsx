@@ -52,8 +52,6 @@ export const handleSubmit = async ({
       },
     });
 
-    console.log(response);
-
     if (!response) {
       console.log("No response from server");
     }
@@ -113,10 +111,9 @@ export const handleUpdate = async ({
   setHasUpdated,
   role,
 }: handleActionProps) => {
-  // e?.preventDefault();
-
   try {
     e?.preventDefault();
+
     const responsePromise = api.put(`/pins/${id}`, {
       name: name,
       address: address,
@@ -141,6 +138,8 @@ export const handleUpdate = async ({
       contact_number: contact_number,
       ...(role === "brgy_op" && { expiry: expiry }),
     });
+
+    console.log(responsePromise);
 
     toast.promise(responsePromise, {
       loading: "Updating your pin...",
@@ -184,7 +183,6 @@ export const handleDelete = async ({
         return "Pin Deactivated!";
       },
       error: (err: any) => {
-        console.log(err.response?.data);
         return err.response?.data?.message || "Please try again.";
       },
       position: "top-center",

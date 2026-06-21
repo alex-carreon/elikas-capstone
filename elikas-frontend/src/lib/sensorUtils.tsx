@@ -104,7 +104,13 @@ export const handleCreate = async ({
     toast.promise(response, {
       loading: "Adding your sensor to the map...",
       success: "Sensor added successfully!",
-      error: (err) => err?.response?.data?.message || "Please try again",
+      error: (err: any) => {
+        if (err.response.status == 422) {
+          return "Fill in all the fields";
+        }
+
+        return "An error occurred. Please try again.";
+      },
       position: "top-center",
     });
 
@@ -195,7 +201,11 @@ export const handleUpdate = async ({
       loading: "Updating this sensor...",
       success: "Sensor is successfully updated!",
       error: (err: any) => {
-        return err.response.data.message || "Please try again.";
+        if (err.response.status == 422) {
+          return "Fill in all the fields";
+        }
+
+        return "An error occurred. Please try again.";
       },
     });
 
