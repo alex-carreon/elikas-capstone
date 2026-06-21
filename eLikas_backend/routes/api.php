@@ -159,8 +159,6 @@ Route::middleware(['firebase.auth', 'role:2'])->group(function () {
     Route::post('/sms/templates', [SMSController::class, 'storeTemplate']);
     Route::get('/sms/templates', [SMSController::class, 'indexTemplates']);
     Route::delete('/sms/templates/{templateId}', [SMSController::class, 'destroyTemplate'])->whereNumber('templateId');
-    Route::patch('/sms/templates/{templateId}/deactivate', [SMSController::class, 'softDestroyTemplate'])
-        ->whereNumber('templateId');
 });
 
 
