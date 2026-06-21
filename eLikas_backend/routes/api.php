@@ -129,8 +129,8 @@ Route::prefix('admin')->middleware(['firebase.auth', 'role:1'])->group(function 
     //SMS
     Route::get('/sms/broadcasts', [AdminSMSController::class, 'index']);
 
-    //Delete Media (media record ID or direct path in server)
-    Route::delete('/media/{arg}', [MediaCleanupController::class, 'destroy']);
+    //Delete Media (media record ID or direct path in server as /media/{id or path})
+    Route::delete('/media/', [MediaCleanupController::class, 'destroy']);
 });
 
 // ---------------------------------------------------------------

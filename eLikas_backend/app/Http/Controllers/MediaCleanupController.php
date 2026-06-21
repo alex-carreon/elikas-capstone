@@ -13,7 +13,7 @@ class MediaCleanupController extends Controller
     {
         // Require either 'id' or 'path', not both
         $request->validate([
-            'id'   => 'required_without:path|string|nullable',
+            'id'   => 'required_without:path|numeric|nullable',
             'path' => 'required_without:id|string|nullable',
         ]);
 
@@ -25,7 +25,7 @@ class MediaCleanupController extends Controller
                 $mediaFile = MediaFile::find($id);
 
                 if (!$mediaFile) {
-                    return response()->json(['error' => 'Media file record not found'], 404);
+                    return response()->json(['message' => 'No associated media record was found'], 404);
                 }
 
                 $filePath = $mediaFile->file_path ?? $path;
@@ -33,15 +33,15 @@ class MediaCleanupController extends Controller
                 if ($deleteService->delete($filePath)) {
                   DB::transaction(function () use ($mediaFile) {
                     $mediaFile->delete();
-                    $remainingMediaCount = MediaFile::where('parent_element_id', $mediaFile->parent_element_id)->count();
+                    $remainingMediaCount = MediaFile::where('parent_id', $mediaFile->parent_id)->count();
 
                     if ($remainingMediaCount === 0) {
                         $mediaFile->social_element()->update(['has_media' => false]);
                     }
                   });
-                  return response()->json(['message' => 'Media record and storage file deleted successfully'], 200);
+                  return response()->json(['message' => 'Media record and/or storage file deleted successfully'], 200);
                 }
-                return response()->json(['error' => 'Failed to delete file from storage server'], 500);
+                return response()->json(['error' => 'Failed to clean up media files'], 500);
             }
 
             if ($path) {
