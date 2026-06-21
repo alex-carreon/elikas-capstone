@@ -64,7 +64,7 @@ function PostRow({
   const [vote, setVote] = useState<1 | -1 | 0>(0);
   const [downvote, setDownvote] = useState(0);
   const [openDialog, setOpenDialog] = useState(false);
-  const [reason, setReason] = useState("");
+  const [reason, setReason] = useState<string | null>(null);
   const [voteLoad, setVoteLoad] = useState(false);
   const [reasons, setReasons] = useState<Reasons[]>([]);
   const [reasonLoad, setReasonLoad] = useState(false);
@@ -199,7 +199,12 @@ function PostRow({
           success:
             "Comment has been flagged! Thank you for making this community safer for everyone.",
           error: (err: any) => {
-            return err.response.data;
+            if (
+              err.response.data.message === "The reason id field is required."
+            ) {
+              return "A reason is required to report a comment.";
+            }
+            return "An error ocurred. Please try again.";
           },
           position: "top-center",
         });
@@ -219,8 +224,14 @@ function PostRow({
           loading: "Flagging this comment...",
           success:
             "Comment has been flagged! Thank you for making this community safer for everyone.",
+
           error: (err: any) => {
-            return err.response.data;
+            if (
+              err.response.data.message === "The reason id field is required."
+            ) {
+              return "A reason is required to report a comment.";
+            }
+            return "An error ocurred. Please try again.";
           },
           position: "top-center",
         });
@@ -275,10 +286,12 @@ function PostRow({
               <p className="text-center">You have already flagged this post</p>
             ) : (
               <Radio
+                key={1}
                 isRequired
                 onValueChange={setReason}
                 onSubmit={(e) => setReason(e.target.value)}
                 options={reasons.map((reason) => ({
+                  key: reason.id,
                   id: `FlagReason_${reason.id}`,
                   value: String(reason.id),
                   label: reason.reason_label,

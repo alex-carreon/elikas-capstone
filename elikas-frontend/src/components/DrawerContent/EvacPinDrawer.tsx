@@ -527,6 +527,10 @@ function EvacPinDrawer({
                   </>
                 )}
               </li>
+              <li>
+                <b>Point Person</b>: {evacPinDetails?.contact_person} -{" "}
+                {evacPinDetails?.contact_number}
+              </li>
             </ul>
           </div>
         </DrawerHeader>

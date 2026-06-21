@@ -174,7 +174,6 @@ function LogIn() {
                 </p>
                 <TextField
                   label="Email"
-                  placeholder="Enter your email"
                   icon={Mail}
                   inputType="email"
                   id="LogIn_EmailField"
@@ -184,7 +183,6 @@ function LogIn() {
                 ></TextField>
                 <TextField
                   label="Password"
-                  placeholder="********"
                   icon={Lock}
                   inputType="password"
                   isPassword

@@ -67,7 +67,7 @@ function ContactNo() {
               <div className="flex justify-center">
                 <TextField
                   label="Contact Number"
-                  placeholder="639081057526"
+                  placeholder="639XXXXXXXXX"
                   inputType="tel"
                   id="ContactNumber_Field"
                   onSubmit={(e) => setContact(e.target.value)}
