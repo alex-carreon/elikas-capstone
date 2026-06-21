@@ -37,6 +37,7 @@ use App\Http\Controllers\Votes\VoteCommentController;
 use App\Http\Controllers\Votes\VoteController;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\AdminSMSController;
+use App\Http\Controllers\MediaCleanupController;
 
 Route::get('/test', function () {
     return response()->json([
@@ -128,7 +129,8 @@ Route::prefix('admin')->middleware(['firebase.auth', 'role:1'])->group(function 
     //SMS
     Route::get('/sms/broadcasts', [AdminSMSController::class, 'index']);
 
-
+    //Delete Media (media record ID or direct path in server)
+    Route::delete('/media/{arg}', [MediaCleanupController::class, 'destroy']);
 });
 
 // ---------------------------------------------------------------
