@@ -157,6 +157,11 @@ export const handleUpdate = async ({
       return;
     }
 
+    if (desc === null) {
+      toast.error("Please fill the description field");
+      return;
+    }
+
     const dateTime = formatInTimeZone(
       new Date(),
       "Asia/Manila",
