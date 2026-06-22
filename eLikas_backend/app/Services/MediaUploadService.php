@@ -40,7 +40,7 @@ class MediaUploadService
         //upload to SFTP and return the path
         Storage::disk('sftp')->put($path, $imagedata);
 
-        if (Storage::disk('sftp')->exists(config('app.media_base_url') . '/' . $path)) {
+        if (Storage::disk('sftp')->exists($path)) {
             return $path;
         } else {
             return null;
