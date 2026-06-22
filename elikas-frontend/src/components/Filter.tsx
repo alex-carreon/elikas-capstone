@@ -45,7 +45,7 @@ function Filter() {
           <div className="text-xs flex flex-row gap-2 items-center ml-4">
             <Switch
               id="MapFilter_Barangay"
-              size="sm"
+              size="default"
               checked={showGovPins}
               onCheckedChange={setShowGovPins}
             />
@@ -54,21 +54,24 @@ function Filter() {
           <div className="text-xs flex flex-row gap-2 items-center ml-4">
             <Switch
               id="MapFilter_User"
-              size="sm"
+              size="default"
               checked={showOtherPins}
               onCheckedChange={setShowOtherPins}
             />
             <p className="">By Other Users</p>
           </div>
           <Separator />
-          <div className="text-xs flex flex-row gap-2">
+          <div className="text-xs">
+            <p className="font-bold">Show Flooded Roads</p>
+          </div>
+          <div className="text-xs flex flex-row gap-2 ml-4">
             <Switch
               id="MapFilter_Hazard"
-              size="sm"
+              size="default"
               checked={showPaths}
               onCheckedChange={setShowPaths}
             />
-            <p className="font-bold">Show Flooded Roads</p>
+            <p>All Flooded Roads</p>
           </div>
         </CollapsibleContent>
       </div>

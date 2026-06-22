@@ -20,7 +20,7 @@ import { useMapFilterContext } from "@/context/MapFilterContext";
 import { type Dispatch, type SetStateAction } from "react";
 import { useUserContext } from "@/context/AuthContext";
 
-const brouterBaseUrl = import.meta.env.VITE_BROUTER_BASE_URL
+const brouterBaseUrl = import.meta.env.VITE_BROUTER_BASE_URL;
 
 type EvacPin = {
   id: number;
@@ -343,9 +343,7 @@ export function PinMarking({ onPinClick }: { onPinClick: (pin: any) => void }) {
     toast.promise(getAll, {
       loading: "Generating the pins! Hold on tight...",
       success: "Pins Generated!",
-      error: (err: any) => {
-        return err.response.message;
-      },
+      error: "An error occurred. Please try again.",
       position: "top-center",
     });
 
