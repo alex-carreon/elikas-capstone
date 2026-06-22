@@ -22,13 +22,11 @@ function Feedback() {
         message: desc,
       });
 
-      console.log(response);
-
       toast.promise(response, {
         loading: "Submitting your feedback...",
         success: "Feedback sent. Thank you for helping us improve!",
         error: (err: any) => {
-          return err.response.data.details;
+          return err.response.data;
         },
         position: "top-center",
       });

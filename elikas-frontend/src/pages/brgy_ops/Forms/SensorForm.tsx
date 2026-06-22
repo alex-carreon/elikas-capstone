@@ -34,13 +34,13 @@ function SensorForm() {
   const [isEditable, setIsEditable] = useState(false);
   const [sensorCode, setSensorCode] = useState("");
   const [name, setName] = useState("");
-  const [mountHeight, setMountHeight] = useState<number | null>(null);
-  const [latitude, setLatitude] = useState<number | null>(null);
-  const [longitude, setLongitude] = useState<number | null>(null);
+  const [mountHeight, setMountHeight] = useState(0);
+  const [latitude, setLatitude] = useState(0);
+  const [longitude, setLongitude] = useState(0);
   const [address, setAddress] = useState("");
-  const [yellowLevel, setYellowLevel] = useState<number | null>(null);
-  const [orangeLevel, setOrangeLevel] = useState<number | null>(null);
-  const [redLevel, setRedLevel] = useState<number | null>(null);
+  const [yellowLevel, setYellowLevel] = useState(0);
+  const [orangeLevel, setOrangeLevel] = useState(0);
+  const [redLevel, setRedLevel] = useState(0);
   const [brgy, setBrgy] = useState(0);
   const [cities, setCities] = useState<Cities[]>([]);
   const [cityId, setCityId] = useState(0);
@@ -146,12 +146,12 @@ function SensorForm() {
     handleCreate({
       e: e,
       name: name,
-      mountHeight: mountHeight ? mountHeight : 0,
-      location: [latitude ? latitude : 0, longitude ? longitude : 0],
+      mountHeight: mountHeight,
+      location: [latitude, longitude],
       address: address,
-      yellowLevel: yellowLevel ? yellowLevel : 0,
-      orangeLevel: orangeLevel ? orangeLevel : 0,
-      redLevel: redLevel ? redLevel : 0,
+      yellowLevel: yellowLevel,
+      orangeLevel: orangeLevel,
+      redLevel: redLevel,
       brgy: brgy,
       navigate: navigate,
       setError: setError,
@@ -166,11 +166,11 @@ function SensorForm() {
       e: e,
       id: Number(id),
       name: name,
-      mountHeight: mountHeight ? mountHeight : 0,
+      mountHeight: mountHeight,
       address: address,
-      yellowLevel: yellowLevel ? yellowLevel : 0,
-      orangeLevel: orangeLevel ? orangeLevel : 0,
-      redLevel: redLevel ? redLevel : 0,
+      yellowLevel: yellowLevel,
+      orangeLevel: orangeLevel,
+      redLevel: redLevel,
       setIsEditable: setIsEditable,
       setError: setError,
     });
@@ -241,7 +241,7 @@ function SensorForm() {
             inputType="text"
             id="Sensor_NameField"
             onSubmit={(e) => setName(e.target.value)}
-            isRequired
+            isRequired={!id}
             readonly={!id || isEditable ? false : true}
           />
           <TextField
@@ -251,7 +251,7 @@ function SensorForm() {
             inputType="number"
             id="Sensor_MountHeightField"
             onSubmit={(e) => setMountHeight(Number(e.target.value))}
-            isRequired
+            isRequired={!id}
             readonly={!id || isEditable ? false : true}
           />
           <TextField
@@ -261,7 +261,7 @@ function SensorForm() {
             inputType="number"
             id="Sensor_LatitudeField"
             onSubmit={(e) => setLatitude(Number(e.target.value))}
-            isRequired
+            isRequired={!id}
             readonly={!id || isEditable ? false : true}
           />
           <TextField
@@ -271,7 +271,7 @@ function SensorForm() {
             inputType="number"
             id="Sensor_LongitudeField"
             onSubmit={(e) => setLongitude(Number(e.target.value))}
-            isRequired
+            isRequired={!id}
             readonly={!id || isEditable ? false : true}
           />
           {!id ? (
@@ -288,7 +288,7 @@ function SensorForm() {
                   label: city.name,
                   value: String(city.id),
                 }))}
-                isRequired
+                isRequired={!id}
                 loading={loading}
               />
               <SelectDropdown
@@ -302,7 +302,7 @@ function SensorForm() {
                   label: brgy.name,
                   value: String(brgy.id),
                 }))}
-                isRequired
+                isRequired={!id}
                 loading={brgyLoad}
               />
             </Field>
@@ -322,7 +322,7 @@ function SensorForm() {
             inputType="string"
             id="Sensor_AddressField"
             onSubmit={(e) => setAddress(e.target.value)}
-            isRequired
+            isRequired={!id}
             readonly={!id || isEditable ? false : true}
           />
           <TextField
@@ -332,7 +332,7 @@ function SensorForm() {
             inputType="number"
             id="Sensor_YellowField"
             onSubmit={(e) => setYellowLevel(Number(e.target.value))}
-            isRequired
+            isRequired={!id}
             readonly={!id || isEditable ? false : true}
             error={error.yellowLevel}
           />
@@ -343,7 +343,7 @@ function SensorForm() {
             inputType="number"
             id="Sensor_OrangeField"
             onSubmit={(e) => setOrangeLevel(Number(e.target.value))}
-            isRequired
+            isRequired={!id}
             readonly={!id || isEditable ? false : true}
             error={error.orangeLevel}
           />
@@ -354,7 +354,7 @@ function SensorForm() {
             inputType="number"
             id="Sensor_RedField"
             onSubmit={(e) => setRedLevel(Number(e.target.value))}
-            isRequired
+            isRequired={!id}
             readonly={!id || isEditable ? false : true}
             error={error.redLevel}
           />

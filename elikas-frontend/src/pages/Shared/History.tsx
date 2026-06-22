@@ -172,7 +172,7 @@ function History() {
 
       const mySensors = sensorsResponse.data.data;
       setSensors(mySensors);
-      if (parameters) toast.success(message);
+      toast.success(message);
     } catch (err: string | any) {
       console.error(err.message || "An error occurred");
       toast.error(err?.response?.data?.message || "An error occurred");
@@ -765,7 +765,6 @@ function History() {
                               link={`/HazardForm/${path.id}`}
                               isExpired={path.is_expired}
                               buttonId="History_ActiveHazardDetailsBtn"
-                              showBtn
                             >
                               <div
                                 className={`mt-2 px-2 py-1 rounded-3xl w-fit text-sm`}

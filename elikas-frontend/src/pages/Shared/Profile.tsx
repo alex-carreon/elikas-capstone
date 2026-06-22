@@ -143,7 +143,6 @@ function Profile() {
         loading: "Deactivating your account...",
         success:
           "Account Deactivated! Please contact eLikas to reactivate your account",
-        error: "An error occurred. Please try again.",
         position: "top-center",
       });
 

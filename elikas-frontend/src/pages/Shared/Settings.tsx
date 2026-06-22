@@ -21,7 +21,6 @@ function Settings() {
       toast.promise(response, {
         loading: "Logging you out...",
         success: "You're logged out!",
-        error: "An error has occurred. Please try again or refresh the page.",
         position: "top-center",
       });
     } catch (error) {

@@ -45,36 +45,6 @@ function FormRegistration() {
   const navigate = useNavigate();
 
   useEffect(() => {
-    if (localStorage.getItem("last_name")) {
-      const ln = localStorage.getItem("last_name");
-      setLn(ln ? ln : "");
-    }
-
-    if (localStorage.getItem("first_name")) {
-      const fn = localStorage.getItem("first_name");
-      setFn(fn ? fn : "");
-    }
-
-    if (localStorage.getItem("email")) {
-      const mail = localStorage.getItem("email");
-      setEmail(mail ? mail : "");
-    }
-
-    if (localStorage.getItem("city")) {
-      const city = localStorage.getItem("city");
-      setCityId(Number(city) ? Number(city) : 0);
-    }
-
-    if (localStorage.getItem("brgy")) {
-      const barangay = localStorage.getItem("brgy");
-      setBrgy(barangay ? barangay : "");
-    }
-
-    if (localStorage.getItem("pw")) {
-      const password = localStorage.getItem("pw");
-      setPw(password ? password : "");
-    }
-
     const getCity = async () => {
       try {
         setLoading(true);
@@ -126,11 +96,22 @@ function FormRegistration() {
       localStorage.setItem("email", email);
       localStorage.setItem("brgy", brgy);
       localStorage.setItem("pw", pw);
-      localStorage.setItem("city", String(cityId));
 
       navigate("/Registration/Contact");
     } catch (err: string | any) {
-      if (err instanceof Error) {
+      if (err.code === "auth/email-already-in-use") {
+        setErrors({
+          email: "This email is already registered.",
+          pw: "",
+          confirmPw: "",
+        });
+      } else if (err.code === "auth/password-does-not-meet-requirements") {
+        setErrors({
+          pw: "Password must be at least 8 characters, and have an uppercase, lowercase, a number, and a special character.",
+          confirmPw: "",
+          email: "",
+        });
+      } else if (err instanceof Error) {
         setErrors({
           email: " ",
           pw: "Password do not match",
@@ -173,25 +154,25 @@ function FormRegistration() {
           <div className="w-full max-w-xs flex justify-start flex-col self-center gap-5 mt-10 mb-10">
             <TextField
               label="Last Name"
+              placeholder="Enter your last name"
               inputType="text"
               id="RegisForm_LNfield"
-              value={last_name ? last_name : ""}
               isRequired
               onSubmit={(e) => setLn(e.target.value)}
             />
             <TextField
               label="First Name"
+              placeholder="Enter your first name"
               inputType="text"
               id="RegisForm_FNfield"
-              value={first_name ? first_name : ""}
               isRequired
               onSubmit={(e) => setFn(e.target.value)}
             />
             <TextField
               label="Email Address"
+              placeholder="Enter your email address"
               inputType="text"
               id="RegisForm_EMAILfield"
-              value={email ? email : ""}
               isRequired
               onSubmit={(e) => setEmail(e.target.value)}
               error={errors.email}
@@ -200,6 +181,7 @@ function FormRegistration() {
               value={String(cityId)}
               onValueChange={(val) => setCityId(Number(val))}
               label="City"
+              placeholder="Select your City"
               id="RegisForm_CITYfield"
               onSubmit={(e) => setCityId(Number(e.target.value))}
               options={cities?.map((city) => ({
@@ -213,6 +195,7 @@ function FormRegistration() {
               value={brgy}
               onValueChange={setBrgy}
               label="Barangay"
+              placeholder="Select your barangay"
               id="RegisForm_BRGYfield"
               onSubmit={(e) => setBrgy(e.target.value)}
               options={barangays?.map((brgy) => ({
@@ -224,16 +207,17 @@ function FormRegistration() {
             />
             <TextField
               label="Password"
+              placeholder="Enter your password of choice"
               inputType="password"
               isPassword
               id="RegisForm_PWfield"
-              value={pw}
               isRequired
               onSubmit={(e) => setPw(e.target.value)}
               error={errors.pw}
             />
             <TextField
               label="Confirm Password"
+              placeholder="Re-enter your password"
               inputType="password"
               isPassword
               id="RegisForm_CONFIRMPWfield"

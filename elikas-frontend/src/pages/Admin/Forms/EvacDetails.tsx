@@ -278,8 +278,6 @@ function EvacDetails() {
   const markFull = (e: React.FormEvent) => {
     e.preventDefault();
 
-    console.log("Before try");
-
     try {
       const fullLevel = capacityLevels?.find(
         (level) => level.capacity_level === "Full",
@@ -381,6 +379,7 @@ function EvacDetails() {
             label="Expiry Date"
             idField="Admin_EvacDetailsDialogReopenExp"
             idBtn="Admin_EvacDetailsDialogReopenCalendar"
+            placeholder="Enter Expiration Date"
             value={expiry}
             onChange={setExpiry}
             edit
@@ -409,6 +408,7 @@ function EvacDetails() {
             value={capacity}
             onValueChange={setCapacity}
             label="Capacity Level*"
+            placeholder="Select the capacity level"
             id="Admin_EvacDetailsDialogOpenCapacity"
             onSubmit={(e) => setCapacity(e.target.value)}
             options={capacityLevels
@@ -484,6 +484,7 @@ function EvacDetails() {
                     value={String(areaType)}
                     onValueChange={(val) => setAreaType(Number(val))}
                     label="Location Type*"
+                    placeholder="Select the location type"
                     id="Admin_EvacDetailsAreaTypeDropdown"
                     onSubmit={(e) => setAreaType(Number(e.target.value))}
                     options={evacTypes.map((type) => ({
@@ -566,6 +567,7 @@ function EvacDetails() {
                     value={capacity}
                     onValueChange={setCapacity}
                     label="Capacity Level*"
+                    placeholder="Select the capacity level"
                     id="Admin_EvacDetailsCapacityDropdown"
                     onSubmit={(e) => setCapacity(e.target.value)}
                     options={capacityLevels

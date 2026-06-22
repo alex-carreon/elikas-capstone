@@ -349,17 +349,6 @@ function EvacPin() {
       formData.append("file", fileName);
     }
 
-    if (
-      !pinName ||
-      !areaType ||
-      !capacityCount ||
-      (!regFlood && !heavyFlood) ||
-      !contactPerson ||
-      !contactNumber
-    ) {
-      toast.error("Please fill in the required fields marked with an *.");
-    }
-
     formData.append("name", pinName);
     formData.append(
       "address",
@@ -513,6 +502,7 @@ function EvacPin() {
             desc="The default date is 7 days from now"
             idField="EvacPin_ReopenExpiryField"
             idBtn="EvacPin_ReopenCalendarBtn"
+            placeholder="Enter Expiration Date"
             value={expiry}
             onChange={setExpiry}
             edit
@@ -556,6 +546,7 @@ function EvacPin() {
             value={capacity}
             onValueChange={setCapacity}
             label="Capacity Level*"
+            placeholder="Select the capacity level"
             id="EvacPin_CapacityOpenField"
             onSubmit={(e) => setCapacity(e.target.value)}
             options={capacityLevels
@@ -630,7 +621,7 @@ function EvacPin() {
               {!id ? (
                 <>
                   <TextField
-                    label="Location Image"
+                    label="Location Image*"
                     inputType="file"
                     id="EvacPin_PhotoField"
                     onSubmit={fileOnChange}
@@ -662,17 +653,18 @@ function EvacPin() {
                 value={String(areaType)}
                 onValueChange={(val) => setAreaType(Number(val))}
                 label="Location Type*"
+                placeholder="Select the location type"
                 id="EvacPin_LocTypeField"
                 onSubmit={(e) => setAreaType(Number(e.target.value))}
                 options={evacTypes.map((type) => ({
                   label: type.evac_type,
                   value: type.id.toString(),
                 }))}
-                isRequired
+                isRequired={!id}
               />
             ) : (
               <TextField
-                label="Location Type*"
+                label="Location Type"
                 value={evacPins?.area_type}
                 inputType="text"
                 id="EvacPin_LocType"
@@ -685,8 +677,9 @@ function EvacPin() {
               value={pinName}
               inputType="text"
               id={!id || isEditable ? "EvacPin_PinNameField" : ""}
+              placeholder={existingPin ? "Gamoras" : "Enter your last name"}
               onSubmit={(e) => setPinName(e.target.value)}
-              isRequired
+              isRequired={!id}
               readonly={!id || isEditable ? false : true}
             />
             <Field>
@@ -702,7 +695,7 @@ function EvacPin() {
                 value={desc || ""}
                 onChange={(e) => setDesc(e.target.value)}
                 readOnly={!id || isEditable ? false : true}
-                required
+                required={!id}
               />
             </Field>
             <Field>
@@ -772,6 +765,7 @@ function EvacPin() {
                 value={capacity}
                 onValueChange={setCapacity}
                 label="Capacity Level*"
+                placeholder="Select the capacity level"
                 id="EvacPin_CapacityField"
                 onSubmit={(e) => setCapacity(e.target.value)}
                 options={capacityLevels
@@ -780,7 +774,7 @@ function EvacPin() {
                     label: level.capacity_level,
                     value: String(level.id),
                   }))}
-                isRequired
+                isRequired={!id}
               />
             ) : (
               <TextField
@@ -879,42 +873,42 @@ function EvacPin() {
                 <div className="flex gap-4 flex-col">
                   {hasToilet && (
                     <TextField
-                      label="Number of Toilets*"
+                      label="Number of Toilets (optional)"
+                      placeholder={!id || isEditable ? "i.e. 2" : ""}
                       id="EvacPin_ToiletField"
                       inputType="number"
                       onSubmit={(e) => setToilet(e.target.value)}
                       value={toilet}
-                      isRequired
                     />
                   )}
                   {hasKitchen && (
                     <TextField
-                      label="Number of Kitchens*"
+                      label="Number of Kitchens (optional)"
+                      placeholder={!id || isEditable ? "i.e. 2" : ""}
                       id="EvacPin_KitchenField"
                       inputType="number"
                       onSubmit={(e) => setKicthen(e.target.value)}
                       value={kitchen}
-                      isRequired
                     />
                   )}
                   {hasChildPrayer && (
                     <TextField
-                      label="Number of Prayer Areas/Child-friendly areas*"
+                      label="Number of Prayer Areas/Child-friendly areas (optional)"
+                      placeholder={!id || isEditable ? "i.e. 2" : ""}
                       id="EvacPin_PrayerChildField"
                       inputType="number"
                       onSubmit={(e) => setChildPrayer(e.target.value)}
                       value={childPrayer}
-                      isRequired
                     />
                   )}
                   {hasBreastfeed && (
                     <TextField
-                      label="Number of Breastfeeding areas*"
+                      label="Number of Breastfeeding areas (optional)"
+                      placeholder={!id || isEditable ? "i.e. 2" : ""}
                       id="EvacPin_BreastfeedField"
                       inputType="number"
                       onSubmit={(e) => setBreastfeed(e.target.value)}
                       value={breastfeed}
-                      isRequired
                     />
                   )}
                 </div>
@@ -922,6 +916,9 @@ function EvacPin() {
             </Field>
             <TextField
               label="Other Facilities (optional)"
+              placeholder={
+                !id || isEditable ? "Enter other facilities available" : ""
+              }
               id="EvacPin_OtherFacilitiesField"
               inputType="text"
               onSubmit={(e) => setOther(e.target.value)}
@@ -930,27 +927,34 @@ function EvacPin() {
             ></TextField>
             <TextField
               label="Contact Person*"
+              placeholder="Enter the person to contact for this pin"
               id="EvacPin_ContactPersonField"
               inputType="text"
               onSubmit={(e) => setContactPerson(e.target.value)}
               value={contactPerson}
               readonly={!id || isEditable ? false : true}
-              isRequired
+              isRequired={!id}
             ></TextField>
             <TextField
               label="Contact Number*"
+              placeholder={
+                !id || isEditable ? "Enter the contact number for this pin" : ""
+              }
               id="EvacPin_ContactNumberField"
               inputType="text"
               onSubmit={(e) => setContactNumber(e.target.value)}
               value={contactNumber}
               readonly={!id || isEditable ? false : true}
-              isRequired
+              isRequired={!id}
             ></TextField>
             {role === "brgy_op" && (
               <DatePickerInput
                 label="Expiry Date"
                 idField="EvacPin_ExpiryField"
                 idBtn="EvacPin_CalendarBtn"
+                placeholder={
+                  !id || isEditable ? "Enter Expiration Date" : String(expiry)
+                }
                 value={expiry}
                 onChange={setExpiry}
                 readonly={!id || isEditable ? false : true}
