@@ -314,9 +314,47 @@ No other configuration changes are needed.
 
 ---
 
+## `DELETE /admin/media`
+
+Deletes a media file from storage and optionally its associated database record. Accepts either `id` *or* `path` as input, but **not both**.
+
+A firebase bearer token with admin role is required for this endpoint.
+
+
+### Request Body
+
+| Field  | Type    | Required              | Description                        |
+|--------|---------|-----------------------|------------------------------------|
+| `id`   | numeric | Required if no `path` | ID of the `MediaFile` record       |
+| `path` | string  | Required if no `id`   | Raw storage path of the file       |
+
+
+### Behavior
+
+**When `id` is provided:**
+1. Looks up the `MediaFile` record — returns `404` if not found.
+2. Deletes the file from storage via `MediaDeleteService`.
+3. On success, removes the DB record in a transaction.
+4. If no other `MediaFile` records share the same `parent_id`, sets the parent social element's `has_media` to `false`.
+
+**When `path` is provided:**
+- Deletes the file directly from storage, no database changes.
+- Intended for orphaned files on the media server. 
+
+
+### Responses
+
+| Status | Description                                          |
+|--------|------------------------------------------------------|
+| `200`  | File (and record, if applicable) deleted             |
+| `404`  | No `MediaFile` record found for the given `id`       |
+| `500`  | Storage deletion failed or an unexpected error occurred |
+
+---
+
 ## Known Limitations
 
-- Media (individually, separate from its associated element) cannot be edited or deleted by users once uploaded. 
+- Media cannot be edited once uploaded. It can only be removed or added.
 - If a flood path or evacuation area is deactivated, its associated media
   files remain on the nginx server. Cleanup is manual for now.
 - HEIC support is not yet implemented.

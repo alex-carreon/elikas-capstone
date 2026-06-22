@@ -38,14 +38,18 @@ export const handleSubmit = ({
     console.log(response);
 
     if (!response) {
-      console.log("Create Failed");
-      toast.error("Adding a new contact failed.");
+      toast.error("An error occurred. Please try agian.");
     }
 
     toast.promise(response, {
       loading: "Adding your contact...",
       success: "Contact successfully added!",
-      error: (err: any) => err.response.data,
+      error: (err: any) => {
+        if (err.response.data.error === "Failed to create emergency contact") {
+          return "Please fill in all the fields.";
+        }
+        return "An error occurred. Please try again.";
+      },
       position: "top-center",
     });
 
@@ -71,6 +75,11 @@ export const handleUpdate = ({
   e?.preventDefault();
 
   try {
+    if (primaryNo === null) {
+      toast.error("Please fill in the Primary Number field.");
+      return;
+    }
+
     const response = api.patch(`/emergency-contacts/${id}`, {
       name: title,
       address: address,
@@ -83,13 +92,18 @@ export const handleUpdate = ({
 
     if (!response) {
       console.log("Update Failed");
-      toast.error("Updating a contact failed.");
+      toast.error("An error occurred. Please try again.");
     }
 
     toast.promise(response, {
       loading: "Updating your contact...",
       success: "Contact updated added!",
-      error: (err: any) => err.response.data,
+      error: (err: any) => {
+        if (err.response.data.error === "Failed to update emergency contact") {
+          return "Please fill in all the fields";
+        }
+        return "An error occurred. Please try again.";
+      },
       position: "top-center",
     });
 
