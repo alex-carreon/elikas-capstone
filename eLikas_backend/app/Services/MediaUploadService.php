@@ -13,7 +13,7 @@ use App\Enums\MediaCollection;
 class MediaUploadService
 {
     //Requires a file and a collection name, returns the URL of the uploaded media
-    public function upload(UploadedFile $file, MediaCollection $collection): string
+    public function upload(UploadedFile $file, MediaCollection $collection): ?string
     {
         //Instantiate the ImageManager with GD driver
         $manager = ImageManager::usingDriver(Driver::class);
@@ -39,6 +39,11 @@ class MediaUploadService
 
         //upload to SFTP and return the path
         Storage::disk('sftp')->put($path, $imagedata);
-        return $path;
+
+        if (Storage::disk('sftp')->exists(config('app.media_base_url') . '/' . $path)) {
+            return $path;
+        } else {
+            return null;
+        }
     }
 }

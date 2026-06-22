@@ -33,8 +33,6 @@ function VerifyOTP() {
         otp: String(otp),
       });
 
-      console.log(response);
-
       toast.promise(response, {
         loading: "Processing your verification...",
         success: "Contact Number verified!",
@@ -56,10 +54,8 @@ function VerifyOTP() {
     try {
       const response = api.post("/otp/send", {
         phone_number: phoneNumber,
-        message: `OTP Resend! Do not share this OTP with others. Here is your code: :otp`,
+        message: `OTP Resent! Do not share this OTP with others. Here is your code: :otp`,
       });
-
-      console.log(response);
 
       toast.promise(response, { success: "OTP has been sent to your number." });
     } catch (err: any) {
