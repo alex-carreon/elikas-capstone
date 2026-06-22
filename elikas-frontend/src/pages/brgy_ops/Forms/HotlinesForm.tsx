@@ -265,6 +265,7 @@ function HotlinesForm() {
             <TextField
               label="Primary Contact Number*"
               description="This will be the number the citizens will copy."
+              placeholder="Enter official phone number"
               id="Hotline_OfficialNumberField"
               inputType="text"
               onSubmit={(e) => setPrimaryNo(e.target.value)}
@@ -275,6 +276,7 @@ function HotlinesForm() {
             <TextField
               label="Secondary Contact Number (optional)"
               description="This will be the number citizens will use in case the official number is unreachable."
+              placeholder="Enter second phone number"
               id="Hotline_SecondNumberField"
               inputType="text"
               onSubmit={(e) => setSecondaryNo(e.target.value)}

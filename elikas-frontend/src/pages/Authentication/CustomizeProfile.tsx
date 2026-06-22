@@ -1,7 +1,7 @@
 import { useNavigate } from "react-router";
 import colors from "@/constants/colors";
 import TextField from "@/components/TextField";
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import ButtonComp from "@/components/Button";
 import { createAvatar } from "@dicebear/core";
 import { bigSmile } from "@dicebear/collection";
@@ -15,7 +15,7 @@ function randomSeed(): string {
 
 function CustomizeProfile() {
   const [username, setUsername] = useState("");
-  const [seed, setSeed] = useState("");
+  const [seed, setSeed] = useState("Felix");
 
   const navigate = useNavigate();
 
@@ -28,7 +28,7 @@ function CustomizeProfile() {
   };
 
   const avatar = createAvatar(bigSmile, {
-    seed: seed ? seed : "Felix",
+    seed: seed,
     backgroundColor: ["b6e3f4", "c0aede", "d1d4f9"],
     radius: 50,
     scale: 90,
@@ -38,18 +38,6 @@ function CustomizeProfile() {
   });
 
   const dataUri = avatar.toDataUri();
-
-  useEffect(() => {
-    if (localStorage.getItem("username")) {
-      const un = localStorage.getItem("username");
-      setUsername(un ? un : "");
-    }
-
-    if (localStorage.getItem("avatarSeed")) {
-      const avatar = localStorage.getItem("avatarSeed");
-      setSeed(avatar ? avatar : "");
-    }
-  }, []);
 
   return (
     <div className="min-h-screen flex justify-center p-6">
@@ -98,9 +86,9 @@ function CustomizeProfile() {
             <div className="flex justify-start flex-col content-center">
               <TextField
                 label="Username"
+                placeholder="Enter your preferred user name"
                 inputType="text"
                 id="Profile_UsernameField"
-                value={username}
                 isRequired
                 onSubmit={(e) => setUsername(e.target.value)}
               ></TextField>

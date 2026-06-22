@@ -163,6 +163,7 @@ function BrgyAdd() {
               label="Username"
               inputType="text"
               id="Admin_NewBrgyUsernameField"
+              placeholder="Enter Govop's Username"
               onSubmit={(e) => setUsername(e.target.value)}
               isRequired
             />
@@ -170,6 +171,7 @@ function BrgyAdd() {
               label="Email"
               inputType="text"
               id="Admin_NewBrgyEmailField"
+              placeholder="Enter Govop's Email"
               onSubmit={(e) => setEmail(e.target.value)}
               isRequired
               error={errors.email}
@@ -178,6 +180,7 @@ function BrgyAdd() {
               value={String(levelId)}
               onValueChange={(val) => setLevelId(Number(val))}
               label="Government Level"
+              placeholder="Select the Govop's level"
               id="Admin_NewGovopLevelField"
               onSubmit={(e) => setLevelId(Number(e.target.value))}
               options={[
@@ -219,18 +222,21 @@ function BrgyAdd() {
               label="Point person"
               inputType="text"
               id="Admin_NewBrgyPointPersonField"
+              placeholder="Enter Govop's Point Person"
               onSubmit={(e) => setPointPerson(e.target.value)}
             />
             <TextField
               label="Point person's position"
               inputType="text"
               id="Admin_NewBrgyPointPositionField"
+              placeholder="Enter Govop's Point Person's Position"
               onSubmit={(e) => setPointPosition(e.target.value)}
             />
             <TextField
               label="Password"
               inputType="password"
               id="Admin_NewGovopPasswordField"
+              placeholder="Enter Govop's Password"
               onSubmit={(e) => setPw(e.target.value)}
               isPassword
               error={errors.pw}
@@ -239,6 +245,7 @@ function BrgyAdd() {
               label="Confirm Password"
               inputType="password"
               id="Admin_NewGovopConfirmPasswordField"
+              placeholder="Re-enter Govop's Password"
               onSubmit={(e) => setConfirmPw(e.target.value)}
               isPassword
               error={errors.confirmPw}

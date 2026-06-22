@@ -13,9 +13,9 @@ import Logo from "@/components/Logo";
 
 function Permissions() {
   const [checked, setChecked] = useState(false);
+  // const [formData, setFormData] = useState({});
   const [error, setError] = useState("");
-  const [toForm, setToForm] = useState(false);
-
+  // const [success, setSuccess] = useState("");
   const navigate = useNavigate();
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
@@ -43,6 +43,8 @@ function Permissions() {
         formData.pw,
       );
 
+      console.log(userCredential);
+
       const firebaseUser = userCredential.user;
 
       localStorage.setItem("firebaseUser", firebaseUser.uid);
@@ -58,20 +60,27 @@ function Permissions() {
         avatar_seed: formData.avatarSeed,
       });
 
-      console.log(response);
-
       toast.promise(response, {
         loading: "Processing...",
         success: "One last step!",
-        error:
-          "An error occurred while creating your account. Please try registering agian.",
+        error: (err: any) => {
+          navigate("/Login");
+          return err.response.message;
+        },
         position: "top-center",
       });
 
       if (!response) {
-        toast.error("Registration failed. Please try registering again.");
+        toast.error("Registration failed. Please try again.");
+        navigate("/Login");
         return;
       }
+
+      const result = response;
+
+      console.log("REGISTER RESULT:", result);
+
+      localStorage.clear();
 
       response.then(() => {
         navigate("/Registration/Verify");
@@ -88,21 +97,8 @@ function Permissions() {
         navigate("/Login");
       }
 
-      if ((err.message = "auth/password-does-not-meet-requirements")) {
-        toast.error(
-          "Your password must have at least 1 uppercase, 1 lowercase, 1 special character, and 1 number. Please go back and try again",
-        );
-      }
-
-      if (err.code === "auth/email-already-in-use") {
-        toast.error("The email you used is already registered.");
-      }
-
-      if ((err.message = "The username has already been taken.")) {
-        toast.error("Username has been taken.");
-      }
-
-      setToForm(true);
+      console.log(err.message);
+      toast.error(err.message);
     }
   };
 
@@ -188,7 +184,7 @@ function Permissions() {
             <form
               id="Permissions_Form"
               onSubmit={handleSubmit}
-              className="w-full flex flex-col justify-center items-center m-0 gap-2"
+              className="w-full flex flex-col justify-center items-center m-0"
             >
               <p className="text-xs text-red-500">{error}</p>
               {!checked ? (
@@ -209,17 +205,6 @@ function Permissions() {
                   isDisabled={!checked}
                   onClick={() => handleSubmit}
                   type="submit"
-                  heightSize="38px"
-                  widthSize="100%"
-                ></ButtonComp>
-              )}
-              {toForm && (
-                <ButtonComp
-                  text="Back to Form"
-                  variant="outline"
-                  id="Permissions_FormBackBtn"
-                  onClick={() => navigate("/Registration/Form")}
-                  type="button"
                   heightSize="38px"
                   widthSize="100%"
                 ></ButtonComp>

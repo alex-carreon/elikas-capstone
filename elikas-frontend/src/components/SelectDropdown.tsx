@@ -15,7 +15,7 @@ interface SelectDropdownProps {
   onValueChange: (val: string) => void;
   label?: string;
   id: string;
-  placeholder?: string;
+  placeholder: string;
   onSubmit?: (e: React.ChangeEvent<HTMLInputElement>) => void;
   error?: string;
   options: { label: string; value: string; description?: string }[];
