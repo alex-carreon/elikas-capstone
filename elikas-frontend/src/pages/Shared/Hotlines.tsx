@@ -1,10 +1,5 @@
-import { Phone, Search, X } from "lucide-react";
+import { Phone } from "lucide-react";
 import { useEffect, useState } from "react";
-import {
-  InputGroup,
-  InputGroupAddon,
-  InputGroupInput,
-} from "@/components/ui/input-group";
 import HotlineRow from "@/components/HotlineRow";
 import { useUserContext } from "@/context/AuthContext";
 import { Button } from "@/components/ui/button";
@@ -12,6 +7,7 @@ import { Link } from "react-router";
 import api from "@/api";
 import { toast } from "sonner";
 import { Skeleton } from "@/components/ui/skeleton";
+import SelectDropdown from "@/components/SelectDropdown";
 
 type Hotline = {
   id: number;
@@ -24,29 +20,34 @@ type Hotline = {
   posted_by: string;
 };
 
+type Barangays = {
+  id: number;
+  name: string;
+  role: string;
+  location: string;
+};
+
 function Hotlines() {
   const [loading, setLoading] = useState(false);
   const [hotlines, setHotlines] = useState<Hotline[]>([]);
   const [searchFor, setSearchFor] = useState("");
+  const [barangays, setBarangays] = useState<Barangays[]>([]);
   const { role } = useUserContext();
 
   const params = new URLSearchParams();
 
-  const getHotlines = async (search = searchFor) => {
+  const getHotlines = async (signal?: AbortSignal, search = searchFor) => {
     try {
       if (search) {
         params.set("location_name", search);
       }
-      setLoading(true);
-      console.log(searchFor);
       const parameters = params.toString();
       const endpoint = `/emergency-contacts${parameters ? `?${parameters}` : ""}`;
       console.log("endpoint", endpoint);
       const response = await api.get(
         `/emergency-contacts${parameters ? `?${parameters}` : ""}`,
+        { signal },
       );
-
-      console.log(response);
 
       if (!response) {
         toast.error("Failed to fetch hotlines");
@@ -54,20 +55,77 @@ function Hotlines() {
         return;
       }
 
-      toast.success("Hotlines fetched successfully!");
-
       const contacts = response.data.emergency_contacts;
+      if (contacts.length > 0) toast.success("Hotlines fetched successfully!");
       setHotlines(contacts);
     } catch (err: any) {
-      console.log(err.response.data);
+      if (err.name === "CanceledError") {
+        return;
+      }
+      console.log(err.response?.data);
+    }
+  };
+
+  const getBrgy = async (signal?: AbortSignal) => {
+    try {
+      const brgyRes = await api.get(`/locations/barangays?city_id=2`, {
+        signal,
+      });
+
+      const barangays = brgyRes.data.Barangays;
+      setBarangays(barangays);
+    } catch (err: any) {
+      if (err.name === "CanceledError") {
+        return;
+      }
+      console.log(err.response?.data);
+    }
+  };
+
+  const getData = async () => {
+    const controller = new AbortController();
+
+    try {
+      setLoading(true);
+      await Promise.all([
+        getHotlines(controller.signal),
+        getBrgy(controller.signal),
+      ]);
+    } catch (err: any) {
+      if (err.name === "CanceledError") {
+        setLoading(false);
+        return;
+      }
+      console.log(err.response?.data);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const getFiltered = async () => {
+    const controller = new AbortController();
+
+    try {
+      setLoading(true);
+      await getHotlines(controller.signal);
+    } catch (err: any) {
+      if (err.name === "CanceledError") {
+        setLoading(false);
+        return;
+      }
+      console.log(err.response?.data);
     } finally {
       setLoading(false);
     }
   };
 
   useEffect(() => {
-    getHotlines();
+    getData();
   }, []);
+
+  useEffect(() => {
+    getFiltered();
+  }, [searchFor]);
 
   return loading ? (
     <>
@@ -120,28 +178,19 @@ function Hotlines() {
             </div>
           )}
           <div className="w-full flex justify-end items-center gap-2">
-            <InputGroup className="w-2/3">
-              <InputGroupInput
-                className="text-sm h-8"
-                id="Hotlines_Search"
-                onChange={(e) => setSearchFor(e.target.value)}
-                value={searchFor}
-              ></InputGroupInput>
-              <InputGroupAddon align="inline-end">
-                <Search onClick={() => getHotlines()} />
-              </InputGroupAddon>
-            </InputGroup>
-            {searchFor ? (
-              <button
-                onClick={() => {
-                  setSearchFor("");
-                  getHotlines("");
-                }}
-                id="Hotline_SearchField"
-              >
-                <X size={14} />
-              </button>
-            ) : null}
+            <SelectDropdown
+              value={String(searchFor)}
+              onValueChange={(val) => setSearchFor(val)}
+              placeholder="Barangay"
+              id="Hotlines_BrgyFilter"
+              options={[
+                { label: "All", value: "" },
+                ...(barangays?.map((barangays) => ({
+                  label: barangays.name,
+                  value: barangays.name,
+                })) ?? []),
+              ]}
+            />
           </div>
         </div>
 

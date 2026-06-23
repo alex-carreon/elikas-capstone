@@ -58,7 +58,7 @@ function Profile() {
   const [barangays, setBarangays] = useState<Barangays[]>([]);
   const [brgyId, setBrgyId] = useState(0);
   const [contact, setContact] = useState("");
-  const [newContact, setNewContact] = useState<string | null>(null);
+  const [newContact, setNewContact] = useState("");
   const [isVerified, setIsVerified] = useState(false);
   const [loading, setLoading] = useState(false);
   const [brgyLoad, setBrgyLoad] = useState(false);
@@ -102,31 +102,42 @@ function Profile() {
     try {
       setDisabled(true);
 
-      const response = api.put(
-        "/profile",
-        {
-          username: newUsername,
-          first_name: firstName,
-          last_name: lastName,
-          email: email,
-          ...(brgyId && { location_id: brgyId }),
-          ...(newContact && { phone: newContact }),
-          avatar_seed: seed,
-        },
-        {
-          headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`,
-          },
-        },
-      );
+      const payload = {
+        username: newUsername,
+        first_name: firstName,
+        last_name: lastName,
+        email,
+        ...(brgyId && { location_id: brgyId }),
+        ...(newContact !== "" && { phone: newContact }),
+        avatar_seed: seed,
+      };
+
+      console.log(payload);
+
+      const response = api.put("/profile", {
+        username: newUsername,
+        first_name: firstName,
+        last_name: lastName,
+        email: email,
+        ...(brgyId && { location_id: brgyId }),
+        ...(newContact !== "" && { phone: newContact }),
+        avatar_seed: seed,
+      });
+
+      console.log(response);
 
       if (!response) {
         return;
       }
 
+      toast.promise(response, {
+        loading: "Updating your profile...",
+        success: "Profile updated!",
+      });
+
       setIsEditable(false);
       setNewUsername(null);
+      setNewContact("");
       setDisabled(false);
       getProfile();
     } catch (err: string | any) {
@@ -381,13 +392,11 @@ function Profile() {
                       placeholder={username}
                       inputType="text"
                       id="Profile_Username"
-                      readonly={!isEditable}
                       onSubmit={(e) => setNewUsername(e.target.value)}
                     />
                   ) : (
                     <TextField
                       label="User Name"
-                      placeholder={username}
                       inputType="text"
                       value={username}
                       id="Profile_Username"
@@ -476,18 +485,30 @@ function Profile() {
                     </>
                   )}
                   <div className="flex flex-col gap-2">
-                    <TextField
-                      label="Contact Number"
-                      description={
-                        isEditable ? "Please use (639#########) format" : ""
-                      }
-                      placeholder={contact}
-                      inputType="text"
-                      id="Profile_ContactNo"
-                      readonly={!isEditable}
-                      value={newContact !== null ? newContact : (contact ?? "")}
-                      onSubmit={(e) => setNewContact(e.target.value)}
-                    />
+                    {isEditable ? (
+                      <TextField
+                        label="Contact Number"
+                        description="Please use (639#########) format"
+                        placeholder={contact}
+                        inputType="text"
+                        id="Profile_ContactNo"
+                        value={newContact}
+                        onSubmit={(e) => {
+                          setNewContact(e.target.value);
+                          console.log(newContact);
+                        }}
+                      />
+                    ) : (
+                      <TextField
+                        label="Contact Number"
+                        placeholder={contact}
+                        inputType="text"
+                        id="Profile_ContactNo"
+                        readonly={!isEditable}
+                        value={contact}
+                      />
+                    )}
+
                     {contact === "No Registered Number" || isVerified ? null : (
                       <ButtonComp
                         text="Verify"
@@ -523,7 +544,7 @@ function Profile() {
                       widthSize="100%"
                       onClick={() => {
                         setIsEditable(false);
-                        setNewContact(null);
+                        setNewContact("");
                       }}
                       isDisabled={disabled}
                     ></ButtonComp>
