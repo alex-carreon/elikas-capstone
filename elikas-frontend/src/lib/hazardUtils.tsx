@@ -49,6 +49,7 @@ interface handleActionProps {
   isEditable?: boolean;
   media?: File | undefined;
   deleteNavigate?: string;
+  setDisabled?: React.Dispatch<React.SetStateAction<boolean>>;
 }
 
 export const handleSubmit = async ({
@@ -61,12 +62,14 @@ export const handleSubmit = async ({
   setError,
   navigate,
   media,
+  setDisabled,
 }: handleActionProps) => {
   e?.preventDefault();
 
   const formData = new FormData();
 
   try {
+    setDisabled?.(true);
     if (center && routePoints) {
       if (!routePoints || routePoints.length < 2) {
         toast("Please indicate the hazard on the map");
@@ -117,17 +120,22 @@ export const handleSubmit = async ({
       response.then(() => {
         navigate?.("/map");
       });
+      setDisabled?.(false);
     }
   } catch (error: any) {
     console.error("Request failed");
+    setDisabled?.(false);
 
     if (error.response) {
       console.error("Status:", error.response.status);
       console.error("Data:", error.response.data);
+      setDisabled?.(false);
     } else if (error.request) {
       console.error("No response received:", error.request);
+      setDisabled?.(false);
     } else {
       console.error("Error:", error.message);
+      setDisabled?.(false);
     }
   }
 
@@ -144,10 +152,12 @@ export const handleUpdate = async ({
   id,
   setIsEditable,
   setHasUpdated,
+  setDisabled,
 }: handleActionProps) => {
   e?.preventDefault();
 
   try {
+    setDisabled?.(true);
     if (!floodDetails) return;
 
     if (!routePoints || routePoints.length < 2) {
@@ -199,8 +209,10 @@ export const handleUpdate = async ({
       setIsEditable?.(false);
       setHasUpdated?.(true);
     });
+    setDisabled?.(false);
   } catch (err: string | any) {
     console.log(err.message || "An error occurred");
+    setDisabled?.(false);
   }
 };
 
@@ -208,8 +220,10 @@ export const handleDelete = async ({
   id,
   navigate,
   deleteNavigate,
+  setDisabled,
 }: handleActionProps) => {
   try {
+    setDisabled?.(true);
     const response = api.patch(`/flood-paths/${id}/deactivate`);
 
     console.log(response);
@@ -229,17 +243,25 @@ export const handleDelete = async ({
     response.then(() => {
       navigate?.(navigation);
     });
+    setDisabled?.(false);
   } catch (err) {
     console.error("Error Deactivating");
+    setDisabled?.(false);
   }
 };
 
-export const handleAddMedia = async ({ e, id, media }: handleActionProps) => {
+export const handleAddMedia = async ({
+  e,
+  id,
+  media,
+  setDisabled,
+}: handleActionProps) => {
   e?.preventDefault();
 
   const formData = new FormData();
 
   try {
+    setDisabled?.(true);
     if (media) {
       formData.append("file", media);
     }
@@ -258,7 +280,10 @@ export const handleAddMedia = async ({ e, id, media }: handleActionProps) => {
       },
       position: "top-center",
     });
+
+    setDisabled?.(false);
   } catch (err: any) {
     console.log(err.response.data);
+    setDisabled?.(false);
   }
 };

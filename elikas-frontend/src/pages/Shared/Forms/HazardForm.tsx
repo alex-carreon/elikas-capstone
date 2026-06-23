@@ -75,6 +75,7 @@ function HazardForm() {
   const [hasUpdated, setHasUpdated] = useState(false);
   const [willDeactivate, setWillDeactivate] = useState(false);
   const [error, setError] = useState("");
+  const [disabled, setDisabled] = useState(false);
 
   const { id } = useParams();
 
@@ -300,6 +301,7 @@ function HazardForm() {
       setError: setError,
       navigate: navigate,
       media: fileName,
+      setDisabled,
     });
   };
 
@@ -317,14 +319,16 @@ function HazardForm() {
       id: id,
       setIsEditable: setIsEditable,
       setHasUpdated: setHasUpdated,
+      setDisabled,
     });
 
-  const deleteHazard = () => handleDelete({ id: id, navigate: navigate });
+  const deleteHazard = () =>
+    handleDelete({ id: id, navigate: navigate, setDisabled });
 
   const addMedia = (e: React.FormEvent) => {
     e.preventDefault();
 
-    handleAddMedia({ e: e, id: id, media: fileName });
+    handleAddMedia({ e: e, id: id, media: fileName, setDisabled });
 
     handleClearImage();
   };
@@ -348,6 +352,7 @@ function HazardForm() {
             setWillDeactivate(false);
           }}
           onClick={deleteHazard}
+          disabled={disabled}
         />
       )}
       <div className="w-full h-full flex flex-col items-center p-12 mt-8 mb-2 gap-4">
@@ -408,6 +413,7 @@ function HazardForm() {
                         id="HazardPin_ImageClearBtn"
                         type="button"
                         onClick={(e) => addMedia(e)}
+                        isDisabled={disabled}
                       ></ButtonComp>
                     )}
                   </div>
@@ -606,6 +612,7 @@ function HazardForm() {
                         widthSize="20"
                         type="button"
                         onClick={() => setIsEditable(true)}
+                        isDisabled={disabled}
                       ></ButtonComp>
                       <ButtonComp
                         text="Delete"
@@ -617,6 +624,7 @@ function HazardForm() {
                         onClick={() => {
                           setWillDeactivate(true);
                         }}
+                        isDisabled={disabled}
                       ></ButtonComp>
                     </div>
                   </>
@@ -633,6 +641,7 @@ function HazardForm() {
                         onClick={(e) => {
                           update(e);
                         }}
+                        isDisabled={disabled}
                       ></ButtonComp>
                       <ButtonComp
                         text="Cancel"
@@ -646,6 +655,7 @@ function HazardForm() {
                           setNewRoutePoints([]);
                           setNewSnapped([]);
                         }}
+                        isDisabled={disabled}
                       ></ButtonComp>
                     </div>
                   </>
@@ -678,7 +688,7 @@ function HazardForm() {
                     text="Create Road Status"
                     variant="primary"
                     id="HazardPin_SubmitBtn"
-                    isDisabled={!validCheck || !infoCheck}
+                    isDisabled={!validCheck || !infoCheck || disabled}
                     heightSize="46px"
                   />
                 </div>

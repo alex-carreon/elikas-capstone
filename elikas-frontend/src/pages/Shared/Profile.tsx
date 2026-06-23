@@ -56,6 +56,7 @@ function Profile() {
   const [loading, setLoading] = useState(false);
   const [brgyLoad, setBrgyLoad] = useState(false);
   const [cityLoad, setCityLoad] = useState(false);
+  const [disabled, setDisabled] = useState(false);
 
   const { token, role } = useUserContext();
 
@@ -88,14 +89,7 @@ function Profile() {
   const putProfile = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
-      console.log("Sending", {
-        username,
-        firstName,
-        lastName,
-        email,
-        brgyId,
-        contact,
-      });
+      setDisabled(true);
 
       const response = api.put(
         "/profile",
@@ -116,22 +110,23 @@ function Profile() {
         },
       );
 
-      console.log(response);
-
       if (!response) {
         return;
       }
 
       setIsEditable(false);
       setNewUsername(null);
+      setDisabled(false);
       getProfile();
     } catch (err: string | any) {
       console.log(err.response.data);
+      setDisabled(false);
     }
   };
 
   const deleteProfile = async () => {
     try {
+      setDisabled(true);
       const response = api.patch("/profile/deactivate", {
         headers: {
           "Content-Type": "application/json",
@@ -150,8 +145,10 @@ function Profile() {
       response.then(() => {
         navigate("/");
       });
+      setDisabled(false);
     } catch (error) {
       console.error("Error during logout:", error);
+      setDisabled(false);
     }
   };
 
@@ -159,6 +156,7 @@ function Profile() {
     e.preventDefault();
 
     try {
+      setDisabled(true);
       const response = api.post("/otp/send", {
         phone_number: contact,
         message: `Hi ${username}! Do not share this OTP with others. Here is your code: :otp`,
@@ -170,10 +168,13 @@ function Profile() {
         localStorage.setItem("phone_number", contact);
         navigate("/VerifyOTP");
       });
+      setDisabled(false);
     } catch (err: any) {
       if (err.name === "CanceledError") {
+        setDisabled(false);
         return;
       }
+      setDisabled(false);
       console.log(err.response?.data);
     }
   };
@@ -431,6 +432,7 @@ function Profile() {
                     heightSize="38px"
                     widthSize="100%"
                     onClick={(e) => putProfile(e)}
+                    isDisabled={disabled}
                   ></ButtonComp>
                   <ButtonComp
                     text="Cancel"
@@ -443,6 +445,7 @@ function Profile() {
                       setIsEditable(false);
                       setNewContact(null);
                     }}
+                    isDisabled={disabled}
                   ></ButtonComp>
                 </>
               ) : (
@@ -454,6 +457,7 @@ function Profile() {
                     id="Profile_ResetPwBtn"
                     heightSize="38px"
                     widthSize="100%"
+                    isDisabled={disabled}
                   ></ButtonComp>
                   <ButtonComp
                     text="Deactivate Account"
@@ -463,6 +467,7 @@ function Profile() {
                     heightSize="38px"
                     widthSize="100%"
                     onClick={deleteProfile}
+                    isDisabled={disabled}
                   ></ButtonComp>
                 </>
               )}

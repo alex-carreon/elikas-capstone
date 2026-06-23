@@ -87,6 +87,7 @@ type EvacPin = {
 
 function EvacDetails() {
   const [loading, setLoading] = useState(false);
+  const [disabled, setDisabled] = useState(false);
   const [pinDetails, setPinDetails] = useState<EvacPin>();
   const [regFlood, setRegFlood] = useState(false);
   const [heavyFlood, setHeavyFlood] = useState(false);
@@ -268,11 +269,17 @@ function EvacDetails() {
         },
       ),
       setIsEditable: setIsEditable,
+      setDisabled: setDisabled,
     });
   };
 
   const deac = () => {
-    handleDelete({ id: id, navigate: navigate, redirect: "/admin-pins" });
+    handleDelete({
+      id: id,
+      navigate: navigate,
+      redirect: "/admin-pins",
+      setDisabled,
+    });
   };
 
   const markFull = (e: React.FormEvent) => {
@@ -324,6 +331,7 @@ function EvacDetails() {
       id: id,
       navigate: navigate,
       redirect: "/admin-pins",
+      setDisabled,
     });
   };
 
@@ -376,6 +384,7 @@ function EvacDetails() {
             setWillReopen(false);
           }}
           onClick={(e) => reOpen(e)}
+          disabled={disabled}
         >
           <DatePickerInput
             label="Expiry Date"
@@ -435,6 +444,7 @@ function EvacDetails() {
           getEvacDetails();
         }}
         deleteClick={() => deac()}
+        isDisabled={disabled}
       >
         {loading ? (
           <div className="flex justify-center">
@@ -779,6 +789,7 @@ function EvacDetails() {
                   onClick={() =>
                     navigate(`/admin-pins/${pinDetails?.id}/comments`)
                   }
+                  isDisabled={disabled}
                 ></ButtonComp>
                 {!isExpired &&
                   !pinDetails?.is_deactivated &&
@@ -791,6 +802,7 @@ function EvacDetails() {
                       widthSize="100%"
                       type="button"
                       onClick={() => setWillOpen(true)}
+                      isDisabled={disabled}
                     ></ButtonComp>
                   ) : (
                     <ButtonComp
@@ -801,6 +813,7 @@ function EvacDetails() {
                       widthSize="100%"
                       type="button"
                       onClick={(e) => markFull(e)}
+                      isDisabled={disabled}
                     ></ButtonComp>
                   ))}
                 {isExpired && !pinDetails?.is_deactivated && (
@@ -813,6 +826,7 @@ function EvacDetails() {
                       widthSize="100%"
                       type="button"
                       onClick={() => setWillReopen(true)}
+                      isDisabled={disabled}
                     />
                   </div>
                 )}
