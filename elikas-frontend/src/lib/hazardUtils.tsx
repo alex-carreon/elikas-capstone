@@ -105,6 +105,8 @@ export const handleSubmit = async ({
         },
       });
 
+      console.log(response);
+
       toast.promise(response, {
         loading: "Adding your pin to the map...",
         success: "Pin successfully added!",
