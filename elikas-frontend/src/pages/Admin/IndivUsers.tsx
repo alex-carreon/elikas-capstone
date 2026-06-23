@@ -64,7 +64,7 @@ function IndivUsers() {
   const [ratingFilter, setRatingFilter] = useState("");
   const [roleFilter, setRoleFilter] = useState<"indiv" | "brgy" | null>();
   const [messageFilter, setMessageFilter] = useState("");
-  const [allRating, setAllRating] = useState<Feedback[]>([]);
+  const [rangeFilter, setRangeFilter] = useState("");
 
   const params = new URLSearchParams();
 
@@ -141,6 +141,10 @@ function IndivUsers() {
         params.append("message", messageFilter);
       }
 
+      if (rangeFilter) {
+        params.append("range", rangeFilter);
+      }
+
       const parameter = params.toString();
 
       const feedbackResponse = await api.get(
@@ -207,17 +211,17 @@ function IndivUsers() {
     }
   };
 
-  const getAllRating = async (signal?: AbortSignal) => {
-    try {
-      const response = await api.get("/admin/feedback", { signal });
-      setAllRating(response.data.feedback);
-    } catch (err: any) {
-      if (err.name === "CanceledError") {
-        return;
-      }
-      console.log(err.response?.data);
-    }
-  };
+  // const getAllRating = async (signal?: AbortSignal) => {
+  //   try {
+  //     const response = await api.get("/admin/feedback", { signal });
+  //     setAllRating(response.data.feedback);
+  //   } catch (err: any) {
+  //     if (err.name === "CanceledError") {
+  //       return;
+  //     }
+  //     console.log(err.response?.data);
+  //   }
+  // };
 
   const getAll = async () => {
     const controller = new AbortController();
@@ -225,7 +229,6 @@ function IndivUsers() {
     try {
       setLoading(true);
       await Promise.all([
-        getAllRating(controller.signal),
         getActiveIndivData(controller.signal),
         getInactiveIndivData(controller.signal),
         getFeedbacks(controller.signal),
@@ -242,25 +245,34 @@ function IndivUsers() {
     return () => controller.abort();
   };
 
+  const getFiltered = async () => {
+    const controller = new AbortController();
+
+    if (isActiveUsers) {
+      setLoading(true);
+      await getActiveIndivData(controller.signal);
+    }
+    if (isFeedback) {
+      setLoading(true);
+      await getFeedbacks(controller.signal);
+    }
+    if (!isActiveUsers) {
+      setLoading(true);
+      await getInactiveIndivData(controller.signal);
+    }
+
+    setLoading(false);
+
+    return () => controller.abort();
+  };
+
   useEffect(() => {
     getAll();
   }, []);
 
   useEffect(() => {
-    const controller = new AbortController();
-
-    if (isActiveUsers) {
-      getActiveIndivData(controller.signal);
-    }
-    if (isFeedback) {
-      getFeedbacks(controller.signal);
-    }
-    if (!isActiveUsers) {
-      getInactiveIndivData(controller.signal);
-    }
-
-    return () => controller.abort();
-  }, [brgyFilter, ratingFilter, roleFilter, messageFilter]);
+    getFiltered();
+  }, [brgyFilter, ratingFilter, roleFilter, messageFilter, rangeFilter]);
 
   return (
     <>
@@ -383,19 +395,38 @@ function IndivUsers() {
                   )}
                   <div className="flex flex-row w-full gap-2">
                     {isFeedback ? (
-                      <SelectDropdown
-                        value={String(ratingFilter)}
-                        onValueChange={(val) => setRatingFilter(val)}
-                        placeholder="Rating"
-                        id="Admin_IndivFeedbackRating"
-                        options={[
-                          { label: "All", value: "0" },
-                          ...(allRating?.map((rating) => ({
-                            label: String(rating.rating),
-                            value: String(rating.rating),
-                          })) ?? []),
-                        ]}
-                      />
+                      <div className="flex flex-row gap-2 w-full">
+                        <SelectDropdown
+                          value={String(ratingFilter)}
+                          onValueChange={(val) => setRatingFilter(val)}
+                          placeholder="Rating"
+                          id="Admin_IndivFeedbackRating"
+                          options={[
+                            { label: "All", value: "0" },
+                            { label: "1", value: "1" },
+                            { label: "1.5", value: "1.5" },
+                            { label: "2", value: "2" },
+                            { label: "2.5", value: "2.5" },
+                            { label: "3", value: "3" },
+                            { label: "3.5", value: "3.5" },
+                            { label: "4", value: "4" },
+                            { label: "4.5", value: "4.5" },
+                            { label: "5", value: "5" },
+                          ]}
+                        />
+                        <SelectDropdown
+                          value={String(rangeFilter)}
+                          onValueChange={(val) => setRangeFilter(val)}
+                          placeholder="Range"
+                          id="Admin_IndivFeedbackRange"
+                          options={[
+                            { label: "All", value: "0" },
+                            { label: "weekly", value: "weekly" },
+                            { label: "monthly", value: "monthly" },
+                            { label: "quarterly", value: "quarterly" },
+                          ]}
+                        />
+                      </div>
                     ) : (
                       <SelectDropdown
                         value={String(brgyFilter)}
