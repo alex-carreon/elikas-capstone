@@ -16,6 +16,7 @@ function randomSeed(): string {
 function CustomizeProfile() {
   const [username, setUsername] = useState("");
   const [seed, setSeed] = useState("");
+  const [error, setError] = useState("");
 
   const navigate = useNavigate();
 
@@ -37,6 +38,27 @@ function CustomizeProfile() {
     navigate("/Registration/Permissions");
   };
 
+<<<<<<< HEAD
+  const dataUri = avatar.toDataUri();
+
+  useEffect(() => {
+    if (username.length == 20) {
+      setError("Username must be 20 characters only");
+    } else {
+      setError("");
+    }
+  }, [username]);
+=======
+  const avatar = createAvatar(bigSmile, {
+    seed: seed ? seed : "Felix",
+    backgroundColor: ["b6e3f4", "c0aede", "d1d4f9"],
+    radius: 50,
+    scale: 90,
+    accessoriesProbability: 50,
+    eyes: ["cheery", "normal", "starstruck", "winking"],
+    mouth: ["braces", "gapSmile", "kawaii", "openedSmile", "teethSmile"],
+  });
+
   const dataUri = avatar.toDataUri();
 
   useEffect(() => {
@@ -50,6 +72,7 @@ function CustomizeProfile() {
       setSeed(avatar ? avatar : "");
     }
   }, []);
+>>>>>>> parent of 55cfba0 (Revert "Merge pull request #289 from alex-carreon/Zel-PWA")
 
   return (
     <div className="min-h-screen flex justify-center p-6">
