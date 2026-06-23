@@ -65,6 +65,33 @@ export function AuthProvider({ children }: AuthProviderProps) {
     navigate("/Login");
   };
 
+  const remember = localStorage.getItem("rememberMe") === "true";
+
+  useEffect(() => {
+    if (remember) return;
+    let idleTimer: ReturnType<typeof setTimeout>;
+
+    const resetTimer = () => {
+      clearTimeout(idleTimer);
+      idleTimer = setTimeout(
+        async () => {
+          await auth.signOut();
+          navigate("/Login");
+        },
+        60 * 60 * 1000,
+      );
+    };
+
+    const events = ["mousedown", "keydown", "touchstart", "scroll"];
+    events.forEach((event) => window.addEventListener(event, resetTimer));
+    resetTimer();
+
+    return () => {
+      clearTimeout(idleTimer);
+      events.forEach((event) => window.removeEventListener(event, resetTimer));
+    };
+  }, [remember]);
+
   // Find user in firebase while loading, when user is found loading stops
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (firebaseUser) => {

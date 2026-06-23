@@ -208,25 +208,25 @@ function HotlinesForm() {
               onSubmit={(e) => setTitle(e.target.value)}
               value={id && title}
               isRequired={!id}
-              readonly={!isEditable}
+              readonly={id && !isEditable ? true : false}
             />
             <TextField
               label="Address*"
-              description="Enter the hotline's address if applicable."
+              description="Enter the hotline's address."
               placeholder="Blk # Lot #, Street, Barangay, City"
               id="Hotline_AddressField"
               inputType="text"
               onSubmit={(e) => setAddress(e.target.value)}
               value={id && address}
               isRequired={!id}
-              readonly={!isEditable}
+              readonly={id && !isEditable ? true : false}
             ></TextField>
             {!id || isEditable ? (
               <>
                 <SelectDropdown
                   value={String(cityId)}
                   onValueChange={(val) => setCityId(Number(val))}
-                  label="City"
+                  label="City*"
                   placeholder="Select the hotline's city"
                   id="Hotline_CityField"
                   onSubmit={(e) => setCityId(Number(e.target.value))}
@@ -240,7 +240,7 @@ function HotlinesForm() {
                 <SelectDropdown
                   value={String(brgyId)}
                   onValueChange={(val) => setBrgyId(Number(val))}
-                  label="Barangay"
+                  label="Barangay*"
                   placeholder="Select the hotline's barangay (Please enter a city first)"
                   id="Hotline_BrgyField"
                   onSubmit={(e) => setBrgyId(Number(e.target.value))}
@@ -270,7 +270,7 @@ function HotlinesForm() {
               onSubmit={(e) => setPrimaryNo(e.target.value)}
               value={id && primaryNo}
               isRequired={!id}
-              readonly={!isEditable}
+              readonly={id && !isEditable ? true : false}
             ></TextField>
             <TextField
               label="Secondary Contact Number (optional)"
@@ -280,7 +280,7 @@ function HotlinesForm() {
               onSubmit={(e) => setSecondaryNo(e.target.value)}
               value={id && secondaryNo}
               isRequired={!id}
-              readonly={!isEditable}
+              readonly={id && !isEditable ? true : false}
             ></TextField>
 
             {id ? (

@@ -297,7 +297,10 @@ function Pins() {
         getFlaggedComments(controller.signal),
       ]);
     } catch (err: any) {
-      if (err.name === "CanceledError") return;
+      if (err.name === "CanceledError") {
+        setLoading(false);
+        return;
+      }
       console.log(err);
     } finally {
       setLoading(false);
@@ -346,7 +349,7 @@ function Pins() {
                 />
                 <CountRow
                   title="Flagged Evacuation Comments"
-                  lastUpdated="Both deactivated and expired"
+                  lastUpdated="Both manual and AI"
                   count={flaggedComCount}
                   loading={pinCountLoad}
                 />
@@ -361,20 +364,20 @@ function Pins() {
                 />
                 <CountRow
                   title="Inactive Hazard Paths"
-                  lastUpdated="Last updated 3 minutes ago"
+                  lastUpdated="Both deactivated and expired"
                   count={inactiveHazCount}
                   loading={hazardCountLoad}
                 />
                 <CountRow
                   title="Flagged Hazard Paths"
-                  lastUpdated="Both deactivated and expired"
+                  lastUpdated="Both manual and AI"
                   count={flaggedPathsCount}
                   loading={hazardCountLoad}
                 />
               </>
             )}
           </DashboardHeader>
-          <div className="bg-white -mt-8 rounded-4xl p-4 flex flex-col gap-2">
+          <div className="bg-white -mt-8 px-4 rounded-4xl p-4 flex flex-col gap-2">
             <Tabs
               defaultValue="overview"
               className="w-full max-w-md flex items-center"
@@ -416,6 +419,7 @@ function Pins() {
                   <TabsTrigger
                     value="ActiveEvac"
                     id="Admin_PinsEvacActiveTigger"
+                    className="min-w-0 flex-1 truncate"
                     onClick={() => {
                       setActiveEvac(true);
                       setFlaggedCom(false);
@@ -426,6 +430,7 @@ function Pins() {
                   <TabsTrigger
                     value="InactiveEvac"
                     id="Admin_PinsEvacInactiveTigger"
+                    className="min-w-0 flex-1 truncate"
                     onClick={() => {
                       setActiveEvac(false);
                       setFlaggedCom(false);
@@ -436,12 +441,13 @@ function Pins() {
                   <TabsTrigger
                     value="FlaggedComms"
                     id="Admin_PinsEvacFlaggedComTrigger"
+                    className="min-w-0 flex-1 truncate"
                     onClick={() => {
                       setActiveEvac(false);
                       setFlaggedCom(true);
                     }}
                   >
-                    Flagged Comments
+                    Flagged
                   </TabsTrigger>
                 </TabsList>
               ) : (
@@ -453,6 +459,7 @@ function Pins() {
                   <TabsTrigger
                     value="ActiveHaz"
                     id="Admin_PinsHazardsActiveTrigger"
+                    className="min-w-0 flex-1 truncate"
                     onClick={() => {
                       setActiveHaz(true);
                       setFlaggedHaz(false);
@@ -463,6 +470,7 @@ function Pins() {
                   <TabsTrigger
                     value="InactiveHaz"
                     id="Admin_PinsHazardsInactiveTrigger"
+                    className="min-w-0 flex-1 truncate"
                     onClick={() => {
                       setActiveHaz(false);
                       setFlaggedHaz(false);
@@ -473,6 +481,7 @@ function Pins() {
                   <TabsTrigger
                     value="FlaggedHaz"
                     id="Admin_PinsHazardsFlaggedTrigger"
+                    className="min-w-0 flex-1 truncate"
                     onClick={() => {
                       setActiveHaz(false);
                       setFlaggedHaz(true);
