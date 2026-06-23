@@ -30,6 +30,7 @@ interface TextFieldProps {
   readonly?: boolean;
   defaultValue?: string;
   capture?: boolean;
+  maxLength?: number;
 }
 
 function TextField({
@@ -50,6 +51,7 @@ function TextField({
   defaultValue,
   description,
   capture,
+  maxLength,
 }: TextFieldProps) {
   const [showPassword, setShowPassword] = useState(false);
 
@@ -74,6 +76,7 @@ function TextField({
             readOnly={readonly}
             defaultValue={defaultValue}
             capture={capture}
+            maxLength={maxLength}
           ></InputGroupInput>
           <InputGroupAddon>
             {Icon && <Icon style={{ color: colors.activeIcon }}></Icon>}

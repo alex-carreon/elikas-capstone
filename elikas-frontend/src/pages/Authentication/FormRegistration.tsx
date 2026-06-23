@@ -3,7 +3,12 @@ import colors from "@/constants/colors";
 import TextField from "@/components/TextField";
 import ButtonComp from "@/components/Button";
 import Select from "@/components/SelectDropdown";
-import { useEffect, useState } from "react";
+import {
+  useEffect,
+  useState,
+  type SetStateAction,
+  type ChangeEvent,
+} from "react";
 import Logo from "@/components/Logo";
 import { ArrowLeftIcon } from "lucide-react";
 import api from "@/api";
@@ -45,6 +50,36 @@ function FormRegistration() {
   const navigate = useNavigate();
 
   useEffect(() => {
+    if (localStorage.getItem("last_name")) {
+      const ln = localStorage.getItem("last_name");
+      setLn(ln ? ln : "");
+    }
+
+    if (localStorage.getItem("first_name")) {
+      const fn = localStorage.getItem("first_name");
+      setFn(fn ? fn : "");
+    }
+
+    if (localStorage.getItem("email")) {
+      const mail = localStorage.getItem("email");
+      setEmail(mail ? mail : "");
+    }
+
+    if (localStorage.getItem("city")) {
+      const city = localStorage.getItem("city");
+      setCityId(Number(city) ? Number(city) : 0);
+    }
+
+    if (localStorage.getItem("brgy")) {
+      const barangay = localStorage.getItem("brgy");
+      setBrgy(barangay ? barangay : "");
+    }
+
+    if (localStorage.getItem("pw")) {
+      const password = localStorage.getItem("pw");
+      setPw(password ? password : "");
+    }
+
     const getCity = async () => {
       try {
         setLoading(true);
@@ -91,11 +126,18 @@ function FormRegistration() {
         throw new Error("Passwords do not match");
       }
 
+      if (!isValidPassword(pw)) {
+        throw new Error(
+          "Password must be 8 characters minimum, and have at least one uppercase, one lowercase, one number, and one special character.",
+        );
+      }
+
       localStorage.setItem("last_name", last_name);
       localStorage.setItem("first_name", first_name);
       localStorage.setItem("email", email);
       localStorage.setItem("brgy", brgy);
       localStorage.setItem("pw", pw);
+      localStorage.setItem("city", String(cityId));
 
       navigate("/Registration/Contact");
     } catch (err: string | any) {
@@ -105,20 +147,28 @@ function FormRegistration() {
           pw: "",
           confirmPw: "",
         });
-      } else if (err.code === "auth/password-does-not-meet-requirements") {
-        setErrors({
-          pw: "Password must be at least 8 characters, and have an uppercase, lowercase, a number, and a special character.",
-          confirmPw: "",
-          email: "",
-        });
       } else if (err instanceof Error) {
         setErrors({
           email: " ",
-          pw: "Password do not match",
-          confirmPw: "Password do not match",
+          pw: err.message,
+          confirmPw: err.message,
         });
       }
     }
+  };
+
+  const filterSpecial = (
+    e: ChangeEvent<HTMLInputElement>,
+    field: React.Dispatch<SetStateAction<string>>,
+  ) => {
+    const filtered = e.target.value.replace(/[^a-zA-Z\sñÑáéíóúÁÉÍÓÚ\.]/g, "");
+    field(filtered);
+  };
+
+  const isValidPassword = (password: string) => {
+    return /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^A-Za-z0-9]).{8,}$/.test(
+      password,
+    );
   };
 
   return (
@@ -158,7 +208,8 @@ function FormRegistration() {
               inputType="text"
               id="RegisForm_LNfield"
               isRequired
-              onSubmit={(e) => setLn(e.target.value)}
+              value={last_name}
+              onSubmit={(e) => filterSpecial(e, setLn)}
             />
             <TextField
               label="First Name"
@@ -166,7 +217,8 @@ function FormRegistration() {
               inputType="text"
               id="RegisForm_FNfield"
               isRequired
-              onSubmit={(e) => setFn(e.target.value)}
+              value={first_name}
+              onSubmit={(e) => filterSpecial(e, setFn)}
             />
             <TextField
               label="Email Address"
@@ -174,6 +226,7 @@ function FormRegistration() {
               inputType="text"
               id="RegisForm_EMAILfield"
               isRequired
+              value={email}
               onSubmit={(e) => setEmail(e.target.value)}
               error={errors.email}
             />
@@ -212,6 +265,7 @@ function FormRegistration() {
               isPassword
               id="RegisForm_PWfield"
               isRequired
+              value={pw}
               onSubmit={(e) => setPw(e.target.value)}
               error={errors.pw}
             />

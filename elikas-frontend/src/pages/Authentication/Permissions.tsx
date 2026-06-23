@@ -49,6 +49,8 @@ function Permissions() {
 
       localStorage.setItem("firebaseUser", firebaseUser.uid);
 
+      console.log(firebaseUser);
+
       const response = api.post("/auth/register", {
         username: formData.username,
         email: formData.email,
@@ -60,23 +62,25 @@ function Permissions() {
         avatar_seed: formData.avatarSeed,
       });
 
+      console.log(response);
+
       toast.promise(response, {
         loading: "Processing...",
         success: "One last step!",
         error: (err: any) => {
-          navigate("/Login");
+          // navigate("/Login");
           return err.response.message;
         },
         position: "top-center",
       });
 
-      if (!response) {
-        toast.error("Registration failed. Please try again.");
-        navigate("/Login");
-        return;
-      }
+      // if (!response) {
+      //   toast.error("Registration failed. Please try again.");
+      //   // navigate("/Login");
+      //   return;
+      // }
 
-      const result = response;
+      const result = await response;
 
       console.log("REGISTER RESULT:", result);
 
@@ -86,6 +90,8 @@ function Permissions() {
         navigate("/Registration/Verify");
       });
     } catch (err: string | any) {
+      console.error("Firebase error message:", err.message);
+
       const firebaseUser = auth.currentUser;
       if (firebaseUser) {
         try {
@@ -93,12 +99,20 @@ function Permissions() {
         } catch (deleteErr: any) {
           await auth.signOut();
         }
+        if (
+          err.response?.data?.message === "The username has already been taken."
+        ) {
+          toast.error("This username has already been taken.");
+        } else {
+          toast.error("Registration failed. Please try again.");
+          navigate("/Login");
+        }
+      } else if (err.code === "auth/email-already-in-use") {
+        toast.error("This email is already in use.");
+      } else {
         toast.error("Registration failed. Please try again.");
         navigate("/Login");
       }
-
-      console.log(err.message);
-      toast.error(err.message);
     }
   };
 
@@ -140,9 +154,9 @@ function Permissions() {
                   Location
                 </p>
                 <p className="text-sm" style={{ color: colors.heading }}>
-                  It is recommended to <b>turn on your device's location</b>!
-                  This is needed for the map's features such as routing and
-                  finding the nearest evacuation center to work.
+                  We recommend <b>turning on your device's location</b>! The
+                  map's features such as routing and finding the nearest
+                  evacuation center centers on your location.
                 </p>
               </div>
               <div>
@@ -153,9 +167,9 @@ function Permissions() {
                   Files Access
                 </p>
                 <p className="text-sm" style={{ color: colors.heading }}>
-                  It is recommended to <b>allow access to your files</b> so that
-                  you may attach images to your comments on evacuation and flood
-                  pins. This will help your fellow neighbors gauge their safety!
+                  We recommend <b>allowing access to your files</b> for
+                  attaching images to your comments on evacuation and flood
+                  pins.
                 </p>
               </div>
             </div>
@@ -189,7 +203,7 @@ function Permissions() {
               <p className="text-xs text-red-500">{error}</p>
               {!checked ? (
                 <ButtonComp
-                  text="Next"
+                  text="Register"
                   variant="primary"
                   id="Permissions_SubmitBtn"
                   isDisabled={!checked}
@@ -199,7 +213,7 @@ function Permissions() {
                 ></ButtonComp>
               ) : (
                 <ButtonComp
-                  text="Next"
+                  text="Register"
                   variant="primary"
                   id="Permissions_SubmitBtn"
                   isDisabled={!checked}

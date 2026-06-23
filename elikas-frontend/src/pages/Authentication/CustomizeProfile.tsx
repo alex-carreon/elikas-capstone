@@ -1,7 +1,7 @@
 import { useNavigate } from "react-router";
 import colors from "@/constants/colors";
 import TextField from "@/components/TextField";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import ButtonComp from "@/components/Button";
 import { createAvatar } from "@dicebear/core";
 import { bigSmile } from "@dicebear/collection";
@@ -15,9 +15,20 @@ function randomSeed(): string {
 
 function CustomizeProfile() {
   const [username, setUsername] = useState("");
-  const [seed, setSeed] = useState("Felix");
+  const [seed, setSeed] = useState("");
+  const [error, setError] = useState("");
 
   const navigate = useNavigate();
+
+  const avatar = createAvatar(bigSmile, {
+    seed: seed ? seed : "Felix",
+    backgroundColor: ["b6e3f4", "c0aede", "d1d4f9"],
+    radius: 50,
+    scale: 90,
+    accessoriesProbability: 50,
+    eyes: ["cheery", "normal", "starstruck", "winking"],
+    mouth: ["braces", "gapSmile", "kawaii", "openedSmile", "teethSmile"],
+  });
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
@@ -27,17 +38,15 @@ function CustomizeProfile() {
     navigate("/Registration/Permissions");
   };
 
-  const avatar = createAvatar(bigSmile, {
-    seed: seed,
-    backgroundColor: ["b6e3f4", "c0aede", "d1d4f9"],
-    radius: 50,
-    scale: 90,
-    accessoriesProbability: 50,
-    eyes: ["cheery", "normal", "starstruck", "winking"],
-    mouth: ["braces", "gapSmile", "kawaii", "openedSmile", "teethSmile"],
-  });
-
   const dataUri = avatar.toDataUri();
+
+  useEffect(() => {
+    if (username.length == 20) {
+      setError("Username must be 20 characters only");
+    } else {
+      setError("");
+    }
+  }, [username]);
 
   return (
     <div className="min-h-screen flex justify-center p-6">
@@ -91,6 +100,8 @@ function CustomizeProfile() {
                 id="Profile_UsernameField"
                 isRequired
                 onSubmit={(e) => setUsername(e.target.value)}
+                maxLength={20}
+                error={error}
               ></TextField>
             </div>
           </div>

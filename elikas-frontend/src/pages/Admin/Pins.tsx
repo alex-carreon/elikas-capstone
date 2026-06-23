@@ -788,7 +788,7 @@ function Pins() {
                     <Row
                       postId={String(paths.flag_id)}
                       title={paths.reason}
-                      desc={`On Comment ID: ${paths.flood_path_id}`}
+                      desc={`On Flood Path ID: ${paths.flood_path_id}`}
                       link={`/admin-flagged/${paths.flood_path_id}`}
                       buttonId="Admin_PinsFlagHazDetailsBtn"
                       showBtn

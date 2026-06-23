@@ -25,6 +25,7 @@ interface AlertDialogueProps {
   actionId?: string;
   actionId2?: string;
   btnType?: "submit" | "button" | "reset" | undefined;
+  disabled?: boolean;
 }
 
 function AlertDialogue({
@@ -42,6 +43,7 @@ function AlertDialogue({
   actionId,
   actionId2,
   btnType,
+  disabled,
 }: AlertDialogueProps) {
   return (
     <>
@@ -80,6 +82,7 @@ function AlertDialogue({
                   onClick={onClick}
                   id={actionId}
                   type={btnType}
+                  disabled={disabled}
                 >
                   {buttonText}
                 </AlertDialogAction>
@@ -90,6 +93,7 @@ function AlertDialogue({
                   onClick={onClick2}
                   id={actionId2}
                   type={btnType}
+                  disabled={disabled}
                 >
                   {buttonText2}
                 </AlertDialogAction>
