@@ -26,9 +26,8 @@ import {
 } from "@/lib/hazardUtils";
 import FormSkeleton from "../../Skeletons/FormSkeleton";
 import { Separator } from "@/components/ui/separator";
-import { toast } from "sonner";
 
-const brouterBaseUrl = import.meta.env.VITE_BROUTER_BASE_URL
+const brouterBaseUrl = import.meta.env.VITE_BROUTER_BASE_URL;
 
 type FloodLevel = {
   id: number;
@@ -228,7 +227,6 @@ function HazardForm() {
     }
 
     const getRoute = async () => {
-      toast.info("Tip: Click on or near a road for accurate routing.");
       const allPoints: [number, number][] = [center, ...routePoints];
 
       const lonlats = allPoints.map(([lat, lng]) => `${lng},${lat}`).join("|");
@@ -522,6 +520,9 @@ function HazardForm() {
                   </>
                 )}
               </MapContainer>
+              <p className="text-xs" style={{ color: colors.label }}>
+                Tip: Click on or near a road for accurate routing.
+              </p>
               {(!id || isEditable) && (
                 <div className="flex flex-row gap-2">
                   <ButtonComp

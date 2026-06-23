@@ -279,7 +279,7 @@ function IndivUsers() {
             />
             <CountRow
               title="Feedback Average"
-              count={feedbackAve}
+              count={Number(feedbackAve.toFixed(2))}
               loading={countLoad}
             />
           </DashboardHeader>

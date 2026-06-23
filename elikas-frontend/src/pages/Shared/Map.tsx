@@ -28,11 +28,11 @@ function Map() {
   const [pathReminder, setPathReminder] = useState<pathReminder[] | null>(null);
   const [showReminder, setShowReminder] = useState(false);
   const [reminderCount, setReminderCount] = useState(0);
-  const [expiry, setExpiry] = useState(0);
   const [selected, setSelected] = useState<
     Record<number, "Dismiss" | "Snooze" | null>
   >({});
   const [decidedCount, setDecidedCount] = useState(0);
+  const [dismissed, setDismissed] = useState(false);
 
   const openDialog = useRef(false);
 
@@ -52,7 +52,7 @@ function Map() {
       const response = await api.get("/flood-reminders");
       setPathReminder(response.data.reminders);
       setReminderCount(response.data.count);
-      setExpiry(response.data.reminders.expiry);
+      // setExpiry(response.data.reminders.expiry);
 
       if (response.data.count > 0) {
         setShowReminder(true);
@@ -80,7 +80,7 @@ function Map() {
         ids: [id],
       });
 
-      toast.success("Flood Path snoozed!");
+      toast.success(`Flood Path ID ${String(id)} snoozed!`);
     } catch (err: any) {
       console.log(err.response.message);
     }
@@ -96,7 +96,7 @@ function Map() {
         ids: ids,
       });
 
-      toast.success("Flood Path snoozed!");
+      toast.success("Flood Paths snoozed!");
       setShowReminder(false);
     } catch (err: any) {
       console.log(err.response.message);
@@ -111,7 +111,7 @@ function Map() {
         ids: [id],
       });
 
-      toast.success("Flood Paths dismissed!");
+      toast.success(`Flood Path ID ${String(id)} dismissed!`);
     } catch (err: any) {
       console.log(err.response.message);
     }
@@ -143,12 +143,6 @@ function Map() {
     setDecidedCount(+1);
   };
 
-  const expiryDate = new Date(expiry);
-  const now = new Date();
-
-  const diffMs = expiryDate.getTime() - now.getTime();
-  const daysLeft = Math.ceil(diffMs / (1000 * 60 * 60 * 24));
-
   useEffect(() => {
     if (role) {
       if (openDialog.current) return;
@@ -179,48 +173,62 @@ function Map() {
           contentId="Map_ReminderDialogContent"
           actionId="Map_DismissAll"
           actionId2="Map_SnoozeAll"
-          onClick={(e) => handleDismissAll(e)}
-          onClick2={(e) => handleSnoozeAll(e)}
+          onClick={(e) => {
+            handleDismissAll(e);
+            setDismissed(true);
+          }}
+          onClick2={(e) => {
+            handleSnoozeAll(e);
+            setDismissed(true);
+          }}
+          disabled={dismissed}
         >
-          <div className="flex flex-col gap-2 overflow-auto h-50">
-            {pathReminder?.map((path) => (
-              <>
-                <Separator />
-                <div className="flex flex-col gap-2">
-                  <div className="text-xs">
-                    <p>Flood ID: {path.floodpath_id}</p>
-                    <p>Message: {path.flood_description}</p>
-                    <p>Expiring in: {daysLeft} days</p>
+          <div className="flex flex-col gap-2 overflow-auto h-[30vh]">
+            {pathReminder?.map((path) => {
+              const expiryDate = new Date(path.expiry);
+              const now = new Date();
+
+              const diffMs = expiryDate.getTime() - now.getTime();
+              const daysLeft = Math.ceil(diffMs / (1000 * 60 * 60 * 24));
+              return (
+                <>
+                  <Separator />
+                  <div className="flex flex-col gap-2">
+                    <div className="text-xs">
+                      <p>Flood ID: {path.floodpath_id}</p>
+                      <p>Message: {path.flood_description}</p>
+                      <p>Expiring in: {daysLeft} days</p>
+                    </div>
+                    <div className="flex gap-2">
+                      <ButtonComp
+                        text="Dismiss"
+                        variant="outline"
+                        type="button"
+                        id="Map_DismissID"
+                        heightSize="28px"
+                        onClick={(e) => {
+                          handleDismissSingle(path.floodpath_id, e);
+                          handleSelect(path.floodpath_id, "Dismiss");
+                        }}
+                        isDisabled={selected[path.floodpath_id] === "Snooze"}
+                      />
+                      <ButtonComp
+                        text="Snooze"
+                        variant="outline"
+                        type="button"
+                        id="Map_SnoozeID"
+                        heightSize="28px"
+                        onClick={(e) => {
+                          handleSnoozeSingle(path.floodpath_id, e);
+                          handleSelect(path.floodpath_id, "Snooze");
+                        }}
+                        isDisabled={selected[path.floodpath_id] === "Dismiss"}
+                      />
+                    </div>
                   </div>
-                  <div className="flex gap-2">
-                    <ButtonComp
-                      text="Dismiss"
-                      variant="outline"
-                      type="button"
-                      id="Map_DismissID"
-                      heightSize="28px"
-                      onClick={(e) => {
-                        handleDismissSingle(path.floodpath_id, e);
-                        handleSelect(path.floodpath_id, "Dismiss");
-                      }}
-                      isDisabled={selected[path.floodpath_id] === "Snooze"}
-                    />
-                    <ButtonComp
-                      text="Snooze"
-                      variant="outline"
-                      type="button"
-                      id="Map_SnoozeID"
-                      heightSize="28px"
-                      onClick={(e) => {
-                        handleSnoozeSingle(path.floodpath_id, e);
-                        handleSelect(path.floodpath_id, "Snooze");
-                      }}
-                      isDisabled={selected[path.floodpath_id] === "Dismiss"}
-                    />
-                  </div>
-                </div>
-              </>
-            ))}
+                </>
+              );
+            })}
           </div>
         </AlertDialogue>
       )}
