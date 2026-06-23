@@ -253,7 +253,6 @@ function FormRegistration() {
               isPassword
               id="RegisForm_PWfield"
               isRequired
-              value={pw}
               onSubmit={(e) => setPw(e.target.value)}
               error={errors.pw}
             />

@@ -136,6 +136,8 @@ function EvacPin() {
   const [isFull, setIsFull] = useState(false);
   const [willOpen, setWillOpen] = useState(false);
   const [disabled, setDisabled] = useState(false);
+  const [typeLoad, setTypeLoad] = useState(false);
+  const [capLoad, setCapLoad] = useState(false);
 
   const location = useLocation();
   const navigate = useNavigate();
@@ -244,10 +246,13 @@ function EvacPin() {
 
   const getCapacityLevels = async () => {
     try {
+      setCapLoad(true);
       const response = await api.get("/capacity-levels");
       setCapacityLevels(response.data);
+      setCapLoad(false);
     } catch (error: any) {
       console.error(error.response.data);
+      setCapLoad(false);
     }
   };
 
@@ -257,6 +262,7 @@ function EvacPin() {
     } else if (!id) {
       const getAreaTypes = async () => {
         try {
+          setTypeLoad(true);
           const response = await api.get("/evac-types");
           setEvacTypes(response.data);
 
@@ -264,8 +270,11 @@ function EvacPin() {
             console.log("Failed to fetch evac types");
             return;
           }
+
+          setTypeLoad(false);
         } catch (error: any) {
           console.error(error.response.data);
+          setTypeLoad(false);
         }
       };
 
@@ -284,6 +293,8 @@ function EvacPin() {
     if (isEditable) {
       const getAreaTypes = async () => {
         try {
+          setTypeLoad(true);
+
           const response = await api.get("/evac-types");
           setEvacTypes(response.data);
 
@@ -291,17 +302,23 @@ function EvacPin() {
             console.log("Failed to fetch evac types");
             return;
           }
+
+          setTypeLoad(false);
         } catch (error: any) {
           console.error(error.response.data);
+          setTypeLoad(false);
         }
       };
 
       const getCapacityLevels = async () => {
         try {
+          setCapLoad(true);
           const response = await api.get("/capacity-levels");
           setCapacityLevels(response.data);
+          setCapLoad(false);
         } catch (error: any) {
           console.error(error.response.data);
+          setCapLoad(false);
         }
       };
 
@@ -359,6 +376,34 @@ function EvacPin() {
       !contactNumber
     ) {
       toast.error("Please fill in the required fields marked with an *.");
+    }
+
+    if (hasToilet) {
+      if (!toilet || toilet == "") {
+        toast.error("Please fill in the toilet count.");
+        return;
+      }
+    }
+
+    if (hasKitchen) {
+      if (!kitchen || kitchen == "") {
+        toast.error("Please fill in the kitchen count.");
+        return;
+      }
+    }
+
+    if (hasChildPrayer) {
+      if (!childPrayer || childPrayer == "") {
+        toast.error("Please fill in the child/prayer area count.");
+        return;
+      }
+    }
+
+    if (hasBreastfeed) {
+      if (!breastfeed || breastfeed == "") {
+        toast.error("Please fill in breastfeedubg area count.");
+        return;
+      }
     }
 
     formData.append("name", pinName);
@@ -579,6 +624,7 @@ function EvacPin() {
                 value: String(level.id),
               }))}
             isRequired
+            loading={capLoad}
           />
         </AlertDialogue>
       )}
@@ -683,6 +729,7 @@ function EvacPin() {
                   value: type.id.toString(),
                 }))}
                 isRequired
+                loading={typeLoad}
               />
             ) : (
               <TextField

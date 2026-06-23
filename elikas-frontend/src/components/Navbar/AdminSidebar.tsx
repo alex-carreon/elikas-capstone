@@ -107,7 +107,7 @@ function AdminSidebar() {
   return (
     <Sidebar className="h-full" collapsible="offcanvas" variant="sidebar">
       <SidebarHeader className="h-1/5 p-0">
-        <div className="h-full w-full bg-gradient-to-r from-[#FFA011] to-[#F3C962] flex flex-col items-center justify-center gap-2">
+        <div className="h-full w-full bg-gradient-to-r from-[#FFA011] to-[#F3C962] flex flex-col items-center justify-center gap-2 p-4">
           <WhiteLogo />
           <p className="text-center text-4xl font-bold BeVietnamPro text-white mx-4">
             Admin Panel

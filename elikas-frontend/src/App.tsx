@@ -91,8 +91,11 @@ function App() {
           </Route>
 
           <Route element={<ConstNavbar />}>
-            <Route path="/Hotlines" element={<Hotlines />} />
             <Route path="/TermsConditions" element={<TermsConditions />} />
+          </Route>
+
+          <Route element={<ConstNavbar redirect="/map" />}>
+            <Route path="/Hotlines" element={<Hotlines />} />
           </Route>
 
           <Route element={<ProtectedRoute userRole={"indiv"} />}>

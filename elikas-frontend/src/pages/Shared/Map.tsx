@@ -183,7 +183,7 @@ function Map() {
           }}
           disabled={dismissed}
         >
-          <div className="flex flex-col gap-2 overflow-auto h-[30vh]">
+          <div className="flex flex-col gap-2 overflow-auto h-fit max-h-[30vh]">
             {pathReminder?.map((path) => {
               const expiryDate = new Date(path.expiry);
               const now = new Date();
