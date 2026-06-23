@@ -200,7 +200,6 @@ function FormRegistration() {
               label="Last Name"
               inputType="text"
               id="RegisForm_LNfield"
-              value={last_name ? last_name : ""}
               isRequired
               value={last_name}
               onSubmit={(e) => filterSpecial(e, setLn)}
@@ -209,7 +208,6 @@ function FormRegistration() {
               label="First Name"
               inputType="text"
               id="RegisForm_FNfield"
-              value={first_name ? first_name : ""}
               isRequired
               value={first_name}
               onSubmit={(e) => filterSpecial(e, setFn)}
@@ -218,7 +216,6 @@ function FormRegistration() {
               label="Email Address"
               inputType="text"
               id="RegisForm_EMAILfield"
-              value={email ? email : ""}
               isRequired
               value={email}
               onSubmit={(e) => setEmail(e.target.value)}
@@ -255,7 +252,6 @@ function FormRegistration() {
               inputType="password"
               isPassword
               id="RegisForm_PWfield"
-              value={pw}
               isRequired
               value={pw}
               onSubmit={(e) => setPw(e.target.value)}
