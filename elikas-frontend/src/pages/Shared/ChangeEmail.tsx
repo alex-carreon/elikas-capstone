@@ -10,12 +10,14 @@ import { toast } from "sonner";
 function ChangeEmail() {
   const [email, setEmail] = useState("");
   const [success, setSuccess] = useState(false);
+  const [disabled, setDisabled] = useState(false);
 
   const submitEmail = async (e: React.FormEvent) => {
     e.preventDefault();
 
     if (auth.currentUser) {
       try {
+        setDisabled(true);
         const response = api.patch("/profile/change-email", { email });
 
         console.log(response);
@@ -32,13 +34,13 @@ function ChangeEmail() {
         if ((await response).request.status === 200) {
           await signOut(auth);
         }
+
+        setDisabled(false);
       } catch (err: any) {
+        setDisabled(false);
         console.log(err.response.message);
       }
     }
-
-    // if (success) {
-    // }
   };
 
   useEffect(() => {
@@ -80,6 +82,7 @@ function ChangeEmail() {
                 onClick={(e) => submitEmail(e)}
                 heightSize="38px"
                 widthSize="100%"
+                isDisabled={disabled}
               />
             </div>
           </div>

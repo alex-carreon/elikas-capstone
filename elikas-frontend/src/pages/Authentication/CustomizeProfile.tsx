@@ -38,7 +38,6 @@ function CustomizeProfile() {
     navigate("/Registration/Permissions");
   };
 
-<<<<<<< HEAD
   const dataUri = avatar.toDataUri();
 
   useEffect(() => {
@@ -48,31 +47,6 @@ function CustomizeProfile() {
       setError("");
     }
   }, [username]);
-=======
-  const avatar = createAvatar(bigSmile, {
-    seed: seed ? seed : "Felix",
-    backgroundColor: ["b6e3f4", "c0aede", "d1d4f9"],
-    radius: 50,
-    scale: 90,
-    accessoriesProbability: 50,
-    eyes: ["cheery", "normal", "starstruck", "winking"],
-    mouth: ["braces", "gapSmile", "kawaii", "openedSmile", "teethSmile"],
-  });
-
-  const dataUri = avatar.toDataUri();
-
-  useEffect(() => {
-    if (localStorage.getItem("username")) {
-      const un = localStorage.getItem("username");
-      setUsername(un ? un : "");
-    }
-
-    if (localStorage.getItem("avatarSeed")) {
-      const avatar = localStorage.getItem("avatarSeed");
-      setSeed(avatar ? avatar : "");
-    }
-  }, []);
->>>>>>> parent of 55cfba0 (Revert "Merge pull request #289 from alex-carreon/Zel-PWA")
 
   return (
     <div className="min-h-screen flex justify-center p-6">
@@ -121,9 +95,9 @@ function CustomizeProfile() {
             <div className="flex justify-start flex-col content-center">
               <TextField
                 label="Username"
+                placeholder="Enter your preferred user name"
                 inputType="text"
                 id="Profile_UsernameField"
-                value={username}
                 isRequired
                 onSubmit={(e) => setUsername(e.target.value)}
                 maxLength={20}

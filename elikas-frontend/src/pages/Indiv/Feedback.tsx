@@ -12,11 +12,13 @@ import { toast } from "sonner";
 function Feedback() {
   const [rating, setRating] = useState(0);
   const [desc, setDesc] = useState("");
-  // Catch Rating value
+  const [disabled, setDisabled] = useState(false);
+
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
 
     try {
+      setDisabled(true);
       const response = api.post("/feedback", {
         rating: rating,
         message: desc,
@@ -32,7 +34,10 @@ function Feedback() {
         },
         position: "top-center",
       });
+
+      setDisabled(false);
     } catch (err: any) {
+      setDisabled(false);
       console.log(err.response.data);
     }
   };
@@ -111,6 +116,7 @@ function Feedback() {
                     heightSize="38px"
                     widthSize="100%"
                     type="submit"
+                    isDisabled={disabled}
                   ></ButtonComp>
                 </div>
               </form>

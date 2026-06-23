@@ -8,10 +8,14 @@ import SettingsIcon from "@/assets/Settings/SettingsIcon.svg";
 import { UserCircle, Star, Text } from "lucide-react";
 import { Separator } from "@/components/ui/separator";
 import { toast } from "sonner";
+import { useState } from "react";
 
 function Settings() {
+  const [disabled, setDisabled] = useState(false);
+
   const handleLogout = async () => {
     try {
+      setDisabled(true);
       localStorage.clear();
 
       const response = api.post("/auth/logout").then(async () => {
@@ -24,8 +28,11 @@ function Settings() {
         error: "An error has occurred. Please try again or refresh the page.",
         position: "top-center",
       });
+
+      setDisabled(false);
     } catch (error) {
       console.error("Error during logout:", error);
+      setDisabled(false);
     }
   };
 
@@ -91,6 +98,7 @@ function Settings() {
             onClick={handleLogout}
             heightSize="38px"
             widthSize="100%"
+            isDisabled={disabled}
           ></ButtonComp>
         </div>
       </div>

@@ -208,6 +208,7 @@ function EvacPinDrawer({
   const [newComment, setNewComment] = useState<string | null>();
   const [seed, setSeed] = useState("");
   const [seedLoad, setSeedLoad] = useState(false);
+  const [disabled, setDisabled] = useState(false);
 
   const cameraInputRef = useRef<HTMLInputElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -303,6 +304,7 @@ function EvacPinDrawer({
     }
 
     try {
+      setDisabled(true);
       const response = api.post(
         `/evac-areas/${selectedPin?.id}/comments`,
         formData,
@@ -320,7 +322,9 @@ function EvacPinDrawer({
         setImage("");
         getComments();
       });
+      setDisabled(false);
     } catch (err: any) {
+      setDisabled(false);
       console.log(err.response.data);
     }
   };
@@ -379,6 +383,7 @@ function EvacPinDrawer({
     e.preventDefault();
 
     try {
+      setDisabled(true);
       const response = api.patch(`/pins/${evacPinDetails?.id}/verify`, {
         verified: !verified,
       });
@@ -390,7 +395,10 @@ function EvacPinDrawer({
 
       setVerified(!verified);
       toast.success("Pin Verified!");
+
+      setDisabled(false);
     } catch (err: any) {
+      setDisabled(false);
       console.log(err.response);
     }
   };
@@ -440,6 +448,7 @@ function EvacPinDrawer({
                 id="Drawer_UnverifyBtn"
                 heightSize="34px"
                 onClick={(e) => verifyPin(e)}
+                isDisabled={disabled}
               />
             ) : (
               <ButtonComp
@@ -448,6 +457,7 @@ function EvacPinDrawer({
                 id="Drawer_VerifyBtn"
                 heightSize="34px"
                 onClick={(e) => verifyPin(e)}
+                isDisabled={disabled}
               />
             )
           ) : null}
@@ -530,6 +540,13 @@ function EvacPinDrawer({
               <li>
                 <b>Point Person</b>: {evacPinDetails?.contact_person} -{" "}
                 {evacPinDetails?.contact_number}
+              </li>
+              <li>
+                {evacPinDetails?.description && (
+                  <>
+                    <b>Description</b>: {evacPinDetails?.description}
+                  </>
+                )}
               </li>
             </ul>
           </div>
@@ -737,6 +754,7 @@ function EvacPinDrawer({
                         id="Drawer_PostCommentBtn"
                         widthSize="100%"
                         onClick={(e) => submitComment(e)}
+                        isDisabled={disabled}
                       />
                     </div>
                   )}

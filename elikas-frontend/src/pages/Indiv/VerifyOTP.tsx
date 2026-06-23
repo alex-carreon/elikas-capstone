@@ -10,6 +10,7 @@ function VerifyOTP() {
   const [elapsed, setElapsed] = useState(60);
   const [running, setRunning] = useState(false);
   const [otp, setOtp] = useState(0);
+  const [disabled, setDisabled] = useState(false);
 
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const navigate = useNavigate();
@@ -28,6 +29,7 @@ function VerifyOTP() {
     e.preventDefault();
 
     try {
+      setDisabled(true);
       const response = api.post("/otp/verify", {
         phone_number: phoneNumber,
         otp: String(otp),
@@ -43,7 +45,9 @@ function VerifyOTP() {
       response.then(() => {
         navigate("/Profile");
       });
+      setDisabled(false);
     } catch (err: any) {
+      setDisabled(false);
       console.log(err.response.message);
     }
   };
@@ -52,13 +56,17 @@ function VerifyOTP() {
     e.preventDefault();
 
     try {
+      setDisabled(true);
       const response = api.post("/otp/send", {
         phone_number: phoneNumber,
         message: `OTP Resent! Do not share this OTP with others. Here is your code: :otp`,
       });
 
       toast.promise(response, { success: "OTP has been sent to your number." });
+
+      setDisabled(false);
     } catch (err: any) {
+      setDisabled(false);
       console.log(err.response?.message);
     }
   };
@@ -138,6 +146,7 @@ function VerifyOTP() {
                 onClick={(e) => submitOTP(e)}
                 heightSize="38px"
                 widthSize="100%"
+                isDisabled={disabled}
               />
             </div>
           </div>

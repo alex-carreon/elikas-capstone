@@ -15,6 +15,7 @@ function Permissions() {
   const [checked, setChecked] = useState(false);
   const [error, setError] = useState("");
   const [toForm, setToForm] = useState(false);
+  const [disabled, setDisabled] = useState(false);
 
   const navigate = useNavigate();
 
@@ -37,6 +38,7 @@ function Permissions() {
     console.log("FORM DATA:", formData);
 
     try {
+      setDisabled(true);
       const userCredential = await createUserWithEmailAndPassword(
         auth,
         formData.email,
@@ -78,26 +80,32 @@ function Permissions() {
       response.then(() => {
         navigate("/Registration/Verify");
       });
+      setDisabled(false);
     } catch (err: string | any) {
       console.error("Firebase error message:", err.message);
+      setDisabled(false);
 
       const firebaseUser = auth.currentUser;
       if (firebaseUser) {
         try {
           await firebaseUser.delete();
+          setDisabled(false);
         } catch (deleteErr: any) {
           await auth.signOut();
+          setDisabled(false);
         }
         if (
           err.response?.data?.message === "The username has already been taken."
         ) {
           toast.error("This username has already been taken.");
+          setDisabled(false);
         } else {
           toast.error("Registration failed. Please try again.");
           navigate("/Login");
         }
       } else if (err.code === "auth/email-already-in-use") {
         toast.error("This email is already in use.");
+        setDisabled(false);
       } else {
         toast.error("Registration failed. Please try again.");
         navigate("/Login");
@@ -221,7 +229,7 @@ function Permissions() {
                   text="Register"
                   variant="primary"
                   id="Permissions_SubmitBtn"
-                  isDisabled={!checked}
+                  isDisabled={!checked || disabled}
                   onClick={() => handleSubmit}
                   type="submit"
                   heightSize="38px"

@@ -36,16 +36,19 @@ interface handleActionProps {
   formData?: FormData;
   redirect?: string;
   role?: string;
+  setDisabled?: React.Dispatch<React.SetStateAction<boolean>>;
 }
 
 export const handleSubmit = async ({
   e,
   navigate,
   formData,
+  setDisabled,
 }: handleActionProps) => {
   e?.preventDefault();
 
   try {
+    setDisabled?.(true);
     const response = api.post("/pins", formData, {
       headers: {
         "Content-Type": undefined,
@@ -67,16 +70,20 @@ export const handleSubmit = async ({
     response.then(() => {
       navigate?.("/map");
     });
+    setDisabled?.(false);
   } catch (error: any) {
     console.error("Request failed");
 
     if (error.response) {
       console.error("Status:", error.response.status);
       console.error("Data:", error.response.data);
+      setDisabled?.(false);
     } else if (error.request) {
       console.error("No response received:", error.request);
+      setDisabled?.(false);
     } else {
       console.error("Error:", error.message);
+      setDisabled?.(false);
     }
   }
 
@@ -110,10 +117,11 @@ export const handleUpdate = async ({
   setIsEditable,
   setHasUpdated,
   role,
+  setDisabled,
 }: handleActionProps) => {
   try {
     e?.preventDefault();
-
+    setDisabled?.(true);
     const responsePromise = api.put(`/pins/${id}`, {
       name: name,
       address: address,
@@ -154,16 +162,21 @@ export const handleUpdate = async ({
       setIsEditable?.(false);
       setHasUpdated?.(true);
     });
+    setDisabled?.(false);
   } catch (error: any) {
     console.error("Request failed");
+    setDisabled?.(false);
 
     if (error.response) {
       console.error("Status:", error.response.status);
       console.error("Data:", error.response.data);
+      setDisabled?.(false);
     } else if (error.request) {
       console.error("No response received:", error.request);
+      setDisabled?.(false);
     } else {
       console.error("Error:", error.message);
+      setDisabled?.(false);
     }
   }
 };
@@ -172,8 +185,10 @@ export const handleDelete = async ({
   id,
   navigate,
   redirect,
+  setDisabled,
 }: handleActionProps) => {
   try {
+    setDisabled?.(true);
     const responsePromise = api.patch(`/pins/${id}/deactivate`);
 
     toast.promise(responsePromise, {
@@ -187,16 +202,21 @@ export const handleDelete = async ({
       },
       position: "top-center",
     });
+    setDisabled?.(false);
   } catch (error: any) {
     console.error("Request failed");
+    setDisabled?.(false);
 
     if (error.response) {
       console.error("Status:", error.response.status);
       console.error("Data:", error.response.data);
+      setDisabled?.(false);
     } else if (error.request) {
       console.error("No response received:", error.request);
+      setDisabled?.(false);
     } else {
       console.error("Error:", error.message);
+      setDisabled?.(false);
     }
   }
 };
@@ -207,10 +227,12 @@ export const handleReOpen = ({
   expiry,
   navigate,
   redirect,
+  setDisabled,
 }: handleActionProps) => {
   e?.preventDefault();
 
   try {
+    setDisabled?.(true);
     const response = api.put(`/pins/${id}`, { expiry: expiry });
     toast.promise(response, {
       loading: "Re-opening your pin...",
@@ -224,8 +246,10 @@ export const handleReOpen = ({
     response.then(() => {
       navigate?.(redirect ? redirect : "");
     });
+    setDisabled?.(false);
   } catch (err: any) {
     console.log(err.response.data);
+    setDisabled?.(false);
   }
 };
 
@@ -234,10 +258,12 @@ export const handleReactivate = ({
   id,
   navigate,
   redirect,
+  setDisabled,
 }: handleActionProps) => {
   e?.preventDefault();
 
   try {
+    setDisabled?.(true);
     const response = api.patch(`/pins/${id}/restore`);
     console.log(response);
 
@@ -253,7 +279,9 @@ export const handleReactivate = ({
     response.then(() => {
       navigate?.(redirect ? redirect : "");
     });
+    setDisabled?.(false);
   } catch (err: any) {
     console.log(err.response.data);
+    setDisabled?.(false);
   }
 };
