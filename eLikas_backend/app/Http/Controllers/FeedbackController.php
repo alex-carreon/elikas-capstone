@@ -4,11 +4,13 @@ namespace App\Http\Controllers;
 
 use App\Models\Feedback;
 use Illuminate\Http\Request;
+use Carbon\Carbon;
 
 class FeedbackController extends Controller
 {
     // ---------------------------------------------------------------
     // POST /feedback
+    // Overwrite guard: one record per user (updateOrCreate on user_id)
     // ---------------------------------------------------------------
     public function store(Request $request)
     {
@@ -20,17 +22,28 @@ class FeedbackController extends Controller
                 'message' => 'nullable|string|max:1000',
             ]);
 
-            $feedback = Feedback::create([
-                'user_id' => $user->id,
-                'sent_at' => now(),
-                'rating'  => $validated['rating'],
-                'message' => $validated['message'] ?? null,
-            ]);
+            // Round submitted rating to nearest 0.5 before storing
+            $cleanRating = $this->roundToHalf((float) $validated['rating']);
+
+            // updateOrCreate: match on user_id, overwrite rating/message/sent_at
+            $feedback = Feedback::updateOrCreate(
+                ['user_id' => $user->id],
+                [
+                    'rating'  => $cleanRating,
+                    'message' => $validated['message'] ?? null,
+                    'sent_at' => now(),
+                ]
+            );
+
+            $wasUpdated = !$feedback->wasRecentlyCreated;
 
             return response()->json([
-                'message'  => 'Feedback submitted successfully',
+                'message'  => $wasUpdated
+                    ? 'Feedback updated successfully'
+                    : 'Feedback submitted successfully',
+                'updated'  => $wasUpdated,
                 'feedback' => $this->formatFeedback($feedback->load('user')),
-            ], 201);
+            ], $wasUpdated ? 200 : 201);
 
         } catch (\Exception $e) {
             return response()->json([
@@ -42,7 +55,8 @@ class FeedbackController extends Controller
 
     // ---------------------------------------------------------------
     // GET /admin/feedback
-    // Query params: id, message, rating, date_from, date_to
+    // Query params: id, message, rating, range, date_from, date_to, role, location_id
+    // Also returns: rating_options (clean 0.5-increment distinct list)
     // ---------------------------------------------------------------
     public function index(Request $request)
     {
@@ -50,13 +64,12 @@ class FeedbackController extends Controller
             $query = Feedback::with('user.role')
                 ->orderByDesc('sent_at');
 
-
-            // Only apply id filter when a positive numeric id is provided
+            // --- ID filter ---
             if ($request->filled('id') && is_numeric($request->query('id')) && (int) $request->query('id') > 0) {
                 $query->where('id', (int) $request->query('id'));
             }
 
-            // Apply message filter only when non-empty after trimming
+            // --- Message keyword filter ---
             if ($request->has('message')) {
                 $rawMsg = $request->query('message');
                 if (is_string($rawMsg)) {
@@ -68,23 +81,44 @@ class FeedbackController extends Controller
                 }
             }
 
-            // Apply rating filter only when numeric and within valid range (1-5)
             if ($request->has('rating') && is_numeric($request->query('rating'))) {
                 $r = (float) $request->query('rating');
                 if ($r >= 1 && $r <= 5) {
-                    $query->where('rating', $r);
+                    // round off to 0.5
+                    $snapped = $this->roundToHalf($r);
+                    // accept ratings within ±0.25 of the chosen value (e.g. 4.5 matches 4.25 to 4.74)
+                    $query->whereBetween('rating', [
+                        max(1.0, $snapped - 0.25),
+                        min(5.0, $snapped + 0.249),
+                    ]);
                 }
             }
 
-            if ($request->filled('date_from')) {
-                $query->whereDate('sent_at', '>=', $request->query('date_from'));
+            // --- Time-range filter (range param takes priority over date_from/date_to) ---
+            if ($request->filled('range')) {
+                switch ($request->query('range')) {
+                    case 'past_week':
+                        $query->where('sent_at', '>=', Carbon::now()->subDays(7)->startOfDay());
+                        break;
+                    case 'monthly':
+                        $query->where('sent_at', '>=', Carbon::now()->subDays(30)->startOfDay());
+                        break;
+                    case 'quarterly':
+                        $query->where('sent_at', '>=', Carbon::now()->subDays(90)->startOfDay());
+                        break;
+                    // 'all_time' or unknown value: no date restriction
+                }
+            } else {
+                // Fall back to explicit date range if no preset range given
+                if ($request->filled('date_from')) {
+                    $query->whereDate('sent_at', '>=', $request->query('date_from'));
+                }
+                if ($request->filled('date_to')) {
+                    $query->whereDate('sent_at', '<=', $request->query('date_to'));
+                }
             }
 
-            if ($request->filled('date_to')) {
-                $query->whereDate('sent_at', '<=', $request->query('date_to'));
-            }
-
-            //Filter by role
+            // --- Role filter ---
             if ($request->filled('role')) {
                 $roleMap = [
                     'brgy'       => 2,
@@ -110,17 +144,15 @@ class FeedbackController extends Controller
                 });
             }
 
-            // Filter by location_id (resolves through GovOp or IndivAcc depending on role)
+            // --- Location filter ---
             if ($request->filled('location_id')) {
                 $locationId = (int) $request->query('location_id');
 
                 $query->whereHas('user', function ($q) use ($locationId) {
                     $q->where(function ($q) use ($locationId) {
-                        // GovOp users (role 2)
                         $q->whereHas('govOp', function ($q) use ($locationId) {
                             $q->where('location_id', $locationId);
                         })
-                        // Individual users (role 3)
                         ->orWhereHas('indivAcc', function ($q) use ($locationId) {
                             $q->where('location_id', $locationId);
                         });
@@ -128,11 +160,16 @@ class FeedbackController extends Controller
                 });
             }
 
-            $feedbackList = $query->get()->map(fn($fb) => $this->formatFeedback($fb));
+            $feedbackList = $query->get();
+
+            // Build clean rating options from the FULL unfiltered dataset
+            // (so the dropdown always shows all available steps, not just current results)
+            $ratingOptions = $this->buildRatingOptions();
 
             return response()->json([
-                'count'    => $feedbackList->count(),
-                'feedback' => $feedbackList,
+                'count'          => $feedbackList->count(),
+                'rating_options' => $ratingOptions,
+                'feedback'       => $feedbackList->map(fn($fb) => $this->formatFeedback($fb)),
             ], 200);
 
         } catch (\Exception $e) {
@@ -149,7 +186,7 @@ class FeedbackController extends Controller
     public function show(Request $request, int $id)
     {
         try {
-            $query = Feedback::with(['user.name', 'user.role'])->where('id', $id);
+            $query = Feedback::with(['user.role'])->where('id', $id);
 
             if ($request->filled('message')) {
                 $term = '%' . $this->escapeLike((string) $request->query('message')) . '%';
@@ -204,6 +241,26 @@ class FeedbackController extends Controller
     // ---------------------------------------------------------------
     // PRIVATE HELPERS
     // ---------------------------------------------------------------
+    private function roundToHalf(float $value): float
+    {
+        return round($value * 2) / 2;
+    }
+
+    private function buildRatingOptions(): array
+    {
+        $rawRatings = Feedback::pluck('rating');
+
+        $steps = $rawRatings
+            ->map(fn($r) => $this->roundToHalf((float) $r))
+            ->unique()
+            ->sort()
+            ->values();
+
+        return $steps->map(fn($step) => [
+            'value' => $step,
+            'label' => number_format($step, 1),   // e.g. "4.5"
+        ])->values()->all();
+    }
 
     private function formatFeedback(Feedback $feedback): array
     {
