@@ -70,21 +70,19 @@ export const handleSubmit = async ({
     response.then(() => {
       navigate?.("/map");
     });
-    setDisabled?.(false);
   } catch (error: any) {
     console.error("Request failed");
 
     if (error.response) {
       console.error("Status:", error.response.status);
       console.error("Data:", error.response.data);
-      setDisabled?.(false);
     } else if (error.request) {
       console.error("No response received:", error.request);
-      setDisabled?.(false);
     } else {
       console.error("Error:", error.message);
-      setDisabled?.(false);
     }
+  } finally {
+    setDisabled?.(false);
   }
 
   return;
@@ -162,22 +160,19 @@ export const handleUpdate = async ({
       setIsEditable?.(false);
       setHasUpdated?.(true);
     });
-    setDisabled?.(false);
   } catch (error: any) {
     console.error("Request failed");
-    setDisabled?.(false);
 
     if (error.response) {
       console.error("Status:", error.response.status);
       console.error("Data:", error.response.data);
-      setDisabled?.(false);
     } else if (error.request) {
       console.error("No response received:", error.request);
-      setDisabled?.(false);
     } else {
       console.error("Error:", error.message);
-      setDisabled?.(false);
     }
+  } finally {
+    setDisabled?.(false);
   }
 };
 
@@ -202,22 +197,19 @@ export const handleDelete = async ({
       },
       position: "top-center",
     });
-    setDisabled?.(false);
   } catch (error: any) {
     console.error("Request failed");
-    setDisabled?.(false);
 
     if (error.response) {
       console.error("Status:", error.response.status);
       console.error("Data:", error.response.data);
-      setDisabled?.(false);
     } else if (error.request) {
       console.error("No response received:", error.request);
-      setDisabled?.(false);
     } else {
       console.error("Error:", error.message);
-      setDisabled?.(false);
     }
+  } finally {
+    setDisabled?.(false);
   }
 };
 
@@ -246,9 +238,9 @@ export const handleReOpen = ({
     response.then(() => {
       navigate?.(redirect ? redirect : "");
     });
-    setDisabled?.(false);
   } catch (err: any) {
     console.log(err.response.data);
+  } finally {
     setDisabled?.(false);
   }
 };
@@ -279,9 +271,9 @@ export const handleReactivate = ({
     response.then(() => {
       navigate?.(redirect ? redirect : "");
     });
-    setDisabled?.(false);
   } catch (err: any) {
     console.log(err.response.data);
+  } finally {
     setDisabled?.(false);
   }
 };

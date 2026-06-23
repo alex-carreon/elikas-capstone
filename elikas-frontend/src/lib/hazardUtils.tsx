@@ -120,23 +120,20 @@ export const handleSubmit = async ({
       response.then(() => {
         navigate?.("/map");
       });
-      setDisabled?.(false);
     }
   } catch (error: any) {
     console.error("Request failed");
-    setDisabled?.(false);
 
     if (error.response) {
       console.error("Status:", error.response.status);
       console.error("Data:", error.response.data);
-      setDisabled?.(false);
     } else if (error.request) {
       console.error("No response received:", error.request);
-      setDisabled?.(false);
     } else {
       console.error("Error:", error.message);
-      setDisabled?.(false);
     }
+  } finally {
+    setDisabled?.(false);
   }
 
   return;
@@ -209,9 +206,9 @@ export const handleUpdate = async ({
       setIsEditable?.(false);
       setHasUpdated?.(true);
     });
-    setDisabled?.(false);
   } catch (err: string | any) {
     console.log(err.message || "An error occurred");
+  } finally {
     setDisabled?.(false);
   }
 };
@@ -225,8 +222,6 @@ export const handleDelete = async ({
   try {
     setDisabled?.(true);
     const response = api.patch(`/flood-paths/${id}/deactivate`);
-
-    console.log(response);
 
     toast.promise(response, {
       loading: "Deleting your pin...",
@@ -243,9 +238,9 @@ export const handleDelete = async ({
     response.then(() => {
       navigate?.(navigation);
     });
-    setDisabled?.(false);
   } catch (err) {
     console.error("Error Deactivating");
+  } finally {
     setDisabled?.(false);
   }
 };
@@ -280,10 +275,9 @@ export const handleAddMedia = async ({
       },
       position: "top-center",
     });
-
-    setDisabled?.(false);
   } catch (err: any) {
     console.log(err.response.data);
+  } finally {
     setDisabled?.(false);
   }
 };
