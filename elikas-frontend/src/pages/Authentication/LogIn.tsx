@@ -7,7 +7,7 @@ import ButtonComp from "@/components/Button";
 import { Mail } from "lucide-react";
 import { Lock } from "lucide-react";
 import { Link } from "react-router-dom";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { auth } from "@/firebase";
 import {
   signInWithEmailAndPassword,
@@ -124,6 +124,10 @@ function LogIn() {
       }
     }
   };
+
+  useEffect(() => {
+    localStorage.clear();
+  }, []);
 
   return (
     <>
