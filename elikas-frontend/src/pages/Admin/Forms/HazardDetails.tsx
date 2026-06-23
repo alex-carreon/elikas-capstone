@@ -241,7 +241,6 @@ function HazardDetails() {
                     value={String(levelId)}
                     onValueChange={(val) => setLevelId(Number(val))}
                     label="Flood Level*"
-                    placeholder="Select the Flood Level"
                     id="Admin_HazardLevelField"
                     onSubmit={(e) => setLevelId(Number(e.target.value))}
                     options={levels?.map((level) => ({

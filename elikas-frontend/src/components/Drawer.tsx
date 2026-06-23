@@ -130,7 +130,7 @@ function DrawerComp({
   if (newPin) {
     content = (
       <>
-        <div className="px-4">
+        <div className="px-4 pb-6">
           <DrawerClose
             id="DrawerMark_CloseBtn"
             className="w-full flex justify-end"

@@ -141,13 +141,7 @@ function FormRegistration() {
 
       navigate("/Registration/Contact");
     } catch (err: string | any) {
-      if (err.code === "auth/email-already-in-use") {
-        setErrors({
-          email: "This email is already registered.",
-          pw: "",
-          confirmPw: "",
-        });
-      } else if (err instanceof Error) {
+      if (err instanceof Error) {
         setErrors({
           email: " ",
           pw: err.message,
@@ -204,27 +198,27 @@ function FormRegistration() {
           <div className="w-full max-w-xs flex justify-start flex-col self-center gap-5 mt-10 mb-10">
             <TextField
               label="Last Name"
-              placeholder="Enter your last name"
               inputType="text"
               id="RegisForm_LNfield"
+              value={last_name ? last_name : ""}
               isRequired
               value={last_name}
               onSubmit={(e) => filterSpecial(e, setLn)}
             />
             <TextField
               label="First Name"
-              placeholder="Enter your first name"
               inputType="text"
               id="RegisForm_FNfield"
+              value={first_name ? first_name : ""}
               isRequired
               value={first_name}
               onSubmit={(e) => filterSpecial(e, setFn)}
             />
             <TextField
               label="Email Address"
-              placeholder="Enter your email address"
               inputType="text"
               id="RegisForm_EMAILfield"
+              value={email ? email : ""}
               isRequired
               value={email}
               onSubmit={(e) => setEmail(e.target.value)}
@@ -234,7 +228,6 @@ function FormRegistration() {
               value={String(cityId)}
               onValueChange={(val) => setCityId(Number(val))}
               label="City"
-              placeholder="Select your City"
               id="RegisForm_CITYfield"
               onSubmit={(e) => setCityId(Number(e.target.value))}
               options={cities?.map((city) => ({
@@ -248,7 +241,6 @@ function FormRegistration() {
               value={brgy}
               onValueChange={setBrgy}
               label="Barangay"
-              placeholder="Select your barangay"
               id="RegisForm_BRGYfield"
               onSubmit={(e) => setBrgy(e.target.value)}
               options={barangays?.map((brgy) => ({
@@ -260,10 +252,10 @@ function FormRegistration() {
             />
             <TextField
               label="Password"
-              placeholder="Enter your password of choice"
               inputType="password"
               isPassword
               id="RegisForm_PWfield"
+              value={pw}
               isRequired
               value={pw}
               onSubmit={(e) => setPw(e.target.value)}
@@ -271,7 +263,6 @@ function FormRegistration() {
             />
             <TextField
               label="Confirm Password"
-              placeholder="Re-enter your password"
               inputType="password"
               isPassword
               id="RegisForm_CONFIRMPWfield"
