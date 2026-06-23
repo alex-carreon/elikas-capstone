@@ -104,7 +104,6 @@ function CustomizeProfile() {
                 isRequired
                 onSubmit={(e) => setUsername(e.target.value)}
                 maxLength={20}
-                error={error}
               ></TextField>
             </div>
           </div>

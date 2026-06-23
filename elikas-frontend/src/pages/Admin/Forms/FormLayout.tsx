@@ -21,6 +21,7 @@ interface FormLayoutProps {
   btnType?: "button" | "submit" | "reset" | undefined;
   formTitle?: string;
   singleUpd?: () => void;
+  isDisabled?: boolean;
 }
 
 function FormLayout({
@@ -39,6 +40,7 @@ function FormLayout({
   btnType,
   formTitle,
   singleUpd,
+  isDisabled,
 }: FormLayoutProps) {
   const navigate = useNavigate();
 
@@ -95,6 +97,7 @@ function FormLayout({
                       heightSize="38px"
                       type="submit"
                       formId={formId}
+                      isDisabled={isDisabled}
                     />
                     <ButtonComp
                       text="Cancel"
@@ -103,6 +106,7 @@ function FormLayout({
                       heightSize="38px"
                       type="button"
                       onClick={closeUpdClick}
+                      isDisabled={isDisabled}
                     />
                   </div>
                 </>
@@ -115,6 +119,7 @@ function FormLayout({
                     heightSize="38px"
                     type="button"
                     onClick={updateClick}
+                    isDisabled={isDisabled}
                   />
                   <ButtonComp
                     text="Delete"
@@ -123,6 +128,7 @@ function FormLayout({
                     heightSize="38px"
                     type="button"
                     onClick={deleteClick}
+                    isDisabled={isDisabled}
                   />
                 </div>
               ) : (
@@ -136,6 +142,7 @@ function FormLayout({
                       type={btnType}
                       onClick={singleUpd}
                       formId={formId}
+                      isDisabled={isDisabled}
                     />
                   )}
                   {deleteId && (
@@ -146,6 +153,7 @@ function FormLayout({
                       heightSize="38px"
                       type="button"
                       onClick={deleteClick}
+                      isDisabled={isDisabled}
                     />
                   )}
                 </div>

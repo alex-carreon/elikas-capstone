@@ -32,6 +32,7 @@ type commentDetail = {
 function CommentDetails() {
   const [loading, setLoading] = useState(false);
   const [comment, setComment] = useState<commentDetail>();
+  const [disabled, setDisabled] = useState(false);
 
   const { id } = useParams();
   const navigate = useNavigate();
@@ -62,6 +63,7 @@ function CommentDetails() {
 
   const delComment = async () => {
     try {
+      setDisabled(true);
       const response = api.patch(`/admin/comments/${comment?.id}/deactivate`);
 
       toast.promise(response, {
@@ -73,6 +75,7 @@ function CommentDetails() {
 
       response.then(() => {
         navigate(`/admin-pins/${comment?.evac_area.id}/comments`);
+        setDisabled(false);
       });
     } catch (err: any) {
       console.log(err.response.message);
@@ -89,6 +92,7 @@ function CommentDetails() {
         formTitle="Comment Details"
         deleteId="Admin_EvacCommentDelete"
         deleteClick={() => delComment()}
+        isDisabled={disabled}
       >
         {loading ? (
           <div className="flex justify-center">

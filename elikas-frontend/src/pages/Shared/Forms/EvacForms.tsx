@@ -135,6 +135,7 @@ function EvacPin() {
   const [willReopen, setWillReopen] = useState(false);
   const [isFull, setIsFull] = useState(false);
   const [willOpen, setWillOpen] = useState(false);
+  const [disabled, setDisabled] = useState(false);
 
   const location = useLocation();
   const navigate = useNavigate();
@@ -395,6 +396,7 @@ function EvacPin() {
       e: e,
       formData: formData,
       navigate: navigate,
+      setDisabled,
     });
   };
 
@@ -431,11 +433,17 @@ function EvacPin() {
       expiry: String(expiry),
       setIsEditable: setIsEditable,
       setHasUpdated: setHasUpdated,
+      setDisabled,
     });
   };
 
   const deac = () => {
-    handleDelete({ id: id, navigate: navigate, redirect: "/History" });
+    handleDelete({
+      id: id,
+      navigate: navigate,
+      redirect: "/History",
+      setDisabled,
+    });
   };
 
   const reOpen = (e: React.FormEvent) => {
@@ -453,6 +461,7 @@ function EvacPin() {
       id: id,
       navigate: navigate,
       redirect: "/History",
+      setDisabled,
     });
   };
 
@@ -460,6 +469,7 @@ function EvacPin() {
     e.preventDefault();
 
     try {
+      setDisabled(true);
       const fullLevel = capacityLevels?.find(
         (level) => level.capacity_level === "Full",
       )?.id;
@@ -483,8 +493,10 @@ function EvacPin() {
         getEvacDetails();
         setIsFull(!isFull);
       });
+      setDisabled(false);
     } catch (err: any) {
       console.log(err.response.data);
+      setDisabled(false);
     }
   };
 
@@ -533,6 +545,7 @@ function EvacPin() {
             setWillDelete(false);
           }}
           onClick={() => deac()}
+          disabled={disabled}
         />
       )}
       {willOpen && (
@@ -551,6 +564,7 @@ function EvacPin() {
             markFull(e);
             setWillOpen(!willOpen);
           }}
+          disabled={disabled}
         >
           <SelectDropdown
             value={capacity}
@@ -984,6 +998,7 @@ function EvacPin() {
                       widthSize="20"
                       onClick={() => setIsEditable(true)}
                       type="button"
+                      isDisabled={disabled}
                     ></ButtonComp>
                     <ButtonComp
                       text="Delete"
@@ -993,6 +1008,7 @@ function EvacPin() {
                       widthSize="20"
                       type="button"
                       onClick={() => setWillDelete(true)}
+                      isDisabled={disabled}
                     ></ButtonComp>
                   </div>
                   <div className="w-full max-w-md flex justify-center">
@@ -1006,6 +1022,7 @@ function EvacPin() {
                           widthSize="100%"
                           type="button"
                           onClick={() => setWillOpen(true)}
+                          isDisabled={disabled}
                         ></ButtonComp>
                       ) : (
                         <ButtonComp
@@ -1016,6 +1033,7 @@ function EvacPin() {
                           widthSize="100%"
                           type="button"
                           onClick={(e) => markFull(e)}
+                          isDisabled={disabled}
                         ></ButtonComp>
                       ))}
                   </div>
@@ -1031,6 +1049,7 @@ function EvacPin() {
                       heightSize="38px"
                       widthSize="20"
                       onClick={(e) => update(e)}
+                      isDisabled={disabled}
                     ></ButtonComp>
                     <ButtonComp
                       text="Cancel"
@@ -1042,6 +1061,7 @@ function EvacPin() {
                         setIsEditable(false);
                       }}
                       type="button"
+                      isDisabled={disabled}
                     ></ButtonComp>
                   </div>
                 </>
@@ -1075,7 +1095,7 @@ or account restriction."
                     text="Create Pin"
                     variant="primary"
                     id="EvacPin_SubmitBtn"
-                    isDisabled={!safetyCheck || !infoCheck}
+                    isDisabled={!safetyCheck || !infoCheck || disabled}
                     heightSize="38px"
                     widthSize="100%"
                     onClick={(e) => submit(e)}
@@ -1092,6 +1112,7 @@ or account restriction."
                   heightSize="38px"
                   widthSize="100%"
                   onClick={() => setWillReopen(true)}
+                  isDisabled={disabled}
                 />
               </div>
             )}
