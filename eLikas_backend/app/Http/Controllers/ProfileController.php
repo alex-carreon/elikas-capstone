@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Mail\VerifyEmailMail;
 use App\Models\User;
+use App\Models\PhoneNumber;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Mail;
 use Kreait\Firebase\Contract\Auth as FirebaseAuth;
@@ -78,19 +79,16 @@ class ProfileController extends Controller
 
             }
 
-            // Update phone number table
-            if ($user->phoneNumber) {
+            // Update or create phone number row
+            if ($request->filled('phone')) {
 
-                $data = [];
-
-                if ($request->filled('phone')) {
-                    $data['phone_no'] = $request->phone;
-                    $data['is_verified'] = false;
-                }
-
-                if (!empty($data)) {
-                    $user->phoneNumber->update($data);
-                }
+                PhoneNumber::updateOrCreate(
+                    ['user_id' => $user->id],
+                    [
+                        'phone_no' => $request->phone,
+                        'is_verified' => false,
+                    ]
+                );
             }
 
             // Update individual account table
