@@ -16,7 +16,6 @@ function randomSeed(): string {
 function CustomizeProfile() {
   const [username, setUsername] = useState("");
   const [seed, setSeed] = useState("");
-  const [error, setError] = useState("");
 
   const navigate = useNavigate();
 
@@ -41,12 +40,16 @@ function CustomizeProfile() {
   const dataUri = avatar.toDataUri();
 
   useEffect(() => {
-    if (username.length == 20) {
-      setError("Username must be 20 characters only");
-    } else {
-      setError("");
+    if (localStorage.getItem("username")) {
+      const un = localStorage.getItem("username");
+      setUsername(un ? un : "");
     }
-  }, [username]);
+
+    if (localStorage.getItem("avatarSeed")) {
+      const avatar = localStorage.getItem("avatarSeed");
+      setSeed(avatar ? avatar : "");
+    }
+  }, []);
 
   return (
     <div className="min-h-screen flex justify-center p-6">
@@ -95,9 +98,9 @@ function CustomizeProfile() {
             <div className="flex justify-start flex-col content-center">
               <TextField
                 label="Username"
-                placeholder="Enter your preferred user name"
                 inputType="text"
                 id="Profile_UsernameField"
+                value={username}
                 isRequired
                 onSubmit={(e) => setUsername(e.target.value)}
                 maxLength={20}
