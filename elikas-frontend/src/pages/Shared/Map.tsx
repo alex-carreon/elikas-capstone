@@ -81,6 +81,7 @@ function Map() {
       });
 
       toast.success(`Flood Path ID ${String(id)} snoozed!`);
+      setDismissed(true);
     } catch (err: any) {
       console.log(err.response.message);
     }
@@ -112,6 +113,7 @@ function Map() {
       });
 
       toast.success(`Flood Path ID ${String(id)} dismissed!`);
+      setDismissed(true);
     } catch (err: any) {
       console.log(err.response.message);
     }

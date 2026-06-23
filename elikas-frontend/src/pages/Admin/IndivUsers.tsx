@@ -211,18 +211,6 @@ function IndivUsers() {
     }
   };
 
-  // const getAllRating = async (signal?: AbortSignal) => {
-  //   try {
-  //     const response = await api.get("/admin/feedback", { signal });
-  //     setAllRating(response.data.feedback);
-  //   } catch (err: any) {
-  //     if (err.name === "CanceledError") {
-  //       return;
-  //     }
-  //     console.log(err.response?.data);
-  //   }
-  // };
-
   const getAll = async () => {
     const controller = new AbortController();
 

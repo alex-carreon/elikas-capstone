@@ -308,24 +308,43 @@ function Pins() {
     return () => controller.abort();
   };
 
+  const getFiltered = async () => {
+    const controller = new AbortController();
+
+    try {
+      if (!isEvac) {
+        setLoading(true);
+        await getHazards(controller.signal);
+      }
+
+      if (isEvac) {
+        setLoading(true);
+        await getPins(controller.signal);
+      }
+
+      if (flaggedCom) {
+        setLoading(true);
+        await getFlaggedComments(controller.signal);
+      }
+    } catch (err: any) {
+      if (err.name === "CanceledError") {
+        setLoading(false);
+        return;
+      }
+      console.log(err);
+    } finally {
+      setLoading(false);
+    }
+
+    return () => controller.abort();
+  };
+
   useEffect(() => {
     getAll();
   }, []);
 
   useEffect(() => {
-    const controller = new AbortController();
-    if (!isEvac) {
-      getHazards(controller.signal);
-    }
-
-    if (isEvac) {
-      getPins(controller.signal);
-    }
-
-    if (flaggedCom) {
-      getFlaggedComments(controller.signal);
-    }
-    return () => controller.abort();
+    getFiltered();
   }, [levelFilter, status, flagType]);
 
   return (
