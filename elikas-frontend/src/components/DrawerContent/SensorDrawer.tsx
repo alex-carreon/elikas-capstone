@@ -67,8 +67,8 @@ function SensorDrawer({ selectedPin }: { selectedPin: Sensors | null }) {
     if (status == null)
       return {
         color: colorSensor.inactive,
-        risk: "Inactive",
-        desc: "This sensor is inactive",
+        risk: "Not yet installed",
+        desc: "This sensor is not yet installed",
       };
     if (status == "red")
       // Overflow
@@ -144,7 +144,7 @@ function SensorDrawer({ selectedPin }: { selectedPin: Sensors | null }) {
                 Last Online:{" "}
                 {sensorDetails?.lastOnline
                   ? sensorDetails?.lastOnline
-                  : "Inactive"}
+                  : "No online record"}
               </p>
             </div>
           </div>
