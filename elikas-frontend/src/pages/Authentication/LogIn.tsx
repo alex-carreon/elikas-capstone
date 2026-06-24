@@ -105,7 +105,12 @@ function LogIn() {
       toast.promise(response, {
         loading: "Logging you in...",
         success: "You're logged in!",
-        error: "User not found",
+        error: (err: any) => {
+          if ((err.response.data.error = "Account disabled")) {
+            return "This account is deactivated. Please contact eLikas to reactivate your account.";
+          }
+          return "User not found";
+        },
         position: "top-center",
       });
 

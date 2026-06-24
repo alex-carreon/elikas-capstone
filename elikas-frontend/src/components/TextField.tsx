@@ -65,7 +65,7 @@ function TextField({
         <InputGroup>
           <InputGroupInput
             required={isRequired}
-            className="w-full max-w-s h-9 outline-1 outline-gray-400 rounded-sm p-3 placeholder:text-sm"
+            className="w-full max-w-s h-12 outline-1 outline-gray-400 rounded-sm p-3 placeholder:text-sm"
             placeholder={placeholder}
             type={showPassword ? "text" : inputType}
             id={id}

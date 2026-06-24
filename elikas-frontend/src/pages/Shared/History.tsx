@@ -745,7 +745,6 @@ function History() {
                       if (!pins.is_expired && !pins.deactivated_at) {
                         return (
                           <Row
-                            postId={String(pins.id)}
                             title={pins.name}
                             address={pins.address}
                             datePosted={pins.posted_at}
@@ -762,7 +761,6 @@ function History() {
                       if (pins.is_expired) {
                         return (
                           <Row
-                            postId={String(pins.id)}
                             title={pins.name}
                             address={pins.address}
                             datePosted={pins.posted_at}
@@ -819,7 +817,6 @@ function History() {
                     if (!path.is_expired)
                       return (
                         <Row
-                          postId={String(path.id)}
                           title="Flood"
                           desc={path.level}
                           address={path.description}
@@ -856,7 +853,6 @@ function History() {
                     if (path.is_expired)
                       return (
                         <Row
-                          postId={String(path.id)}
                           title="Flood"
                           desc={path.level}
                           address={path.description}
@@ -870,7 +866,7 @@ function History() {
                 )
               ) : (
                 <p className="text-center">
-                  Mark an Evacuation Center on the map to get started!
+                  Mark a Hazard Pin on the map to get started!
                 </p>
               )}
             </div>

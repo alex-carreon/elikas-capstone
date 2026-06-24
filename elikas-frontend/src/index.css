@@ -27,6 +27,10 @@ body,
   height: 100%;
 }
 
+html {
+  scrollbar-gutter: stable;
+}
+
 @custom-variant dark (&:is(.dark *));
 
 @theme inline {

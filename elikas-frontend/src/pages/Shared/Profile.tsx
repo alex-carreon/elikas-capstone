@@ -58,7 +58,8 @@ function Profile() {
   const [barangays, setBarangays] = useState<Barangays[]>([]);
   const [brgyId, setBrgyId] = useState(0);
   const [contact, setContact] = useState("");
-  const [newContact, setNewContact] = useState("");
+  const [newContact, setNewContact] = useState<string | null>("");
+  const [contactTouched, setContactTouched] = useState(false);
   const [isVerified, setIsVerified] = useState(false);
   const [loading, setLoading] = useState(false);
   const [brgyLoad, setBrgyLoad] = useState(false);
@@ -73,11 +74,15 @@ function Profile() {
 
   const navigate = useNavigate();
 
+  const contactValidate = /^639\d{9}$/;
+
   const getProfile = async (signal?: AbortSignal) => {
     try {
       const response = await api.get("/profile", { signal });
 
       const userData = response.data;
+
+      console.log(userData);
 
       setUsername(userData.username);
       setFirstName(userData.first_name);
@@ -102,13 +107,22 @@ function Profile() {
     try {
       setDisabled(true);
 
+      if (newContact) {
+        if (!contactValidate.test(newContact)) {
+          setError("Invalid Contact Number");
+          return;
+        } else {
+          setError("");
+        }
+      }
+
       const payload = {
         username: newUsername,
         first_name: firstName,
         last_name: lastName,
         email,
         ...(brgyId && { location_id: brgyId }),
-        ...(newContact !== "" && { phone: newContact }),
+        ...(contactTouched && { phone: newContact }),
         avatar_seed: seed,
       };
 
@@ -120,7 +134,7 @@ function Profile() {
         last_name: lastName,
         email: email,
         ...(brgyId && { location_id: brgyId }),
-        ...(newContact !== "" && { phone: newContact }),
+        ...(contactTouched && { phone: newContact }),
         avatar_seed: seed,
       });
 
@@ -138,10 +152,12 @@ function Profile() {
       setIsEditable(false);
       setNewUsername(null);
       setNewContact("");
-      setDisabled(false);
+      setContactTouched(false);
       getProfile();
     } catch (err: string | any) {
       console.log(err.response.data);
+      setDisabled(false);
+    } finally {
       setDisabled(false);
     }
   };
@@ -165,7 +181,7 @@ function Profile() {
       });
 
       response.then(() => {
-        navigate("/");
+        auth.signOut();
       });
       setDisabled(false);
     } catch (error) {
@@ -380,7 +396,12 @@ function Profile() {
                         id="Profile_EditBtn"
                         heightSize="32px"
                         widthSize="100px"
-                        onClick={() => setIsEditable(true)}
+                        onClick={() => {
+                          setIsEditable(true);
+                          setNewContact(
+                            contact === "No Registered Number" ? "" : contact,
+                          );
+                        }}
                       />
                     )}
                   </div>
@@ -428,7 +449,7 @@ function Profile() {
                       placeholder={email}
                       inputType="text"
                       id="Profile_Email"
-                      readonly={!isEditable}
+                      readonly
                       value={email}
                       onSubmit={(e) => setEmail(e.target.value)}
                     />
@@ -489,19 +510,24 @@ function Profile() {
                       <TextField
                         label="Contact Number"
                         description="Please use (639#########) format"
-                        placeholder={contact}
+                        placeholder={
+                          newContact === null ? "No Registered Number" : contact
+                        }
                         inputType="text"
                         id="Profile_ContactNo"
-                        value={newContact}
+                        value={newContact ?? ""}
                         onSubmit={(e) => {
                           setNewContact(e.target.value);
-                          console.log(newContact);
+                          setContactTouched(true);
                         }}
+                        error={error}
                       />
                     ) : (
                       <TextField
                         label="Contact Number"
-                        placeholder={contact}
+                        placeholder={
+                          newContact === null ? "No Registered Number" : contact
+                        }
                         inputType="text"
                         id="Profile_ContactNo"
                         readonly={!isEditable}
@@ -509,7 +535,8 @@ function Profile() {
                       />
                     )}
 
-                    {contact === "No Registered Number" || isVerified ? null : (
+                    {(contact === "No Registered Number" || isVerified) &&
+                    isEditable ? null : (
                       <ButtonComp
                         text="Verify"
                         variant="primary"
@@ -518,6 +545,18 @@ function Profile() {
                         widthSize="1/2"
                       />
                     )}
+                    {isEditable && contact !== "No Registered Number" ? (
+                      <ButtonComp
+                        text="Remove Number"
+                        variant="outline"
+                        id="Profile_VerifyBtnNumberBtn"
+                        onClick={() => {
+                          setNewContact(null);
+                          setContactTouched(true);
+                        }}
+                        widthSize="1/2"
+                      />
+                    ) : null}
                   </div>
                 </div>
               </div>
@@ -526,7 +565,7 @@ function Profile() {
                 {isEditable ? (
                   <>
                     <ButtonComp
-                      text="Update"
+                      text="Save"
                       variant="primary"
                       type="button"
                       id="Profile_FormSubmitBtn"
@@ -545,6 +584,7 @@ function Profile() {
                       onClick={() => {
                         setIsEditable(false);
                         setNewContact("");
+                        setContactTouched(false);
                       }}
                       isDisabled={disabled}
                     ></ButtonComp>

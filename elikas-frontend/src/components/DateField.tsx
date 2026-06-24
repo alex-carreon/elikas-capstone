@@ -182,7 +182,7 @@ function DatePickerInput({
       <FieldLabel htmlFor="date-required">{label}</FieldLabel>
       <FieldDescription>{desc}</FieldDescription>
       <div className="flex items-center gap-2">
-        <InputGroup className="w-1/2">
+        <InputGroup className="w-full">
           <InputGroupInput
             id={idField}
             value={inputValue}
@@ -235,7 +235,7 @@ function DatePickerInput({
       </div>
       <div className="flex items-center gap-2">
         {showTime && (
-          <InputGroup className="w-1/2">
+          <InputGroup className="w-full">
             <InputGroupInput
               type="time"
               value={time}
