@@ -153,6 +153,8 @@ function EvacPin() {
   const { role } = useUserContext();
   const { id } = useParams();
 
+  const contactValidate = /^09\d{9}$/;
+
   const defaultExpiry = addDays(new Date(), 7);
 
   useEffect(() => {
@@ -220,20 +222,45 @@ function EvacPin() {
       setIsExpired(evacDetails.is_expired);
       if (evacDetails.toilet_count) {
         setHasToilet(true);
+      } else {
+        setHasToilet(false);
       }
       setToilet(String(evacDetails.toilet_count));
-      if (evacDetails.kitchen_count) {
+      if (
+        evacDetails.kitchen_count &&
+        !Number.isNaN(evacDetails.toilet_count)
+      ) {
         setHasKitchen(true);
+      } else {
+        setHasKitchen(false);
       }
       setKicthen(String(evacDetails.kitchen_count));
-      if (evacDetails.breastfeed_count) {
+      if (
+        evacDetails.breastfeed_count &&
+        !Number.isNaN(evacDetails.breastfeed_count)
+      ) {
         setHasBreastfeed(true);
+      } else {
+        setHasBreastfeed(false);
       }
       setChildPrayer(String(evacDetails.child_prayer_count));
-      if (evacDetails.child_prayer_count) {
+      if (
+        evacDetails.child_prayer_count &&
+        !Number.isNaN(evacDetails.child_prayer_count)
+      ) {
         setHasChildPrayer(true);
+      } else {
+        setHasChildPrayer(false);
       }
       setBreastfeed(String(evacDetails.breastfeed_count));
+      if (
+        evacDetails.breastfeed_count &&
+        !Number.isNaN(evacDetails.breastfeed_count)
+      ) {
+        setHasBreastfeed(true);
+      } else {
+        setHasBreastfeed(false);
+      }
       setOther(evacDetails.other_facilities);
       setContactPerson(evacDetails.contact_person);
       setContactNumber(evacDetails.contact_number);
@@ -356,6 +383,10 @@ function EvacPin() {
       return;
     }
 
+    if (!contactValidate.test(contactNumber)) {
+      toast.error("Invalid Contact Number.");
+    }
+
     const formData = new FormData();
 
     const expDate = expiry ?? addDays(new Date(), 7);
@@ -376,28 +407,28 @@ function EvacPin() {
     }
 
     if (hasToilet) {
-      if (!toilet || toilet == "") {
+      if (!toilet || toilet == "" || toilet == "0") {
         toast.error("Please fill in the toilet count.");
         return;
       }
     }
 
     if (hasKitchen) {
-      if (!kitchen || kitchen == "") {
+      if (!kitchen || kitchen == "" || kitchen == "0") {
         toast.error("Please fill in the kitchen count.");
         return;
       }
     }
 
     if (hasChildPrayer) {
-      if (!childPrayer || childPrayer == "") {
+      if (!childPrayer || childPrayer == "" || childPrayer == "0") {
         toast.error("Please fill in the child/prayer area count.");
         return;
       }
     }
 
     if (hasBreastfeed) {
-      if (!breastfeed || breastfeed == "") {
+      if (!breastfeed || breastfeed == "" || breastfeed == "0") {
         toast.error("Please fill in breastfeedubg area count.");
         return;
       }
@@ -448,10 +479,25 @@ function EvacPin() {
       return;
     }
 
+    if (
+      !pinName ||
+      !areaType ||
+      !capacityCount ||
+      (!regFlood && !heavyFlood) ||
+      !contactPerson ||
+      !contactNumber
+    ) {
+      toast.error("Please fill in the required fields marked with an *.");
+    }
+
+    if (!contactValidate.test(contactNumber)) {
+      toast.error("Invalid Contact Number.");
+    }
+
     handleUpdate({
       e: e,
       id: id,
-      name: pinName,
+      ...(pinName && { name: pinName }),
       address: `${blkLot ?? ""} ${houseNo ?? ""} ${street ?? ""}`,
       description: desc,
       area_type: areaType,
@@ -469,8 +515,8 @@ function EvacPin() {
       child_prayer_count: childPrayerCount,
       breastfeed_count: breastfeedCount,
       other_facilities: other,
-      contact_person: contactPerson,
-      contact_number: contactNumber,
+      ...(contactPerson && { contact_person: contactPerson }),
+      ...(contactNumber && { contact_number: contactNumber }),
       role: role ? role : "",
       expiry: String(expiry),
       setIsEditable: setIsEditable,
@@ -835,6 +881,7 @@ function EvacPin() {
                 value={capacity}
                 onValueChange={setCapacity}
                 label="Capacity Level*"
+                description="Indicate how many people this evacuation center can hold."
                 id="EvacPin_CapacityField"
                 onSubmit={(e) => setCapacity(e.target.value)}
                 options={capacityLevels
@@ -901,14 +948,22 @@ function EvacPin() {
                     <CheckBox
                       text="Toilet"
                       id="EvacPin_ToiletChckbox"
-                      checked={hasToilet}
+                      checked={
+                        hasToilet ||
+                        (hasToilet && toiletCount !== 0 && toiletCount !== null)
+                      }
                       onCheckedChange={() => setHasToilet(!hasToilet)}
                       readOnly={!id || isEditable ? false : true}
                     />
                     <CheckBox
                       text="Kitchen"
                       id="EvacPin_KitchenChckbox"
-                      checked={hasKitchen}
+                      checked={
+                        hasKitchen ||
+                        (hasKitchen &&
+                          kitchenCount !== 0 &&
+                          kitchenCount !== null)
+                      }
                       onCheckedChange={() => setHasKitchen(!hasKitchen)}
                       readOnly={!id || isEditable ? false : true}
                     />
@@ -917,14 +972,24 @@ function EvacPin() {
                     <CheckBox
                       text="Child/Prayer Area"
                       id="EvacPin_ChildPrayerChckbox"
-                      checked={hasChildPrayer}
+                      checked={
+                        hasChildPrayer ||
+                        (hasChildPrayer &&
+                          childPrayerCount !== 0 &&
+                          childPrayerCount !== null)
+                      }
                       onCheckedChange={() => setHasChildPrayer(!hasChildPrayer)}
                       readOnly={!id || isEditable ? false : true}
                     />
                     <CheckBox
                       text="Breastfeeding Area"
                       id="EvacPin_BreastfeedChckbox"
-                      checked={hasBreastfeed}
+                      checked={
+                        hasBreastfeed ||
+                        (hasBreastfeed &&
+                          breastfeedCount !== 0 &&
+                          breastfeedCount !== null)
+                      }
                       onCheckedChange={() => setHasBreastfeed(!hasBreastfeed)}
                       readOnly={!id || isEditable ? false : true}
                     />
@@ -956,7 +1021,7 @@ function EvacPin() {
                       id="EvacPin_KitchenField"
                       inputType="number"
                       onSubmit={(e) => setKicthen(e.target.value)}
-                      value={kitchen}
+                      value={kitchen ?? ""}
                       isRequired
                     />
                   )}
@@ -1097,7 +1162,10 @@ function EvacPin() {
                       variant="primary"
                       heightSize="38px"
                       widthSize="20"
-                      onClick={(e) => update(e)}
+                      onClick={(e) => {
+                        update(e);
+                        console.log(toiletCount);
+                      }}
                       isDisabled={disabled}
                     ></ButtonComp>
                     <ButtonComp

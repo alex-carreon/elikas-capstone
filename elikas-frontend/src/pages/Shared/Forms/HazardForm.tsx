@@ -26,6 +26,7 @@ import {
 } from "@/lib/hazardUtils";
 import FormSkeleton from "../../Skeletons/FormSkeleton";
 import { Separator } from "@/components/ui/separator";
+import DatePickerInput from "@/components/DateField";
 
 const brouterBaseUrl = import.meta.env.VITE_BROUTER_BASE_URL;
 
@@ -67,6 +68,7 @@ function HazardForm() {
   const [newSnapped, setNewSnapped] = useState<[number, number][]>([]);
   const [snapped, setSnapped] = useState<[number, number][]>([]);
   const [levels, setLevels] = useState<FloodLevel[]>();
+  const [expiry, setExpiry] = useState<Date | undefined>();
   const [loading, setLoading] = useState(true);
   const [floodDetails, setFloodDetails] = useState<FloodDetails>();
   const [daysLeft, setDaysleft] = useState(0);
@@ -132,30 +134,32 @@ function HazardForm() {
     }
   };
 
+  const getFloodDetails = async () => {
+    try {
+      setHasUpdated(false);
+      setLoading(true);
+      const response = await api.get(`/flood-paths/${id}`);
+      const floodDetails = await response.data.flood_path;
+      console.log("Details", floodDetails);
+      setFloodDetails(floodDetails);
+      setExpiry(floodDetails.expiry);
+
+      const midpoint = getMidpoint(floodDetails.path);
+      setMidpoint(midpoint);
+
+      const today = new Date();
+      const expDate = new Date(floodDetails.expiry);
+
+      setDaysleft(differenceInDays(expDate, today));
+    } catch (err: string | any) {
+      console.log(err.message || "An error occurred");
+    } finally {
+      setLoading(false);
+    }
+  };
+
   useEffect(() => {
     if (id) {
-      const getFloodDetails = async () => {
-        try {
-          setHasUpdated(false);
-          setLoading(true);
-          const response = await api.get(`/flood-paths/${id}`);
-          const floodDetails = await response.data.flood_path;
-          console.log("Details", floodDetails);
-          setFloodDetails(floodDetails);
-
-          const midpoint = getMidpoint(floodDetails.path);
-          setMidpoint(midpoint);
-
-          const today = new Date();
-          const expDate = new Date(floodDetails.expiry);
-
-          setDaysleft(differenceInDays(expDate, today));
-        } catch (err: string | any) {
-          console.log(err.message || "An error occurred");
-        } finally {
-          setLoading(false);
-        }
-      };
       getFloodDetails();
     } else if (!id) {
       const getFloodLevels = async () => {
@@ -302,6 +306,7 @@ function HazardForm() {
       navigate: navigate,
       media: fileName,
       setDisabled,
+      userExpiry: expiry,
     });
   };
 
@@ -320,6 +325,7 @@ function HazardForm() {
       setIsEditable: setIsEditable,
       setHasUpdated: setHasUpdated,
       setDisabled: setDisabled,
+      userExpiry: expiry,
     });
 
   const deleteHazard = () =>
@@ -427,12 +433,12 @@ function HazardForm() {
                 className={"text-sm w-s"}
                 style={{ color: colors.label }}
               >
-                Chosen Location
+                Marking the road
               </FieldLabel>
               <FieldDescription>
-                Press on a road to make a line. Press again to make a line
-                connecting to the one before. Please refrain from going
-                off-road.
+                <b>Tap a road on the map below to start drawing your route.</b>{" "}
+                Press again to make a line connecting to the one before. Please
+                refrain from going off-road.
               </FieldDescription>
               <FieldLabel
                 className={"text-sm w-s"}
@@ -597,6 +603,17 @@ function HazardForm() {
                 readonly
               />
             )}
+            <DatePickerInput
+              label="Expiry Date (optional)"
+              desc="The expiry for hazard pins are set to 3 days from now by default"
+              idField="HazardPin_ExpiryField"
+              idBtn="HazardPin_ExpiryCalendarField"
+              onChange={(val) => setExpiry(val)}
+              value={expiry}
+              readonly={!id || isEditable ? false : true}
+              edit={!id || isEditable}
+              clearDate={!id}
+            />
             {id ? (
               <>
                 <p className="italic" style={{ color: colors.label }}>
@@ -655,6 +672,7 @@ function HazardForm() {
                           setIsEditable(false);
                           setNewRoutePoints([]);
                           setNewSnapped([]);
+                          getFloodDetails();
                         }}
                         isDisabled={disabled}
                       ></ButtonComp>

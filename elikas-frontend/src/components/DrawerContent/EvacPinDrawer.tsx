@@ -660,7 +660,7 @@ function EvacPinDrawer({
                         <Skeleton className="h-4 w-[200px] bg-[#59260B]/30" />
                       </div>
                     </div>
-                  ) : (
+                  ) : comments.length > 0 ? (
                     comments.map((comment) => (
                       <Fragment key={comment.id}>
                         <PostRow
@@ -677,6 +677,10 @@ function EvacPinDrawer({
                         />
                       </Fragment>
                     ))
+                  ) : (
+                    <p className="text-center text-sm">
+                      Add a comment to help others stay updated!
+                    </p>
                   )
                 ) : (
                   <>

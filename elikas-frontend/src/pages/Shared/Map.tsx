@@ -280,7 +280,9 @@ function Map() {
           >
             <div className="flex justify-center">
               <div className="absolute max-w-md w-full pointer-events-auto">
-                <Filter />
+                <span>
+                  <Filter />
+                </span>
               </div>
             </div>
           </div>
@@ -291,12 +293,12 @@ function Map() {
                 onClick={() => setShowLocation((prev) => !prev)}
               />
               {!admin && (
-                <div className="w-full flex flex-col items-center gap-2">
-                  <div className="bg-gray-400/40 rounded-xl h-fit w-full max-w-xs text-center p-1">
+                <div className="w-full flex flex-col items-center gap-2 ">
+                  <div className="bg-gray-400/40 rounded-xl h-fit w-4/5 text-center p-1">
                     <p className="text-sm">Press anywhere on the map</p>
                   </div>
                   <ButtonComp
-                    text="Find Evac Center"
+                    text="Find Nearest Evac Center"
                     variant="important"
                     id="Map_NearestRouteBtn"
                     onClick={handleNearestRoute}

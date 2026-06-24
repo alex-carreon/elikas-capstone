@@ -50,6 +50,7 @@ interface handleActionProps {
   media?: File | undefined;
   deleteNavigate?: string;
   setDisabled?: React.Dispatch<React.SetStateAction<boolean>>;
+  userExpiry?: Date;
 }
 
 export const handleSubmit = async ({
@@ -63,6 +64,7 @@ export const handleSubmit = async ({
   navigate,
   media,
   setDisabled,
+  userExpiry,
 }: handleActionProps) => {
   e?.preventDefault();
 
@@ -89,7 +91,7 @@ export const handleSubmit = async ({
         return;
       }
 
-      const expDate = addDays(dateTime, 3);
+      const expDate = userExpiry ?? addDays(dateTime, 3);
 
       formData.append("expiry", format(expDate, "yyyy-MM-dd"));
       routePoints.forEach((point, index) => {
@@ -107,8 +109,6 @@ export const handleSubmit = async ({
           "Content-Type": "undefined",
         },
       });
-
-      console.log(response);
 
       toast.promise(response, {
         loading: "Adding your pin to the map...",
@@ -144,12 +144,12 @@ export const handleUpdate = async ({
   routePoints,
   desc,
   floodLevel,
-  token,
   floodDetails,
   id,
   setIsEditable,
   setHasUpdated,
   setDisabled,
+  userExpiry,
 }: handleActionProps) => {
   e?.preventDefault();
 
@@ -171,30 +171,25 @@ export const handleUpdate = async ({
       return;
     }
 
+    if (!userExpiry) {
+      toast.error("Please enter an expiry date.");
+      return;
+    }
+
+    const expDate = userExpiry;
+
     const dateTime = formatInTimeZone(
-      new Date(),
+      expDate,
       "Asia/Manila",
       "MMMM dd, yyyy, h:mm a",
     );
 
-    const expDate = addDays(dateTime, 7);
-
-    console.log("Passing Update Points: ", routePoints);
-    const response = api.patch(
-      `/flood-paths/${id}`,
-      {
-        level_id: floodLevel,
-        description: desc,
-        expiry: expDate,
-        path: routePoints,
-      },
-      {
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-      },
-    );
+    const response = api.patch(`/flood-paths/${id}`, {
+      level_id: floodLevel,
+      description: desc,
+      expiry: dateTime,
+      path: routePoints,
+    });
 
     toast.promise(response, {
       loading: "Saving your updates...",
@@ -261,11 +256,7 @@ export const handleAddMedia = async ({
       formData.append("file", media);
     }
 
-    console.log("sending: ", formData);
-
     const response = api.post(`/flood-paths/${id}/media`, formData);
-
-    console.log(response);
 
     toast.promise(response, {
       loading: "Adding your photo...",
