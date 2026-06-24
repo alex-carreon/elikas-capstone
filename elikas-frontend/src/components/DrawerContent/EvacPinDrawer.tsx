@@ -7,7 +7,7 @@ import {
   ChevronDownIcon,
   ShieldCheck,
   CircleX,
-  File,
+  ImageUp,
   Camera,
   ChevronUpIcon,
   X,
@@ -734,7 +734,7 @@ function EvacPinDrawer({
                           id="Drawer_FileBtn"
                           style={{ cursor: "pointer" }}
                         >
-                          <File />
+                          <ImageUp />
                         </InputGroupAddon>
                         <InputGroupAddon
                           align="inline-end"
