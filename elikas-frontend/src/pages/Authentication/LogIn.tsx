@@ -19,6 +19,11 @@ import { toast } from "sonner";
 import api from "@/api";
 import { useUserContext } from "@/context/AuthContext";
 
+interface BeforeInstallPromptEvent extends Event {
+  prompt: () => Promise<void>;
+  userChoice: Promise<{ outcome: "accepted" | "dismissed" }>;
+}
+
 function LogIn() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
@@ -28,6 +33,8 @@ function LogIn() {
     password: "",
     general: "",
   });
+  const [deferredPrompt, setDeferredPrompt] =
+    useState<BeforeInstallPromptEvent | null>(null);
 
   const { setIsLoginReady } = useUserContext();
 
@@ -127,8 +134,46 @@ function LogIn() {
     }
   };
 
+  const handleInstallClick = async () => {
+    if (!deferredPrompt) return;
+
+    // Show the browser's installation prompt modal
+    await deferredPrompt.prompt();
+
+    // Wait for the user to accept or dismiss the prompt
+    const { outcome } = await deferredPrompt.userChoice;
+    console.log(`User response to install banner: ${outcome}`);
+
+    // Clean up the saved prompt variable (it can only be used once)
+    setDeferredPrompt(null);
+  };
+
   useEffect(() => {
-    localStorage.clear();
+    const handleBeforeInstallPrompt = (e: Event) => {
+      e.preventDefault();
+      setDeferredPrompt(e as BeforeInstallPromptEvent);
+    };
+
+    window.addEventListener("beforeinstallprompt", handleBeforeInstallPrompt);
+
+    return () => {
+      window.removeEventListener(
+        "beforeinstallprompt",
+        handleBeforeInstallPrompt,
+      );
+    };
+  }, []);
+
+  useEffect(() => {
+    localStorage.removeItem("last_name");
+    localStorage.removeItem("first_name");
+    localStorage.removeItem("email");
+    localStorage.removeItem("brgy");
+    localStorage.removeItem("pw");
+    localStorage.removeItem("city");
+    localStorage.removeItem("contact");
+    localStorage.removeItem("username");
+    localStorage.removeItem("avatarSeed");
   }, []);
 
   return (
@@ -234,6 +279,16 @@ function LogIn() {
                   widthSize="100%"
                 ></ButtonComp>
               </Link>
+              <ButtonComp
+                text="Download the app!"
+                variant="important"
+                type="button"
+                id="LogIn_DownloadBtn"
+                heightSize="38px"
+                widthSize="100%"
+                onClick={() => handleInstallClick()}
+                isDisabled={!deferredPrompt}
+              ></ButtonComp>
             </div>
           </form>
           <div className="flex justify-start flex-col content-center mx-auto text-sm gap-3 mt-24">

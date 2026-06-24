@@ -38,7 +38,7 @@ function Map() {
   >({});
   const [decidedCount, setDecidedCount] = useState(0);
   const [dismissed, setDismissed] = useState(false);
-  const [showDownload, setShowDownload] = useState<boolean>();
+  const [showDownload, setShowDownload] = useState(true);
   const [deferredPrompt, setDeferredPrompt] =
     useState<BeforeInstallPromptEvent | null>(null);
   const openDialog = useRef(false);
@@ -162,10 +162,22 @@ function Map() {
     const { outcome } = await deferredPrompt.userChoice;
     console.log(`User response to install banner: ${outcome}`);
 
-    // Clean up the saved prompt variable (it can only be used once)
     setDeferredPrompt(null);
     setShowDownload(false);
   };
+
+  useEffect(() => {
+    const handleBeforeInstallPrompt = (e: Event) => {
+      e.preventDefault();
+      setDeferredPrompt(e as BeforeInstallPromptEvent);
+    };
+    window.addEventListener("beforeinstallprompt", handleBeforeInstallPrompt);
+    return () =>
+      window.removeEventListener(
+        "beforeinstallprompt",
+        handleBeforeInstallPrompt,
+      );
+  }, []);
 
   useEffect(() => {
     if (!role) return;
@@ -173,24 +185,6 @@ function Map() {
 
     openDialog.current = true;
     getFloodExpired();
-  }, [role]);
-
-  useEffect(() => {
-    if (role) return;
-    const handleBeforeInstallPrompt = (e: Event) => {
-      e.preventDefault();
-      setDeferredPrompt(e as BeforeInstallPromptEvent);
-      setShowDownload(true);
-    };
-
-    window.addEventListener("beforeinstallprompt", handleBeforeInstallPrompt);
-
-    return () => {
-      window.removeEventListener(
-        "beforeinstallprompt",
-        handleBeforeInstallPrompt,
-      );
-    };
   }, [role]);
 
   useEffect(() => {
@@ -215,6 +209,7 @@ function Map() {
           actionId="Map_CloseDLDialog"
           onClick={() => {
             handleInstallClick();
+            setShowDownload(false);
           }}
         ></AlertDialogue>
       )}
