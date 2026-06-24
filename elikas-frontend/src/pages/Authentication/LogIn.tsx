@@ -128,7 +128,15 @@ function LogIn() {
   };
 
   useEffect(() => {
-    localStorage.clear();
+    localStorage.removeItem("last_name");
+    localStorage.removeItem("first_name");
+    localStorage.removeItem("email");
+    localStorage.removeItem("brgy");
+    localStorage.removeItem("pw");
+    localStorage.removeItem("city");
+    localStorage.removeItem("contact");
+    localStorage.removeItem("username");
+    localStorage.removeItem("avatarSeed");
   }, []);
 
   return (

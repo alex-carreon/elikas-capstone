@@ -9,9 +9,13 @@ import { UserCircle, Star, Text } from "lucide-react";
 import { Separator } from "@/components/ui/separator";
 import { toast } from "sonner";
 import { useState } from "react";
+import { useInstall } from "@/context/InstallContext";
 
 function Settings() {
   const [disabled, setDisabled] = useState(false);
+
+  const { canInstall, triggerInstall } = useInstall();
+  const showDownload = canInstall;
 
   const handleLogout = async () => {
     try {
@@ -90,16 +94,27 @@ function Settings() {
             </div>
           </Link>
         </div>
-        <div className="h-full flex justify-center items-end">
-          <ButtonComp
-            text="Logout"
-            variant="primary"
-            id="Settings_LogOutBtn"
-            onClick={handleLogout}
-            heightSize="38px"
-            widthSize="100%"
-            isDisabled={disabled}
-          ></ButtonComp>
+        <div className="h-full flex items-end">
+          <div className="w-full flex flex-col gap-2 items-center">
+            <ButtonComp
+              text="Logout"
+              variant="primary"
+              id="Settings_LogOutBtn"
+              onClick={handleLogout}
+              heightSize="38px"
+              widthSize="100%"
+              isDisabled={disabled}
+            ></ButtonComp>
+            <ButtonComp
+              text="Download the App!"
+              variant="important"
+              id="Settings_DownloadBtn"
+              onClick={() => triggerInstall()}
+              heightSize="38px"
+              widthSize="100%"
+              isDisabled={!showDownload}
+            ></ButtonComp>
+          </div>
         </div>
       </div>
     </div>
