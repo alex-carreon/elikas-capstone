@@ -153,6 +153,8 @@ function EvacPin() {
   const { role } = useUserContext();
   const { id } = useParams();
 
+  const contactValidate = /^09\d{9}$/;
+
   const defaultExpiry = addDays(new Date(), 7);
 
   useEffect(() => {
@@ -381,6 +383,10 @@ function EvacPin() {
       return;
     }
 
+    if (!contactValidate.test(contactNumber)) {
+      toast.error("Invalid Contact Number.");
+    }
+
     const formData = new FormData();
 
     const expDate = expiry ?? addDays(new Date(), 7);
@@ -482,6 +488,10 @@ function EvacPin() {
       !contactNumber
     ) {
       toast.error("Please fill in the required fields marked with an *.");
+    }
+
+    if (!contactValidate.test(contactNumber)) {
+      toast.error("Invalid Contact Number.");
     }
 
     handleUpdate({

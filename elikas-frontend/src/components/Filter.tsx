@@ -27,10 +27,12 @@ function Filter() {
       onOpenChange={setIsOpen}
       className="fixed w-full max-w-md z-1"
     >
-      <div className="flex items-center justify-end m-4">
+      <div className="flex items-center justify-end mx-4 mt-4 mb-2">
         <CollapsibleTrigger id="Map_FilterTrigger">
-          <div className="size-8 bg-white rounded-md flex items-center justify-center cursor-pointer hover:bg-gray-100">
-            <ListFilterIcon strokeWidth={3} />
+          <div className="w-fit p-1 px-5 bg-white shadow-xl rounded-2xl flex items-center justify-center cursor-pointer hover:bg-gray-100">
+            <span className="flex gap-2 items-center text-sm font-medium">
+              <ListFilterIcon size={14} strokeWidth={2} /> Filter
+            </span>
           </div>
         </CollapsibleTrigger>
       </div>

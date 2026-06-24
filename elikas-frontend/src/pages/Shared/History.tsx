@@ -91,10 +91,14 @@ function History() {
   const [isEvac, setIsEvac] = useState<boolean>();
   const [isSensors, setIsSensors] = useState<boolean>();
   const [sensors, setSensors] = useState<SensorsDetails[]>([]);
-  const [evacPins, setEvacPins] = useState<myEvacPins[]>([]);
+  const [activeEvacPins, setActiveEvacPins] = useState<myEvacPins[]>([]);
+  const [inactiveEvacPins, setInactiveEvacPins] = useState<myEvacPins[]>([]);
   const [activeEvac, setActiveEvac] = useState<boolean>();
   const [activeHaz, setActiveHaz] = useState<boolean>();
-  const [floodPaths, setFloodPaths] = useState<myFloodPaths[]>([]);
+  const [activeFloodPaths, setActiveFloodPaths] = useState<myFloodPaths[]>([]);
+  const [inactiveFloodPaths, setInactiveFloodPaths] = useState<myFloodPaths[]>(
+    [],
+  );
   const [loading, setLoading] = useState(false);
   const [status, setStatus] = useState<"Inactive" | "Active" | null>();
   const [red, setRed] = useState(false);
@@ -140,8 +144,16 @@ function History() {
 
       console.log(response);
 
-      const myEvacs = await response.data.pins;
-      setEvacPins(myEvacs);
+      const activeEvacs = await response.data.pins.filter(
+        (pin: myEvacPins) => !pin.is_deactivated && !pin.is_expired,
+      );
+
+      const inactiveEvacs = await response.data.pins.filter(
+        (pin: myEvacPins) => pin.is_deactivated || pin.is_expired,
+      );
+
+      setInactiveEvacPins(inactiveEvacs);
+      setActiveEvacPins(activeEvacs);
     } catch (err: any) {
       if (err.name === "CanceledError") {
         return;
@@ -166,8 +178,17 @@ function History() {
       const endpointHazard = `/flood-paths/my${parameters ? `?${parameters}` : ""}`;
 
       const response = await api.get(endpointHazard, { signal });
-      const myHazards = await response.data.flood_paths;
-      setFloodPaths(myHazards);
+
+      const activeHazardPins = await response.data.pins.filter(
+        (pin: myFloodPaths) => !pin.is_expired && !pin.is_deactivated,
+      );
+
+      const inactiveHazardPins = await response.data.pins.filter(
+        (pin: myFloodPaths) => pin.is_deactivated || pin.is_expired,
+      );
+
+      setActiveFloodPaths(activeHazardPins);
+      setInactiveFloodPaths(inactiveHazardPins);
     } catch (err: any) {
       if (err.name === "CanceledError") {
         return;
@@ -739,135 +760,133 @@ function History() {
             </div>
             <div className="flex flex-col gap-2 overflow-y-auto max-h-screen">
               {isEvac ? (
-                evacPins.length > 0 ? (
-                  activeEvac ? (
-                    evacPins.map((pins) => {
-                      if (!pins.is_expired && !pins.deactivated_at) {
-                        return (
-                          <Row
-                            title={pins.name}
-                            address={pins.address}
-                            datePosted={pins.posted_at}
-                            link={`/EvacForm/${pins.id}`}
-                            isExpired={pins.is_expired}
-                            buttonId="History_ActiveEvacDetailsBtn"
-                            showBtn
-                          ></Row>
-                        );
-                      }
+                activeEvac ? (
+                  activeEvacPins.length > 0 ? (
+                    activeEvacPins.map((pins) => {
+                      return (
+                        <Row
+                          title={pins.name}
+                          address={pins.address}
+                          datePosted={pins.posted_at}
+                          link={`/EvacForm/${pins.id}`}
+                          isExpired={pins.is_expired}
+                          buttonId="History_ActiveEvacDetailsBtn"
+                          showBtn
+                        ></Row>
+                      );
                     })
                   ) : (
-                    evacPins.map((pins) => {
-                      if (pins.is_expired) {
-                        return (
-                          <Row
-                            title={pins.name}
-                            address={pins.address}
-                            datePosted={pins.posted_at}
-                            link={`/EvacForm/${pins.id}`}
-                            isExpired={pins.is_expired}
-                            buttonId="History_ExpiredEvacDetailsBtn"
-                            showBtn
-                          />
-                        );
-                      }
-                    })
+                    <p className="text-center">
+                      You don't have active evacuation pins. Mark one on the
+                      map!
+                    </p>
                   )
+                ) : inactiveEvacPins.length > 0 ? (
+                  inactiveEvacPins.map((pins) => {
+                    return (
+                      <Row
+                        title={pins.name}
+                        address={pins.address}
+                        datePosted={pins.posted_at}
+                        link={`/EvacForm/${pins.id}`}
+                        isExpired={pins.is_expired}
+                        buttonId="History_ExpiredEvacDetailsBtn"
+                        showBtn
+                      />
+                    );
+                  })
                 ) : (
                   <p className="text-center">
-                    Mark an Evacuation Center on the map to get started!
+                    You don't have active hazard pins. Mark one on the map!
                   </p>
                 )
               ) : isSensors ? (
-                sensors.map((pins) => {
-                  return (
-                    <Row
-                      postId={String(pins.sensorCode)}
-                      title={pins.name}
-                      desc={`Status: ${pins.currentStatus}`}
-                      address={`${pins.address}`}
-                      datePosted={pins.lastOnline}
-                      link={`/SensorForm/${pins.id}`}
-                      // isExpired={pins.deactivatedAt}
-                      buttonId="History_ExpiredEvacDetailsBtn"
-                      showBtn
-                    >
-                      <div className="flex flex-row gap-2">
-                        <div
-                          className={`mt-2 px-2 py-1 rounded-3xl ${pins.deactivatedAt ? "bg-gray-500/30" : "bg-green-700/60"} w-fit text-sm`}
-                        >
-                          {pins.deactivatedAt ? "Inactive" : "Active"}
+                sensors.length > 0 ? (
+                  sensors.map((pins) => {
+                    return (
+                      <Row
+                        postId={String(pins.sensorCode)}
+                        title={pins.name}
+                        desc={`Status: ${pins.currentStatus}`}
+                        address={`${pins.address}`}
+                        datePosted={pins.lastOnline}
+                        link={`/SensorForm/${pins.id}`}
+                        buttonId="History_ExpiredEvacDetailsBtn"
+                        showBtn
+                      >
+                        <div className="flex flex-row gap-2">
+                          <div
+                            className={`mt-2 px-2 py-1 rounded-3xl ${pins.deactivatedAt ? "bg-gray-500/30" : "bg-green-700/60"} w-fit text-sm`}
+                          >
+                            {pins.deactivatedAt ? "Inactive" : "Active"}
+                          </div>
+                          {!pins.deactivatedAt && (
+                            <div
+                              className={`mt-2 px-2 py-1 rounded-3xl ${pins.currentStatus == "normal" ? "bg-green-700/60" : pins.currentStatus == "yellow" ? "bg-yellow-700/60" : pins.currentStatus == "orange" ? "bg-amber-700/60" : pins.currentStatus == "red" ? "bg-red-700/60" : "bg-gray-500/30"} w-fit text-sm`}
+                            >
+                              {pins.currentStatus
+                                ? pins.currentStatus
+                                : "No Level Detected"}
+                            </div>
+                          )}
                         </div>
-                        {!pins.deactivatedAt && (
-                          <div
-                            className={`mt-2 px-2 py-1 rounded-3xl ${pins.currentStatus == "normal" ? "bg-green-700/60" : pins.currentStatus == "yellow" ? "bg-yellow-700/60" : pins.currentStatus == "orange" ? "bg-amber-700/60" : pins.currentStatus == "red" ? "bg-red-700/60" : "bg-gray-500/30"} w-fit text-sm`}
-                          >
-                            {pins.currentStatus
-                              ? pins.currentStatus
-                              : "No Level Detected"}
-                          </div>
-                        )}
-                      </div>
-                    </Row>
-                  );
-                })
-              ) : floodPaths.length > 0 ? (
-                activeHaz ? (
-                  floodPaths.map((path) => {
-                    if (!path.is_expired)
-                      return (
-                        <Row
-                          title="Flood"
-                          desc={path.level}
-                          address={path.description}
-                          datePosted={path.last_confirmed}
-                          link={`/HazardForm/${path.id}`}
-                          isExpired={path.is_expired}
-                          buttonId="History_ActiveHazardDetailsBtn"
-                          showBtn
-                        >
-                          <div
-                            className={`mt-2 px-2 py-1 rounded-3xl w-fit text-sm`}
-                            style={{
-                              backgroundColor:
-                                path.level === "Gutter" ||
-                                path.level === "Half Knee"
-                                  ? colorHazard.lightBlue
-                                  : path.level === "Half Tire" ||
-                                      path.level === "Knee"
-                                    ? colorHazard.darkBlue
-                                    : path.level === "Tire" ||
-                                        path.level === "Waist" ||
-                                        path.level === "chest"
-                                      ? colorHazard.red
-                                      : colorHazard.fallback,
-                            }}
-                          >
-                            {path.level}
-                          </div>
-                        </Row>
-                      );
+                      </Row>
+                    );
                   })
                 ) : (
-                  floodPaths.map((path) => {
-                    if (path.is_expired)
-                      return (
-                        <Row
-                          title="Flood"
-                          desc={path.level}
-                          address={path.description}
-                          datePosted={path.last_confirmed}
-                          link="/HazardForm"
-                          isExpired={path.is_expired}
-                          buttonId="History_ExpHazardDetailsBtn"
-                        />
-                      );
-                  })
+                  <p className="text-center">No registered sensors.</p>
                 )
+              ) : activeHaz ? (
+                activeFloodPaths.map((path) => {
+                  if (!path.is_expired)
+                    return (
+                      <Row
+                        title="Flood"
+                        desc={path.level}
+                        address={path.description}
+                        datePosted={path.last_confirmed}
+                        link={`/HazardForm/${path.id}`}
+                        isExpired={path.is_expired}
+                        buttonId="History_ActiveHazardDetailsBtn"
+                        showBtn
+                      >
+                        <div
+                          className={`mt-2 px-2 py-1 rounded-3xl w-fit text-sm`}
+                          style={{
+                            backgroundColor:
+                              path.level === "Gutter" ||
+                              path.level === "Half Knee"
+                                ? colorHazard.lightBlue
+                                : path.level === "Half Tire" ||
+                                    path.level === "Knee"
+                                  ? colorHazard.darkBlue
+                                  : path.level === "Tire" ||
+                                      path.level === "Waist" ||
+                                      path.level === "chest"
+                                    ? colorHazard.red
+                                    : colorHazard.fallback,
+                          }}
+                        >
+                          {path.level}
+                        </div>
+                      </Row>
+                    );
+                })
               ) : (
-                <p className="text-center">
-                  Mark a Hazard Pin on the map to get started!
-                </p>
+                inactiveFloodPaths.map((path) => {
+                  if (path.is_expired)
+                    return (
+                      <Row
+                        title="Flood"
+                        desc={path.level}
+                        address={path.description}
+                        datePosted={path.last_confirmed}
+                        link="/HazardForm"
+                        isExpired={path.is_expired}
+                        buttonId="History_ExpHazardDetailsBtn"
+                      />
+                    );
+                })
               )}
             </div>
           </>
