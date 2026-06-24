@@ -13,6 +13,7 @@ import api from "@/api";
 import { Separator } from "@/components/ui/separator";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
+import { useInstall } from "@/context/InstallContext";
 
 type pathReminder = {
   floodpath_id: number;
@@ -20,11 +21,6 @@ type pathReminder = {
   message: string;
   expiry: string;
 };
-
-interface BeforeInstallPromptEvent extends Event {
-  prompt: () => Promise<void>;
-  userChoice: Promise<{ outcome: "accepted" | "dismissed" }>;
-}
 
 function Map() {
   const [locationFound, setLocationFound] = useState(false);
@@ -38,9 +34,6 @@ function Map() {
   >({});
   const [decidedCount, setDecidedCount] = useState(0);
   const [dismissed, setDismissed] = useState(false);
-  const [showDownload, setShowDownload] = useState(true);
-  const [deferredPrompt, setDeferredPrompt] =
-    useState<BeforeInstallPromptEvent | null>(null);
   const openDialog = useRef(false);
 
   const philippinesBounds: LatLngBoundsExpression = [
@@ -53,6 +46,9 @@ function Map() {
   // let authorized = false;
   let admin = false;
   const { role } = useUserContext();
+
+  const { canInstall, triggerInstall } = useInstall();
+  const showDownload = canInstall && !role;
 
   const getFloodExpired = async () => {
     try {
@@ -152,33 +148,6 @@ function Map() {
     setDecidedCount(+1);
   };
 
-  const handleInstallClick = async () => {
-    if (!deferredPrompt) return;
-
-    // Show the browser's installation prompt modal
-    await deferredPrompt.prompt();
-
-    // Wait for the user to accept or dismiss the prompt
-    const { outcome } = await deferredPrompt.userChoice;
-    console.log(`User response to install banner: ${outcome}`);
-
-    setDeferredPrompt(null);
-    setShowDownload(false);
-  };
-
-  useEffect(() => {
-    const handleBeforeInstallPrompt = (e: Event) => {
-      e.preventDefault();
-      setDeferredPrompt(e as BeforeInstallPromptEvent);
-    };
-    window.addEventListener("beforeinstallprompt", handleBeforeInstallPrompt);
-    return () =>
-      window.removeEventListener(
-        "beforeinstallprompt",
-        handleBeforeInstallPrompt,
-      );
-  }, []);
-
   useEffect(() => {
     if (!role) return;
     if (openDialog.current) return;
@@ -208,8 +177,7 @@ function Map() {
           contentId="Map_DLDialogContent"
           actionId="Map_CloseDLDialog"
           onClick={() => {
-            handleInstallClick();
-            setShowDownload(false);
+            triggerInstall();
           }}
         ></AlertDialogue>
       )}
