@@ -211,7 +211,7 @@ class SMSController extends Controller
     {
         try {
             $validated = $request->validate([
-                'message_content' => 'required|string|max:600',
+                'message_content' => 'required|string',
                 'scheduled_for'   => 'nullable|date|after_or_equal:now',
             ]);
 
@@ -368,8 +368,8 @@ class SMSController extends Controller
     {
         try {
             $validated = $request->validate([
-                'template_name'   => 'required|string|max:255',
-                'message_content' => 'required|string|max:600',
+                'template_name'   => 'required|string|max:50',
+                'message_content' => 'required|string',
             ]);
 
             $govOp = $this->resolveGovOp($request);

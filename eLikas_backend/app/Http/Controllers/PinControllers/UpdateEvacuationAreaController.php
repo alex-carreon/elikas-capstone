@@ -17,8 +17,8 @@ class UpdateEvacuationAreaController extends Controller
             $roleId = $user?->role_id;
 
             $request->validate([
-                'name'               => 'nullable|string|max:255',
-                'address'            => 'nullable|string|max:255',
+                'name'               => 'nullable|string|max:50',
+                'address'            => 'nullable|string',
                 'lat'                => 'nullable|numeric|between:-90,90',
                 'lng'                => 'nullable|numeric|between:-180,180',
                 'location_id'        => 'nullable|integer|exists:Locations,id',
@@ -38,8 +38,8 @@ class UpdateEvacuationAreaController extends Controller
                 'child_prayer_count' => 'nullable|integer|min:0',
                 'breastfeed_count'   => 'nullable|integer|min:0',
                 'other_facilities'   => 'nullable|string',
-                'contact_person'     => 'nullable|string|max:255',
-                'contact_number'     => 'nullable|string|max:20',
+                'contact_person'     => 'nullable|string|max:100',
+                'contact_number'     => 'nullable|string|max:15',
                 'expiry'             => 'nullable|date|after:now',
             ]);
 
