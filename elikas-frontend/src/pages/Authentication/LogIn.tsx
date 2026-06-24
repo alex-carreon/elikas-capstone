@@ -18,6 +18,7 @@ import {
 import { toast } from "sonner";
 import api from "@/api";
 import { useUserContext } from "@/context/AuthContext";
+import { useInstall } from "@/context/InstallContext";
 
 function LogIn() {
   const [email, setEmail] = useState("");
@@ -30,6 +31,9 @@ function LogIn() {
   });
 
   const { setIsLoginReady } = useUserContext();
+
+  const { canInstall, triggerInstall } = useInstall();
+  const showDownload = canInstall;
 
   const handleVerify = (e: React.FormEvent) => {
     e.preventDefault();
@@ -242,6 +246,15 @@ function LogIn() {
                   widthSize="100%"
                 ></ButtonComp>
               </Link>
+              <ButtonComp
+                text="Download the App!"
+                variant="important"
+                id="Settings_DownloadBtn"
+                onClick={() => triggerInstall()}
+                heightSize="38px"
+                widthSize="100%"
+                isDisabled={!showDownload}
+              ></ButtonComp>
             </div>
           </form>
           <div className="flex justify-start flex-col content-center mx-auto text-sm gap-3 mt-24">
