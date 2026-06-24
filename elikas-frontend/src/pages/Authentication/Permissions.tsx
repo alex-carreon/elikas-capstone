@@ -80,32 +80,36 @@ function Permissions() {
       response.then(() => {
         navigate("/Registration/Verify");
       });
-      setDisabled(false);
     } catch (err: string | any) {
       console.error("Firebase error message:", err.message);
       setDisabled(false);
 
       const firebaseUser = auth.currentUser;
       if (firebaseUser) {
-        try {
-          await firebaseUser.delete();
-          setDisabled(false);
-        } catch (deleteErr: any) {
-          await auth.signOut();
-          setDisabled(false);
-        }
+        await firebaseUser.delete();
+
+        // try {
+        //   setDisabled(false);
+        // } catch (deleteErr: any) {
+        //   await auth.signOut();
+        //   setDisabled(false);
+        // }
         if (
           err.response?.data?.message === "The username has already been taken."
         ) {
           toast.error("This username has already been taken.");
           setDisabled(false);
+          return;
         } else {
           toast.error("Registration failed. Please try again.");
           navigate("/Login");
+          return;
         }
-      } else if (err.code === "auth/email-already-in-use") {
+      }
+      if (err.code === "auth/email-already-in-use") {
         toast.error("This email is already in use.");
         setDisabled(false);
+        return;
       } else {
         toast.error("Registration failed. Please try again.");
         navigate("/Login");
@@ -119,13 +123,17 @@ function Permissions() {
 
       if (err.code === "auth/email-already-in-use") {
         toast.error("The email you used is already registered.");
+        return;
       }
 
       if ((err.message = "The username has already been taken.")) {
         toast.error("Username has been taken.");
+        return;
       }
 
       setToForm(true);
+    } finally {
+      setDisabled(false);
     }
   };
 
