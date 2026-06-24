@@ -54,7 +54,7 @@ function HotlineRow({
 
   return (
     <Fragment key={id}>
-      <div className="">
+      <div className="w-full max-w-sm">
         <p className="italic text-xs">Last Update: {lastUpdate}</p>
         <div className="bg-[#FFE6A9] p-4 rounded-xl shadow-xl border-solid border-1 border-amber-300 flex flex-col gap-2">
           <div className="flex flex-row justify-between gap-2">

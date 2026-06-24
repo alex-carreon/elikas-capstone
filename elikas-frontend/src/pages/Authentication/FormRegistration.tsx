@@ -132,6 +132,10 @@ function FormRegistration() {
         );
       }
 
+      if (pwHasWhiteSpace(pw)) {
+        throw new Error("Password should not have any spaces.");
+      }
+
       localStorage.setItem("last_name", last_name);
       localStorage.setItem("first_name", first_name);
       localStorage.setItem("email", email);
@@ -163,6 +167,11 @@ function FormRegistration() {
     return /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^A-Za-z0-9]).{8,}$/.test(
       password,
     );
+  };
+
+  const pwHasWhiteSpace = (password: string) => {
+    console.log(/\s/.test(password));
+    return /\s/.test(password);
   };
 
   return (
@@ -253,7 +262,6 @@ function FormRegistration() {
               isPassword
               id="RegisForm_PWfield"
               isRequired
-              value={pw}
               onSubmit={(e) => setPw(e.target.value)}
               error={errors.pw}
             />

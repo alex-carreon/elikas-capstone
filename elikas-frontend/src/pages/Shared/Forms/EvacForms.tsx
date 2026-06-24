@@ -101,6 +101,7 @@ function EvacPin() {
   const [capacity, setCapacity] = useState("");
   const [capacityLevels, setCapacityLevels] = useState<CapacityLevel[]>([]);
   const [address, setAddress] = useState("");
+  const [latLng, setLatLng] = useState<[number, number]>();
   const [isPersistent, setIsPersistent] = useState(false);
   const [other, setOther] = useState("");
   const [contactPerson, setContactPerson] = useState("");
@@ -136,6 +137,8 @@ function EvacPin() {
   const [isFull, setIsFull] = useState(false);
   const [willOpen, setWillOpen] = useState(false);
   const [disabled, setDisabled] = useState(false);
+  const [typeLoad, setTypeLoad] = useState(false);
+  const [capLoad, setCapLoad] = useState(false);
 
   const location = useLocation();
   const navigate = useNavigate();
@@ -205,6 +208,7 @@ function EvacPin() {
       setPinName(evacDetails.name);
       setDesc(evacDetails.description);
       setAddress(evacDetails.address);
+      setLatLng(evacDetails.coordinates);
       setCapacity(String(evacDetails.capacity_level));
       setIsFull(evacDetails.capacity_name === "Full");
       setHasAccom(evacDetails.has_accom);
@@ -244,19 +248,24 @@ function EvacPin() {
 
   const getCapacityLevels = async () => {
     try {
+      setCapLoad(true);
       const response = await api.get("/capacity-levels");
       setCapacityLevels(response.data);
+      setCapLoad(false);
     } catch (error: any) {
       console.error(error.response.data);
+      setCapLoad(false);
     }
   };
 
   useEffect(() => {
     if (id) {
       getEvacDetails();
+      getCapacityLevels();
     } else if (!id) {
       const getAreaTypes = async () => {
         try {
+          setTypeLoad(true);
           const response = await api.get("/evac-types");
           setEvacTypes(response.data);
 
@@ -264,8 +273,11 @@ function EvacPin() {
             console.log("Failed to fetch evac types");
             return;
           }
+
+          setTypeLoad(false);
         } catch (error: any) {
           console.error(error.response.data);
+          setTypeLoad(false);
         }
       };
 
@@ -275,15 +287,11 @@ function EvacPin() {
   }, [hasUpdated]);
 
   useEffect(() => {
-    if (willOpen) {
-      getCapacityLevels();
-    }
-  }, [willOpen]);
-
-  useEffect(() => {
     if (isEditable) {
       const getAreaTypes = async () => {
         try {
+          setTypeLoad(true);
+
           const response = await api.get("/evac-types");
           setEvacTypes(response.data);
 
@@ -291,17 +299,23 @@ function EvacPin() {
             console.log("Failed to fetch evac types");
             return;
           }
+
+          setTypeLoad(false);
         } catch (error: any) {
           console.error(error.response.data);
+          setTypeLoad(false);
         }
       };
 
       const getCapacityLevels = async () => {
         try {
+          setCapLoad(true);
           const response = await api.get("/capacity-levels");
           setCapacityLevels(response.data);
+          setCapLoad(false);
         } catch (error: any) {
           console.error(error.response.data);
+          setCapLoad(false);
         }
       };
 
@@ -359,6 +373,34 @@ function EvacPin() {
       !contactNumber
     ) {
       toast.error("Please fill in the required fields marked with an *.");
+    }
+
+    if (hasToilet) {
+      if (!toilet || toilet == "") {
+        toast.error("Please fill in the toilet count.");
+        return;
+      }
+    }
+
+    if (hasKitchen) {
+      if (!kitchen || kitchen == "") {
+        toast.error("Please fill in the kitchen count.");
+        return;
+      }
+    }
+
+    if (hasChildPrayer) {
+      if (!childPrayer || childPrayer == "") {
+        toast.error("Please fill in the child/prayer area count.");
+        return;
+      }
+    }
+
+    if (hasBreastfeed) {
+      if (!breastfeed || breastfeed == "") {
+        toast.error("Please fill in breastfeedubg area count.");
+        return;
+      }
     }
 
     formData.append("name", pinName);
@@ -478,9 +520,13 @@ function EvacPin() {
       // if not full, mark as full using the Full level id
       const newCapacityLevel = isFull ? Number(capacity) : fullLevel;
 
+      console.log(newCapacityLevel);
+
       const response = api.put(`/pins/${id}`, {
         capacity_level: newCapacityLevel,
       });
+
+      console.log(response);
 
       toast.promise(response, {
         loading: isFull ? "Marking as open..." : "Marking as full...",
@@ -493,9 +539,9 @@ function EvacPin() {
         getEvacDetails();
         setIsFull(!isFull);
       });
-      setDisabled(false);
     } catch (err: any) {
       console.log(err.response.data);
+    } finally {
       setDisabled(false);
     }
   };
@@ -579,6 +625,7 @@ function EvacPin() {
                 value: String(level.id),
               }))}
             isRequired
+            loading={capLoad}
           />
         </AlertDialogue>
       )}
@@ -597,7 +644,8 @@ function EvacPin() {
               className="text-align italic text-sm"
               style={{ color: colors.label }}
             >
-              Help others find safe temporary shelter.
+              Help others find safe temporary shelter. All marked with an * are
+              required fields.
             </p>
           )}
         </div>
@@ -644,7 +692,7 @@ function EvacPin() {
               {!id ? (
                 <>
                   <TextField
-                    label="Location Image"
+                    label="Location Image (optional)"
                     inputType="file"
                     id="EvacPin_PhotoField"
                     onSubmit={fileOnChange}
@@ -683,6 +731,7 @@ function EvacPin() {
                   value: type.id.toString(),
                 }))}
                 isRequired
+                loading={typeLoad}
               />
             ) : (
               <TextField
@@ -738,7 +787,7 @@ function EvacPin() {
                 Map Location
               </FieldLabel>
               <MapContainer
-                center={center}
+                center={latLng ? latLng : center}
                 zoom={17}
                 scrollWheelZoom={false}
                 style={{ height: "30vh", width: "100%" }}
@@ -748,20 +797,20 @@ function EvacPin() {
                   attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
                   url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
                 />
-                <MapClickHandler onPinClick={() => {}} clickedLoc={center} />
+                <MapClickHandler onPinClick={() => {}} clickedLoc={latLng} />
               </MapContainer>
               {id && <p className="text-sm">{address}</p>}
               {!id || isEditable ? (
                 <>
                   <TextField
-                    label="Block and Lot"
+                    label="Block and Lot (optional)"
                     placeholder="Blk # Lot #"
                     id="EvacPin_BlkLotField"
                     inputType="text"
                     onSubmit={(e) => setBlkLot(e.target.value)}
                   ></TextField>
                   <TextField
-                    label="House Number"
+                    label="House Number (optional)"
                     placeholder="i.e. 111"
                     id="EvacPin_HouseNumberField"
                     inputType="text"
@@ -962,7 +1011,7 @@ function EvacPin() {
             ></TextField>
             {role === "brgy_op" && (
               <DatePickerInput
-                label="Expiry Date"
+                label="Expiry Date (optional)"
                 idField="EvacPin_ExpiryField"
                 idBtn="EvacPin_CalendarBtn"
                 value={expiry}
@@ -975,7 +1024,7 @@ function EvacPin() {
             )}
             {role === "indiv" && (
               <DatePickerInput
-                label="Expiry Date"
+                label="Expiry Date (optional)"
                 idField="EvacPin_ExpiryField"
                 idBtn="EvacPin_CalendarBtn"
                 value={expiry}
@@ -991,7 +1040,7 @@ function EvacPin() {
                 <>
                   <div className="mx-2 flex justify-evenly shrink gap-4">
                     <ButtonComp
-                      text="Update"
+                      text="Edit"
                       id="EvacPin_UpdatePinBtn"
                       variant="primary"
                       heightSize="38px"

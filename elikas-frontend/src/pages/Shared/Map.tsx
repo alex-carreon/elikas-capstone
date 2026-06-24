@@ -21,6 +21,11 @@ type pathReminder = {
   expiry: string;
 };
 
+interface BeforeInstallPromptEvent extends Event {
+  prompt: () => Promise<void>;
+  userChoice: Promise<{ outcome: "accepted" | "dismissed" }>;
+}
+
 function Map() {
   const [locationFound, setLocationFound] = useState(false);
   const [showLocation, setShowLocation] = useState(false);
@@ -33,7 +38,9 @@ function Map() {
   >({});
   const [decidedCount, setDecidedCount] = useState(0);
   const [dismissed, setDismissed] = useState(false);
-
+  const [showDownload, setShowDownload] = useState<boolean>();
+  const [deferredPrompt, setDeferredPrompt] =
+    useState<BeforeInstallPromptEvent | null>(null);
   const openDialog = useRef(false);
 
   const philippinesBounds: LatLngBoundsExpression = [
@@ -81,6 +88,7 @@ function Map() {
       });
 
       toast.success(`Flood Path ID ${String(id)} snoozed!`);
+      setDismissed(true);
     } catch (err: any) {
       console.log(err.response.message);
     }
@@ -112,6 +120,7 @@ function Map() {
       });
 
       toast.success(`Flood Path ID ${String(id)} dismissed!`);
+      setDismissed(true);
     } catch (err: any) {
       console.log(err.response.message);
     }
@@ -143,13 +152,46 @@ function Map() {
     setDecidedCount(+1);
   };
 
+  const handleInstallClick = async () => {
+    if (!deferredPrompt) return;
+
+    // Show the browser's installation prompt modal
+    await deferredPrompt.prompt();
+
+    // Wait for the user to accept or dismiss the prompt
+    const { outcome } = await deferredPrompt.userChoice;
+    console.log(`User response to install banner: ${outcome}`);
+
+    // Clean up the saved prompt variable (it can only be used once)
+    setDeferredPrompt(null);
+    setShowDownload(false);
+  };
+
   useEffect(() => {
-    if (role) {
-      if (openDialog.current) return;
-      openDialog.current = true;
-      getFloodExpired();
-    }
-  }, []);
+    if (!role) return;
+    if (openDialog.current) return;
+
+    openDialog.current = true;
+    getFloodExpired();
+  }, [role]);
+
+  useEffect(() => {
+    if (role) return;
+    const handleBeforeInstallPrompt = (e: Event) => {
+      e.preventDefault();
+      setDeferredPrompt(e as BeforeInstallPromptEvent);
+      setShowDownload(true);
+    };
+
+    window.addEventListener("beforeinstallprompt", handleBeforeInstallPrompt);
+
+    return () => {
+      window.removeEventListener(
+        "beforeinstallprompt",
+        handleBeforeInstallPrompt,
+      );
+    };
+  }, [role]);
 
   useEffect(() => {
     if (decidedCount === reminderCount) {
@@ -163,6 +205,19 @@ function Map() {
 
   return (
     <>
+      {showDownload && (
+        <AlertDialogue
+          title="Welcome to eLikas!"
+          description='Download the app to have the full experience by clicking on "Add to Home Screen" on your browser!'
+          buttonText="Got it!"
+          open={showDownload}
+          contentId="Map_DLDialogContent"
+          actionId="Map_CloseDLDialog"
+          onClick={() => {
+            handleInstallClick();
+          }}
+        ></AlertDialogue>
+      )}
       {showReminder && (
         <AlertDialogue
           title="Reminder: Hazard Pins"
@@ -183,7 +238,7 @@ function Map() {
           }}
           disabled={dismissed}
         >
-          <div className="flex flex-col gap-2 overflow-auto h-[30vh]">
+          <div className="flex flex-col gap-2 overflow-auto h-fit max-h-[30vh]">
             {pathReminder?.map((path) => {
               const expiryDate = new Date(path.expiry);
               const now = new Date();
@@ -273,14 +328,19 @@ function Map() {
                 onClick={() => setShowLocation((prev) => !prev)}
               />
               {!admin && (
-                <ButtonComp
-                  text="Find Evac Center"
-                  variant="important"
-                  id="Map_NearestRouteBtn"
-                  onClick={handleNearestRoute}
-                  widthSize="90%"
-                  heightSize="50px"
-                />
+                <div className="w-full flex flex-col items-center gap-2">
+                  <div className="bg-gray-400/40 rounded-xl h-fit w-full max-w-xs text-center p-1">
+                    <p className="text-sm">Press anywhere on the map</p>
+                  </div>
+                  <ButtonComp
+                    text="Find Evac Center"
+                    variant="important"
+                    id="Map_NearestRouteBtn"
+                    onClick={handleNearestRoute}
+                    widthSize="90%"
+                    heightSize="50px"
+                  />
+                </div>
               )}
             </div>
           </div>

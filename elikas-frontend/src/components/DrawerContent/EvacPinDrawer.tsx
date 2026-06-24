@@ -52,6 +52,7 @@ import { format } from "date-fns";
 import { Spinner } from "../ui/spinner";
 import brgyProfile from "@/assets/brgyProfile.svg";
 import adminProfile from "@/assets/adminProfile.svg";
+import { Link } from "react-router";
 
 type CommentType = {
   id: number;
@@ -541,13 +542,13 @@ function EvacPinDrawer({
                 <b>Point Person</b>: {evacPinDetails?.contact_person} -{" "}
                 {evacPinDetails?.contact_number}
               </li>
-              <li>
-                {evacPinDetails?.description && (
+              {evacPinDetails?.description && (
+                <li>
                   <>
                     <b>Description</b>: {evacPinDetails?.description}
                   </>
-                )}
-              </li>
+                </li>
+              )}
             </ul>
           </div>
         </DrawerHeader>
@@ -650,116 +651,142 @@ function EvacPinDrawer({
                 </p>
               </div>
               <div className="flex flex-col gap-2 mb-4 mt-4 pb-16 px-4">
-                {commentsLoad ? (
-                  <div className="h-full w-full flex items-center gap-4">
-                    <Skeleton className="h-12 w-12 rounded-full bg-[#59260B]/30" />
-                    <div className="w-full space-y-2 items-start justify-center">
-                      <Skeleton className="h-4 w-full bg-[#59260B]/30" />
-                      <Skeleton className="h-4 w-[200px] bg-[#59260B]/30" />
+                {role ? (
+                  commentsLoad ? (
+                    <div className="h-full w-full flex items-center gap-4">
+                      <Skeleton className="h-12 w-12 rounded-full bg-[#59260B]/30" />
+                      <div className="w-full space-y-2 items-start justify-center">
+                        <Skeleton className="h-4 w-full bg-[#59260B]/30" />
+                        <Skeleton className="h-4 w-[200px] bg-[#59260B]/30" />
+                      </div>
                     </div>
-                  </div>
+                  ) : (
+                    comments.map((comment) => (
+                      <Fragment key={comment.id}>
+                        <PostRow
+                          id={comment.id}
+                          username={comment.posted_by.username}
+                          timePosted={convertDateTime(comment.posted_at)}
+                          description={comment.content}
+                          locationVerified
+                          isEvacComments={true}
+                          isHazardPost={false}
+                          image={comment.media}
+                          seed={comment.posted_by.avatar_seed}
+                          role={comment.posted_by.role}
+                        />
+                      </Fragment>
+                    ))
+                  )
                 ) : (
-                  comments.map((comment) => (
-                    <Fragment key={comment.id}>
-                      <PostRow
-                        id={comment.id}
-                        username={comment.posted_by.username}
-                        timePosted={convertDateTime(comment.posted_at)}
-                        description={comment.content}
-                        locationVerified
-                        isEvacComments={true}
-                        isHazardPost={false}
-                        image={comment.media}
-                        seed={comment.posted_by.avatar_seed}
-                        role={comment.posted_by.role}
-                      />
-                    </Fragment>
-                  ))
+                  <>
+                    <div className="h-70 flex justify-center items-center">
+                      <div className="flex flex-col justify-center items-center gap-2">
+                        <div className="flex flex-col justify-center items-center">
+                          <p className="text-center">Join the community!</p>
+                          <p className="text-center">
+                            Create an account to view other people's comments.
+                          </p>
+                        </div>
+                        <Link to="/Login">
+                          <ButtonComp
+                            text="Sign in"
+                            id="Drawer_HazardSignIn"
+                            variant="primary"
+                            heightSize="40px"
+                            widthSize="100px"
+                          />
+                        </Link>
+                      </div>
+                    </div>
+                  </>
                 )}
               </div>
-              <div className="fixed bottom-0 z-100 bg-white w-full h-content">
-                <div className="flex flex-col h-fit justify-center">
-                  <div className="h-full flex flex-row items-center p-2 gap-2">
-                    {seedLoad ? (
-                      <Spinner />
-                    ) : seed ? (
-                      <img src={dataUri} className="w-11" />
-                    ) : role === "brgy_op" ? (
-                      <img src={brgyProfile} className="w-11" />
-                    ) : role === "admin" ? (
-                      <img src={adminProfile} className="w-11" />
-                    ) : (
-                      <UserIcon className="w-11" />
+              {role && (
+                <div className="fixed bottom-0 z-100 bg-white w-full h-content">
+                  <div className="flex flex-col h-fit justify-center">
+                    <div className="h-full flex flex-row items-center p-2 gap-2">
+                      {seedLoad ? (
+                        <Spinner />
+                      ) : seed ? (
+                        <img src={dataUri} className="w-11" />
+                      ) : role === "brgy_op" ? (
+                        <img src={brgyProfile} className="w-11" />
+                      ) : role === "admin" ? (
+                        <img src={adminProfile} className="w-11" />
+                      ) : (
+                        <UserIcon className="w-11" />
+                      )}
+                      <InputGroup>
+                        <InputGroupInput
+                          placeholder="Add a Comment"
+                          id="Drawer_CommentField"
+                          onChange={(e) => setNewComment(e.target.value)}
+                          value={!newComment ? "" : newComment}
+                        ></InputGroupInput>
+                        <InputGroupAddon
+                          align="inline-end"
+                          onClick={handleFileClick}
+                          id="Drawer_FileBtn"
+                          style={{ cursor: "pointer" }}
+                        >
+                          <File />
+                        </InputGroupAddon>
+                        <InputGroupAddon
+                          align="inline-end"
+                          id="Drawer_CameraBtn"
+                          onClick={handleCameraClick}
+                          style={{ cursor: "pointer" }}
+                        >
+                          <Camera />
+                        </InputGroupAddon>
+                        <input
+                          style={{ display: "none" }}
+                          type="file"
+                          onChange={fileOnChange}
+                          ref={fileInputRef}
+                          accept="image/png, image/jpeg, image/heic"
+                          id="Drawer_FileInput"
+                        />
+                        {/* To test when PWA is done  */}
+                        <input
+                          style={{ display: "none" }}
+                          type="file"
+                          onChange={fileOnChange}
+                          ref={cameraInputRef}
+                          capture
+                          accept="image/png, image/jpeg, image/heic"
+                          id="Drawer_CameraTrigger"
+                        />
+                      </InputGroup>
+                    </div>
+                    {image && (
+                      <div className="flex flex-col gap-1 p-2">
+                        <button
+                          onClick={handleClearImage}
+                          id="Drawer_ClearImageBtn"
+                          className="flex self-end"
+                        >
+                          <X size={14} />
+                        </button>
+                        <img src={imagePreview} />
+                      </div>
                     )}
-                    <InputGroup>
-                      <InputGroupInput
-                        placeholder="Add a Comment"
-                        id="Drawer_CommentField"
-                        onChange={(e) => setNewComment(e.target.value)}
-                        value={!newComment ? "" : newComment}
-                      ></InputGroupInput>
-                      <InputGroupAddon
-                        align="inline-end"
-                        onClick={handleFileClick}
-                        id="Drawer_FileBtn"
-                        style={{ cursor: "pointer" }}
-                      >
-                        <File />
-                      </InputGroupAddon>
-                      <InputGroupAddon
-                        align="inline-end"
-                        id="Drawer_CameraBtn"
-                        onClick={handleCameraClick}
-                        style={{ cursor: "pointer" }}
-                      >
-                        <Camera />
-                      </InputGroupAddon>
-                      <input
-                        style={{ display: "none" }}
-                        type="file"
-                        onChange={fileOnChange}
-                        ref={fileInputRef}
-                        accept="image/png, image/jpeg, image/heic"
-                        id="Drawer_FileInput"
-                      />
-                      {/* To test when PWA is done  */}
-                      <input
-                        style={{ display: "none" }}
-                        type="file"
-                        onChange={fileOnChange}
-                        ref={cameraInputRef}
-                        capture
-                        accept="image/png, image/jpeg, image/heic"
-                        id="Drawer_CameraTrigger"
-                      />
-                    </InputGroup>
+                    {(newComment || image) && (
+                      <div className="mx-2 mb-2 flex justify-center">
+                        <ButtonComp
+                          text="Post"
+                          variant="primary"
+                          id="Drawer_PostCommentBtn"
+                          widthSize="100%"
+                          onClick={(e) => submitComment(e)}
+                          isDisabled={disabled}
+                        />
+                      </div>
+                    )}
                   </div>
-                  {image && (
-                    <div className="flex flex-col gap-1 p-2">
-                      <button
-                        onClick={handleClearImage}
-                        id="Drawer_ClearImageBtn"
-                        className="flex self-end"
-                      >
-                        <X size={14} />
-                      </button>
-                      <img src={imagePreview} />
-                    </div>
-                  )}
-                  {(newComment || image) && (
-                    <div className="mx-2 mb-2 flex justify-center">
-                      <ButtonComp
-                        text="Post"
-                        variant="primary"
-                        id="Drawer_PostCommentBtn"
-                        widthSize="100%"
-                        onClick={(e) => submitComment(e)}
-                        isDisabled={disabled}
-                      />
-                    </div>
-                  )}
                 </div>
-              </div>
+              )}
             </div>
           </div>
         ) : null}

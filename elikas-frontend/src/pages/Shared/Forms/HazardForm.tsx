@@ -319,7 +319,7 @@ function HazardForm() {
       id: id,
       setIsEditable: setIsEditable,
       setHasUpdated: setHasUpdated,
-      setDisabled,
+      setDisabled: setDisabled,
     });
 
   const deleteHazard = () =>
@@ -372,7 +372,8 @@ function HazardForm() {
               className="text-align italic text-sm"
               style={{ color: colors.label }}
             >
-              Help others avoid blocked or unsafe routes.
+              Help others avoid blocked or unsafe routes. All marked with an *
+              are required fields.
             </p>
           )}
         </div>
@@ -605,7 +606,7 @@ function HazardForm() {
                   <>
                     <div className="mx-2 flex justify-evenly shrink gap-4">
                       <ButtonComp
-                        text="Update"
+                        text="Edit"
                         id="HazardPin_UpdatePinBtn"
                         variant="primary"
                         heightSize="38px"
