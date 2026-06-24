@@ -5,7 +5,7 @@ import {
   SelectItem,
   SelectTrigger,
 } from "@/components/ui/select";
-import { Field, FieldLabel } from "./ui/field";
+import { Field, FieldLabel, FieldDescription } from "./ui/field";
 import colors from "@/constants/colors";
 import { Spinner } from "./ui/spinner";
 import { X } from "lucide-react";
@@ -25,6 +25,7 @@ interface SelectDropdownProps {
   clearClick?: () => void;
   clearId?: string;
   showClear?: boolean;
+  description?: string;
 }
 
 function SelectDropdown({
@@ -41,6 +42,7 @@ function SelectDropdown({
   clearClick,
   clearId,
   showClear,
+  description,
 }: SelectDropdownProps) {
   return (
     <Field>
@@ -50,6 +52,7 @@ function SelectDropdown({
         </FieldLabel>
         {loading && <Spinner />}
       </div>
+      <FieldDescription>{description}</FieldDescription>
       <div className="w-full flex flex-row gap-2 overflow-hidden">
         <Select
           onValueChange={(val: string | null) => onValueChange(val ?? "")}
@@ -83,7 +86,6 @@ function SelectDropdown({
           </button>
         )}
       </div>
-
       {error && <p className="text-red-500 text-sm mt-1">{error}</p>}
     </Field>
   );

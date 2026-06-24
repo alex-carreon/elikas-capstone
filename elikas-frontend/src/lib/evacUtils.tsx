@@ -121,10 +121,9 @@ export const handleUpdate = async ({
     e?.preventDefault();
     setDisabled?.(true);
     const responsePromise = api.put(`/pins/${id}`, {
-      name: name,
+      ...(name && { name: name }),
       address: address,
       description: description,
-      //   location_id: location_id,
       area_type: area_type,
       capacity_level: capacity_level,
       is_persistent: is_persistent,
@@ -135,17 +134,15 @@ export const handleUpdate = async ({
       has_health: has_health,
       pwd_friendly: pwd_friendly,
       has_catchment: has_catchment,
-      toilet_count: toilet_count,
-      kitchen_count: kitchen_count,
-      child_prayer_count: child_prayer_count,
-      breastfeed_count: breastfeed_count,
+      toilet_count: toilet_count == 0 ? null : toilet_count,
+      kitchen_count: kitchen_count == 0 ? null : kitchen_count,
+      child_prayer_count: child_prayer_count == 0 ? null : child_prayer_count,
+      breastfeed_count: breastfeed_count == 0 ? null : child_prayer_count,
       other_facilities: other_facilities,
-      contact_person: contact_person,
-      contact_number: contact_number,
+      ...(contact_person && { contact_person: contact_person }),
+      ...(contact_number && { contact_number: contact_number }),
       ...(role === "brgy_op" && { expiry: expiry }),
     });
-
-    console.log(responsePromise);
 
     toast.promise(responsePromise, {
       loading: "Updating your pin...",

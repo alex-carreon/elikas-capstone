@@ -1,4 +1,5 @@
 import { createContext, useContext, useEffect, useState } from "react";
+import { toast } from "sonner";
 
 interface BeforeInstallEvent extends Event {
   prompt: () => Promise<void>;
@@ -37,6 +38,7 @@ export function InstallProvider({ children }: { children: React.ReactNode }) {
     const handleAppInstalled = () => {
       setDeferredPrompt(null);
       setPromptHandled(true);
+      toast.success("eLikas has been installed!", { position: "top-center" });
     };
     window.addEventListener("appinstalled", handleAppInstalled);
     return () => window.removeEventListener("appinstalled", handleAppInstalled);

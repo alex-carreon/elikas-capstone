@@ -296,7 +296,7 @@ function Map() {
                     <p className="text-sm">Press anywhere on the map</p>
                   </div>
                   <ButtonComp
-                    text="Find Evac Center"
+                    text="Find Nearest Evac Center"
                     variant="important"
                     id="Map_NearestRouteBtn"
                     onClick={handleNearestRoute}
