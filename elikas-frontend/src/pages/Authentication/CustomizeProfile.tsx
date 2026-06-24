@@ -1,7 +1,7 @@
 import { useNavigate } from "react-router";
 import colors from "@/constants/colors";
 import TextField from "@/components/TextField";
-import { useState, useEffect } from "react";
+import React, { useEffect, useState } from "react";
 import ButtonComp from "@/components/Button";
 import { createAvatar } from "@dicebear/core";
 import { bigSmile } from "@dicebear/collection";
@@ -16,12 +16,12 @@ function randomSeed(): string {
 function CustomizeProfile() {
   const [username, setUsername] = useState("");
   const [seed, setSeed] = useState("");
-  const [error, setError] = useState("");
+  const [error, setError] = useState({ avatar: "", username: "" });
 
   const navigate = useNavigate();
 
   const avatar = createAvatar(bigSmile, {
-    seed: seed ? seed : "Felix",
+    seed: seed,
     backgroundColor: ["b6e3f4", "c0aede", "d1d4f9"],
     radius: 50,
     scale: 90,
@@ -32,8 +32,19 @@ function CustomizeProfile() {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
+    if (!seed) {
+      setError({ avatar: "An avatar is required", username: "" });
+      return;
+    }
+    if (username.length == 20) {
+      setError({ avatar: "", username: "Username must be 20 characters only" });
+      return;
+    }
+
     localStorage.setItem("username", username);
     localStorage.setItem("avatarSeed", seed);
+
+    setError({ avatar: "", username: "" });
 
     navigate("/Registration/Permissions");
   };
@@ -41,12 +52,16 @@ function CustomizeProfile() {
   const dataUri = avatar.toDataUri();
 
   useEffect(() => {
-    if (username.length == 20) {
-      setError("Username must be 20 characters only");
-    } else {
-      setError("");
+    if (localStorage.getItem("username")) {
+      const un = localStorage.getItem("username");
+      setUsername(un ? un : "");
     }
-  }, [username]);
+
+    if (localStorage.getItem("avatarSeed")) {
+      const seed = localStorage.getItem("avatarSeed");
+      setSeed(seed ? seed : "");
+    }
+  }, []);
 
   return (
     <div className="min-h-screen flex justify-center p-6">
@@ -83,7 +98,7 @@ function CustomizeProfile() {
         >
           <div className=" flex flex-col gap-10">
             <div className="w-full flex flex-col justify-center items-center m-0 gap-2">
-              <img src={dataUri} className="w-24" />
+              {seed && <img src={dataUri} className="w-24" />}
               <ButtonComp
                 text="Generate New Avatar"
                 id="Profile_RandommAvatarBtn"
@@ -91,6 +106,7 @@ function CustomizeProfile() {
                 type="button"
                 onClick={() => setSeed(randomSeed())}
               />
+              <p className="text-xs text-red-500">{error.avatar}</p>
             </div>
             <div className="flex justify-start flex-col content-center">
               <TextField
@@ -99,9 +115,10 @@ function CustomizeProfile() {
                 inputType="text"
                 id="Profile_UsernameField"
                 isRequired
+                value={username}
                 onSubmit={(e) => setUsername(e.target.value)}
                 maxLength={20}
-                error={error}
+                error={error.username}
               ></TextField>
             </div>
           </div>
