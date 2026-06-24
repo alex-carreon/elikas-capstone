@@ -163,10 +163,10 @@ class EmergencyContactController extends Controller
 
             $validated = $request->validate([
                 'location_id' => 'required|integer|exists:Locations,id',
-                'name' => 'required|string|max:255',
-                'phone_number' => 'nullable|string|max:50',
-                'mobile_number' => 'nullable|string|max:50',
-                'address' => 'required|string|max:255',
+                'name' => 'required|string|max:50',
+                'phone_number' => 'nullable|string|max:15',
+                'mobile_number' => 'nullable|string|max:15',
+                'address' => 'required|string',
             ]);
 
             DB::beginTransaction();

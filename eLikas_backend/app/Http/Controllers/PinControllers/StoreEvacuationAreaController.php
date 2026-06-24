@@ -34,8 +34,8 @@ class StoreEvacuationAreaController extends Controller
             }
 
             $request->validate([
-                'name' => 'required|string|max:255',
-                'address' => 'required|string|max:255',
+                'name' => 'required|string|max:50',
+                'address' => 'required|string',
                 'lat' => 'required|numeric|between:-90,90',
                 'lng' => 'required|numeric|between:-180,180',
                 'location_id' => 'required|integer|exists:Locations,id',
@@ -55,8 +55,8 @@ class StoreEvacuationAreaController extends Controller
                 'child_prayer_count' => 'nullable|integer|min:0',
                 'breastfeed_count' => 'nullable|integer|min:0',
                 'other_facilities' => 'nullable|string',
-                'contact_person' => 'nullable|string|max:255',
-                'contact_number' => 'nullable|string|max:20',
+                'contact_person' => 'nullable|string|max:100',
+                'contact_number' => 'nullable|string|max:15',
                 'expiry' => 'nullable|date|after:now',
                 'file' => ['nullable', 'file', 'image', 'mimes:jpg,jpeg,png', 'max:8192'],
             ]);
