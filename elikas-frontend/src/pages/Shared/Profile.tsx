@@ -210,6 +210,8 @@ function Profile() {
         message: `Hi ${username}! Do not share this OTP with others. Here is your code: :otp`,
       });
 
+      console.log(response);
+
       toast.promise(response, { success: "OTP has been sent to your number." });
 
       response.then(() => {
