@@ -323,10 +323,10 @@ function EvacPinDrawer({
         setImage("");
         getComments();
       });
-      setDisabled(false);
     } catch (err: any) {
-      setDisabled(false);
       console.log(err.response.data);
+    } finally {
+      setDisabled(false);
     }
   };
 
