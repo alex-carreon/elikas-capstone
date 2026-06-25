@@ -4,15 +4,18 @@ set -e
 echo "🚀 Deployment started ..."
 
 # Enter maintenance mode so users don't hit errors mid-update
+echo "🚧 Entering maintenance mode..."
 (/var/www/eLikas_backend/php artisan down) || true
 
 # Navigate to backend directory
 cd /var/www/elikas-capstone/eLikas_backend
 
 # Install production dependencies
+echo "📦 Installing production dependencies..."
 composer install --no-dev --no-interaction --prefer-dist --optimize-autoloader
 
-# Recreate configuration and route caches for maximum performance
+# Clear old caches and optimize configuration/routes
+echo "⚡ Optimizing application caches..."
 php artisan optimize
 php artisan view:cache
 
@@ -21,6 +24,7 @@ echo "🔄 Reloading PHP-FPM..."
 sudo systemctl restart php8.5-fpm
 
 # Exit maintenance mode
+echo "✨ Bringing API back online..."
 php artisan up
 
 echo "✅ Deployment finished successfully!"
