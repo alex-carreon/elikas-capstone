@@ -8,6 +8,8 @@ import RegisterHeader from "@/components/RegisterHeader";
 import { toast } from "sonner";
 
 function EmailVerif() {
+  const [disabled, setDisabled] = useState(false);
+
   const navigate = useNavigate();
 
   const email = auth.currentUser?.email;
@@ -31,12 +33,15 @@ function EmailVerif() {
 
   const checkVerification = async () => {
     if (auth.currentUser) {
+      setDisabled(true);
       await auth.currentUser.reload();
 
       if (auth.currentUser.emailVerified) {
         navigate("/Registration/Finish");
+        setDisabled(false);
       } else {
         toast.error("Still not verified.");
+        setDisabled(false);
       }
     }
   };
@@ -78,6 +83,7 @@ function EmailVerif() {
               onClick={checkVerification}
               heightSize="38px"
               widthSize="100%"
+              isDisabled={disabled}
             />
             <ButtonComp
               text="Resend Email Verification"
@@ -86,6 +92,7 @@ function EmailVerif() {
               onClick={handleResend}
               heightSize="38px"
               widthSize="100%"
+              isDisabled={disabled}
             />
           </div>
         </div>
