@@ -120,6 +120,7 @@ type EvacPin = {
   last_confirmed: string | null;
   media: media[];
   avatar_seed: string;
+  is_own_pin: boolean;
 };
 
 type FacilityKey =
@@ -345,6 +346,9 @@ function EvacPinDrawer({
       try {
         setLoading(true);
         const response = await api.get(`/pins/${selectedPin.id}`);
+
+        console.log(response);
+
         const evacPinDetails = await response.data;
         setEvacPinDetails(evacPinDetails);
         setVerifiedBy(evacPinDetails.verified_by.gov_op_id);
@@ -473,26 +477,40 @@ function EvacPinDrawer({
             <DrawerDescription />
           </DrawerTitle>
           <div className="flex flex-col gap-2">
-            <div className="flex flex-row gap-2">
-              <img src={DrawerIcon} className="w-10" />
-              <div>
-                <div className="flex flex-row">
-                  <p className="text-lg font-semibold">
-                    {evacPinDetails?.name}
+            <div className="flex flex-row justify-between">
+              <div className="flex flex-row gap-2">
+                <img src={DrawerIcon} className="w-10" />
+                <div>
+                  <div className="flex flex-row">
+                    <p className="text-lg font-semibold">
+                      {evacPinDetails?.name}
+                    </p>
+                    {evacPinDetails?.verified_by.gov_op_id !== null ? (
+                      <ShieldCheck
+                        fill="#20BF55"
+                        strokeWidth={1}
+                        color="white"
+                        size={18}
+                      />
+                    ) : null}
+                  </div>
+                  <p className="text-xs text-left font-bold italic">
+                    {evacPinDetails?.is_persistent ? "Persistent" : "Temporary"}
                   </p>
-                  {evacPinDetails?.verified_by.gov_op_id !== null ? (
-                    <ShieldCheck
-                      fill="#20BF55"
-                      strokeWidth={1}
-                      color="white"
-                      size={18}
-                    />
-                  ) : null}
                 </div>
-                <p className="text-xs text-left font-bold italic">
-                  {evacPinDetails?.is_persistent ? "Persistent" : "Temporary"}
-                </p>
               </div>
+              {evacPinDetails?.is_own_pin && (
+                <div>
+                  <Link to={`/EvacForm/${evacPinDetails?.id}`}>
+                    <ButtonComp
+                      text="Edit Pin"
+                      variant="outline"
+                      id="Drawer_EvacEditBtn"
+                      widthSize="20"
+                    />
+                  </Link>
+                </div>
+              )}
             </div>
             <div>
               {evacPinDetails?.last_updated && (
@@ -536,19 +554,23 @@ function EvacPinDrawer({
                     </b>
                   </>
                 ) : (
-                  <>
-                    <b>Capacity</b>: {evacPinDetails?.capacity_name}{" "}
-                    {evacPinDetails?.for_heavy_flood && (
-                      <span className="ml-2 text-xs px-2 py-0.5 rounded-full bg-mauve-300 text-amber-800">
-                        Heavy Flooding
-                      </span>
-                    )}
-                    {evacPinDetails?.for_reg_flood && (
-                      <span className="ml-2 text-xs px-2 py-0.5 rounded-full bg-mauve-300 text-amber-800">
-                        Regular Flooding
-                      </span>
-                    )}
-                  </>
+                  <div className="flex flex-col gap-1">
+                    <span>
+                      <b>Capacity</b>: {evacPinDetails?.capacity_name}
+                    </span>
+                    <div className="flex flex-row gap-1">
+                      {evacPinDetails?.for_heavy_flood && (
+                        <div className="w-fit text-xs px-2 py-0.5 rounded-full bg-mauve-300 text-amber-800">
+                          Heavy Flooding
+                        </div>
+                      )}
+                      {evacPinDetails?.for_reg_flood && (
+                        <div className="w-fit text-xs px-2 py-0.5 rounded-full bg-mauve-300 text-amber-800">
+                          Regular Flooding
+                        </div>
+                      )}
+                    </div>
+                  </div>
                 )}
               </li>
               <li>
