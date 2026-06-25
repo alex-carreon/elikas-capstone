@@ -116,13 +116,13 @@ function EvacPin() {
   const [pwdFriendly, setPWDFriendly] = useState(false);
   const [hasCatchment, setHasCatchment] = useState(false);
   const [hasToilet, setHasToilet] = useState(false);
-  const [toilet, setToilet] = useState("");
+  const [toilet, setToilet] = useState<string | null>(null);
   const [hasKitchen, setHasKitchen] = useState(false);
-  const [kitchen, setKicthen] = useState("");
+  const [kitchen, setKicthen] = useState<string | null>(null);
   const [hasChildPrayer, setHasChildPrayer] = useState(false);
-  const [childPrayer, setChildPrayer] = useState("");
+  const [childPrayer, setChildPrayer] = useState<string | null>(null);
   const [hasBreastfeed, setHasBreastfeed] = useState(false);
-  const [breastfeed, setBreastfeed] = useState("");
+  const [breastfeed, setBreastfeed] = useState<string | null>(null);
   const [desc, setDesc] = useState("");
   const [evacTypes, setEvacTypes] = useState<EvacType[]>([]);
   const [areaType, setAreaType] = useState(0);
@@ -411,6 +411,8 @@ function EvacPin() {
         toast.error("Please fill in the toilet count.");
         return;
       }
+    } else {
+      setToilet(null);
     }
 
     if (hasKitchen) {
@@ -418,6 +420,8 @@ function EvacPin() {
         toast.error("Please fill in the kitchen count.");
         return;
       }
+    } else {
+      setKicthen(null);
     }
 
     if (hasChildPrayer) {
@@ -425,6 +429,8 @@ function EvacPin() {
         toast.error("Please fill in the child/prayer area count.");
         return;
       }
+    } else {
+      setChildPrayer(null);
     }
 
     if (hasBreastfeed) {
@@ -432,6 +438,12 @@ function EvacPin() {
         toast.error("Please fill in breastfeedubg area count.");
         return;
       }
+    } else {
+      setBreastfeed(null);
+    }
+
+    if (!contactValidate.test(contactNumber)) {
+      toast.error("Invalid Contact Number.");
     }
 
     formData.append("name", pinName);
@@ -707,7 +719,7 @@ function EvacPin() {
               >
                 Check what applies
               </FieldLabel>
-              {role === "brgy_op" && (
+              {role !== "indiv" && (
                 <CheckBox
                   text="Is this evacuation center persistent?"
                   id="EvacPin_isPersistentChckbox"
@@ -1011,7 +1023,7 @@ function EvacPin() {
                       id="EvacPin_ToiletField"
                       inputType="number"
                       onSubmit={(e) => setToilet(e.target.value)}
-                      value={toilet}
+                      value={toilet ?? ""}
                       isRequired
                     />
                   )}
@@ -1031,7 +1043,7 @@ function EvacPin() {
                       id="EvacPin_PrayerChildField"
                       inputType="number"
                       onSubmit={(e) => setChildPrayer(e.target.value)}
-                      value={childPrayer}
+                      value={childPrayer ?? ""}
                       isRequired
                     />
                   )}
@@ -1041,7 +1053,7 @@ function EvacPin() {
                       id="EvacPin_BreastfeedField"
                       inputType="number"
                       onSubmit={(e) => setBreastfeed(e.target.value)}
-                      value={breastfeed}
+                      value={breastfeed ?? ""}
                       isRequired
                     />
                   )}

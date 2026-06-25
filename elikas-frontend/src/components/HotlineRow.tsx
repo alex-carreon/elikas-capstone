@@ -93,10 +93,12 @@ function HotlineRow({
               <Phone strokeWidth={2} size={16} />
               <p className="text-sm">{primary}</p>
             </div>
-            <div className="flex flex-row text-sm items-center gap-1">
-              <Smartphone strokeWidth={2} size={16} />
-              <p className="text-sm">{secondary}</p>
-            </div>
+            {secondary && (
+              <div className="flex flex-row text-sm items-center gap-1">
+                <Smartphone strokeWidth={2} size={16} />
+                <p className="text-sm">{secondary}</p>
+              </div>
+            )}
           </div>
           <Separator className="border-t border-gray-800/10 mt-2 pt-2" />
           <p className="flex italic text-xs justify-end">

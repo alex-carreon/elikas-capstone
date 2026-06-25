@@ -49,9 +49,7 @@ function Permissions() {
 
       localStorage.setItem("firebaseUser", firebaseUser.uid);
 
-      console.log(firebaseUser);
-
-      const response = api.post("/auth/register", {
+      await api.post("/auth/register", {
         username: formData.username,
         email: formData.email,
         first_name: formData.fn,
@@ -62,51 +60,28 @@ function Permissions() {
         avatar_seed: formData.avatarSeed,
       });
 
-      console.log(response);
-
-      toast.promise(response, {
-        loading: "Processing...",
-        success: "One last step!",
-        error:
-          "An error occurred while creating your account. Please try registering agian.",
-        position: "top-center",
-      });
-
-      if (!response) {
-        toast.error("Registration failed. Please try registering again.");
-        return;
-      }
-
-      response.then(() => {
-        navigate("/Registration/Verify");
-      });
+      toast.success("One last step!");
+      navigate("/Registration/Verify");
     } catch (err: string | any) {
       console.error("Firebase error message:", err.message);
-      setDisabled(false);
 
       const firebaseUser = auth.currentUser;
       if (firebaseUser) {
-        await firebaseUser.delete();
-
-        // try {
-        //   setDisabled(false);
-        // } catch (deleteErr: any) {
-        //   await auth.signOut();
-        //   setDisabled(false);
-        // }
-        if (
-          err.response?.data?.message === "The username has already been taken."
-        ) {
-          toast.error("This username has already been taken.");
-          setDisabled(false);
-          return;
-        } else {
-          toast.error("Registration failed. Please try again.");
-          navigate("/Login");
-          return;
+        try {
+          await firebaseUser.delete();
+        } catch (deleteErr) {
+          console.log("Failed to delete: ", deleteErr);
         }
       }
-      if (err.code === "auth/email-already-in-use") {
+      if (
+        err.response?.data?.message === "The username has already been taken."
+      ) {
+        toast.error("This username has already been taken.");
+      } else if (err.message === "auth/password-does-not-meet-requirements") {
+        toast.error(
+          "Your password must have at least 1 uppercase, 1 lowercase, 1 special character, and 1 number. Please go back and try again",
+        );
+      } else if (err.code === "auth/email-already-in-use") {
         toast.error("This email is already in use.");
         setDisabled(false);
         return;
@@ -114,23 +89,6 @@ function Permissions() {
         toast.error("Registration failed. Please try again.");
         navigate("/Login");
       }
-
-      if ((err.message = "auth/password-does-not-meet-requirements")) {
-        toast.error(
-          "Your password must have at least 1 uppercase, 1 lowercase, 1 special character, and 1 number. Please go back and try again",
-        );
-      }
-
-      if (err.code === "auth/email-already-in-use") {
-        toast.error("The email you used is already registered.");
-        return;
-      }
-
-      if ((err.message = "The username has already been taken.")) {
-        toast.error("Username has been taken.");
-        return;
-      }
-
       setToForm(true);
     } finally {
       setDisabled(false);
