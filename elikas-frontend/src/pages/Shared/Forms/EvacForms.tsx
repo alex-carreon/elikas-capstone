@@ -855,7 +855,10 @@ function EvacPin() {
                   attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
                   url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
                 />
-                <MapClickHandler onPinClick={() => {}} clickedLoc={latLng} />
+                <MapClickHandler
+                  onPinClick={() => {}}
+                  clickedLoc={latLng ? latLng : clickedLoc}
+                />
               </MapContainer>
               {id && <p className="text-sm">{address}</p>}
               {!id || isEditable ? (
@@ -1025,6 +1028,7 @@ function EvacPin() {
                       onSubmit={(e) => setToilet(e.target.value)}
                       value={toilet ?? ""}
                       isRequired
+                      readonly={!id || isEditable ? false : true}
                     />
                   )}
                   {hasKitchen && (
@@ -1035,6 +1039,7 @@ function EvacPin() {
                       onSubmit={(e) => setKicthen(e.target.value)}
                       value={kitchen ?? ""}
                       isRequired
+                      readonly={!id || isEditable ? false : true}
                     />
                   )}
                   {hasChildPrayer && (
@@ -1045,6 +1050,7 @@ function EvacPin() {
                       onSubmit={(e) => setChildPrayer(e.target.value)}
                       value={childPrayer ?? ""}
                       isRequired
+                      readonly={!id || isEditable ? false : true}
                     />
                   )}
                   {hasBreastfeed && (
@@ -1055,6 +1061,7 @@ function EvacPin() {
                       onSubmit={(e) => setBreastfeed(e.target.value)}
                       value={breastfeed ?? ""}
                       isRequired
+                      readonly={!id || isEditable ? false : true}
                     />
                   )}
                 </div>

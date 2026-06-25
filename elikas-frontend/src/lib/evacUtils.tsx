@@ -64,8 +64,15 @@ export const handleSubmit = async ({
     toast.promise(response, {
       loading: "Adding your pin to the map...",
       success: "Pin successfully added!",
-      error:
-        "Creating Pin failed. Please make sure that all required fields are filled",
+      error: (err: any) => {
+        if (
+          err.response.data.details ===
+          "The expiry field must be a date after now."
+        ) {
+          return "The expiry date must be a date after now.";
+        }
+        return "Creating Pin failed. Please make sure that all required fields are filled";
+      },
       position: "top-center",
     });
 

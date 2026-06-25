@@ -95,7 +95,7 @@ const getAllIndivPins = async ({
   signal?: AbortSignal;
 }) => {
   try {
-    const IndivResponse = await api.get("/pins?role=indiv&role=admin", {
+    const IndivResponse = await api.get("/pins?role[]=indiv&role[]=admin", {
       signal,
     });
     const indivPins = await IndivResponse.data.pins;

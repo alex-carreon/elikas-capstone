@@ -44,7 +44,6 @@ function Map() {
   const mapRef = useRef<LeafletMap | null>(null);
 
   // let authorized = false;
-  let admin = false;
   const { role } = useUserContext();
 
   const { canInstall, triggerInstall } = useInstall();
@@ -161,10 +160,6 @@ function Map() {
       setShowReminder(false);
     }
   }, [selected]);
-
-  if (role === "admin") {
-    admin = true;
-  }
 
   return (
     <>

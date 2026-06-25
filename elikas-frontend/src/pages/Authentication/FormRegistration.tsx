@@ -2,7 +2,6 @@ import { useNavigate, Link } from "react-router-dom";
 import colors from "@/constants/colors";
 import TextField from "@/components/TextField";
 import ButtonComp from "@/components/Button";
-import Select from "@/components/SelectDropdown";
 import {
   useEffect,
   useState,
@@ -243,7 +242,7 @@ function FormRegistration() {
               isRequired
               loading={loading}
             />
-            <Select
+            <SelectDropdown
               value={brgy}
               onValueChange={setBrgy}
               label="Barangay"

@@ -58,6 +58,7 @@ function SelectDropdown({
           onValueChange={(val: string | null) => onValueChange(val ?? "")}
           required={isRequired}
           disabled={disabled}
+          value={value}
         >
           <SelectTrigger id={id} className="w-full overflow-hidden">
             <span className="truncate block">
