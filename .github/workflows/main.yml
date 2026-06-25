@@ -16,10 +16,6 @@ jobs:
   build:
     runs-on: ubuntu-latest
 
-    defaults:
-      run:
-        working-directory: ./eLikas_backend
-
     steps:
     - name: Checkout
       uses: actions/checkout@v6
@@ -31,19 +27,27 @@ jobs:
 
     - name: Copy .env
       run: cp .env.testing .env
+      working-directory: ./eLikas_backend
 
     - name: Composer Test Build (API)
-      run: composer install
-
-    # name: Create database
-
-    # name: Build database
-
-    # name: Test PHPStan
-    # run: ./vendor/bin/phpstan analyse
+      run: composer install --no-progress --prefer-dist
+      working-directory: ./eLikas_backend
 
     # name: TestPHPUnit
     # run: ./vendor/bin/phpunit
+
+    - name: Set Up Node.js
+      uses: actions/setup-node@v6
+      with:
+        node-version: '24.17.0'
+
+    - name: Install Frontend Dependencies
+      run: npm ci
+      working-directory: ./elikas-frontend
+
+    - name: Frontend Test Build
+      run: npm run build
+      working-directory: ./elikas-frontend
 
   deploy: 
     runs-on: ubuntu-latest
