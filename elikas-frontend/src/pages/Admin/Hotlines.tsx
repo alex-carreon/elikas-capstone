@@ -13,6 +13,8 @@ import colors from "@/constants/colors";
 import api from "@/api";
 import { ChevronDownIcon, ChevronUpIcon, X } from "lucide-react";
 import SelectDropdown from "@/components/SelectDropdown";
+import ButtonComp from "@/components/Button";
+import { Link } from "react-router";
 
 type Hotline = {
   id: number;
@@ -205,8 +207,9 @@ function Hotlines() {
               <CollapsibleTrigger
                 onClick={() => setOpenCollapse(!openCollapse)}
                 id="Admin_HotlinesFilterTrigger"
+                className="w-full flex flex-row justify-between"
               >
-                <div className="w-full flex flex-row justify-end mb-2">
+                <div className="w-full flex flex-row mb-2">
                   Filters
                   {openCollapse ? (
                     <ChevronUpIcon className="ml-2 group-data-[state=open]:rotate-180" />
@@ -215,6 +218,13 @@ function Hotlines() {
                   )}
                 </div>
               </CollapsibleTrigger>
+              <Link to="/admin-hotlines/add">
+                <ButtonComp
+                  text="Add Hotline"
+                  variant="primary"
+                  id="Admin_HotlinesAddBtn"
+                />
+              </Link>
             </div>
             <CollapsibleContent
               id="Admin_HotlinesFilterContent"
@@ -283,13 +293,15 @@ function Hotlines() {
                       >
                         {`Primary Contact: ${hotline.phone_number}`}
                       </p>
-                      <p
-                        className="text-sm"
-                        style={{ color: colors.heading }}
-                        id="Admin_HotlinesSecondary"
-                      >
-                        {`Secondary Contact: ${hotline.mobile_number}`}
-                      </p>
+                      {hotline.mobile_number && (
+                        <p
+                          className="text-sm"
+                          style={{ color: colors.heading }}
+                          id="Admin_HotlinesSecondary"
+                        >
+                          {`Secondary Contact: ${hotline.mobile_number}`}
+                        </p>
+                      )}
                     </Row>
                   );
               })}

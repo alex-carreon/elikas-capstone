@@ -252,7 +252,7 @@ function Map({ onLocationFound, showLocation, nearestRouteTrigger }: MapProps) {
           document.body,
         )}
       {/* Adding a pin */}
-      {authorized && !admin ? (
+      {authorized ? (
         <MapClickHandler
           onPinClick={handlePinClick}
           setClickedLoc={setClickedLoc}
@@ -303,7 +303,7 @@ function Map({ onLocationFound, showLocation, nearestRouteTrigger }: MapProps) {
           nearestRouteTrigger={nearestRouteTrigger}
         />
       )}
-      {showRoute && !showNearestRoute && selectedPin && !admin && (
+      {showRoute && !showNearestRoute && selectedPin && (
         <Routing
           onPinSelected={setSelectedPin}
           selectedPin={selectedPin}
