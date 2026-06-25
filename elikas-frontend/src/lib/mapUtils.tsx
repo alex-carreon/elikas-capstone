@@ -95,7 +95,9 @@ const getAllIndivPins = async ({
   signal?: AbortSignal;
 }) => {
   try {
-    const IndivResponse = await api.get("/pins?role=indiv", { signal });
+    const IndivResponse = await api.get("/pins?role=indiv&role=admin", {
+      signal,
+    });
     const indivPins = await IndivResponse.data.pins;
     setIndivPins?.(indivPins);
   } catch (err: string | any) {
@@ -325,9 +327,6 @@ export function PinMarking({ onPinClick }: { onPinClick: (pin: any) => void }) {
     className: "",
     iconAnchor: [12, 12],
   });
-
-  // const showBrgyPins = showGovPins ? brgyPins : null;
-  // const showUserPins = showOtherPins ? indivPins : myPins;
 
   const getData = async () => {
     const controller = new AbortController();

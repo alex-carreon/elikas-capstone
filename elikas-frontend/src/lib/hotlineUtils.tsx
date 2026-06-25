@@ -23,6 +23,7 @@ export const handleSubmit = ({
   secondaryNo,
   brgyId,
   navigate,
+  redirect,
 }: handleActionProps) => {
   e?.preventDefault();
 
@@ -54,7 +55,7 @@ export const handleSubmit = ({
     });
 
     response.then(() => {
-      navigate?.("/Hotlines");
+      navigate?.(redirect ? redirect : "/Hotlines");
     });
   } catch (err: any) {
     console.log(err.response);

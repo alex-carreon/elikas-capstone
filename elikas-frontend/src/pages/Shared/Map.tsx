@@ -292,21 +292,24 @@ function Map() {
                 className="w-14 h-14 self-end m-4 drop-shadow-xl"
                 onClick={() => setShowLocation((prev) => !prev)}
               />
-              {!admin && (
-                <div className="w-full flex flex-col items-center gap-2 ">
-                  <div className="bg-gray-400/40 rounded-xl h-fit w-4/5 text-center p-1">
-                    <p className="text-sm">Press anywhere on the map</p>
-                  </div>
-                  <ButtonComp
-                    text="Find Nearest Evac Center"
-                    variant="important"
-                    id="Map_NearestRouteBtn"
-                    onClick={handleNearestRoute}
-                    widthSize="90%"
-                    heightSize="50px"
-                  />
+
+              <div className="w-full flex flex-col items-center gap-2 ">
+                <div className="bg-gray-400/40 rounded-xl h-fit w-4/5 text-center p-1">
+                  <p className="text-sm">
+                    {role
+                      ? "Press anywhere on the map"
+                      : "Guest Mode - View only"}
+                  </p>
                 </div>
-              )}
+                <ButtonComp
+                  text="Find Nearest Evac Center"
+                  variant="important"
+                  id="Map_NearestRouteBtn"
+                  onClick={handleNearestRoute}
+                  widthSize="90%"
+                  heightSize="50px"
+                />
+              </div>
             </div>
           </div>
         </div>
