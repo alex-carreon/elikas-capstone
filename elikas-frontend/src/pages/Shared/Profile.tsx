@@ -147,13 +147,23 @@ function Profile() {
       toast.promise(response, {
         loading: "Updating your profile...",
         success: "Profile updated!",
+        error: (err: any) => {
+          if (
+            err.response.data.details === "The username has already been taken."
+          ) {
+            return "Username has already been taken.";
+          }
+          return "Update failed";
+        },
       });
 
-      setIsEditable(false);
-      setNewUsername(null);
-      setNewContact("");
-      setContactTouched(false);
-      getProfile();
+      response.then(() => {
+        setIsEditable(false);
+        setNewUsername(null);
+        setNewContact("");
+        setContactTouched(false);
+        getProfile();
+      });
     } catch (err: string | any) {
       console.log(err.response.data);
       setDisabled(false);
@@ -535,7 +545,8 @@ function Profile() {
                       />
                     )}
 
-                    {(contact === "No Registered Number" || isVerified) &&
+                    {contact === "No Registered Number" ||
+                    isVerified ||
                     isEditable ? null : (
                       <ButtonComp
                         text="Verify"

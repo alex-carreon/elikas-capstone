@@ -142,8 +142,6 @@ function History() {
 
       const response = await api.get(endpointEvac, { signal });
 
-      console.log(response);
-
       const activeEvacs = await response.data.pins.filter(
         (pin: myEvacPins) => !pin.is_deactivated && !pin.is_expired,
       );
@@ -171,19 +169,17 @@ function History() {
         message = "Hazards filtered!";
       }
 
-      console.log("Hazards");
-
       const parameters = params.toString();
 
       const endpointHazard = `/flood-paths/my${parameters ? `?${parameters}` : ""}`;
 
       const response = await api.get(endpointHazard, { signal });
 
-      const activeHazardPins = await response.data.pins.filter(
+      const activeHazardPins = response.data.flood_paths.filter(
         (pin: myFloodPaths) => !pin.is_expired && !pin.is_deactivated,
       );
 
-      const inactiveHazardPins = await response.data.pins.filter(
+      const inactiveHazardPins = await response.data.flood_paths.filter(
         (pin: myFloodPaths) => pin.is_deactivated || pin.is_expired,
       );
 
@@ -854,16 +850,28 @@ function History() {
                           className={`mt-2 px-2 py-1 rounded-3xl w-fit text-sm`}
                           style={{
                             backgroundColor:
-                              path.level === "Gutter" ||
-                              path.level === "Half Knee"
+                              path.level === "Gutter-Deep" ||
+                              path.level === "Half Knee-Deep"
                                 ? colorHazard.lightBlue
-                                : path.level === "Half Tire" ||
-                                    path.level === "Knee"
+                                : path.level === "Half Tire-Deep" ||
+                                    path.level === "Knee-Deep"
                                   ? colorHazard.darkBlue
-                                  : path.level === "Tire" ||
-                                      path.level === "Waist" ||
-                                      path.level === "chest"
+                                  : path.level === "Tire-Deep" ||
+                                      path.level === "Waist-Deep" ||
+                                      path.level === "Chest-Deep"
                                     ? colorHazard.red
+                                    : colorHazard.fallback,
+                            color:
+                              path.level === "Gutter-Deep" ||
+                              path.level === "Half Knee-Deep"
+                                ? "Black"
+                                : path.level === "Half Tire-Deep" ||
+                                    path.level === "Knee-Deep"
+                                  ? "White"
+                                  : path.level === "Tire-Deep" ||
+                                      path.level === "Waist-Deep" ||
+                                      path.level === "Chest-Deep"
+                                    ? "White"
                                     : colorHazard.fallback,
                           }}
                         >

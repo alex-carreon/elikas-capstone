@@ -1,6 +1,6 @@
 import { useUserContext } from "@/context/AuthContext";
 import { Separator } from "@base-ui/react";
-import { MapPin, Smartphone, Phone, Copy, Edit, CopyCheck } from "lucide-react";
+import { MapPin, Phone, Copy, Edit, CopyCheck } from "lucide-react";
 import { Fragment, useState } from "react";
 import { toast } from "sonner";
 import { Link } from "react-router";
@@ -84,18 +84,30 @@ function HotlineRow({
               </button>
             )}
           </div>
-          <div className="flex flex-col gap-1">
+          <div className="flex flex-col gap-2">
             <div className="flex flex-row text-sm items-center gap-1">
-              <MapPin strokeWidth={2} size={16} />
+              <div className="w-fit h-fit flex flex-row gap-1 items-center px-3 py-1 rounded-lg border border-black">
+                <MapPin strokeWidth={2} size={12} />
+              </div>
               <p className="text-sm">{address}</p>
             </div>
             <div className="flex flex-row text-sm items-center gap-1">
-              <Phone strokeWidth={2} size={16} />
+              <div className="w-fit h-fit flex flex-row gap-1 items-center px-2 rounded-lg border border-black">
+                <Phone strokeWidth={4} size={10} fill="black" />1
+              </div>
               <p className="text-sm">{primary}</p>
             </div>
             {secondary && (
               <div className="flex flex-row text-sm items-center gap-1">
-                <Smartphone strokeWidth={2} size={16} />
+                <div className="w-fit h-fit flex flex-row items-center gap-1 px-2 rounded-2xl bg-black border border-black text-[#FFE6A9]">
+                  <Phone
+                    strokeWidth={2}
+                    size={10}
+                    fill="#FFE6A9"
+                    color="#FFE6A9"
+                  />
+                  2
+                </div>
                 <p className="text-sm">{secondary}</p>
               </div>
             )}

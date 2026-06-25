@@ -29,6 +29,7 @@ function LogIn() {
     password: "",
     general: "",
   });
+  const [disabled, setDisabled] = useState(false);
 
   const { setIsLoginReady } = useUserContext();
 
@@ -60,6 +61,7 @@ function LogIn() {
     e.preventDefault();
 
     try {
+      setDisabled(true);
       await auth.signOut();
 
       await setPersistence(
@@ -133,6 +135,8 @@ function LogIn() {
       } else {
         setErrors(err.message);
       }
+    } finally {
+      setDisabled(false);
     }
   };
 
@@ -240,6 +244,7 @@ function LogIn() {
                 id="LogIn_SubmitBtn"
                 heightSize="38px"
                 widthSize="100%"
+                isDisabled={disabled}
               ></ButtonComp>
               <Link to="/" className="w-full flex justify-center">
                 <ButtonComp

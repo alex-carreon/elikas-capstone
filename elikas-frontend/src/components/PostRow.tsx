@@ -367,67 +367,69 @@ function PostRow({
         </div>
 
         <Collapsible className="flex flex-col gap-4">
-          <div className="px-2 flex flex-row gap-4">
-            <div
-              className="flex flex-row items-center gap-1"
-              onClick={() => {
-                const newVote = vote === 1 ? 0 : 1;
-                setVote(newVote);
-                handleVote(1);
-              }}
-            >
-              {vote === 1 ? (
-                <ThumbsUp
-                  id="Drawer_PostUpvoteBtn"
-                  size={16}
-                  strokeWidth={1.5}
-                  fill="#FFA215"
-                />
-              ) : (
-                <ThumbsUp
-                  id="Drawer_PostUpvoteBtn"
-                  size={16}
-                  strokeWidth={1.5}
-                />
-              )}
-
-              <p className="text-xs flex flex-row">
-                Upvote {voteLoad ? <Spinner className="w-6" /> : `(${upvote})`}
-              </p>
-            </div>
-            <div
-              className="flex flex-row items-center gap-1"
-              onClick={() => {
-                const newVote = vote === -1 ? 0 : -1;
-                setVote(newVote);
-                handleVote(-1);
-              }}
-            >
-              {vote === -1 ? (
-                <ThumbsDown
-                  id="Drawer_PostDownvoteBtn"
-                  size={16}
-                  strokeWidth={1.5}
-                  fill="#642424"
-                />
-              ) : (
-                <ThumbsDown
-                  id="Drawer_PostDownvoteBtn"
-                  size={16}
-                  strokeWidth={1.5}
-                />
-              )}
-              <p className="text-xs flex flex-row">
-                Downvote
-                {voteLoad ? <Spinner className="w-6" /> : `(${downvote})`}
-              </p>
+          <div className="px-2 flex flex-row justify-between items-center">
+            <div className="flex flex-row gap-3">
+              <div
+                className="flex flex-row items-center gap-1"
+                onClick={() => {
+                  const newVote = vote === 1 ? 0 : 1;
+                  setVote(newVote);
+                  handleVote(1);
+                }}
+              >
+                {vote === 1 ? (
+                  <ThumbsUp
+                    id="Drawer_PostUpvoteBtn"
+                    size={16}
+                    strokeWidth={1.5}
+                    fill="#FFA215"
+                  />
+                ) : (
+                  <ThumbsUp
+                    id="Drawer_PostUpvoteBtn"
+                    size={16}
+                    strokeWidth={1.5}
+                  />
+                )}
+                <p className="text-xs flex flex-row">
+                  {voteLoad ? <Spinner className="w-6" /> : `(${upvote})`}
+                </p>
+              </div>
+              <div
+                className="flex flex-row items-center gap-1"
+                onClick={() => {
+                  const newVote = vote === -1 ? 0 : -1;
+                  setVote(newVote);
+                  handleVote(-1);
+                }}
+              >
+                {vote === -1 ? (
+                  <ThumbsDown
+                    id="Drawer_PostDownvoteBtn"
+                    size={16}
+                    strokeWidth={1.5}
+                    fill="#642424"
+                  />
+                ) : (
+                  <ThumbsDown
+                    id="Drawer_PostDownvoteBtn"
+                    size={16}
+                    strokeWidth={1.5}
+                  />
+                )}
+                <p className="text-xs flex flex-row">
+                  {voteLoad ? <Spinner className="w-6" /> : `(${downvote})`}
+                </p>
+              </div>
             </div>
             {isSimple || image?.length === 0 ? null : (
               <CollapsibleTrigger
                 id="Drawer_PostDetailsTrigger"
-                className="text-xs underline italic flex ml-auto"
+                // className="text-xs underline italic flex ml-auto"
+                className="border rounded-lg px-2 flex shrink"
+                style={{ color: colors.heading, borderColor: colors.heading }}
               >
-                See More
+                View Photo
               </CollapsibleTrigger>
             )}
           </div>
