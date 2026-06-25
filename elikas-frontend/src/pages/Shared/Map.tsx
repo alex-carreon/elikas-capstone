@@ -78,6 +78,7 @@ function Map() {
     e.preventDefault();
 
     try {
+      setDismissed(true);
       await api.post("/flood-reminders/remind-later", {
         ids: [id],
       });
@@ -110,6 +111,8 @@ function Map() {
     e.preventDefault();
 
     try {
+      setDismissed(true);
+
       await api.post("/flood-reminders/dismiss", {
         ids: [id],
       });

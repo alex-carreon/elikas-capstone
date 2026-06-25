@@ -90,7 +90,6 @@ function Permissions() {
         navigate("/Login");
       }
       setToForm(true);
-    } finally {
       setDisabled(false);
     }
   };
