@@ -54,17 +54,22 @@ class GetEvacAreasController extends Controller
             }
 
             // Filter by role
-            if ($request->filled('role')) {
-                $roleId = $this->resolveRoleId($request->query('role'));
+            $rawRole = $request->query('role');
+            if (!empty($rawRole)) {
+                $roleInputs = is_array($rawRole) ? $rawRole : [$rawRole];
+                $roleIds = collect($roleInputs)
+                    ->map(fn($r) => $this->resolveRoleId($r))
+                    ->filter(fn($id) => $id !== null)
+                    ->unique()->values()->all();
 
-                if ($roleId === null) {
+                if (empty($roleIds)) {
                     return response()->json([
                         'error' => 'Invalid role filter. Accepted values: admin, govop, indiv',
                     ], 422);
                 }
 
-                $query->whereHas('social_element.user', function ($q) use ($roleId) {
-                    $q->where('role_id', $roleId);
+                $query->whereHas('social_element.user', function ($q) use ($roleIds) {
+                    $q->whereIn('role_id', $roleIds);
                 });
             }
 
@@ -188,17 +193,22 @@ class GetEvacAreasController extends Controller
             $this->applySearchFilter($query, $request);
 
             // Filter by role across all profiles
-            if ($request->filled('role')) {
-                $roleId = $this->resolveRoleId($request->query('role'));
+            $rawRole = $request->query('role');
+            if (!empty($rawRole)) {
+                $roleInputs = is_array($rawRole) ? $rawRole : [$rawRole];
+                $roleIds = collect($roleInputs)
+                    ->map(fn($r) => $this->resolveRoleId($r))
+                    ->filter(fn($id) => $id !== null)
+                    ->unique()->values()->all();
 
-                if ($roleId === null) {
+                if (empty($roleIds)) {
                     return response()->json([
                         'error' => 'Invalid role filter. Accepted values: admin, govop, indiv',
                     ], 422);
                 }
 
-                $query->whereHas('social_element.user', function ($q) use ($roleId) {
-                    $q->where('role_id', $roleId);
+                $query->whereHas('social_element.user', function ($q) use ($roleIds) {
+                    $q->whereIn('role_id', $roleIds);
                 });
             }
 
@@ -309,17 +319,22 @@ class GetEvacAreasController extends Controller
             $this->applySearchFilter($query, $request);
 
             // Filter by role
-            if ($request->filled('role')) {
-                $roleId = $this->resolveRoleId($request->query('role'));
+            $rawRole = $request->query('role');
+            if (!empty($rawRole)) {
+                $roleInputs = is_array($rawRole) ? $rawRole : [$rawRole];
+                $roleIds = collect($roleInputs)
+                    ->map(fn($r) => $this->resolveRoleId($r))
+                    ->filter(fn($id) => $id !== null)
+                    ->unique()->values()->all();
 
-                if ($roleId === null) {
+                if (empty($roleIds)) {
                     return response()->json([
                         'error' => 'Invalid role filter. Accepted values: admin, govop, indiv',
                     ], 422);
                 }
 
-                $query->whereHas('social_element.user', function ($q) use ($roleId) {
-                    $q->where('role_id', $roleId);
+                $query->whereHas('social_element.user', function ($q) use ($roleIds) {
+                    $q->whereIn('role_id', $roleIds);
                 });
             }
 
