@@ -51,15 +51,10 @@ function Map({ onLocationFound, showLocation, nearestRouteTrigger }: MapProps) {
   const hasLocated = useRef(false);
 
   let authorized = false;
-  let admin = false;
   const { role } = useUserContext();
 
   if (role) {
     authorized = true;
-  }
-
-  if (role === "admin") {
-    admin = true;
   }
 
   // Auto find location
