@@ -8,8 +8,22 @@ use Illuminate\Support\Facades\Log;
 
 class OtpService
 {
-    public function sendOtp(string $phoneNumber, ?string $message = null, int $expiresInMinutes = 10): array
-    {
+    /**
+     * Send an OTP to a phone number.
+     *
+     * @param string      $phoneNumber
+     * @param string|null $message           Optional custom SMS message body.
+     * @param int         $expiresInMinutes
+     * @param string|null $apiToken          Caller-supplied token (overrides env).
+     *                                       Required when mock=false and env token is absent.
+     */
+    public function sendOtp(
+        string  $phoneNumber,
+        ?string $message = null,
+        int     $expiresInMinutes = 10,
+        ?string $apiToken = null
+    ): array {
+        // ── Mock mode: return a fixed OTP without hitting the gateway ──────
         if (config('services.iprogsms.mock', true)) {
             Log::info('IPROGSMS OTP mock send', ['phone_number' => $phoneNumber]);
 
@@ -27,12 +41,21 @@ class OtpService
             ];
         }
 
-        if (empty(config('services.iprogsms.api_token'))) {
-            abort(500, 'IPROGSMS_API_TOKEN is not configured.');
+        // ── Resolve token: caller-supplied → env fallback ──────────────────
+        $resolvedToken = $apiToken ?? config('services.iprogsms.api_token');
+
+        if (empty($resolvedToken)) {
+            return [
+                'success' => false,
+                'mock'    => false,
+                'message' => 'An iPROG API token is required to send OTPs. Please configure one in your profile.',
+                'data'    => null,
+            ];
         }
 
+        // ── Live gateway call ──────────────────────────────────────────────
         $payload = [
-            'api_token'          => config('services.iprogsms.api_token'),
+            'api_token'          => $resolvedToken,
             'phone_number'       => $phoneNumber,
             'expires_in_minutes' => $expiresInMinutes,
         ];
@@ -41,9 +64,19 @@ class OtpService
             $payload['message'] = $message;
         }
 
-        $response = Http::timeout(15)
-            ->asJson()
-            ->post(rtrim(config('services.iprogsms.otp_base_url'), '/') . '/otp/send_otp', $payload);
+        try {
+            $response = Http::timeout(15)
+                ->asJson()
+                ->post(rtrim(config('services.iprogsms.otp_base_url'), '/') . '/otp/send_otp', $payload);
+        } catch (\Illuminate\Http\Client\ConnectionException $e) {
+            Log::error('IPROGSMS send_otp connection failed', ['phone_number' => $phoneNumber, 'error' => $e->getMessage()]);
+            return [
+                'success' => false,
+                'mock'    => false,
+                'message' => 'Could not reach the iPROG SMS gateway. Please try again.',
+                'data'    => null,
+            ];
+        }
 
         $body = $response->json();
 
@@ -71,11 +104,21 @@ class OtpService
         ];
     }
 
-    public function verifyOtp(string $phoneNumber, string $otp): array
-    {
+    /**
+     * Verify an OTP submitted by the user.
+     *
+     * @param string      $phoneNumber
+     * @param string      $otp
+     * @param string|null $apiToken     Caller-supplied token (overrides env).
+     */
+    public function verifyOtp(
+        string  $phoneNumber,
+        string  $otp,
+        ?string $apiToken = null
+    ): array {
+        // ── Mock mode: accept any OTP, mark phone verified ─────────────────
         if (config('services.iprogsms.mock', true)) {
             Log::info('IPROGSMS OTP mock verify', ['phone_number' => $phoneNumber, 'otp' => $otp]);
-
             $this->markPhoneVerified($phoneNumber);
 
             return [
@@ -85,19 +128,36 @@ class OtpService
             ];
         }
 
-        if (empty(config('services.iprogsms.api_token'))) {
-            abort(500, 'IPROGSMS_API_TOKEN is not configured.');
+        // ── Resolve token ──────────────────────────────────────────────────
+        $resolvedToken = $apiToken ?? config('services.iprogsms.api_token');
+
+        if (empty($resolvedToken)) {
+            return [
+                'success' => false,
+                'mock'    => false,
+                'message' => 'An iPROG API token is required to verify OTPs. Please configure one in your profile.',
+            ];
         }
 
+        // ── Live gateway call ──────────────────────────────────────────────
         $payload = [
-            'api_token'    => config('services.iprogsms.api_token'),
+            'api_token'    => $resolvedToken,
             'phone_number' => $phoneNumber,
             'otp'          => $otp,
         ];
 
-        $response = Http::timeout(15)
-            ->asJson()
-            ->post(rtrim(config('services.iprogsms.otp_base_url'), '/') . '/otp/verify_otp', $payload);
+        try {
+            $response = Http::timeout(15)
+                ->asJson()
+                ->post(rtrim(config('services.iprogsms.otp_base_url'), '/') . '/otp/verify_otp', $payload);
+        } catch (\Illuminate\Http\Client\ConnectionException $e) {
+            Log::error('IPROGSMS verify_otp connection failed', ['phone_number' => $phoneNumber, 'error' => $e->getMessage()]);
+            return [
+                'success' => false,
+                'mock'    => false,
+                'message' => 'Could not reach the iPROG SMS gateway. Please try again.',
+            ];
+        }
 
         $body = $response->json();
 
@@ -128,11 +188,11 @@ class OtpService
     private function markPhoneVerified(string $phoneNumber): void
     {
         $updated = PhoneNumber::where('phone_no', $phoneNumber)
-        ->update(['is_verified' => true]);
+            ->update(['is_verified' => true]);
 
         Log::info('markPhoneVerified', [
-        'phone_number' => $phoneNumber,
-        'rows_updated' => $updated,
+            'phone_number' => $phoneNumber,
+            'rows_updated' => $updated,
         ]);
     }
 }
