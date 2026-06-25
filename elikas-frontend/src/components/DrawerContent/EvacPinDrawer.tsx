@@ -536,19 +536,23 @@ function EvacPinDrawer({
                     </b>
                   </>
                 ) : (
-                  <>
-                    <b>Capacity</b>: {evacPinDetails?.capacity_name}{" "}
-                    {evacPinDetails?.for_heavy_flood && (
-                      <span className="ml-2 text-xs px-2 py-0.5 rounded-full bg-mauve-300 text-amber-800">
-                        Heavy Flooding
-                      </span>
-                    )}
-                    {evacPinDetails?.for_reg_flood && (
-                      <span className="ml-2 text-xs px-2 py-0.5 rounded-full bg-mauve-300 text-amber-800">
-                        Regular Flooding
-                      </span>
-                    )}
-                  </>
+                  <div className="flex flex-col gap-1">
+                    <span>
+                      <b>Capacity</b>: {evacPinDetails?.capacity_name}
+                    </span>
+                    <div className="flex flex-row gap-1">
+                      {evacPinDetails?.for_heavy_flood && (
+                        <div className="w-fit text-xs px-2 py-0.5 rounded-full bg-mauve-300 text-amber-800">
+                          Heavy Flooding
+                        </div>
+                      )}
+                      {evacPinDetails?.for_reg_flood && (
+                        <div className="w-fit text-xs px-2 py-0.5 rounded-full bg-mauve-300 text-amber-800">
+                          Regular Flooding
+                        </div>
+                      )}
+                    </div>
+                  </div>
                 )}
               </li>
               <li>
