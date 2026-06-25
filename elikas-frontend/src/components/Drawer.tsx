@@ -84,6 +84,7 @@ type EvacPin = {
   last_confirmed: string | null;
   media: media[];
   avatar_seed: string;
+  is_own_pin: boolean;
 };
 
 type Sensors = {
