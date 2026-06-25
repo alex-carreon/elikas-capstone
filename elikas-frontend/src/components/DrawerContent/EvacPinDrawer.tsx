@@ -495,9 +495,12 @@ function EvacPinDrawer({
               </div>
             </div>
             <div>
-              <p className="text-left text-xs italic">
-                Information Last Updated: {evacPinDetails?.last_updated}
-              </p>
+              {evacPinDetails?.last_updated && (
+                <p className="text-left text-xs italic">
+                  Information Last Updated:{" "}
+                  {convertDateTime(evacPinDetails?.last_updated)}
+                </p>
+              )}
               <p className="text-left text-xs italic">
                 Expires in: {daysLeft} days
               </p>
@@ -517,7 +520,7 @@ function EvacPinDrawer({
             </Button>
           </div>
           <div className="mt-2">
-            <ul className="list-disc pl-8 text-left text-xs">
+            <ul className="list-disc pl-8 text-left text-xs flex flex-col gap-2">
               <li>
                 <b>Address</b>: {evacPinDetails?.address}
               </li>
@@ -534,7 +537,17 @@ function EvacPinDrawer({
                   </>
                 ) : (
                   <>
-                    <b>Capacity</b>: {evacPinDetails?.capacity_name}
+                    <b>Capacity</b>: {evacPinDetails?.capacity_name}{" "}
+                    {evacPinDetails?.for_heavy_flood && (
+                      <span className="ml-2 text-xs px-2 py-0.5 rounded-full bg-mauve-300 text-amber-800">
+                        Heavy Flooding
+                      </span>
+                    )}
+                    {evacPinDetails?.for_reg_flood && (
+                      <span className="ml-2 text-xs px-2 py-0.5 rounded-full bg-mauve-300 text-amber-800">
+                        Regular Flooding
+                      </span>
+                    )}
                   </>
                 )}
               </li>

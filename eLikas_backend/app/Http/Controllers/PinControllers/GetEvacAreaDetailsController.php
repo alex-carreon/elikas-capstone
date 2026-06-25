@@ -107,6 +107,7 @@ class GetEvacAreaDetailsController extends Controller
                         ? $pin->social_element->posted_at->timezone('Asia/Manila')->toDateTimeString()
                         : null,
                 ],
+                'is_own_pin' => $user && $pin->social_element?->user_id === $user->id,
                 'media' => $pin->social_element?->media->map(function ($media) {
                     return [
                         'id' => $media->id,
@@ -117,6 +118,7 @@ class GetEvacAreaDetailsController extends Controller
                 'last_confirmed' => $pin->verified_at
                     ? $pin->verified_at->timezone('Asia/Manila')->toDateTimeString()
                     : null,
+                
             ], 200);
 
         } catch (\Exception $e) {
