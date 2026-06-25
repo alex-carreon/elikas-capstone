@@ -25,7 +25,7 @@ function Filter() {
     <Collapsible
       open={isOpen}
       onOpenChange={setIsOpen}
-      className="fixed w-full max-w-md z-1"
+      className="absolute max-w-md z-1 right-0"
     >
       <div className="flex items-center justify-end mx-4 mt-4 mb-2">
         <CollapsibleTrigger id="Map_FilterTrigger">

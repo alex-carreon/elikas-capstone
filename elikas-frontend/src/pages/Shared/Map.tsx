@@ -162,7 +162,7 @@ function Map() {
     if (decidedCount === reminderCount) {
       setShowReminder(false);
     }
-  }, [selected]);
+  }, [decidedCount]);
 
   return (
     <>
@@ -276,8 +276,8 @@ function Map() {
             className="absolute top-0 left-0 w-full pointer-events-none z-[1000]"
             style={{ height: "94vh" }}
           >
-            <div className="flex justify-center">
-              <div className="absolute max-w-md w-full pointer-events-auto">
+            <div className="flex justify-end px-4 pt-4">
+              <div className="pointer-events-auto">
                 <span>
                   <Filter />
                 </span>
