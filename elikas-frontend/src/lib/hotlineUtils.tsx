@@ -1,4 +1,5 @@
 import api from "@/api";
+import type { SetStateAction } from "react";
 import type React from "react";
 import type { NavigateFunction } from "react-router";
 import { toast } from "sonner";
@@ -13,6 +14,7 @@ interface handleActionProps {
   navigate?: NavigateFunction;
   id?: string;
   redirect?: string;
+  setDisabled?: React.Dispatch<SetStateAction<boolean>>;
 }
 
 export const handleSubmit = ({
@@ -24,10 +26,12 @@ export const handleSubmit = ({
   brgyId,
   navigate,
   redirect,
+  setDisabled,
 }: handleActionProps) => {
   e?.preventDefault();
 
   try {
+    setDisabled?.(true);
     const response = api.post("/emergency-contacts", {
       name: title,
       address: address,
@@ -35,8 +39,6 @@ export const handleSubmit = ({
       mobile_number: secondaryNo,
       location_id: brgyId,
     });
-
-    console.log(response);
 
     if (!response) {
       toast.error("An error occurred. Please try agian.");
@@ -59,6 +61,8 @@ export const handleSubmit = ({
     });
   } catch (err: any) {
     console.log(err.response);
+  } finally {
+    setDisabled?.(false);
   }
 };
 
@@ -72,10 +76,12 @@ export const handleUpdate = ({
   navigate,
   id,
   redirect,
+  setDisabled,
 }: handleActionProps) => {
   e?.preventDefault();
 
   try {
+    setDisabled?.(true);
     if (primaryNo === null) {
       toast.error("Please fill in the Primary Number field.");
       return;
@@ -113,11 +119,19 @@ export const handleUpdate = ({
     });
   } catch (err: any) {
     console.log(err.response);
+  } finally {
+    setDisabled?.(false);
   }
 };
 
-export const handleDeac = ({ id, navigate, redirect }: handleActionProps) => {
+export const handleDeac = ({
+  id,
+  navigate,
+  redirect,
+  setDisabled,
+}: handleActionProps) => {
   try {
+    setDisabled?.(true);
     const response = api.patch(`/emergency-contacts/${id}/deactivate`);
 
     if (!response.catch) {
@@ -139,5 +153,7 @@ export const handleDeac = ({ id, navigate, redirect }: handleActionProps) => {
     });
   } catch (err: any) {
     console.log(err.response.data);
+  } finally {
+    setDisabled?.(false);
   }
 };

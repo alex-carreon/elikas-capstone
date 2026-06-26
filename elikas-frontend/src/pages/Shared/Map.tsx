@@ -85,6 +85,7 @@ function Map() {
 
       toast.success(`Flood Path ID ${String(id)} snoozed!`);
       setDismissed(true);
+      setDecidedCount((prev) => prev + 1);
     } catch (err: any) {
       console.log(err.response.message);
     }
@@ -119,6 +120,7 @@ function Map() {
 
       toast.success(`Flood Path ID ${String(id)} dismissed!`);
       setDismissed(true);
+      setDecidedCount((prev) => prev + 1);
     } catch (err: any) {
       console.log(err.response.message);
     }
@@ -146,8 +148,6 @@ function Map() {
       ...prev,
       [itemId]: value,
     }));
-
-    setDecidedCount(+1);
   };
 
   useEffect(() => {
@@ -159,6 +159,7 @@ function Map() {
   }, [role]);
 
   useEffect(() => {
+    console.log("Decided", decidedCount);
     if (decidedCount === reminderCount) {
       setShowReminder(false);
     }

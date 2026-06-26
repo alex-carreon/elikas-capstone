@@ -8,6 +8,7 @@ import { useNavigate, useParams } from "react-router";
 import SelectDropdown from "@/components/SelectDropdown";
 import { handleDeac, handleSubmit, handleUpdate } from "@/lib/hotlineUtils";
 import FormSkeleton from "@/pages/Skeletons/FormSkeleton";
+import AlertDialogue from "@/components/AlertDialogue";
 
 type Barangays = {
   id: number;
@@ -56,6 +57,8 @@ function HotlinesForm() {
   const [infoCheck, setInfoCheck] = useState(false);
   const [hotlines, setHotlines] = useState<HotlineDetails>();
   const [isEditable, setIsEditable] = useState(false);
+  const [disabled, setDisabled] = useState(false);
+  const [showDelete, setShowDelete] = useState(false);
 
   const navigate = useNavigate();
   const { id } = useParams();
@@ -136,6 +139,7 @@ function HotlinesForm() {
       secondaryNo: secondaryNo,
       brgyId: brgyId,
       navigate: navigate,
+      setDisabled: setDisabled,
     });
   };
 
@@ -150,6 +154,7 @@ function HotlinesForm() {
       navigate: navigate,
       id: id,
       redirect: "/Hotlines",
+      setDisabled: setDisabled,
     });
   };
 
@@ -158,6 +163,7 @@ function HotlinesForm() {
       id: id,
       navigate: navigate,
       redirect: "/Hotlines",
+      setDisabled: setDisabled,
     });
   };
 
@@ -166,202 +172,221 @@ function HotlinesForm() {
       <FormSkeleton />
     </div>
   ) : (
-    <div className="w-full h-full flex flex-col items-center ">
-      <div className="w-full max-w-md pt-12 p-6 mt-8 mb-2 flex flex-col gap-4 items-center">
-        <div>
-          <p
-            className="font-bold text-lg text-center"
-            style={{ color: colors.heading }}
+    <>
+      {showDelete && (
+        <AlertDialogue
+          contentId="EvacPin_DeacContent"
+          closeId="EvacPin_DeacClose"
+          actionId="EvacPin_DeacBtn"
+          open={showDelete}
+          title="You are about to delete this hotline"
+          description="Deleting this hotline will remove it to the public view."
+          buttonText="Delete"
+          onClose={() => {
+            setShowDelete(false);
+          }}
+          onClick={() => deac()}
+          disabled={disabled}
+        />
+      )}
+      <div className="w-full h-full flex flex-col items-center ">
+        <div className="w-full max-w-md pt-12 p-6 mt-8 mb-2 flex flex-col gap-4 items-center">
+          <div>
+            <p
+              className="font-bold text-lg text-center"
+              style={{ color: colors.heading }}
+            >
+              Add a Hotline
+            </p>
+            <p
+              className="text-align text-center italic text-sm"
+              style={{ color: colors.label }}
+            >
+              Hotlines added will be accessible by all users.
+            </p>
+          </div>
+          <form
+            id="Hotline_Form"
+            onSubmit={create}
+            className="w-full flex flex-col justify-center items-center m-0"
           >
-            Add a Hotline
-          </p>
-          <p
-            className="text-align text-center italic text-sm"
-            style={{ color: colors.label }}
-          >
-            Hotlines added will be accessible by all users.
-          </p>
-        </div>
-        <form
-          id="Hotline_Form"
-          onSubmit={create}
-          className="w-full flex flex-col justify-center items-center m-0"
-        >
-          <div className="w-full max-w-md flex flex-col gap-5">
-            {id && (
+            <div className="w-full max-w-md flex flex-col gap-5">
+              {id && (
+                <TextField
+                  label="Hotline Id"
+                  description="Enter where the hotline belongs to."
+                  inputType="text"
+                  id="Hotline_Id"
+                  placeholder="i.e. Medical and Health"
+                  value={String(hotlines?.id)}
+                  readonly
+                />
+              )}
               <TextField
-                label="Hotline Id"
+                label="Hotline Name*"
                 description="Enter where the hotline belongs to."
                 inputType="text"
-                id="Hotline_Id"
+                id="Hotline_NameField"
                 placeholder="i.e. Medical and Health"
-                value={String(hotlines?.id)}
-                readonly
+                onSubmit={(e) => setTitle(e.target.value)}
+                value={id && title}
+                isRequired={!id}
+                readonly={id && !isEditable ? true : false}
               />
-            )}
-            <TextField
-              label="Hotline Name*"
-              description="Enter where the hotline belongs to."
-              inputType="text"
-              id="Hotline_NameField"
-              placeholder="i.e. Medical and Health"
-              onSubmit={(e) => setTitle(e.target.value)}
-              value={id && title}
-              isRequired={!id}
-              readonly={id && !isEditable ? true : false}
-            />
-            <TextField
-              label="Address*"
-              description="Enter the hotline's address."
-              placeholder="Blk # Lot #, Street, Barangay, City"
-              id="Hotline_AddressField"
-              inputType="text"
-              onSubmit={(e) => setAddress(e.target.value)}
-              value={id && address}
-              isRequired={!id}
-              readonly={id && !isEditable ? true : false}
-            ></TextField>
-            {!id || isEditable ? (
-              <>
-                <SelectDropdown
-                  value={String(cityId)}
-                  onValueChange={(val) => setCityId(Number(val))}
-                  label="City*"
-                  placeholder="Select the hotline's city"
-                  id="Hotline_CityField"
-                  onSubmit={(e) => setCityId(Number(e.target.value))}
-                  options={cities?.map((city) => ({
-                    label: city.name,
-                    value: String(city.id),
-                  }))}
-                  isRequired={!id}
-                  loading={cityLoad}
-                />
-                <SelectDropdown
-                  value={String(brgyId)}
-                  onValueChange={(val) => setBrgyId(Number(val))}
-                  label="Barangay*"
-                  placeholder="Select the hotline's barangay (Please enter a city first)"
-                  id="Hotline_BrgyField"
-                  onSubmit={(e) => setBrgyId(Number(e.target.value))}
-                  options={barangays?.map((brgy) => ({
-                    label: brgy.name,
-                    value: String(brgy.id),
-                  }))}
-                  isRequired={!id}
-                  loading={brgyLoad}
-                />
-              </>
-            ) : (
               <TextField
-                label="Barangay Location"
-                id="Hotline_Barangay"
+                label="Address*"
+                description="Enter the hotline's address."
+                placeholder="Blk # Lot #, Street, Barangay, City"
+                id="Hotline_AddressField"
                 inputType="text"
-                readonly
-                value={barangay}
+                onSubmit={(e) => setAddress(e.target.value)}
+                value={id && address}
+                isRequired={!id}
+                readonly={id && !isEditable ? true : false}
               ></TextField>
-            )}
-
-            <TextField
-              label="Primary Contact Number*"
-              description="This will be the number the citizens will copy."
-              id="Hotline_OfficialNumberField"
-              inputType="text"
-              onSubmit={(e) => setPrimaryNo(e.target.value)}
-              value={id && primaryNo}
-              isRequired={!id}
-              readonly={id && !isEditable ? true : false}
-            ></TextField>
-            <TextField
-              label="Secondary Contact Number (optional)"
-              description="This will be the number citizens will use in case the official number is unreachable."
-              id="Hotline_SecondNumberField"
-              inputType="text"
-              onSubmit={(e) => setSecondaryNo(e.target.value)}
-              value={id && secondaryNo}
-              isRequired={!id}
-              readonly={id && !isEditable ? true : false}
-            ></TextField>
-
-            {id ? (
-              isEditable ? (
+              {!id || isEditable ? (
                 <>
+                  <SelectDropdown
+                    value={String(cityId)}
+                    onValueChange={(val) => setCityId(Number(val))}
+                    label="City*"
+                    placeholder="Select the hotline's city"
+                    id="Hotline_CityField"
+                    onSubmit={(e) => setCityId(Number(e.target.value))}
+                    options={cities?.map((city) => ({
+                      label: city.name,
+                      value: String(city.id),
+                    }))}
+                    isRequired={!id}
+                    loading={cityLoad}
+                  />
+                  <SelectDropdown
+                    value={String(brgyId)}
+                    onValueChange={(val) => setBrgyId(Number(val))}
+                    label="Barangay*"
+                    placeholder="Select the hotline's barangay (Please enter a city first)"
+                    id="Hotline_BrgyField"
+                    onSubmit={(e) => setBrgyId(Number(e.target.value))}
+                    options={barangays?.map((brgy) => ({
+                      label: brgy.name,
+                      value: String(brgy.id),
+                    }))}
+                    isRequired={!id}
+                    loading={brgyLoad}
+                  />
+                </>
+              ) : (
+                <TextField
+                  label="Barangay Location"
+                  id="Hotline_Barangay"
+                  inputType="text"
+                  readonly
+                  value={barangay}
+                ></TextField>
+              )}
+
+              <TextField
+                label="Primary Contact Number*"
+                description="This will be the number the citizens will copy."
+                id="Hotline_OfficialNumberField"
+                inputType="text"
+                onSubmit={(e) => setPrimaryNo(e.target.value)}
+                value={id && primaryNo}
+                isRequired={!id}
+                readonly={id && !isEditable ? true : false}
+              ></TextField>
+              <TextField
+                label="Secondary Contact Number (optional)"
+                description="This will be the number citizens will use in case the official number is unreachable."
+                id="Hotline_SecondNumberField"
+                inputType="text"
+                onSubmit={(e) => setSecondaryNo(e.target.value)}
+                value={id && secondaryNo}
+                readonly={id && !isEditable ? true : false}
+              ></TextField>
+
+              {id ? (
+                isEditable ? (
+                  <>
+                    <div className="mx-2 flex justify-evenly shrink gap-4">
+                      <ButtonComp
+                        text="Submit"
+                        id="Hotline_SubmitUpdBtn"
+                        // type="button"
+                        variant="primary"
+                        heightSize="38px"
+                        widthSize="20"
+                        onClick={(e) => update(e)}
+                        isDisabled={disabled}
+                      ></ButtonComp>
+                      <ButtonComp
+                        text="Cancel"
+                        id="Hotline_CancelUpdBtn"
+                        variant="outline"
+                        heightSize="38px"
+                        widthSize="20"
+                        onClick={() => {
+                          navigate("/Hotlines");
+                        }}
+                        type="button"
+                      ></ButtonComp>
+                    </div>
+                  </>
+                ) : (
                   <div className="mx-2 flex justify-evenly shrink gap-4">
                     <ButtonComp
-                      text="Submit"
-                      id="Hotline_SubmitUpdBtn"
+                      text="Edit"
+                      id="Hotline_UpdateBtn"
                       // type="button"
                       variant="primary"
                       heightSize="38px"
                       widthSize="20"
-                      onClick={(e) => update(e)}
+                      onClick={() => setIsEditable(true)}
                     ></ButtonComp>
                     <ButtonComp
-                      text="Cancel"
-                      id="Hotline_CancelUpdBtn"
-                      variant="outline"
+                      text="Delete"
+                      id="Hotline_DeleteBtn"
+                      variant="important"
                       heightSize="38px"
                       widthSize="20"
                       onClick={() => {
-                        navigate("/Hotlines");
+                        setShowDelete(true);
                       }}
                       type="button"
+                      isDisabled={disabled}
                     ></ButtonComp>
                   </div>
-                </>
+                )
               ) : (
-                <div className="mx-2 flex justify-evenly shrink gap-4">
-                  <ButtonComp
-                    text="Update"
-                    id="Hotline_UpdateBtn"
-                    // type="button"
-                    variant="primary"
-                    heightSize="38px"
-                    widthSize="20"
-                    onClick={() => setIsEditable(true)}
-                  ></ButtonComp>
-                  <ButtonComp
-                    text="Delete"
-                    id="Hotline_DeleteBtn"
-                    variant="important"
-                    heightSize="38px"
-                    widthSize="20"
-                    onClick={() => {
-                      deac();
-                    }}
-                    type="button"
-                  ></ButtonComp>
-                </div>
-              )
-            ) : (
-              <>
-                <div>
-                  <CheckBox
-                    text="I confirm that this location is safe for temporary 
+                <>
+                  <div>
+                    <CheckBox
+                      text="I confirm that this location is safe for temporary 
 evacuation use."
-                    id="Hotline_InfoChckbox"
-                    checked={infoCheck}
-                    onCheckedChange={(val) => {
-                      setInfoCheck(!!val);
-                    }}
-                  />
-                </div>
-                <div className="w-full max-w-md flex justify-center">
-                  <ButtonComp
-                    text="Create Pin"
-                    variant="primary"
-                    id="Hotline_SubmitBtn"
-                    isDisabled={!infoCheck}
-                    heightSize="38px"
-                    widthSize="100%"
-                  />
-                </div>
-              </>
-            )}
-          </div>
-        </form>
+                      id="Hotline_InfoChckbox"
+                      checked={infoCheck}
+                      onCheckedChange={(val) => {
+                        setInfoCheck(!!val);
+                      }}
+                    />
+                  </div>
+                  <div className="w-full max-w-md flex justify-center">
+                    <ButtonComp
+                      text="Add Hotline"
+                      variant="primary"
+                      id="Hotline_SubmitBtn"
+                      isDisabled={!infoCheck || disabled}
+                      heightSize="38px"
+                      widthSize="100%"
+                    />
+                  </div>
+                </>
+              )}
+            </div>
+          </form>
+        </div>
       </div>
-    </div>
+    </>
   );
 }
 

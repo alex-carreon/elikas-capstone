@@ -69,6 +69,7 @@ function Profile() {
   const [newPw, setNewPw] = useState("");
   const [currentPw, setCurrentPw] = useState("");
   const [error, setError] = useState("");
+  const [showDeac, setShowDeac] = useState(false);
 
   const { token, role } = useUserContext();
 
@@ -377,6 +378,22 @@ function Profile() {
           />
         </AlertDialogue>
       )}
+      {showDeac && (
+        <AlertDialogue
+          contentId="EvacPin_DeacContent"
+          closeId="EvacPin_DeacClose"
+          actionId="EvacPin_DeacBtn"
+          open={showDeac}
+          title="You are about to deactivate your account"
+          description="Deactivating your account will remove your access to online features."
+          buttonText="Deactivate Account"
+          onClose={() => {
+            setShowDeac(false);
+          }}
+          onClick={() => deleteProfile()}
+          disabled={disabled}
+        />
+      )}
       <div className="min-h-screen flex justify-center p-6 pt-20">
         <div className="w-full max-w-sm flex flex-col gap-10 items-center">
           <div className="w-full flex justify-between flex-col">
@@ -621,7 +638,7 @@ function Profile() {
                       id="Profile_DeacBtn"
                       heightSize="38px"
                       widthSize="100%"
-                      onClick={deleteProfile}
+                      onClick={() => setShowDeac(true)}
                       isDisabled={disabled}
                     ></ButtonComp>
                   </>
