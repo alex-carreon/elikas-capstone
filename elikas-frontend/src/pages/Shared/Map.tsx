@@ -257,10 +257,10 @@ function Map() {
             : `flex justify-center w-full pt-13`,
         )}
       >
-        <div className="relative max-w-md w-full">
+        <div className="relative max-w-md w-full h-full">
           <MapContainer
             id="Map_Container"
-            style={{ height: "94vh", width: "100%" }}
+            style={{ height: "93dvh", width: "100%" }}
             maxBounds={philippinesBounds}
             maxBoundsViscosity={1.0}
             minZoom={6}
@@ -275,7 +275,7 @@ function Map() {
           {/* <div className="fixed w-full max-w-md"> */}
           <div
             className="absolute top-0 left-0 w-full pointer-events-none z-[1000]"
-            style={{ height: "94vh" }}
+            style={{ height: "100%" }}
           >
             <div className="flex justify-end px-4 pt-4">
               <div className="pointer-events-auto">
