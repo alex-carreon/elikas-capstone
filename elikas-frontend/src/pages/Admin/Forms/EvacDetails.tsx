@@ -285,35 +285,32 @@ function EvacDetails() {
   const markFull = (e: React.FormEvent) => {
     e.preventDefault();
 
-    console.log("Before try");
+    setDisabled(true);
+    const fullLevel = capacityLevels?.find(
+      (level) => level.capacity_level === "Full",
+    )?.id;
 
-    try {
-      const fullLevel = capacityLevels?.find(
-        (level) => level.capacity_level === "Full",
-      )?.id;
+    const newCapacityLevel = isFull ? Number(capacity) : fullLevel;
 
-      // if currently full, mark as open using selected capacity
-      // if not full, mark as full using the Full level id
-      const newCapacityLevel = isFull ? Number(capacity) : fullLevel;
+    const response = api.put(`/pins/${id}`, {
+      capacity_level: newCapacityLevel,
+    });
 
-      const response = api.put(`/pins/${id}`, {
-        capacity_level: newCapacityLevel,
-      });
+    toast.promise(response, {
+      loading: isFull ? "Marking as open..." : "Marking as full...",
+      success: isFull ? "Pin marked as open!" : "Pin marked as full!",
+      error: (err: any) => err.response.data,
+      position: "top-center",
+    });
 
-      toast.promise(response, {
-        loading: isFull ? "Marking as open..." : "Marking as full...",
-        success: isFull ? "Pin marked as open!" : "Pin marked as full!",
-        error: (err: any) => err.response.data,
-        position: "top-center",
-      });
-
-      response.then(async () => {
+    response
+      .then(async () => {
         setIsFull(!isFull);
         await getEvacDetails();
+      })
+      .catch((err: any) => {
+        console.log(err.response.data);
       });
-    } catch (err: any) {
-      console.log(err.response.data);
-    }
   };
 
   const reOpen = (e: React.FormEvent) => {

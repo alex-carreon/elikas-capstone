@@ -28,28 +28,28 @@ function VerifyOTP() {
   const submitOTP = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    try {
-      setDisabled(true);
-      const response = api.post("/otp/verify", {
-        phone_number: phoneNumber,
-        otp: String(otp),
-      });
+    setDisabled(true);
+    const response = api.post("/otp/verify", {
+      phone_number: phoneNumber,
+      otp: String(otp),
+    });
 
-      toast.promise(response, {
-        loading: "Processing your verification...",
-        success: "Contact Number verified!",
-        error: "Contact Number verification failed. Please try agian.",
-        position: "top-center",
-      });
+    toast.promise(response, {
+      loading: "Processing your verification...",
+      success: "Contact Number verified!",
+      error: "Contact Number verification failed. Please try agian.",
+      position: "top-center",
+    });
 
-      response.then(() => {
+    response
+      .then(() => {
         navigate("/Profile");
-      });
-      setDisabled(false);
-    } catch (err: any) {
-      setDisabled(false);
-      console.log(err.response.message);
-    }
+      })
+      .catch((err: any) => {
+        setDisabled(false);
+        console.log(err.response.message);
+      })
+      .finally(() => setDisabled(false));
   };
 
   const resendOTP = async (e: React.FormEvent) => {
@@ -66,8 +66,12 @@ function VerifyOTP() {
 
       setDisabled(false);
     } catch (err: any) {
-      setDisabled(false);
       console.log(err.response?.message);
+      toast.error(
+        "An unexpected error occurred. Please wait while the team fixes this!",
+      );
+    } finally {
+      setDisabled(false);
     }
   };
 

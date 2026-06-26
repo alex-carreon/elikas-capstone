@@ -70,73 +70,70 @@ export const handleSubmit = async ({
 
   const formData = new FormData();
 
-  try {
-    setDisabled?.(true);
-    if (center && routePoints) {
-      if (!routePoints || routePoints.length < 2) {
-        toast("Please indicate the hazard on the map");
-        return;
-      }
+  setDisabled?.(true);
+  if (center && routePoints) {
+    if (!routePoints || routePoints.length < 2) {
+      toast("Please indicate the hazard on the map");
+      return;
+    }
 
-      setMidpoint?.(getMidpoint(routePoints));
+    setMidpoint?.(getMidpoint(routePoints));
 
-      const dateTime = formatInTimeZone(
-        new Date(),
-        "Asia/Manila",
-        "MMMM dd, yyyy, h:mm a",
-      );
+    const dateTime = formatInTimeZone(
+      new Date(),
+      "Asia/Manila",
+      "MMMM dd, yyyy, h:mm a",
+    );
 
-      if (!desc) {
-        setError?.("This field is required.");
-        return;
-      }
+    if (!desc) {
+      setError?.("This field is required.");
+      return;
+    }
 
-      const expDate = userExpiry ?? addDays(dateTime, 3);
+    const expDate = userExpiry ?? addDays(dateTime, 3);
 
-      formData.append("expiry", format(expDate, "yyyy-MM-dd"));
-      routePoints.forEach((point, index) => {
-        formData.append(`path[${index}][0]`, String(point[0]));
-        formData.append(`path[${index}][1]`, String(point[1]));
-      });
-      if (media) {
-        formData.append("file", media);
-      }
-      formData.append("level_id", String(floodLevel));
-      formData.append("description", String(desc));
+    formData.append("expiry", format(expDate, "yyyy-MM-dd"));
+    routePoints.forEach((point, index) => {
+      formData.append(`path[${index}][0]`, String(point[0]));
+      formData.append(`path[${index}][1]`, String(point[1]));
+    });
+    if (media) {
+      formData.append("file", media);
+    }
+    formData.append("level_id", String(floodLevel));
+    formData.append("description", String(desc));
 
-      const response = api.post("/flood-paths", formData, {
-        headers: {
-          "Content-Type": "undefined",
-        },
-      });
+    const response = api.post("/flood-paths", formData, {
+      headers: {
+        "Content-Type": "undefined",
+      },
+    });
 
-      toast.promise(response, {
-        loading: "Adding your pin to the map...",
-        success: "Pin successfully added!",
-        error: (err) => err?.message || "Please try again.",
-        position: "top-center",
-      });
+    toast.promise(response, {
+      loading: "Adding your pin to the map...",
+      success: "Pin successfully added!",
+      error: (err) => err?.message || "Please try again.",
+      position: "top-center",
+    });
 
-      response.then(() => {
+    response
+      .then(() => {
         navigate?.("/map");
-      });
-    }
-  } catch (error: any) {
-    console.error("Request failed");
+      })
+      .catch((error: any) => {
+        console.error("Request failed");
 
-    if (error.response) {
-      console.error("Status:", error.response.status);
-      console.error("Data:", error.response.data);
-    } else if (error.request) {
-      console.error("No response received:", error.request);
-    } else {
-      console.error("Error:", error.message);
-    }
-  } finally {
-    setDisabled?.(false);
+        if (error.response) {
+          console.error("Status:", error.response.status);
+          console.error("Data:", error.response.data);
+        } else if (error.request) {
+          console.error("No response received:", error.request);
+        } else {
+          console.error("Error:", error.message);
+        }
+      })
+      .finally(() => setDisabled?.(false));
   }
-
-  return;
 };
 
 export const handleUpdate = async ({
@@ -153,59 +150,58 @@ export const handleUpdate = async ({
 }: handleActionProps) => {
   e?.preventDefault();
 
-  try {
-    setDisabled?.(true);
-    if (!floodDetails) return;
+  setDisabled?.(true);
+  if (!floodDetails) return;
 
-    if (!routePoints || routePoints.length < 2) {
-      toast.error("Please indicate the hazard on the map");
-      return;
-    }
+  if (!routePoints || routePoints.length < 2) {
+    toast.error("Please indicate the hazard on the map");
+    return;
+  }
 
-    if (!floodLevel) {
-      return;
-    }
+  if (!floodLevel) {
+    return;
+  }
 
-    if (desc === null) {
-      toast.error("Please fill the description field");
-      return;
-    }
+  if (desc === null) {
+    toast.error("Please fill the description field");
+    return;
+  }
 
-    if (!userExpiry) {
-      toast.error("Please enter an expiry date.");
-      return;
-    }
+  if (!userExpiry) {
+    toast.error("Please enter an expiry date.");
+    return;
+  }
 
-    const expDate = userExpiry;
+  const expDate = userExpiry;
 
-    const dateTime = formatInTimeZone(
-      expDate,
-      "Asia/Manila",
-      "MMMM dd, yyyy, h:mm a",
-    );
+  const dateTime = formatInTimeZone(
+    expDate,
+    "Asia/Manila",
+    "MMMM dd, yyyy, h:mm a",
+  );
 
-    const response = api.patch(`/flood-paths/${id}`, {
-      level_id: floodLevel,
-      description: desc,
-      expiry: dateTime,
-      path: routePoints,
-    });
+  const response = api.patch(`/flood-paths/${id}`, {
+    level_id: floodLevel,
+    description: desc,
+    expiry: dateTime,
+    path: routePoints,
+  });
 
-    toast.promise(response, {
-      loading: "Saving your updates...",
-      success: "Pin successfully updated!",
-      position: "top-center",
-    });
+  toast.promise(response, {
+    loading: "Saving your updates...",
+    success: "Pin successfully updated!",
+    position: "top-center",
+  });
 
-    response.then(() => {
+  response
+    .then(() => {
       setIsEditable?.(false);
       setHasUpdated?.(true);
-    });
-  } catch (err: string | any) {
-    console.log(err.message || "An error occurred");
-  } finally {
-    setDisabled?.(false);
-  }
+    })
+    .catch((err: string | any) => {
+      console.log(err.message || "An error occurred");
+    })
+    .finally(() => setDisabled?.(false));
 };
 
 export const handleDelete = async ({
@@ -214,30 +210,31 @@ export const handleDelete = async ({
   deleteNavigate,
   setDisabled,
 }: handleActionProps) => {
-  try {
-    setDisabled?.(true);
-    const response = api.patch(`/flood-paths/${id}/deactivate`);
+  setDisabled?.(true);
+  const response = api.patch(`/flood-paths/${id}/deactivate`);
 
-    toast.promise(response, {
-      loading: "Deleting your pin...",
-      success: "Pin Deleted!",
-      error: (err: any) => {
-        console.log(err.response?.data);
-        return err.response?.data?.message || "Please try again.";
-      },
-      position: "top-center",
-    });
+  toast.promise(response, {
+    loading: "Deleting your pin...",
+    success: "Pin Deleted!",
+    error: (err: any) => {
+      console.log(err.response?.data);
+      return err.response?.data?.message || "Please try again.";
+    },
+    position: "top-center",
+  });
 
-    const navigation = deleteNavigate ? deleteNavigate : "/History";
+  const navigation = deleteNavigate ? deleteNavigate : "/History";
 
-    response.then(() => {
+  response
+    .then(() => {
       navigate?.(navigation);
-    });
-  } catch (err) {
-    console.error("Error Deactivating");
-  } finally {
-    setDisabled?.(false);
-  }
+    })
+    .catch(() => {
+      toast.error(
+        "An unexpected error has occurred. Please wait as the team tries to fix this!",
+      );
+    })
+    .finally(() => setDisabled?.(false));
 };
 
 export const handleAddMedia = async ({

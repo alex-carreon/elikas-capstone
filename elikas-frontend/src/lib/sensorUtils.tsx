@@ -27,6 +27,7 @@ interface handleActionProps {
     orangeLevel: string;
     redLevel: string;
   };
+  setDisabled?: React.Dispatch<React.SetStateAction<boolean>>;
 }
 
 export const handleCreate = async ({
@@ -41,96 +42,98 @@ export const handleCreate = async ({
   redLevel,
   brgy,
   setError,
+  setDisabled,
 }: handleActionProps) => {
   e?.preventDefault();
 
-  try {
-    if (mountHeight) {
-      if (!yellowLevel || yellowLevel == 0) {
-        setError?.({
-          yellowLevel: "Yellow level must be greater than 0",
-          orangeLevel: "",
-          redLevel: "",
-        });
-        return;
-      }
-      if (
-        !orangeLevel ||
-        !redLevel ||
-        !(yellowLevel < orangeLevel) ||
-        !(orangeLevel < redLevel)
-      ) {
-        setError?.({
-          yellowLevel: "",
-          orangeLevel:
-            "Orange level must be greater than yellow level and less than red level",
-          redLevel: "",
-        });
-        return;
-      }
-      if (!redLevel || !(redLevel > orangeLevel) || !(redLevel < mountHeight)) {
-        setError?.({
-          yellowLevel: "",
-          orangeLevel: "",
-          redLevel:
-            "Red level must be greater than orange level and less than the mount height",
-        });
-        return;
-      } else {
-        setError?.({
-          yellowLevel: "",
-          orangeLevel: "",
-          redLevel: "",
-        });
-      }
-    }
+  setDisabled?.(true);
 
-    const response = api.post("/sensors", {
-      name: name,
-      mountHeight: mountHeight,
-      location: location,
-      address: address,
-      yellowLevel: yellowLevel,
-      orangeLevel: orangeLevel,
-      redLevel: redLevel,
-      locationId: brgy,
-    });
-    console.log(response);
-
-    if (!response) {
-      console.log(response);
-    }
-
-    toast.promise(response, {
-      loading: "Adding your sensor to the map...",
-      success: "Sensor added successfully!",
-      error: (err: any) => {
-        if (err.response.status == 422) {
-          return "Fill in all the fields";
-        }
-
-        return "An error occurred. Please try again.";
-      },
-      position: "top-center",
-    });
-
-    response.then(() => {
-      navigate?.("/History");
-    });
-  } catch (error: any) {
-    console.error(error?.response?.data);
-    if (error instanceof Error) {
+  if (mountHeight) {
+    if (!yellowLevel || yellowLevel == 0) {
       setError?.({
         yellowLevel: "Yellow level must be greater than 0",
+        orangeLevel: "",
+        redLevel: "",
+      });
+      return;
+    }
+    if (
+      !orangeLevel ||
+      !redLevel ||
+      !(yellowLevel < orangeLevel) ||
+      !(orangeLevel < redLevel)
+    ) {
+      setError?.({
+        yellowLevel: "",
         orangeLevel:
           "Orange level must be greater than yellow level and less than red level",
+        redLevel: "",
+      });
+      return;
+    }
+    if (!redLevel || !(redLevel > orangeLevel) || !(redLevel < mountHeight)) {
+      setError?.({
+        yellowLevel: "",
+        orangeLevel: "",
         redLevel:
           "Red level must be greater than orange level and less than the mount height",
+      });
+      return;
+    } else {
+      setError?.({
+        yellowLevel: "",
+        orangeLevel: "",
+        redLevel: "",
       });
     }
   }
 
-  return;
+  const response = api.post("/sensors", {
+    name: name,
+    mountHeight: mountHeight,
+    location: location,
+    address: address,
+    yellowLevel: yellowLevel,
+    orangeLevel: orangeLevel,
+    redLevel: redLevel,
+    locationId: brgy,
+  });
+
+  if (!response) {
+    console.log(response);
+    toast.error("eLikas is not responding. Please try again later!");
+  }
+
+  toast.promise(response, {
+    loading: "Adding your sensor to the map...",
+    success: "Sensor added successfully!",
+    error: (err: any) => {
+      if (err.response.status == 422) {
+        return "Fill in all the fields";
+      }
+
+      return "An error occurred. Please try again.";
+    },
+    position: "top-center",
+  });
+
+  response
+    .then(() => {
+      navigate?.("/History");
+    })
+    .catch((error: any) => {
+      console.error(error?.response?.data);
+      if (error instanceof Error) {
+        setError?.({
+          yellowLevel: "Yellow level must be greater than 0",
+          orangeLevel:
+            "Orange level must be greater than yellow level and less than red level",
+          redLevel:
+            "Red level must be greater than orange level and less than the mount height",
+        });
+      }
+    })
+    .finally(() => setDisabled?.(false));
 };
 
 export const handleUpdate = async ({
@@ -144,90 +147,98 @@ export const handleUpdate = async ({
   redLevel,
   setIsEditable,
   setError,
+  setDisabled,
 }: handleActionProps) => {
   e?.preventDefault();
 
-  try {
-    if (mountHeight) {
-      if (!yellowLevel || yellowLevel == 0) {
-        setError?.({
-          yellowLevel: "Yellow level must be greater than 0",
-          orangeLevel: "",
-          redLevel: "",
-        });
-        return;
-      }
-      if (
-        !orangeLevel ||
-        !redLevel ||
-        !(yellowLevel < orangeLevel) ||
-        !(orangeLevel < redLevel)
-      ) {
-        setError?.({
-          yellowLevel: "",
-          orangeLevel:
-            "Orange level must be greater than yellow level and less than red level",
-          redLevel: "",
-        });
-        return;
-      }
-      if (!redLevel || !(redLevel > orangeLevel) || !(redLevel < mountHeight)) {
-        setError?.({
-          yellowLevel: "",
-          orangeLevel: "",
-          redLevel:
-            "Red level must be greater than orange level and less than the mount height",
-        });
-        return;
-      } else {
-        setError?.({
-          yellowLevel: "",
-          orangeLevel: "",
-          redLevel: "",
-        });
-      }
-    }
-
-    const response = api.patch(`/sensors/${id}`, {
-      name: name,
-      mountHeight: mountHeight,
-      address: address,
-      yellowLevel: yellowLevel,
-      orangeLevel: orangeLevel,
-      redLevel: redLevel,
-    });
-
-    toast.promise(response, {
-      loading: "Updating this sensor...",
-      success: "Sensor is successfully updated!",
-      error: (err: any) => {
-        if (err.response.status == 422) {
-          return "Fill in all the fields";
-        }
-
-        return "An error occurred. Please try again.";
-      },
-    });
-
-    response.then(() => {
-      setIsEditable?.(false);
-    });
-  } catch (err: any) {
-    console.log(err.response.data);
-    if (err instanceof Error) {
+  setDisabled?.(true);
+  if (mountHeight) {
+    if (!yellowLevel || yellowLevel == 0) {
       setError?.({
         yellowLevel: "Yellow level must be greater than 0",
+        orangeLevel: "",
+        redLevel: "",
+      });
+      return;
+    }
+    if (
+      !orangeLevel ||
+      !redLevel ||
+      !(yellowLevel < orangeLevel) ||
+      !(orangeLevel < redLevel)
+    ) {
+      setError?.({
+        yellowLevel: "",
         orangeLevel:
           "Orange level must be greater than yellow level and less than red level",
+        redLevel: "",
+      });
+      return;
+    }
+    if (!redLevel || !(redLevel > orangeLevel) || !(redLevel < mountHeight)) {
+      setError?.({
+        yellowLevel: "",
+        orangeLevel: "",
         redLevel:
           "Red level must be greater than orange level and less than the mount height",
       });
+      return;
+    } else {
+      setError?.({
+        yellowLevel: "",
+        orangeLevel: "",
+        redLevel: "",
+      });
     }
   }
+
+  const response = api.patch(`/sensors/${id}`, {
+    name: name,
+    mountHeight: mountHeight,
+    address: address,
+    yellowLevel: yellowLevel,
+    orangeLevel: orangeLevel,
+    redLevel: redLevel,
+  });
+
+  toast.promise(response, {
+    loading: "Updating this sensor...",
+    success: "Sensor is successfully updated!",
+    error: (err: any) => {
+      if (err.response.status == 422) {
+        return "Fill in all the fields";
+      }
+
+      return "An error occurred. Please try again.";
+    },
+  });
+
+  response
+    .then(() => {
+      setIsEditable?.(false);
+    })
+    .catch((err: any) => {
+      console.log(err.response.data);
+      if (err instanceof Error) {
+        setError?.({
+          yellowLevel: "Yellow level must be greater than 0",
+          orangeLevel:
+            "Orange level must be greater than yellow level and less than red level",
+          redLevel:
+            "Red level must be greater than orange level and less than the mount height",
+        });
+      }
+    })
+    .finally(() => setDisabled?.(false));
 };
 
-export const handleDeac = async ({ id, navigate }: handleActionProps) => {
+export const handleDeac = async ({
+  id,
+  navigate,
+  setDisabled,
+}: handleActionProps) => {
   try {
+    setDisabled?.(true);
     const response = api.patch(`/sensors/${id}/deactivate`);
 
     if (!response) {
@@ -248,5 +259,7 @@ export const handleDeac = async ({ id, navigate }: handleActionProps) => {
     });
   } catch (err: any) {
     console.log(err.response.data);
+  } finally {
+    setDisabled?.(false);
   }
 };

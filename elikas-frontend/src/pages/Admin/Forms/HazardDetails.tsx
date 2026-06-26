@@ -44,6 +44,7 @@ function HazardDetails() {
   const [isEditable, setIsEditable] = useState(false);
   const [levels, setLevels] = useState<FloodLevel[]>([]);
   const [levelId, setLevelId] = useState(0);
+  const [disabled, setDisabled] = useState(false);
 
   const { id } = useParams();
   const navigate = useNavigate();
@@ -120,29 +121,37 @@ function HazardDetails() {
   const handleUpdate = (e: React.FormEvent) => {
     e?.preventDefault();
 
-    try {
-      const response = api.patch(`/flood-paths/${id}`, {
-        level_id: levelId,
-      });
+    setDisabled(true);
 
-      console.log(response);
+    const response = api.patch(`/flood-paths/${id}`, {
+      level_id: levelId,
+    });
 
-      toast.promise(response, {
-        loading: "Saving your updates...",
-        success: "Pin successfully updated!",
-        position: "top-center",
-      });
+    console.log(response);
 
-      response.then(() => {
+    toast.promise(response, {
+      loading: "Saving your updates...",
+      success: "Pin successfully updated!",
+      position: "top-center",
+    });
+
+    response
+      .then(() => {
         setIsEditable?.(false);
-      });
-    } catch (err: string | any) {
-      console.log(err.message || "An error occurred");
-    }
+      })
+      .catch((err: string | any) => {
+        console.log(err.message || "An error occurred");
+      })
+      .finally(() => setDisabled(false));
   };
 
   const deleteHaz = () => {
-    handleDelete({ id: id, navigate: navigate, deleteNavigate: "/admin-pins" });
+    handleDelete({
+      id: id,
+      navigate: navigate,
+      deleteNavigate: "/admin-pins",
+      setDisabled: setDisabled,
+    });
   };
 
   useEffect(() => {
@@ -187,6 +196,7 @@ function HazardDetails() {
         formId="Admin_HazardUpdateForm"
         deleteClick={() => deleteHaz()}
         isEditable={isEditable}
+        isDisabled={disabled}
       >
         {loading ? (
           <div className="flex justify-center">

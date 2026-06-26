@@ -68,6 +68,7 @@ function UserDetails() {
   const [brgyLoad, setBrgyLoad] = useState(false);
   const [cities, setCities] = useState<Cities[]>([]);
   const [cityId, setCityId] = useState(0);
+  const [disabled, setDisabled] = useState(false);
 
   const getIndivDetails = async (signal?: AbortSignal) => {
     try {
@@ -118,6 +119,7 @@ function UserDetails() {
     });
 
     try {
+      setDisabled(true);
       const response = await api.patch(`/admin/users/${id}`, {
         username: username,
         email: email,
@@ -136,25 +138,30 @@ function UserDetails() {
       }
     } catch (err: any) {
       console.log(err.response?.data);
+      toast.error("An unexpected error occurred.");
+    } finally {
+      setDisabled(false);
     }
   };
 
   const deacIndiv = async () => {
-    try {
-      const response = api.patch(`/admin/users/${id}/deactivate`);
+    setDisabled(true);
+    const response = api.patch(`/admin/users/${id}/deactivate`);
 
-      toast.promise(response, {
-        loading: "Deactivating this account...",
-        success: "Account Deactivated!",
-        position: "top-center",
-      });
+    toast.promise(response, {
+      loading: "Deactivating this account...",
+      success: "Account Deactivated!",
+      position: "top-center",
+    });
 
-      response.then(() => {
+    response
+      .then(() => {
         navigate("/admin-indiv");
-      });
-    } catch (err: any) {
-      console.log(err.response.message);
-    }
+      })
+      .catch((err: any) => {
+        console.log(err.response.message);
+      })
+      .finally(() => setDisabled(false));
   };
 
   useEffect(() => {
@@ -269,6 +276,7 @@ function UserDetails() {
           getIndivDetails();
         }}
         formId="Admin_IndivUpdateForm"
+        isDisabled={disabled}
       >
         {loading ? (
           <div className="flex justify-center">
