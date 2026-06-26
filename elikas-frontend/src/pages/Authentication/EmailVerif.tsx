@@ -14,7 +14,7 @@ function EmailVerif() {
 
   const email = auth.currentUser?.email;
 
-  const [message, setMessage] = useState("");
+  // const [message, setMessage] = useState("");
 
   const handleResend = async () => {
     try {
@@ -24,10 +24,16 @@ function EmailVerif() {
         throw new Error("Please register again first.");
       }
 
-      await sendEmailVerification(user);
+      const response = await sendEmailVerification(user);
+      console.log(response);
       toast.info("Verification email sent again. Check your inbox/spam.");
     } catch (err: string | any) {
-      setMessage(err.message);
+      if (err.code === "auth/too-many-requests") {
+        toast.error("Too many attempts. Please try agian later.");
+        return;
+      }
+      console.log(err.response);
+      toast.error("An unexpected error occurred. Please try again later.");
     }
   };
 
@@ -70,12 +76,12 @@ function EmailVerif() {
             {/* <p className="text-xs text-red-500 font-bold">
               You're lying it aint verified
             </p> */}
-            <p
+            {/* <p
               className="text-sm text-center p-1"
               style={{ color: colors.heading }}
             >
               {message}
-            </p>
+            </p> */}
             <ButtonComp
               text="Verify Email"
               variant="primary"

@@ -15,15 +15,18 @@ class OtpController extends Controller
     {
         try {
             $validated = $request->validate([
-                'phone_number'        => 'required|string',
-                'message'             => 'nullable|string|max:600',
-                'expires_in_minutes'  => 'nullable|integer|min:1|max:60',
+                'phone_number'       => 'required|string',
+                'message'            => 'nullable|string|max:600',
+                'expires_in_minutes' => 'nullable|integer|min:1|max:60',
             ]);
+
+            $apiToken = $request->header('X-iPROG-API-Token') ?: null;
 
             $result = $this->otpService->sendOtp(
                 $validated['phone_number'],
                 $validated['message'] ?? null,
                 $validated['expires_in_minutes'] ?? 10,
+                $apiToken,
             );
 
             if (!$result['success']) {
@@ -53,9 +56,13 @@ class OtpController extends Controller
                 'otp'          => 'required|string',
             ]);
 
+            // Accept a per-request token from the header
+            $apiToken = $request->header('X-iPROG-API-Token') ?: null;
+
             $result = $this->otpService->verifyOtp(
                 $validated['phone_number'],
                 $validated['otp'],
+                $apiToken,
             );
 
             if (!$result['success']) {
@@ -70,9 +77,9 @@ class OtpController extends Controller
             ]);
         } catch (\Illuminate\Validation\ValidationException $e) {
             return response()->json(['message' => 'Validation failed.', 'errors' => $e->errors()], 422);
-    } catch (\Exception $e) {
+        } catch (\Exception $e) {
             Log::error('OtpController@verify', ['error' => $e->getMessage()]);
             return response()->json(['error' => 'Failed to verify OTP.', 'details' => $e->getMessage()], 500);
-            }
         }
     }
+}

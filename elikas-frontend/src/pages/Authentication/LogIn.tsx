@@ -53,7 +53,12 @@ function LogIn() {
         position: "top-center",
       });
     } catch (err: any) {
-      console.log(err.response.message);
+      if (err.code === "auth/too-many-requests") {
+        toast.error("Too many attempts. Please try agian later.");
+        return;
+      }
+      console.log(err.response);
+      toast.error("An unexpected error occurred. Please try again later.");
     }
   };
 

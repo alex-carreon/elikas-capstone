@@ -124,7 +124,9 @@ function Hotlines() {
   }, []);
 
   useEffect(() => {
-    getFiltered();
+    if (searchFor) {
+      getFiltered();
+    }
   }, [searchFor]);
 
   return loading ? (
@@ -163,7 +165,7 @@ function Hotlines() {
           </p>
         </div>
         {/* Search and Filter and Add button */}
-        <div className="w-full max-w-md flex flex-row justify-between">
+        <div className="w-full max-w-md flex flex-row justify-between items-center">
           {role === "brgy_op" && (
             <div>
               <Link to="/HotlinesForm">
@@ -177,7 +179,7 @@ function Hotlines() {
               </Link>
             </div>
           )}
-          <div className="w-full flex justify-end items-center gap-2">
+          <div className="w-3/5 flex justify-center gap-2">
             <SelectDropdown
               value={String(searchFor)}
               onValueChange={(val) => setSearchFor(val)}

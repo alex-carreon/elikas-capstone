@@ -129,13 +129,6 @@ class SMSController extends Controller
                 'api_token' => 'required|string|min:8|max:255',
             ]);
 
-            if (config('services.iprogsms.mock', true)) {
-                return response()->json([
-                    'message' => 'Token is valid (mock).',
-                    'gateway' => ['http_status' => 200],
-                ]);
-            }
-
             $token   = $validated['api_token'];
             $baseUrl = rtrim(config('services.iprogsms.otp_base_url', 'https://sms.iprogtech.com/api/v1'), '/');
 
@@ -211,7 +204,7 @@ class SMSController extends Controller
     {
         try {
             $validated = $request->validate([
-                'message_content' => 'required|string',
+                'message_content' => 'required|string|max:600',
                 'scheduled_for'   => 'nullable|date|after_or_equal:now',
             ]);
 
@@ -368,8 +361,8 @@ class SMSController extends Controller
     {
         try {
             $validated = $request->validate([
-                'template_name'   => 'required|string|max:50',
-                'message_content' => 'required|string',
+                'template_name'   => 'required|string|max:255',
+                'message_content' => 'required|string|max:600',
             ]);
 
             $govOp = $this->resolveGovOp($request);
