@@ -30,6 +30,7 @@ function SMS() {
   const [templates, setTemplates] = useState<templateType[]>([]);
   const [showDialog, setShowDialog] = useState(true);
   const [smsToken, setSMSToken] = useState<string | null>(null);
+  const [disabled, setDisabled] = useState(false);
 
   const navigate = useNavigate();
 
@@ -65,12 +66,11 @@ function SMS() {
     }
 
     try {
+      setDisabled(true);
       const response = api.post("/sms/templates", {
         message_content: message,
         template_name: templateTitle,
       });
-
-      console.log(response);
 
       toast.promise(response, {
         loading: "Adding to your templates...",
@@ -93,11 +93,15 @@ function SMS() {
       getTemplates();
     } catch (err: any) {
       console.log(err.response.data);
+      toast.error("An unexpected error occurred");
+    } finally {
+      setDisabled(false);
     }
   };
 
   const handleTempleteDel = () => {
     try {
+      setDisabled(true);
       const response = api.delete(`/sms/templates/${templateId}`);
 
       console.log(response);
@@ -119,6 +123,8 @@ function SMS() {
     } catch (err: any) {
       toast.error("An unexpected error occurred. Please try again later.");
       console.log(err.response.message);
+    } finally {
+      setDisabled(false);
     }
   };
 
@@ -134,6 +140,7 @@ function SMS() {
     }
 
     try {
+      setDisabled(true);
       const response = api.post(
         "/sms/broadcasts/send-now",
         { message_content: message },
@@ -143,8 +150,6 @@ function SMS() {
           },
         },
       );
-
-      console.log(response);
 
       toast.promise(response, {
         loading: "Sending your message now...",
@@ -156,6 +161,9 @@ function SMS() {
       });
     } catch (err: any) {
       console.log(err.response.data);
+      toast.error("An unexpected error occurred.");
+    } finally {
+      setDisabled(false);
     }
   };
 
@@ -172,6 +180,7 @@ function SMS() {
       );
 
       try {
+        setDisabled(true);
         const response = api.post(
           "/sms-broadcasts/schedule",
           {
@@ -192,9 +201,12 @@ function SMS() {
         });
       } catch (err: any) {
         console.log(err.response.data);
+      } finally {
+        setDisabled(false);
       }
     } else {
       toast.error("You are missing a field.");
+      setDisabled(false);
       return;
     }
   };
@@ -207,35 +219,34 @@ function SMS() {
 
   const handleSubmitToken = (e: React.FormEvent) => {
     e.preventDefault();
+    setDisabled(true);
+    const response = api.post("/sms/verify-token", {
+      api_token: smsToken,
+    });
 
-    try {
-      const response = api.post("/sms/verify-token", {
-        api_token: smsToken,
-      });
+    toast.promise(response, {
+      loading: "Verifying your token...",
+      success: "Token verified!",
+      error: (err: any) => {
+        if (err.response?.data.error == "Unauthorized") {
+          return "Your session has expired. Please log in again.";
+        }
+        if (err.response?.data.message == "Validation failed.") {
+          return "Verification failed. Please be sure that the token is from your IPROGSMS account.";
+        }
+        return "An error occurred. Please try again.";
+      },
+    });
 
-      toast.promise(response, {
-        loading: "Verifying your token...",
-        success: "Token verified!",
-        error: (err: any) => {
-          if (err.response?.data.error == "Unauthorized") {
-            return "Your session has expired. Please log in again.";
-          }
-          if (err.response?.data.message == "Validation failed.") {
-            return "Verification failed. Please be sure that the token is from your IPROGSMS account.";
-          }
-          return "An error occurred. Please try again.";
-        },
-      });
-
-      console.log(response);
-
-      response.then(() => {
+    response
+      .then(() => {
         setShowDialog(false);
-      });
-    } catch (err: any) {
-      console.log(err.response.data);
-      toast.error("An error ocurred. Please try again.");
-    }
+      })
+      .catch((err: any) => {
+        console.log(err.response.data);
+        toast.error("An error ocurred. Please try again.");
+      })
+      .finally(() => setDisabled(false));
   };
 
   useEffect(() => {
@@ -263,6 +274,7 @@ function SMS() {
           buttonText2="Go Back"
           onClick={(e) => handleSubmitToken(e)}
           onClick2={() => navigate("/map")}
+          disabled={disabled}
         >
           <TextField
             label="Verify IPROGSMS Token"
@@ -294,6 +306,7 @@ function SMS() {
             setWillDelete(false);
           }}
           onClick={handleTempleteDel}
+          disabled={disabled}
         />
       )}
       {addTemplate && (
@@ -310,6 +323,7 @@ function SMS() {
             setError({ title: "", message: "" });
           }}
           onClick={(e: any) => handleTemplateAdd(e)}
+          disabled={disabled}
         >
           <TextField
             label="Template Title*"
@@ -451,6 +465,7 @@ function SMS() {
                 heightSize="38px"
                 widthSize="100%"
                 onClick={(e) => handleSendNow(e)}
+                isDisabled={disabled}
               />
             ) : (
               <ButtonComp
@@ -460,6 +475,7 @@ function SMS() {
                 heightSize="38px"
                 widthSize="100%"
                 onClick={(e) => handleSchedSend(e)}
+                isDisabled={disabled}
               />
             )}
             <ButtonComp
@@ -469,6 +485,7 @@ function SMS() {
               heightSize="38px"
               widthSize="100%"
               onClick={() => setWillDelete(true)}
+              isDisabled={disabled}
             />
           </div>
         </div>

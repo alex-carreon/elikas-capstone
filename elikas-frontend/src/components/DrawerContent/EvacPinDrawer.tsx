@@ -305,30 +305,31 @@ function EvacPinDrawer({
       formData.append("file", image);
     }
 
-    try {
-      setDisabled(true);
-      const response = api.post(
-        `/evac-areas/${selectedPin?.id}/comments`,
-        formData,
-      );
+    setDisabled(true);
+    const response = api.post(
+      `/evac-areas/${selectedPin?.id}/comments`,
+      formData,
+    );
 
-      toast.promise(response, {
-        loading: "Adding your comment...",
-        success: "Comment successfully added!",
-        error: (err) => err?.message || "Please try again.",
-        position: "top-center",
-      });
+    toast.promise(response, {
+      loading: "Adding your comment...",
+      success: "Comment successfully added!",
+      error: (err) => err?.message || "Please try again.",
+      position: "top-center",
+    });
 
-      response.then(() => {
+    response
+      .then(() => {
         setNewComment(null);
         setImage("");
         getComments();
+      })
+      .catch((err: any) => {
+        console.log(err.response.data);
+      })
+      .finally(() => {
+        setDisabled(false);
       });
-    } catch (err: any) {
-      console.log(err.response.data);
-    } finally {
-      setDisabled(false);
-    }
   };
 
   useEffect(() => {

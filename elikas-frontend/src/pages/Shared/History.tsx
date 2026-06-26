@@ -147,7 +147,7 @@ function History() {
       );
 
       const inactiveEvacs = await response.data.pins.filter(
-        (pin: myEvacPins) => pin.is_deactivated || pin.is_expired,
+        (pin: myEvacPins) => pin.is_expired,
       );
 
       setInactiveEvacPins(inactiveEvacs);
@@ -180,7 +180,7 @@ function History() {
       );
 
       const inactiveHazardPins = await response.data.flood_paths.filter(
-        (pin: myFloodPaths) => pin.is_deactivated || pin.is_expired,
+        (pin: myFloodPaths) => pin.is_expired,
       );
 
       setActiveFloodPaths(activeHazardPins);
@@ -792,9 +792,7 @@ function History() {
                     );
                   })
                 ) : (
-                  <p className="text-center">
-                    You don't have active hazard pins. Mark one on the map!
-                  </p>
+                  <p className="text-center">No expired evacuation pins yet!</p>
                 )
               ) : isSensors ? (
                 sensors.length > 0 ? (
@@ -833,54 +831,60 @@ function History() {
                   <p className="text-center">No registered sensors.</p>
                 )
               ) : activeHaz ? (
-                activeFloodPaths.map((path) => {
-                  if (!path.is_expired)
-                    return (
-                      <Row
-                        title="Flood"
-                        desc={path.level}
-                        address={path.description}
-                        datePosted={path.last_confirmed}
-                        link={`/HazardForm/${path.id}`}
-                        isExpired={path.is_expired}
-                        buttonId="History_ActiveHazardDetailsBtn"
-                        showBtn
-                      >
-                        <div
-                          className={`mt-2 px-2 py-1 rounded-3xl w-fit text-sm`}
-                          style={{
-                            backgroundColor:
-                              path.level === "Gutter-Deep" ||
-                              path.level === "Half Knee-Deep"
-                                ? colorHazard.lightBlue
-                                : path.level === "Half Tire-Deep" ||
-                                    path.level === "Knee-Deep"
-                                  ? colorHazard.darkBlue
-                                  : path.level === "Tire-Deep" ||
-                                      path.level === "Waist-Deep" ||
-                                      path.level === "Chest-Deep"
-                                    ? colorHazard.red
-                                    : colorHazard.fallback,
-                            color:
-                              path.level === "Gutter-Deep" ||
-                              path.level === "Half Knee-Deep"
-                                ? "Black"
-                                : path.level === "Half Tire-Deep" ||
-                                    path.level === "Knee-Deep"
-                                  ? "White"
-                                  : path.level === "Tire-Deep" ||
-                                      path.level === "Waist-Deep" ||
-                                      path.level === "Chest-Deep"
-                                    ? "White"
-                                    : colorHazard.fallback,
-                          }}
+                activeFloodPaths.length > 0 ? (
+                  activeFloodPaths.map((path) => {
+                    if (!path.is_expired)
+                      return (
+                        <Row
+                          title="Flood"
+                          desc={path.level}
+                          address={path.description}
+                          datePosted={path.last_confirmed}
+                          link={`/HazardForm/${path.id}`}
+                          isExpired={path.is_expired}
+                          buttonId="History_ActiveHazardDetailsBtn"
+                          showBtn
                         >
-                          {path.level}
-                        </div>
-                      </Row>
-                    );
-                })
-              ) : (
+                          <div
+                            className={`mt-2 px-2 py-1 rounded-3xl w-fit text-sm`}
+                            style={{
+                              backgroundColor:
+                                path.level === "Gutter-Deep" ||
+                                path.level === "Half Knee-Deep"
+                                  ? colorHazard.lightBlue
+                                  : path.level === "Half Tire-Deep" ||
+                                      path.level === "Knee-Deep"
+                                    ? colorHazard.darkBlue
+                                    : path.level === "Tire-Deep" ||
+                                        path.level === "Waist-Deep" ||
+                                        path.level === "Chest-Deep"
+                                      ? colorHazard.red
+                                      : colorHazard.fallback,
+                              color:
+                                path.level === "Gutter-Deep" ||
+                                path.level === "Half Knee-Deep"
+                                  ? "Black"
+                                  : path.level === "Half Tire-Deep" ||
+                                      path.level === "Knee-Deep"
+                                    ? "White"
+                                    : path.level === "Tire-Deep" ||
+                                        path.level === "Waist-Deep" ||
+                                        path.level === "Chest-Deep"
+                                      ? "White"
+                                      : colorHazard.fallback,
+                            }}
+                          >
+                            {path.level}
+                          </div>
+                        </Row>
+                      );
+                  })
+                ) : (
+                  <p className="text-center">
+                    You don't have active hazard pins. Mark one on the map!
+                  </p>
+                )
+              ) : inactiveFloodPaths.length > 0 ? (
                 inactiveFloodPaths.map((path) => {
                   if (path.is_expired)
                     return (
@@ -895,6 +899,10 @@ function History() {
                       />
                     );
                 })
+              ) : (
+                <p className="text-center">
+                  You don't have expired hazard pins yet!
+                </p>
               )}
             </div>
           </>

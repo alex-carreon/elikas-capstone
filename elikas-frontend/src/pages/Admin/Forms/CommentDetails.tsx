@@ -62,24 +62,27 @@ function CommentDetails() {
   };
 
   const delComment = async () => {
-    try {
-      setDisabled(true);
-      const response = api.patch(`/admin/comments/${comment?.id}/deactivate`);
+    setDisabled(true);
+    const response = api.patch(`/admin/comments/${comment?.id}/deactivate`);
 
-      toast.promise(response, {
-        loading: "Deactivating this comment...",
-        success: "Comment deactivated!",
-        error: "Deleting unsuccessful. Please try again",
-        position: "top-center",
-      });
+    toast.promise(response, {
+      loading: "Deactivating this comment...",
+      success: "Comment deactivated!",
+      error: "Deleting unsuccessful. Please try again",
+      position: "top-center",
+    });
 
-      response.then(() => {
+    response
+      .then(() => {
         navigate(`/admin-pins/${comment?.evac_area.id}/comments`);
-        setDisabled(false);
-      });
-    } catch (err: any) {
-      console.log(err.response.message);
-    }
+      })
+      .catch((err: any) => {
+        console.log(err.response.message);
+        toast.error(
+          "An unexpected error occurred. Please wait while the team tries to fix this!",
+        );
+      })
+      .finally(() => setDisabled(false));
   };
 
   useEffect(() => {

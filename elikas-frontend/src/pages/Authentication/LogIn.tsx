@@ -107,8 +107,6 @@ function LogIn() {
         },
       );
 
-      console.log(response);
-
       toast.promise(response, {
         loading: "Logging you in...",
         success: "You're logged in!",

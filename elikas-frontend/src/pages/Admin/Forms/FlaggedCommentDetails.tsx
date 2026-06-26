@@ -46,6 +46,7 @@ type flagDetails = {
 function FlaggedCommentDetails() {
   const [loading, setLoading] = useState(false);
   const [flagDetails, setFlagDetails] = useState<flagDetails>();
+  const [disabled, setDisabled] = useState(false);
 
   const { id } = useParams();
   const navigate = useNavigate();
@@ -82,49 +83,54 @@ function FlaggedCommentDetails() {
   const ignoreFlag = (e?: React.FormEvent) => {
     e?.preventDefault();
 
-    try {
-      const response = api.patch(
-        `/admin/flags/${flagDetails?.element_id}/approve`,
-      );
-      console.log(response);
-      toast.promise(response, {
-        loading: "Removing the flag...",
-        success: "Flag removed!",
-        error: (err: any) => {
-          return err.response.data;
-        },
-        position: "top-center",
-      });
-      response.then(() => {
+    setDisabled(true);
+    const response = api.patch(
+      `/admin/flags/${flagDetails?.element_id}/approve`,
+    );
+    console.log(response);
+    toast.promise(response, {
+      loading: "Removing the flag...",
+      success: "Flag removed!",
+      error: (err: any) => {
+        return err.response.data;
+      },
+      position: "top-center",
+    });
+    response
+      .then(() => {
         navigate("/admin-pins");
-      });
-    } catch (err: any) {
-      console.log(err.response.data);
-    }
+      })
+      .catch((err: any) => {
+        console.log(err.response.data);
+      })
+      .finally(() => setDisabled(false));
   };
 
   const rejectFlag = (e?: React.FormEvent) => {
     e?.preventDefault();
 
-    try {
-      const response = api.patch(
-        `/admin/flags/${flagDetails?.element_id}/reject`,
-      );
-      console.log(response);
-      toast.promise(response, {
-        loading: "Accepting the flag and deleting the post...",
-        success: "Post removed!",
-        error: (err: any) => {
-          return err.response.data;
-        },
-        position: "top-center",
-      });
-      response.then(() => {
+    setDisabled(true);
+
+    const response = api.patch(
+      `/admin/flags/${flagDetails?.element_id}/reject`,
+    );
+    console.log(response);
+    toast.promise(response, {
+      loading: "Accepting the flag and deleting the post...",
+      success: "Post removed!",
+      error: (err: any) => {
+        return err.response.data;
+      },
+      position: "top-center",
+    });
+    response
+      .then(() => {
         navigate("/admin-pins");
-      });
-    } catch (err: any) {
-      console.log(err.response.data);
-    }
+      })
+      .catch((err: any) => {
+        console.log(err.response.data);
+      })
+      .finally(() => setDisabled(false));
   };
 
   useEffect(() => {
@@ -140,6 +146,7 @@ function FlaggedCommentDetails() {
         updBtnLabel="Ignore"
         updateClick={(e) => ignoreFlag(e)}
         deleteClick={(e) => rejectFlag(e)}
+        isDisabled={disabled}
       >
         {loading ? (
           <div className="flex justify-center">
