@@ -55,6 +55,7 @@ function FlaggedDetails() {
   const [loading, setLoading] = useState(false);
   const [pathDetails, setPathDetails] = useState<FlaggedFlood>();
   const [midpoint, setMidpoint] = useState<[number, number]>();
+  const [disabled, setDisabled] = useState(false);
 
   const { id } = useParams();
   const navigate = useNavigate();
@@ -117,49 +118,55 @@ function FlaggedDetails() {
   const ignoreFlag = (e?: React.FormEvent) => {
     e?.preventDefault();
 
-    try {
-      const response = api.patch(
-        `/admin/flags/${pathDetails?.element_id}/approve`,
-      );
-      console.log(response);
-      toast.promise(response, {
-        loading: "Removing the flag...",
-        success: "Flag removed!",
-        error: (err: any) => {
-          return err.response.data;
-        },
-        position: "top-center",
-      });
-      response.then(() => {
+    setDisabled(true);
+    const response = api.patch(
+      `/admin/flags/${pathDetails?.element_id}/approve`,
+    );
+    console.log(response);
+    toast.promise(response, {
+      loading: "Removing the flag...",
+      success: "Flag removed!",
+      error: (err: any) => {
+        return err.response.data;
+      },
+      position: "top-center",
+    });
+    response
+      .then(() => {
         navigate("/admin-pins");
-      });
-    } catch (err: any) {
-      console.log(err.response.data);
-    }
+      })
+      .catch((err: any) => {
+        console.log(err.response.data);
+        toast.error(
+          "An unexpected error occurred. Please wait while we try to fix this!",
+        );
+      })
+      .finally(() => setDisabled(false));
   };
 
   const rejectFlag = (e?: React.FormEvent) => {
     e?.preventDefault();
 
-    try {
-      const response = api.patch(
-        `/admin/flags/${pathDetails?.element_id}/reject`,
-      );
-      console.log(response);
-      toast.promise(response, {
-        loading: "Accepting the flag and deleting the post...",
-        success: "Post removed!",
-        error: (err: any) => {
-          return err.response.data;
-        },
-        position: "top-center",
-      });
-      response.then(() => {
+    const response = api.patch(
+      `/admin/flags/${pathDetails?.element_id}/reject`,
+    );
+    console.log(response);
+    toast.promise(response, {
+      loading: "Accepting the flag and deleting the post...",
+      success: "Post removed!",
+      error: (err: any) => {
+        return err.response.data;
+      },
+      position: "top-center",
+    });
+    response
+      .then(() => {
         navigate("/admin-pins");
-      });
-    } catch (err: any) {
-      console.log(err.response.data);
-    }
+      })
+      .catch((err: any) => {
+        console.log(err.response.data);
+      })
+      .finally(() => setDisabled(false));
   };
 
   useEffect(() => {
@@ -175,6 +182,7 @@ function FlaggedDetails() {
         deleteId="Admin_FlaggedPathDelete"
         updateClick={(e) => ignoreFlag(e)}
         deleteClick={(e) => rejectFlag(e)}
+        isDisabled={disabled}
       >
         {loading ? (
           <div className="flex justify-center">

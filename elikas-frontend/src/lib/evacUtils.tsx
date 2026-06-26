@@ -47,54 +47,53 @@ export const handleSubmit = async ({
 }: handleActionProps) => {
   e?.preventDefault();
 
-  try {
-    setDisabled?.(true);
-    const response = api.post("/pins", formData, {
-      headers: {
-        "Content-Type": undefined,
-      },
-    });
+  setDisabled?.(true);
+  const response = api.post("/pins", formData, {
+    headers: {
+      "Content-Type": undefined,
+    },
+  });
 
-    console.log(response);
+  console.log(response);
 
-    if (!response) {
-      console.log("No response from server");
-    }
-
-    toast.promise(response, {
-      loading: "Adding your pin to the map...",
-      success: "Pin successfully added!",
-      error: (err: any) => {
-        if (
-          err.response.data.details ===
-          "The expiry field must be a date after now."
-        ) {
-          return "The expiry date must be a date after now.";
-        }
-        return "Creating Pin failed. Please make sure that all required fields are filled";
-      },
-      position: "top-center",
-    });
-
-    response.then(() => {
-      navigate?.("/map");
-    });
-  } catch (error: any) {
-    console.error("Request failed");
-
-    if (error.response) {
-      console.error("Status:", error.response.status);
-      console.error("Data:", error.response.data);
-    } else if (error.request) {
-      console.error("No response received:", error.request);
-    } else {
-      console.error("Error:", error.message);
-    }
-  } finally {
-    setDisabled?.(false);
+  if (!response) {
+    toast.error(
+      "eLikas isn't responding right now. Please try later as the team is working on it!",
+    );
   }
 
-  return;
+  toast.promise(response, {
+    loading: "Adding your pin to the map...",
+    success: "Pin successfully added!",
+    error: (err: any) => {
+      if (
+        err.response.data.details ===
+        "The expiry field must be a date after now."
+      ) {
+        return "The expiry date must be a date after now.";
+      }
+      return "Creating Pin failed. Please make sure that all required fields are filled";
+    },
+    position: "top-center",
+  });
+
+  response
+    .then(() => {
+      navigate?.("/map");
+    })
+    .catch((error: any) => {
+      console.error("Request failed");
+
+      if (error.response) {
+        console.error("Status:", error.response.status);
+        console.error("Data:", error.response.data);
+      } else if (error.request) {
+        console.error("No response received:", error.request);
+      } else {
+        console.error("Error:", error.message);
+      }
+    })
+    .finally(() => setDisabled?.(false));
 };
 
 export const handleUpdate = async ({
@@ -126,60 +125,69 @@ export const handleUpdate = async ({
   role,
   setDisabled,
 }: handleActionProps) => {
-  try {
-    e?.preventDefault();
-    setDisabled?.(true);
-    const responsePromise = api.put(`/pins/${id}`, {
-      ...(name && { name: name }),
-      address: address,
-      description: description,
-      area_type: area_type,
-      capacity_level: capacity_level,
-      is_persistent: is_persistent,
-      for_reg_flood: for_reg_flood,
-      for_heavy_flood: for_heavy_flood,
-      has_accom: has_accom,
-      has_DRRMO: has_DRRMO,
-      has_health: has_health,
-      pwd_friendly: pwd_friendly,
-      has_catchment: has_catchment,
-      toilet_count: toilet_count == 0 ? null : toilet_count,
-      kitchen_count: kitchen_count == 0 ? null : kitchen_count,
-      child_prayer_count: child_prayer_count == 0 ? null : child_prayer_count,
-      breastfeed_count: breastfeed_count == 0 ? null : child_prayer_count,
-      other_facilities: other_facilities,
-      ...(contact_person && { contact_person: contact_person }),
-      ...(contact_number && { contact_number: contact_number }),
-      ...(role === "brgy_op" && { expiry: expiry }),
-    });
+  e?.preventDefault();
+  setDisabled?.(true);
 
-    toast.promise(responsePromise, {
-      loading: "Updating your pin...",
-      success: "Pin successfully updated!",
-      error: (err: any) => {
-        console.log(err.response?.data);
-        return err.response?.data?.message || "Please try again.";
-      },
-    });
+  console.log(
+    "Sending",
+    toilet_count,
+    kitchen_count,
+    child_prayer_count,
+    child_prayer_count,
+    other_facilities,
+  );
 
-    responsePromise.then(() => {
+  const responsePromise = api.put(`/pins/${id}`, {
+    ...(name && { name: name }),
+    address: address,
+    description: description,
+    area_type: area_type,
+    capacity_level: capacity_level,
+    is_persistent: is_persistent,
+    for_reg_flood: for_reg_flood,
+    for_heavy_flood: for_heavy_flood,
+    has_accom: has_accom,
+    has_DRRMO: has_DRRMO,
+    has_health: has_health,
+    pwd_friendly: pwd_friendly,
+    has_catchment: has_catchment,
+    toilet_count: toilet_count == 0 ? null : toilet_count,
+    kitchen_count: kitchen_count == 0 ? null : kitchen_count,
+    child_prayer_count: child_prayer_count == 0 ? null : child_prayer_count,
+    breastfeed_count: breastfeed_count == 0 ? null : child_prayer_count,
+    other_facilities: other_facilities,
+    ...(contact_person && { contact_person: contact_person }),
+    ...(contact_number && { contact_number: contact_number }),
+    ...(role === "brgy_op" && { expiry: expiry }),
+  });
+
+  toast.promise(responsePromise, {
+    loading: "Updating your pin...",
+    success: "Pin successfully updated!",
+    error: (err: any) => {
+      console.log(err.response?.data);
+      return err.response?.data?.message || "Please try again.";
+    },
+  });
+
+  responsePromise
+    .then(() => {
       setIsEditable?.(false);
       setHasUpdated?.(true);
-    });
-  } catch (error: any) {
-    console.error("Request failed");
+    })
+    .catch((error: any) => {
+      console.error("Request failed");
 
-    if (error.response) {
-      console.error("Status:", error.response.status);
-      console.error("Data:", error.response.data);
-    } else if (error.request) {
-      console.error("No response received:", error.request);
-    } else {
-      console.error("Error:", error.message);
-    }
-  } finally {
-    setDisabled?.(false);
-  }
+      if (error.response) {
+        console.error("Status:", error.response.status);
+        console.error("Data:", error.response.data);
+      } else if (error.request) {
+        console.error("No response received:", error.request);
+      } else {
+        console.error("Error:", error.message);
+      }
+    })
+    .finally(() => setDisabled?.(false));
 };
 
 export const handleDelete = async ({
@@ -229,26 +237,25 @@ export const handleReOpen = ({
 }: handleActionProps) => {
   e?.preventDefault();
 
-  try {
-    setDisabled?.(true);
-    const response = api.put(`/pins/${id}`, { expiry: expiry });
-    toast.promise(response, {
-      loading: "Re-opening your pin...",
-      success: "Pin Re-opened!",
-      error: (err: any) => {
-        return err.response.data;
-      },
-      position: "top-center",
-    });
+  setDisabled?.(true);
+  const response = api.put(`/pins/${id}`, { expiry: expiry });
+  toast.promise(response, {
+    loading: "Re-opening your pin...",
+    success: "Pin Re-opened!",
+    error: (err: any) => {
+      return err.response.data;
+    },
+    position: "top-center",
+  });
 
-    response.then(() => {
+  response
+    .then(() => {
       navigate?.(redirect ? redirect : "");
-    });
-  } catch (err: any) {
-    console.log(err.response.data);
-  } finally {
-    setDisabled?.(false);
-  }
+    })
+    .catch((err: any) => {
+      console.log(err.response.data);
+    })
+    .finally(() => setDisabled?.(false));
 };
 
 export const handleReactivate = ({
@@ -260,26 +267,25 @@ export const handleReactivate = ({
 }: handleActionProps) => {
   e?.preventDefault();
 
-  try {
-    setDisabled?.(true);
-    const response = api.patch(`/pins/${id}/restore`);
-    console.log(response);
+  setDisabled?.(true);
+  const response = api.patch(`/pins/${id}/restore`);
+  console.log(response);
 
-    toast.promise(response, {
-      loading: "Re-activating this pin...",
-      success: "Pin Re-activated!",
-      error: (err: any) => {
-        return err.response.data;
-      },
-      position: "top-center",
-    });
+  toast.promise(response, {
+    loading: "Re-activating this pin...",
+    success: "Pin Re-activated!",
+    error: (err: any) => {
+      return err.response.data;
+    },
+    position: "top-center",
+  });
 
-    response.then(() => {
+  response
+    .then(() => {
       navigate?.(redirect ? redirect : "");
-    });
-  } catch (err: any) {
-    console.log(err.response.data);
-  } finally {
-    setDisabled?.(false);
-  }
+    })
+    .catch((err: any) => {
+      console.log(err.response.data);
+    })
+    .finally(() => setDisabled?.(false));
 };

@@ -1,6 +1,6 @@
 import feedbackIcon from "@/assets/Feedback/feedbackIcon.svg";
 import colors from "@/constants/colors";
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import Rating from "@mui/material/Rating";
 import Stack from "@mui/material/Stack";
 import { FieldLabel, Field } from "@/components/ui/field";
@@ -17,30 +17,38 @@ function Feedback() {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
 
-    try {
-      setDisabled(true);
-      const response = api.post("/feedback", {
-        rating: rating,
-        message: desc,
+    setDisabled(true);
+    const response = api.post("/feedback", {
+      rating: rating,
+      message: desc,
+    });
+
+    toast.promise(response, {
+      loading: "Submitting your feedback...",
+      success: "Feedback sent. Thank you for helping us improve!",
+      error: (err: any) => {
+        return err.response.data.details;
+      },
+      position: "top-center",
+    });
+
+    response
+      .then(() => {
+        setRating(0);
+        setDesc("");
+      })
+      .catch((err: any) => {
+        toast.error("An unexpected error occurred.");
+        console.log(err.response.data);
+      })
+      .finally(() => {
+        setDisabled(false);
       });
-
-      console.log(response);
-
-      toast.promise(response, {
-        loading: "Submitting your feedback...",
-        success: "Feedback sent. Thank you for helping us improve!",
-        error: (err: any) => {
-          return err.response.data.details;
-        },
-        position: "top-center",
-      });
-
-      setDisabled(false);
-    } catch (err: any) {
-      setDisabled(false);
-      console.log(err.response.data);
-    }
   };
+
+  useEffect(() => {
+    console.log(disabled);
+  }, [disabled]);
 
   return (
     <>
@@ -104,6 +112,7 @@ function Feedback() {
                       id="EvacPin_StreetField"
                       className="h-50 border rounded-lg text-xs"
                       onChange={(e) => setDesc(e.target.value)}
+                      value={desc}
                     ></Textarea>
                   </Field>
                 </div>

@@ -105,129 +105,115 @@ function Profile() {
 
   const putProfile = async (e: React.FormEvent) => {
     e.preventDefault();
-    try {
-      setDisabled(true);
+    setDisabled(true);
 
-      if (newContact) {
-        if (!contactValidate.test(newContact)) {
-          setError("Invalid Contact Number");
-          return;
-        } else {
-          setError("");
-        }
-      }
-
-      const payload = {
-        username: newUsername,
-        first_name: firstName,
-        last_name: lastName,
-        email,
-        ...(brgyId && { location_id: brgyId }),
-        ...(contactTouched && { phone: newContact }),
-        avatar_seed: seed,
-      };
-
-      console.log(payload);
-
-      const response = api.put("/profile", {
-        username: newUsername,
-        first_name: firstName,
-        last_name: lastName,
-        email: email,
-        ...(brgyId && { location_id: brgyId }),
-        ...(contactTouched && { phone: newContact }),
-        avatar_seed: seed,
-      });
-
-      console.log(response);
-
-      if (!response) {
+    if (newContact) {
+      if (!contactValidate.test(newContact)) {
+        setError("Invalid Contact Number");
         return;
+      } else {
+        setError("");
       }
+    }
 
-      toast.promise(response, {
-        loading: "Updating your profile...",
-        success: "Profile updated!",
-        error: (err: any) => {
-          if (
-            err.response.data.details === "The username has already been taken."
-          ) {
-            return "Username has already been taken.";
-          }
-          return "Update failed";
-        },
-      });
+    const response = api.put("/profile", {
+      username: newUsername,
+      first_name: firstName,
+      last_name: lastName,
+      email: email,
+      ...(brgyId && { location_id: brgyId }),
+      ...(contactTouched && { phone: newContact }),
+      avatar_seed: seed,
+    });
 
-      response.then(() => {
+    console.log(response);
+
+    if (!response) {
+      return;
+    }
+
+    toast.promise(response, {
+      loading: "Updating your profile...",
+      success: "Profile updated!",
+      error: (err: any) => {
+        if (
+          err.response.data.details === "The username has already been taken."
+        ) {
+          return "Username has already been taken.";
+        }
+        return "Update failed";
+      },
+    });
+
+    response
+      .then(() => {
         setIsEditable(false);
         setNewUsername(null);
         setNewContact("");
         setContactTouched(false);
         getProfile();
-      });
-    } catch (err: string | any) {
-      console.log(err.response.data);
-      setDisabled(false);
-    } finally {
-      setDisabled(false);
-    }
+      })
+      .catch((err: string | any) => {
+        console.log(err.response.data);
+        setDisabled(false);
+      })
+      .finally(() => setDisabled(false));
   };
 
   const deleteProfile = async () => {
-    try {
-      setDisabled(true);
-      const response = api.patch("/profile/deactivate", {
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-      });
+    setDisabled(true);
+    const response = api.patch("/profile/deactivate", {
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+    });
 
-      toast.promise(response, {
-        loading: "Deactivating your account...",
-        success:
-          "Account Deactivated! Please contact eLikas to reactivate your account",
-        error: "An error occurred. Please try again.",
-        position: "top-center",
-      });
+    toast.promise(response, {
+      loading: "Deactivating your account...",
+      success:
+        "Account Deactivated! Please contact eLikas to reactivate your account",
+      error: "An error occurred. Please try again.",
+      position: "top-center",
+    });
 
-      response.then(() => {
+    response
+      .then(() => {
         auth.signOut();
-      });
-      setDisabled(false);
-    } catch (error) {
-      console.error("Error during logout:", error);
-      setDisabled(false);
-    }
+      })
+      .catch((error) => {
+        console.error("Error during logout:", error);
+        setDisabled(false);
+      })
+      .finally(() => setDisabled(false));
   };
 
   const sendOTP = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    try {
-      setDisabled(true);
-      const response = api.post("/otp/send", {
-        phone_number: contact,
-        message: `Hi ${username}! Do not share this OTP with others. Here is your code: :otp`,
-      });
+    setDisabled(true);
+    const response = api.post("/otp/send", {
+      phone_number: contact,
+      message: `Hi ${username}! Do not share this OTP with others. Here is your code: :otp`,
+    });
 
-      console.log(response);
+    console.log(response);
 
-      toast.promise(response, { success: "OTP has been sent to your number." });
+    toast.promise(response, { success: "OTP has been sent to your number." });
 
-      response.then(() => {
+    response
+      .then(() => {
         localStorage.setItem("phone_number", contact);
         navigate("/VerifyOTP");
-      });
-      setDisabled(false);
-    } catch (err: any) {
-      if (err.name === "CanceledError") {
-        setDisabled(false);
-        return;
-      }
-      setDisabled(false);
-      console.log(err.response?.data);
-    }
+      })
+      .catch((err: any) => {
+        if (err.name === "CanceledError") {
+          setDisabled(false);
+          return;
+        }
+        console.log(err.response?.data);
+      })
+      .finally(() => setDisabled(false));
   };
 
   const getCity = async () => {
@@ -289,6 +275,7 @@ function Profile() {
     const credentials = EmailAuthProvider.credential(user.email, currentPw);
 
     try {
+      setDisabled(true);
       await reauthenticateWithCredential(user, credentials);
     } catch (err: any) {
       if (
@@ -300,6 +287,8 @@ function Profile() {
       }
 
       toast.error("An unexpected error occurred. Please try again.");
+    } finally {
+      setDisabled(false);
     }
 
     try {
@@ -360,6 +349,7 @@ function Profile() {
           onClick={() => handleResetPW(currentPw)}
           onClose={() => setShowReset(false)}
           closeId="Profile_PWResetClose"
+          disabled={disabled}
         >
           <TextField
             label="Current Password"
@@ -490,6 +480,7 @@ function Profile() {
                       heightSize="30px"
                       widthSize="1/2"
                       onClick={() => navigate("/ChangeEmail")}
+                      isDisabled={disabled}
                     ></ButtonComp>
                   </div>
 
@@ -573,6 +564,7 @@ function Profile() {
                         id="Profile_VerifyBtnNumberBtn"
                         onClick={(e) => sendOTP(e)}
                         widthSize="1/2"
+                        isDisabled={disabled}
                       />
                     )}
                     {isEditable && contact !== "No Registered Number" ? (

@@ -144,11 +144,17 @@ function EvacPin() {
   const navigate = useNavigate();
   const inputRef = useRef<HTMLInputElement | null>(null);
 
+  // For update
   const capacityCount = Number(capacity);
   const toiletCount = Number(toilet);
   const kitchenCount = Number(kitchen);
   const childPrayerCount = Number(childPrayer);
   const breastfeedCount = Number(breastfeed);
+
+  const editedToilet = hasToilet ? toilet : "0";
+  const editedKitchen = hasKitchen ? kitchen : "0";
+  const editedChildPrayer = hasChildPrayer ? childPrayer : "0";
+  const editedBreastfeed = hasBreastfeed ? breastfeed : "0";
 
   const { role } = useUserContext();
   const { id } = useParams();
@@ -404,6 +410,7 @@ function EvacPin() {
       !contactNumber
     ) {
       toast.error("Please fill in the required fields marked with an *.");
+      return;
     }
 
     if (hasToilet) {
@@ -444,6 +451,7 @@ function EvacPin() {
 
     if (!contactValidate.test(contactNumber)) {
       toast.error("Invalid Contact Number.");
+      return;
     }
 
     formData.append("name", pinName);
@@ -500,10 +508,48 @@ function EvacPin() {
       !contactNumber
     ) {
       toast.error("Please fill in the required fields marked with an *.");
+      return;
     }
 
     if (!contactValidate.test(contactNumber)) {
       toast.error("Invalid Contact Number.");
+      return;
+    }
+
+    if (hasToilet) {
+      if (!toilet || toilet == "" || toilet == "0") {
+        toast.error("Please fill in the toilet count.");
+        return;
+      }
+    } else {
+      setToilet("0");
+    }
+
+    if (hasKitchen) {
+      if (!kitchen || kitchen == "" || kitchen == "0") {
+        toast.error("Please fill in the kitchen count.");
+        return;
+      }
+    } else {
+      setKicthen("0");
+    }
+
+    if (hasChildPrayer) {
+      if (!childPrayer || childPrayer == "" || childPrayer == "0") {
+        toast.error("Please fill in the child/prayer area count.");
+        return;
+      }
+    } else {
+      setChildPrayer("0");
+    }
+
+    if (hasBreastfeed) {
+      if (!breastfeed || breastfeed == "" || breastfeed == "0") {
+        toast.error("Please fill in breastfeedubg area count.");
+        return;
+      }
+    } else {
+      setBreastfeed("0");
     }
 
     handleUpdate({
@@ -522,10 +568,10 @@ function EvacPin() {
       has_health: hasHealth,
       pwd_friendly: pwdFriendly,
       has_catchment: hasCatchment,
-      toilet_count: toiletCount,
-      kitchen_count: kitchenCount,
-      child_prayer_count: childPrayerCount,
-      breastfeed_count: breastfeedCount,
+      toilet_count: Number(editedToilet),
+      kitchen_count: Number(editedKitchen),
+      child_prayer_count: Number(editedChildPrayer),
+      breastfeed_count: Number(editedBreastfeed),
       other_facilities: other,
       ...(contactPerson && { contact_person: contactPerson }),
       ...(contactNumber && { contact_number: contactNumber }),
@@ -568,40 +614,39 @@ function EvacPin() {
   const markFull = (e: React.FormEvent) => {
     e.preventDefault();
 
-    try {
-      setDisabled(true);
-      const fullLevel = capacityLevels?.find(
-        (level) => level.capacity_level === "Full",
-      )?.id;
+    setDisabled(true);
+    const fullLevel = capacityLevels?.find(
+      (level) => level.capacity_level === "Full",
+    )?.id;
 
-      // if currently full, mark as open using selected capacity
-      // if not full, mark as full using the Full level id
-      const newCapacityLevel = isFull ? Number(capacity) : fullLevel;
+    // if currently full, mark as open using selected capacity
+    // if not full, mark as full using the Full level id
+    const newCapacityLevel = isFull ? Number(capacity) : fullLevel;
 
-      console.log(newCapacityLevel);
+    console.log(newCapacityLevel);
 
-      const response = api.put(`/pins/${id}`, {
-        capacity_level: newCapacityLevel,
-      });
+    const response = api.put(`/pins/${id}`, {
+      capacity_level: newCapacityLevel,
+    });
 
-      console.log(response);
+    console.log(response);
 
-      toast.promise(response, {
-        loading: isFull ? "Marking as open..." : "Marking as full...",
-        success: isFull ? "Pin marked as open!" : "Pin marked as full!",
-        error: (err: any) => err.response.data,
-        position: "top-center",
-      });
+    toast.promise(response, {
+      loading: isFull ? "Marking as open..." : "Marking as full...",
+      success: isFull ? "Pin marked as open!" : "Pin marked as full!",
+      error: (err: any) => err.response.data,
+      position: "top-center",
+    });
 
-      response.then(() => {
+    response
+      .then(() => {
         getEvacDetails();
         setIsFull(!isFull);
-      });
-    } catch (err: any) {
-      console.log(err.response.data);
-    } finally {
-      setDisabled(false);
-    }
+      })
+      .catch((err: any) => {
+        console.log(err.response.data);
+      })
+      .finally(() => setDisabled(false));
   };
 
   return loading ? (
@@ -623,6 +668,7 @@ function EvacPin() {
             setWillReopen(false);
           }}
           onClick={(e) => reOpen(e)}
+          disabled={disabled}
         >
           <DatePickerInput
             label="Expiry Date"

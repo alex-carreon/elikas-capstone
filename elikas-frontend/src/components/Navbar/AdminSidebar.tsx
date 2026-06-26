@@ -85,23 +85,24 @@ function AdminSidebar() {
   ];
 
   const handleLogout = async () => {
-    try {
-      localStorage.clear();
+    localStorage.clear();
 
-      const response = api.post("/auth/logout");
+    const response = api.post("/auth/logout");
 
-      toast.promise(response, {
-        loading: "Logging you out...",
-        success: "You're logged out!",
-        position: "top-center",
-      });
+    toast.promise(response, {
+      loading: "Logging you out...",
+      success: "You're logged out!",
+      position: "top-center",
+    });
 
-      response.then(() => {
+    response
+      .then(() => {
         navigate("/Login");
+      })
+      .catch((error) => {
+        console.error("Error during logout:", error);
+        toast.error("An unexpecte error occurred. Please try again later.");
       });
-    } catch (error) {
-      console.error("Error during logout:", error);
-    }
   };
 
   return (
