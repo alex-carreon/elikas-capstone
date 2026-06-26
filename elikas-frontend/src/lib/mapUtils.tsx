@@ -546,6 +546,8 @@ function RouterHazard({
           { method: "GET" },
         );
 
+        console.log(response);
+
         if (!response.ok) {
           console.error("BRouter request failed:", response.status);
           return null; // or return a fallback
@@ -558,7 +560,7 @@ function RouterHazard({
           );
         setPoints(points);
       } catch (err: any) {
-        console.log(err.response.data.message);
+        console.log(err.response);
       }
     };
 

@@ -148,7 +148,6 @@ export function AuthProvider({ children }: AuthProviderProps) {
         );
         const userRole = loginResponse.data.role;
 
-        console.log("Setting userRole in localStorage:", userRole);
         localStorage.setItem("userRole", userRole);
 
         setRole(userRole);

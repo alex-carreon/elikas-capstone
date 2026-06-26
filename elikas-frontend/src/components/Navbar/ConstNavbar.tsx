@@ -8,7 +8,7 @@ function ConstNavbar({ redirect }: { redirect?: string }) {
 
   return (
     <>
-      <div className="fixed top-0 left-0 z-50 w-full h-content flex justify-center">
+      <div className="fixed top-0 left-0 right-0 z-50 h-content flex justify-center">
         <div className="w-full max-w-md flex flex-row justify-start items-center p-3 shadow-lg bg-white">
           <ArrowLeft
             id="Navbar_Back"
