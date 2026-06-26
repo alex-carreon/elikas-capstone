@@ -68,7 +68,7 @@ function SelectDropdown({
 
             {/* <SelectValue placeholder={placeholder} /> */}
           </SelectTrigger>
-          <SelectContent className="z-[900]">
+          <SelectContent className="z-[900] max-w-[calc(100vw-2rem)]">
             <SelectGroup>
               {options.map((option) => (
                 <SelectItem key={option.value} value={option.value}>

@@ -165,7 +165,7 @@ function Hotlines() {
           </p>
         </div>
         {/* Search and Filter and Add button */}
-        <div className="w-full max-w-md flex flex-row justify-between items-center">
+        <div className="w-full max-w-md flex flex-col gap-2 items-center">
           {role === "brgy_op" && (
             <div>
               <Link to="/HotlinesForm">
@@ -179,7 +179,7 @@ function Hotlines() {
               </Link>
             </div>
           )}
-          <div className="w-3/5 flex justify-center gap-2">
+          <div className="w-3/5 flex gap-2">
             <SelectDropdown
               value={String(searchFor)}
               onValueChange={(val) => setSearchFor(val)}
