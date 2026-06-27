@@ -3,12 +3,15 @@
 namespace App\Http\Controllers\Dashboards;
 
 use App\Http\Controllers\Controller;
+use App\Mail\ContentRejectedMail;
 use App\Models\Comment;
 use App\Models\EvacArea;
 use App\Models\Flag;
 use App\Models\FloodPath;
 use App\Models\ModerationLog;
+use App\Models\SocialElement;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Mail;
 
 class AdminFlagController extends Controller
 {
@@ -292,7 +295,7 @@ class AdminFlagController extends Controller
 
     /**
      * PATCH /admin/flags/{elementId}/reject
-     * Content is bad — deactivate and clear all flags
+     * Content is bad — deactivate, notify owner by email, clear all flags
      */
     public function reject(Request $request, int $elementId)
     {
@@ -303,8 +306,18 @@ class AdminFlagController extends Controller
             return response()->json(['message' => 'Admin record not found.'], 403);
         }
 
-        \App\Models\SocialElement::where('id', $elementId)
-            ->update(['deactivated_at' => now()]);
+        $element = SocialElement::with(['user', 'comment', 'floodPath'])->find($elementId);
+
+        if (!$element) {
+            return response()->json(['message' => 'Element not found.'], 404);
+        }
+
+        // Detect reason BEFORE resolveFlags() nulls out the unresolved rows
+        $reason = $this->detectRejectionReason($elementId);
+
+        $element->update(['deactivated_at' => now()]);
+
+        $this->notifyOwnerOfRejection($element, $reason);
 
         $this->resolveFlags($elementId, false, $admin->id);
 
@@ -314,6 +327,87 @@ class AdminFlagController extends Controller
     }
 
     // ── Private Helpers ───────────────────────────────────────────────────────
+
+    private function detectRejectionReason(int $elementId): string
+    {
+        $hasManualFlag = Flag::where('element_id', $elementId)
+            ->whereNull('is_approved')
+            ->exists();
+
+        $hasModerationFlag = ModerationLog::where('element_id', $elementId)
+            ->whereNull('is_approved')
+            ->exists();
+
+        if ($hasManualFlag && $hasModerationFlag) {
+            return 'reported by other users and flagged by automated moderation';
+        }
+
+        if ($hasManualFlag) {
+            return 'reported by other users';
+        }
+
+        if ($hasModerationFlag) {
+            return 'flagged by automated moderation';
+        }
+
+        return 'flagged for review';
+    }
+
+    private function notifyOwnerOfRejection(SocialElement $element, string $reason): void
+    {
+        $owner = $element->user;
+
+        if (!$owner || !$owner->email) {
+            return; // nothing to notify, don't block the rejection
+        }
+
+        [$contentType, $snippet] = $this->describeElementContent($element);
+
+        try {
+            Mail::to($owner->email)->send(
+                new ContentRejectedMail($element, $reason, $snippet, $contentType)
+            );
+        } catch (\Throwable $e) {
+            \Illuminate\Support\Facades\Log::error('Failed to send content rejection email', [
+                'element_id' => $element->id,
+                'user_id'    => $owner->id,
+                'error'      => $e->getMessage(),
+            ]);
+        }
+    }
+
+    /**
+     * Returns [contentType, snippet] describing what was rejected.
+     * Add more cases here as new content types become floggable.
+     */
+    private function describeElementContent(SocialElement $element): array
+    {
+        if ($element->comment) {
+            $content = $element->comment->content ?? '';
+            return ['comment', $this->truncate($content)];
+        }
+
+        if ($element->floodPath) {
+            $description = $element->floodPath->description ?? '';
+            return ['flood report', $this->truncate($description)];
+        }
+
+        return ['post', null];
+    }
+
+    private function truncate(string $text, int $limit = 200): ?string
+    {
+        $text = trim($text);
+
+        if ($text === '') {
+            return null;
+        }
+
+        return mb_strlen($text) > $limit
+            ? mb_substr($text, 0, $limit) . '…'
+            : $text;
+    }
+
 
     private function resolveFlags(int $elementId, bool $isApproved, int $adminId): void
     {
