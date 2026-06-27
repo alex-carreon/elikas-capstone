@@ -1,4 +1,11 @@
-import { Flag, ThumbsUp, ThumbsDown, UserIcon } from "lucide-react";
+import {
+  Flag,
+  ThumbsUp,
+  ThumbsDown,
+  UserIcon,
+  ChevronDownIcon,
+  ChevronUpIcon,
+} from "lucide-react";
 import {
   Collapsible,
   CollapsibleContent,
@@ -68,6 +75,7 @@ function PostRow({
   const [voteLoad, setVoteLoad] = useState(false);
   const [reasons, setReasons] = useState<Reasons[]>([]);
   const [reasonLoad, setReasonLoad] = useState(false);
+  const [openPhoto, sentOpenPhoto] = useState(false);
 
   const avatar = seed
     ? createAvatar(bigSmile, {
@@ -425,10 +433,15 @@ function PostRow({
             {isSimple || image?.length === 0 ? null : (
               <CollapsibleTrigger
                 id="Drawer_PostDetailsTrigger"
-                // className="text-xs underline italic flex ml-auto"
-                className="border rounded-lg px-2 flex shrink"
+                className="border rounded-lg px-2 flex shrink items-center"
                 style={{ color: colors.heading, borderColor: colors.heading }}
+                onClick={() => sentOpenPhoto(!openPhoto)}
               >
+                {openPhoto ? (
+                  <ChevronUpIcon className="ml-auto group-data-[state=open]:rotate-180" />
+                ) : (
+                  <ChevronDownIcon className="ml-auto group-data-[state=open]:rotate-180" />
+                )}
                 View Photo
               </CollapsibleTrigger>
             )}

@@ -14,6 +14,9 @@ import { Separator } from "@/components/ui/separator";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import { useInstall } from "@/context/InstallContext";
+import { Button } from "@/components/ui/button";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import colors from "@/constants/colors";
 
 type pathReminder = {
   floodpath_id: number;
@@ -23,6 +26,8 @@ type pathReminder = {
 };
 
 function Map() {
+  const [closeAlert, setCloseAlert] = useState(false);
+
   const [locationFound, setLocationFound] = useState(false);
   const [showLocation, setShowLocation] = useState(false);
   const [showNearestRouteTrigger, setShowNearestRouteTrigger] = useState(0);
@@ -167,6 +172,34 @@ function Map() {
 
   return (
     <>
+      {!role &&
+        (closeAlert ? null : (
+          <div className="fixed top-18 left-0 right-0 z-20 mx-4 flex justify-center">
+            <Alert
+              id="NavbarGuest_Alert"
+              className="w-full max-w-sm p-4 shadow-lg bg-[#FFF1DD] text-center flex flex-col items-center gap-3 z-["
+            >
+              {/* <CheckCircle2Icon /> */}
+              <AlertTitle
+                className="font-bold"
+                style={{ color: colors.heading }}
+              >
+                You are logged out!
+              </AlertTitle>
+              <AlertDescription style={{ color: colors.heading }}>
+                You are now in guest mode. You can still explore the map, but
+                you’ll need an account to join the conversation.
+              </AlertDescription>
+              <Button
+                id="NavbarGuest_AlertBtn"
+                className="w-2/3"
+                onClick={() => setCloseAlert(true)}
+              >
+                Got it!
+              </Button>
+            </Alert>
+          </div>
+        ))}
       {showDownload && (
         <AlertDialogue
           title="Welcome to eLikas!"
@@ -273,18 +306,20 @@ function Map() {
             />
           </MapContainer>
           {/* <div className="fixed w-full max-w-md"> */}
-          <div
-            className="absolute top-0 left-0 w-full pointer-events-none z-[1000]"
-            style={{ height: "100%" }}
-          >
-            <div className="flex justify-end px-4 pt-4">
-              <div className="pointer-events-auto">
-                <span>
-                  <Filter />
-                </span>
+          {closeAlert && (
+            <div
+              className="absolute top-0 left-0 w-full pointer-events-none z-[1000]"
+              style={{ height: "100%" }}
+            >
+              <div className="flex justify-end px-4 pt-4">
+                <div className="pointer-events-auto">
+                  <span>
+                    <Filter />
+                  </span>
+                </div>
               </div>
             </div>
-          </div>
+          )}
           <div className="absolute bottom-0 left-0 w-full flex justify-center items-center pointer-events-none">
             <div className="flex flex-col w-full max-w-md items-center justify-center mb-8 pointer-events-auto">
               <CurrentLocation
