@@ -3,6 +3,7 @@
 namespace App\Http\Controllers;
 
 use App\Jobs\SendVerificationEmailJob;
+use App\Mail\ForgotPasswordMail;
 use App\Mail\VerifyEmailMail;
 use App\Models\User;
 use App\Models\UserAuth;
@@ -242,6 +243,53 @@ class AuthController extends Controller
 
             return response()->json([
                 'error' => 'Failed to resend verification email.',
+                'details' => $e->getMessage(),
+            ], 500);
+        }
+    }
+
+    public function forgotPassword(Request $request)
+    {
+        $request->validate([
+            'email' => 'required|email|max:50',
+        ]);
+
+        try {
+            $user = User::where('email', $request->email)->first();
+
+            // Don't reveal whether the email exists.
+            if (!$user) {
+                return response()->json([
+                    'message' => 'If an account with that email exists, a password reset email has been sent.'
+                ]);
+            }
+
+            // Prevent deactivated users from resetting password
+            if ($user->deactivated_at) {
+                return response()->json([
+                    'error' => 'This account has been deactivated.'
+                ], 403);
+            }
+
+            // Generate Firebase password reset link
+            $resetLink = $this->firebaseAuth
+                ->getPasswordResetLink($user->email);
+
+            // Send custom email
+            Mail::to($user->email)->send(
+                new ForgotPasswordMail(
+                    $user->username,
+                    $resetLink
+                )
+            );
+
+            return response()->json([
+                'message' => 'If an account with that email exists, a password reset email has been sent.'
+            ]);
+
+        } catch (\Exception $e) {
+            return response()->json([
+                'error' => 'Failed to send password reset email.',
                 'details' => $e->getMessage(),
             ], 500);
         }
