@@ -275,7 +275,6 @@ function SMSHistory() {
                 broadcasts.map((broadcast) => (
                   <Row
                     key={broadcast.id}
-                    postId={String(broadcast.id)}
                     title={`Sent to: ${broadcast.total_recipients} recipient/s`}
                     desc={
                       broadcast.status.name === "Scheduled"

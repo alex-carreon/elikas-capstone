@@ -211,6 +211,7 @@ function EvacPinDrawer({
   const [seed, setSeed] = useState("");
   const [seedLoad, setSeedLoad] = useState(false);
   const [disabled, setDisabled] = useState(false);
+  const [openPhoto, sentOpenPhoto] = useState(false);
 
   const cameraInputRef = useRef<HTMLInputElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
