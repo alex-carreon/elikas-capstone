@@ -23,6 +23,8 @@ import {
 } from "lucide-react";
 import SelectDropdown from "@/components/SelectDropdown";
 import { Toggle } from "@/components/ui/toggle";
+import { toast } from "sonner";
+import PaginationComp from "@/components/Pagination";
 
 type log = {
   id: number;
@@ -53,6 +55,7 @@ function AuditLogs() {
   const [isCreated, setIsCreated] = useState(false);
   const [isUpdated, setIsUpdated] = useState(false);
   const [isDeleted, setIsDeleted] = useState(false);
+  const [next, setNext] = useState(1);
 
   const convertDateTime = (utcString: string) => {
     const zoned = toZonedTime(new Date(utcString), "Asia/Manila");
@@ -123,8 +126,37 @@ function AuditLogs() {
       if (err.name === "CanceledError") {
         return;
       }
+      toast.error(
+        "An unexpected occurred. Please wait while we try to fix this!",
+      );
       console.log(err.response?.data);
     }
+  };
+
+  const getByPage = async (page: number) => {
+    const controller = new AbortController();
+    try {
+      setLoading(true);
+      const response = await api.get(`/admin/audit-logs?page=${String(page)}`, {
+        signal: controller.signal,
+      });
+
+      console.log(response);
+
+      setLogs(response.data.data);
+    } catch (err: any) {
+      if (err.name === "CanceledError") {
+        return;
+      }
+      console.log(err.response?.data);
+      toast.error(
+        "An unexpected occurred. Please wait while we try to fix this!",
+      );
+    } finally {
+      setLoading(false);
+    }
+
+    return () => controller.abort();
   };
 
   const getAll = async () => {
@@ -335,6 +367,31 @@ function AuditLogs() {
                   </div>
                 </CollapsibleContent>
               </Collapsible>
+              <PaginationComp
+                onClickPrev={() => {
+                  const updated = next - 1;
+                  setNext(updated);
+                  getByPage(updated);
+                }}
+                onClick1={() => {
+                  setNext(1);
+                  getByPage(1);
+                }}
+                onClick2={() => {
+                  setNext(2);
+                  getByPage(2);
+                }}
+                onClick3={() => {
+                  setNext(3);
+                  getByPage(3);
+                }}
+                onClickNext={() => {
+                  const updated = next + 1;
+                  setNext(updated);
+                  getByPage(updated);
+                }}
+                next={next}
+              />
               {loading ? (
                 <>
                   <div className="w-full flex flex-col items-center">
