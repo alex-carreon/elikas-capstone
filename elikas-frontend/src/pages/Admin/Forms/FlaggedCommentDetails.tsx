@@ -24,10 +24,20 @@ type reason = {
   first_flagged_at: number;
 };
 
-type flagInfo = {
-  type: string;
+type manual = {
   flag_count: number;
   reasons: reason[];
+};
+
+type aiModeration = {
+  id: number;
+  flagged_at: string;
+};
+
+type flagInfo = {
+  manual: manual;
+  flag_count: number;
+  ai_moderation: aiModeration[];
 };
 
 type flagDetails = {
@@ -156,20 +166,14 @@ function FlaggedCommentDetails() {
           <>
             <div className="flex flex-col gap-4">
               <TextField
-                label="Flag Type"
-                value={String(flagDetails?.flag_info.type)}
-                inputType="text"
-                id="Admin_EvacFlaggedFlagType"
-                readonly
-              />
-              <TextField
                 label="Flag Count"
                 value={String(flagDetails?.flag_info.flag_count)}
                 inputType="text"
                 id="Admin_EvacFlaggedFlagCount"
                 readonly
               />
-              {flagDetails?.flag_info.reasons.map((reason) => (
+
+              {flagDetails?.flag_info.manual.reasons.map((reason) => (
                 <div className="flex gap-2">
                   <TextField
                     label="Flag Reason"
@@ -187,7 +191,16 @@ function FlaggedCommentDetails() {
                   />
                 </div>
               ))}
-
+              {flagDetails?.flag_info.ai_moderation &&
+                flagDetails?.flag_info.ai_moderation.length > 0 && (
+                  <TextField
+                    label="FlagReason"
+                    value="AI Moderator"
+                    inputType="text"
+                    id="Admin_EvacFlaggedAIMod"
+                    readonly
+                  />
+                )}
               <TextField
                 label="Comment Id"
                 value={String(flagDetails?.id)}
