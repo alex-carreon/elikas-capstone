@@ -2,25 +2,32 @@ import colors from "@/constants/colors";
 import { useState } from "react";
 import TextField from "@/components/TextField";
 import ButtonComp from "@/components/Button";
-import { getAuth, sendPasswordResetEmail } from "firebase/auth";
-import { EmailToast } from "@/components/ToastSuccess";
 import RegisterHeader from "@/components/RegisterHeader";
+import api from "@/api";
+import { toast } from "sonner";
 
 function ForgotPW() {
   const [email, setEmail] = useState("");
-  const [error, setError] = useState("");
+  const [disabled, setDisabled] = useState(false);
 
-  const handleResetPW = () => {
-    const auth = getAuth();
-    sendPasswordResetEmail(auth, email)
-      .then(() => {
-        EmailToast();
-      })
-      .catch((error) => {
-        if (error.code === "auth/missing-email") {
-          setError("Please enter your email.");
-        } else setError(error.code);
-      });
+  const handleResetPW = async () => {
+    setDisabled(true);
+    const response = api.post("/forgot-password", { email: email });
+
+    console.log(response);
+
+    toast.promise(response, {
+      loading: "Verifying your email...",
+      success: "An email has been sent!",
+      error: (err: any) => {
+        if (err.response.data.details === "RESET_PASSWORD_EXCEED_LIMIT") {
+          return "Too many attempts. Please try again later.";
+        }
+        return "An unexpected error occurred.";
+      },
+    });
+
+    response.finally(() => setDisabled(false));
   };
 
   return (
@@ -46,7 +53,6 @@ function ForgotPW() {
                 password.
               </p>
             </div>
-            <p className="text-red-500 text-xs text-center">{error}</p>
             <div className="flex flex-col gap-6">
               <TextField
                 label="Email"
@@ -62,6 +68,7 @@ function ForgotPW() {
                   onClick={handleResetPW}
                   heightSize="38px"
                   widthSize="100%"
+                  isDisabled={disabled}
                 />
               </div>
             </div>
