@@ -10,7 +10,7 @@ class FeedbackController extends Controller
 {
     // ---------------------------------------------------------------
     // POST /feedback
-    // Overwrite guard: one record per user (updateOrCreate on user_id)
+    // Always creates a new feedback record — no overwrite.
     // ---------------------------------------------------------------
     public function store(Request $request)
     {
@@ -19,31 +19,23 @@ class FeedbackController extends Controller
 
             $validated = $request->validate([
                 'rating'  => 'required|numeric|min:1|max:5',
-                'message' => 'nullable|string|max:1000',
+                'message' => 'nullable|string',
             ]);
 
             // Round submitted rating to nearest 0.5 before storing
             $cleanRating = $this->roundToHalf((float) $validated['rating']);
 
-            // updateOrCreate: match on user_id, overwrite rating/message/sent_at
-            $feedback = Feedback::updateOrCreate(
-                ['user_id' => $user->id],
-                [
-                    'rating'  => $cleanRating,
-                    'message' => $validated['message'] ?? null,
-                    'sent_at' => now(),
-                ]
-            );
-
-            $wasUpdated = !$feedback->wasRecentlyCreated;
+            $feedback = Feedback::create([
+                'user_id' => $user->id,
+                'rating'  => $cleanRating,
+                'message' => $validated['message'] ?? null,
+                'sent_at' => now(),
+            ]);
 
             return response()->json([
-                'message'  => $wasUpdated
-                    ? 'Feedback updated successfully'
-                    : 'Feedback submitted successfully',
-                'updated'  => $wasUpdated,
+                'message'  => 'Feedback submitted successfully',
                 'feedback' => $this->formatFeedback($feedback->load('user')),
-            ], $wasUpdated ? 200 : 201);
+            ], 201);
 
         } catch (\Exception $e) {
             return response()->json([
@@ -81,12 +73,13 @@ class FeedbackController extends Controller
                 }
             }
 
+            // --- Rating filter: match records within ±0.25 of the chosen 0.5 step ---
             if ($request->has('rating') && is_numeric($request->query('rating'))) {
                 $r = (float) $request->query('rating');
                 if ($r >= 1 && $r <= 5) {
-                    // round off to 0.5
+                    // Snap the requested value to a clean 0.5 step first
                     $snapped = $this->roundToHalf($r);
-                    // accept ratings within ±0.25 of the chosen value (e.g. 4.5 matches 4.25 to 4.74)
+                    // Then match any stored rating whose 0.5-rounded value equals that step
                     $query->whereBetween('rating', [
                         max(1.0, $snapped - 0.25),
                         min(5.0, $snapped + 0.249),
@@ -94,7 +87,6 @@ class FeedbackController extends Controller
                 }
             }
 
-            // --- Time-range filter (range param takes priority over date_from/date_to) ---
             if ($request->filled('range')) {
                 switch ($request->query('range')) {
                     case 'past_week':
@@ -106,10 +98,8 @@ class FeedbackController extends Controller
                     case 'quarterly':
                         $query->where('sent_at', '>=', Carbon::now()->subDays(90)->startOfDay());
                         break;
-                    // 'all_time' or unknown value: no date restriction
                 }
             } else {
-                // Fall back to explicit date range if no preset range given
                 if ($request->filled('date_from')) {
                     $query->whereDate('sent_at', '>=', $request->query('date_from'));
                 }
@@ -241,6 +231,11 @@ class FeedbackController extends Controller
     // ---------------------------------------------------------------
     // PRIVATE HELPERS
     // ---------------------------------------------------------------
+
+    /**
+     * Round a float to the nearest 0.5 increment.
+     * e.g. 4.7 → 5.0,  3.2 → 3.0,  3.26 → 3.5
+     */
     private function roundToHalf(float $value): float
     {
         return round($value * 2) / 2;

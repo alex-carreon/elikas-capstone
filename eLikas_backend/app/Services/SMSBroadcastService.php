@@ -202,35 +202,68 @@ class SMSBroadcastService
             ];
         }
 
-        if (empty(config('services.iprogsms.api_token'))) {
-            abort(500, 'IPROGSMS_API_TOKEN is not configured.');
+        $resolvedToken = config('services.iprogsms.api_token');
+
+        if (empty($resolvedToken)) {
+            $broadcast->update(['status' => 3]);
+            abort(422, 'No iPROG API token provided. Please set your token via the Verify Token screen.');
         }
 
         $payload = [
-            'api_token'    => config('services.iprogsms.api_token'),
+            'api_token'    => $resolvedToken,
             'phone_number' => $phoneNumbers->implode(','),
             'message'      => $broadcast->message_content,
             'sms_provider' => (int) config('services.iprogsms.sms_provider', 0),
         ];
 
-        $response = Http::timeout(15)
-            ->asForm()
-            ->post(rtrim(config('services.iprogsms.base_url'), '/') . '/sms_messages/send_bulk', $payload);
-
-        if (!$response->successful()) {
+        try {
+            $response = Http::timeout(15)
+                ->asForm()
+                ->post(rtrim(config('services.iprogsms.base_url'), '/') . '/sms_messages/send_bulk', $payload);
+        } catch (\Illuminate\Http\Client\ConnectionException $e) {
+            // The gateway never returned a response at all (timeout, DNS failure,
+            // connection refused).
             $broadcast->update(['status' => 3]);
 
-            Log::error('IPROGSMS immediate send failed', [
+            Log::error('IPROGSMS connection failed', [
                 'broadcast_id' => $broadcast->id,
-                'http_status'  => $response->status(),
-                'body'         => $response->json() ?? $response->body(),
+                'error'        => $e->getMessage(),
             ]);
 
             return [
                 'broadcast'        => $broadcast->fresh(['gov_op.user', 'location', 'broadcast_status']),
                 'mock'             => false,
-                'gateway_response' => $response->json(),
+                'gateway_response' => null,
+                'gateway_status'   => null,
+                'gateway_message'  => 'Could not reach the iPROG SMS gateway. Please check your connection and try again.',
+                'error_code'       => 'GATEWAY_UNREACHABLE',
+                'failed'           => true,
+            ];
+        }
+
+        $responseBody = $response->json() ?? ['raw' => $response->body()];
+
+        // Classify the iPROG response into a specific error type.
+        // iPROG sometimes returns HTTP 200 even on failure — check the body too.
+        $classified = $this->classifyGatewayResponse($response->status(), $responseBody);
+
+        if ($classified['failed']) {
+            $broadcast->update(['status' => 3]);
+
+            Log::error('IPROGSMS send failed', [
+                'broadcast_id' => $broadcast->id,
+                'http_status'  => $response->status(),
+                'error_code'   => $classified['error_code'],
+                'body'         => $responseBody,
+            ]);
+
+            return [
+                'broadcast'        => $broadcast->fresh(['gov_op.user', 'location', 'broadcast_status']),
+                'mock'             => false,
+                'gateway_response' => $responseBody,
                 'gateway_status'   => $response->status(),
+                'gateway_message'  => $classified['message'],
+                'error_code'       => $classified['error_code'],
                 'failed'           => true,
             ];
         }
@@ -240,7 +273,7 @@ class SMSBroadcastService
         return [
             'broadcast'        => $broadcast->fresh(['gov_op.user', 'location', 'broadcast_status']),
             'mock'             => false,
-            'gateway_response' => $response->json(),
+            'gateway_response' => $responseBody,
             'failed'           => false,
         ];
     }
@@ -398,6 +431,96 @@ class SMSBroadcastService
         }
 
         return $query->orderByDesc('scheduled_for')->paginate($limit);
+    }
+
+    private function classifyGatewayResponse(int $httpStatus, array $body): array
+    {
+        $bodyStatus  = $body['status']  ?? null;
+        $bodyMessage = $body['message'] ?? '';
+
+        // ── Success ───────────────────────────────────────────────────────────
+        if ($httpStatus >= 200 && $httpStatus < 300 && $bodyStatus === 'success') {
+            return ['failed' => false, 'error_code' => null, 'message' => null];
+        }
+
+        // ── Normalize message to lowercase for keyword matching ───────────────
+        $lowerMessage = strtolower($bodyMessage);
+
+        // ── Invalid / missing token ───────────────────────────────────────────
+        // IPROG's documented invalid-token shape is HTTP 200 with an integer
+        // status of 500 embedded in the JSON body, e.g.:
+        //   { "status": 500, "message": "Invalid Token" }
+        // The 401/403 and string-based checks below are kept as a fallback
+        // net in case other IPROG endpoints/versions use a different shape,
+        // but the (int) 500 check is the one confirmed signal we have.
+        if (
+            $bodyStatus === 500
+            || in_array($httpStatus, [401, 403], true)
+            || str_contains($lowerMessage, 'unauthenticated')
+            || str_contains($lowerMessage, 'unauthorized')
+            || str_contains($lowerMessage, 'invalid token')
+            || str_contains($lowerMessage, 'invalid api token')
+        ) {
+            return [
+                'failed'     => true,
+                'error_code' => 'INVALID_TOKEN',
+                'message'    => 'The iPROG API token is invalid or has expired. Please re-verify your token.',
+            ];
+        }
+
+        // ── Insufficient balance ──────────────────────────────────────────────
+        if (
+            str_contains($lowerMessage, 'insufficient balance')
+            || str_contains($lowerMessage, 'insufficient credit')
+            || str_contains($lowerMessage, 'not enough balance')
+            || str_contains($lowerMessage, 'no balance')
+            || str_contains($lowerMessage, 'low balance')
+        ) {
+            return [
+                'failed'     => true,
+                'error_code' => 'INSUFFICIENT_BALANCE',
+                'message'    => 'Your iPROG account has insufficient balance to send this broadcast. Please top up your account.',
+            ];
+        }
+
+        // ── No valid recipients ───────────────────────────────────────────────
+        if (
+            str_contains($lowerMessage, 'no recipient')
+            || str_contains($lowerMessage, 'invalid phone')
+            || str_contains($lowerMessage, 'invalid number')
+            || str_contains($lowerMessage, 'no valid')
+        ) {
+            return [
+                'failed'     => true,
+                'error_code' => 'INVALID_RECIPIENTS',
+                'message'    => 'No valid recipient phone numbers were accepted by the gateway.',
+            ];
+        }
+
+        // ── Gateway server error ──────────────────────────────────────────────
+        if ($httpStatus >= 500) {
+            return [
+                'failed'     => true,
+                'error_code' => 'GATEWAY_ERROR',
+                'message'    => 'The iPROG SMS gateway encountered an internal error. Please try again later.',
+            ];
+        }
+
+        // ── Generic / unknown error ───────────────────────────────────────────
+        if ($bodyStatus === 'error' || $bodyStatus === 'failed' || $httpStatus >= 400) {
+            return [
+                'failed'     => true,
+                'error_code' => 'BROADCAST_FAILED',
+                'message'    => $bodyMessage ?: 'The SMS broadcast failed. Please check your iPROG account and try again.',
+            ];
+        }
+
+        // ── Ambiguous 200 with no clear success indicator — treat as failed ───
+        return [
+            'failed'     => true,
+            'error_code' => 'UNKNOWN_RESPONSE',
+            'message'    => 'Received an unexpected response from the iPROG gateway. Please try again.',
+        ];
     }
 
 }

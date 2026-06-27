@@ -262,12 +262,23 @@ class SMSController extends Controller
             }
 
             if ($result['failed']) {
+                // Map error_code to the appropriate HTTP status for the frontend
+                $httpStatus = match ($result['error_code'] ?? '') {
+                    'INVALID_TOKEN'        => 401,
+                    'INSUFFICIENT_BALANCE' => 402,
+                    'INVALID_RECIPIENTS'   => 422,
+                    'GATEWAY_ERROR'        => 503,
+                    'GATEWAY_UNREACHABLE'  => 503,
+                    default                => 502,
+                };
+
                 return response()->json([
-                    'message'           => 'SMS dispatch failed.',
+                    'message'           => $result['gateway_message'] ?? 'SMS dispatch failed.',
+                    'error_code'        => $result['error_code'] ?? 'BROADCAST_FAILED',
                     'broadcast'         => $formatted,
-                    'iprogsms_status'   => $result['gateway_status'],
-                    'iprogsms_response' => $result['gateway_response'],
-                ], 502);
+                    'iprogsms_status'   => $result['gateway_status'] ?? null,
+                    'iprogsms_response' => $result['gateway_response'] ?? null,
+                ], $httpStatus);
             }
 
             return response()->json([
