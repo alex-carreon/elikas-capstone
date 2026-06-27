@@ -321,10 +321,11 @@ function FlaggedDetails() {
                 />
                 <div className="flex gap-4">
                   <p className="text-xs italic" id="Admin_FlaggedIsExpired">
-                    Has expired: {String(pathDetails?.is_expired)}
+                    Has hazard pin expired: {String(pathDetails?.is_expired)}
                   </p>
                   <p className="text-xs italic" id="Admin_FlaggedIsDeac">
-                    Has deactivated: {String(pathDetails?.is_deactivated)}
+                    Has hazard pin deactivated:
+                    {String(pathDetails?.is_deactivated)}
                   </p>
                 </div>
               </div>

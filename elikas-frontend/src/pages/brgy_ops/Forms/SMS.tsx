@@ -151,6 +151,8 @@ function SMS() {
         },
       );
 
+      console.log(response);
+
       toast.promise(response, {
         loading: "Sending your message now...",
         success: "Message sent!",
@@ -160,7 +162,14 @@ function SMS() {
         position: "top-center",
       });
     } catch (err: any) {
-      console.log(err.response.data);
+      if (
+        err.response.data.message === "Invalid api token or no load balance"
+      ) {
+        toast.error(
+          "You don't have enough credits! Please check your IPROGSMS account.",
+        );
+        return;
+      }
       toast.error("An unexpected error occurred.");
     } finally {
       setDisabled(false);
@@ -194,13 +203,23 @@ function SMS() {
           },
         );
 
+        console.log(response);
+
         toast.promise(response, {
           loading: "Scheduling your message now...",
           success: `Message scheduled! Your message will be sent on ${dateTime}`,
           error: (err: any) => err.response.data.details,
         });
       } catch (err: any) {
-        console.log(err.response.data);
+        if (
+          err.response.data.message === "Invalid api token or no load balance"
+        ) {
+          toast.error(
+            "You don't have enough credits! Please check your IPROGSMS account.",
+          );
+          return;
+        }
+        toast.error("An unexpected error occurred.");
       } finally {
         setDisabled(false);
       }
@@ -224,6 +243,8 @@ function SMS() {
       api_token: smsToken,
     });
 
+    console.log(response);
+
     toast.promise(response, {
       loading: "Verifying your token...",
       success: "Token verified!",
@@ -233,6 +254,9 @@ function SMS() {
         }
         if (err.response?.data.message == "Validation failed.") {
           return "Verification failed. Please be sure that the token is from your IPROGSMS account.";
+        }
+        if (err.response.data.message === "Invalid Token") {
+          return "The token is invalid. Please check your IPROGSMS account and try again.";
         }
         return "An error occurred. Please try again.";
       },
