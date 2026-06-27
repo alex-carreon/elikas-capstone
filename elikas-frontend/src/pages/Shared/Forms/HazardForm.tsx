@@ -433,10 +433,13 @@ function HazardForm() {
                 className={"text-sm w-s"}
                 style={{ color: colors.label }}
               >
-                Marking the road
+                Marking a flood path on the road
               </FieldLabel>
               <FieldDescription>
-                <b>Tap a road on the map below to start drawing your route.</b>{" "}
+                <b>
+                  Tap on the map below to start drawing the flood path from your
+                  chosen location to where the flood ends.
+                </b>
                 Press again to make a line connecting to the one before. Please
                 refrain from going off-road.
               </FieldDescription>

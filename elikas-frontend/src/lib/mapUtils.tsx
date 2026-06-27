@@ -173,7 +173,6 @@ function getNearestWaypoint(
     }
   });
 
-  console.log("nearest", nearest);
   return nearest;
 }
 
@@ -545,8 +544,6 @@ function RouterHazard({
           `${brouterBaseUrl}/brouter?lonlats=${lonlats}&profile=${profile}&format=geojson`,
           { method: "GET" },
         );
-
-        console.log(response);
 
         if (!response.ok) {
           console.error("BRouter request failed:", response.status);

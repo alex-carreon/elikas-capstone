@@ -54,7 +54,7 @@ function AlertDialogue({
         }}
       >
         <AlertDialogContent
-          className="p-4 w-70 z-[500] pointer-events-auto"
+          className="p-4 w-70 pointer-events-auto"
           onClick={(e) => e.stopPropagation()}
           id={contentId}
         >
