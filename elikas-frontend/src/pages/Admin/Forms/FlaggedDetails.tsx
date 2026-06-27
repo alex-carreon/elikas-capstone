@@ -268,6 +268,13 @@ function FlaggedDetails() {
                 />
               </MapContainer>
               <TextField
+                label="Description"
+                value={String(pathDetails?.description)}
+                inputType="text"
+                id="Admin_FlaggedPathDesc"
+                readonly
+              />
+              <TextField
                 label="Flood Level"
                 value={String(pathDetails?.flood_level.level_name)}
                 inputType="text"
@@ -279,13 +286,6 @@ function FlaggedDetails() {
                 value={String(pathDetails?.posted_by.username)}
                 inputType="text"
                 id="Admin_FlaggedPathPostedBy"
-                readonly
-              />
-              <TextField
-                label="Description"
-                value={String(pathDetails?.description)}
-                inputType="text"
-                id="Admin_FlaggedPathDesc"
                 readonly
               />
               <div className="flex gap-2">
