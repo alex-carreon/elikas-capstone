@@ -10,6 +10,7 @@ import { toast } from "sonner";
 type evacArea = {
   id: number;
   name: string;
+  evac_deactivated: boolean;
 };
 
 type postedBy = {
@@ -38,7 +39,6 @@ type flagDetails = {
   upvotes: number;
   downvotes: number;
   posted_at: string;
-  is_deactivated: boolean;
   media: string[];
   flag_info: flagInfo;
 };
@@ -243,7 +243,8 @@ function FlaggedCommentDetails() {
                 />
                 <div className="flex gap-4">
                   <p className="text-xs italic" id="Admin_EvacFlaggedIsDeac">
-                    Has deactivated: {String(flagDetails?.is_deactivated)}
+                    Has evacuation pin deactivated:
+                    {String(flagDetails?.evac_area.evac_deactivated)}
                   </p>
                 </div>
               </div>

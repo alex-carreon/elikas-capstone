@@ -401,6 +401,7 @@ function HazardForm() {
                     ? "You may only add one photo at a time. Please press the add photo below to post the photo on your post!"
                     : ""
                 }
+                accept="image/png, image/jpeg, image/heic"
               />
               {fileName && (
                 <>
