@@ -148,6 +148,7 @@ function BrgyAdd() {
   return (
     <>
       <FormLayout
+        formTitle="Add a Barangay User"
         updateId="Admin_NewSubmitBtn"
         updBtnLabel="Create"
         btnType="submit"

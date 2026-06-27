@@ -30,6 +30,7 @@ function EvacComments() {
   const [loading, setLoading] = useState(false);
   const [comments, setComments] = useState<comment[]>([]);
   const [openCollapse, setOpenCollapse] = useState(false);
+  const [openCommentId, setOpenCommentId] = useState<number | null>(null);
 
   const { pinId } = useParams();
 
@@ -103,7 +104,13 @@ function EvacComments() {
                       showBtn
                     ></Row>
                     {comment.media.length > 0 && (
-                      <Collapsible className="rounded-sm data-[state=open]:bg-red p-1 outline">
+                      <Collapsible
+                        className="rounded-sm data-[state=open]:bg-red p-1 outline"
+                        open={openCommentId === comment.id}
+                        onOpenChange={(isOpen) =>
+                          setOpenCommentId(isOpen ? comment.id : null)
+                        }
+                      >
                         <CollapsibleTrigger
                           id="Admin_EvacCommentsMediaTrigger"
                           className="group w-full flex flex-col items-start"
@@ -113,7 +120,7 @@ function EvacComments() {
                         >
                           <div className="flex flex-row items-center">
                             See Attached Media
-                            {openCollapse ? (
+                            {openCommentId === comment.id ? (
                               <ChevronUpIcon className="ml-auto group-data-[state=open]:rotate-180" />
                             ) : (
                               <ChevronDownIcon className="ml-auto group-data-[state=open]:rotate-180" />

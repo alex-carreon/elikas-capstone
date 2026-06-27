@@ -64,7 +64,8 @@ Route::get('/capacity-levels', [CapacityLevelController::class, 'index']);
 Route::post('/sensor-logs', [SensorLogController::class, 'store']);
 
 Route::post('/email/resend-verification', [AuthController::class, 'resendVerification']);
-
+Route::post('/forgot-password', [AuthController::class, 'forgotPassword'])
+    ->middleware('throttle:5,1');
 // ---------------------------------------------------------------
 // PIN ROUTES
 // ---------------------------------------------------------------

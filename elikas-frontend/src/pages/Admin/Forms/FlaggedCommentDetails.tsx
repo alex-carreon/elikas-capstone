@@ -10,6 +10,7 @@ import { toast } from "sonner";
 type evacArea = {
   id: number;
   name: string;
+  evac_deactivated: boolean;
 };
 
 type postedBy = {
@@ -23,10 +24,20 @@ type reason = {
   first_flagged_at: number;
 };
 
-type flagInfo = {
-  type: string;
+type manual = {
   flag_count: number;
   reasons: reason[];
+};
+
+type aiModeration = {
+  id: number;
+  flagged_at: string;
+};
+
+type flagInfo = {
+  manual: manual;
+  flag_count: number;
+  ai_moderation: aiModeration[];
 };
 
 type flagDetails = {
@@ -38,7 +49,6 @@ type flagDetails = {
   upvotes: number;
   downvotes: number;
   posted_at: string;
-  is_deactivated: boolean;
   media: string[];
   flag_info: flagInfo;
 };
@@ -156,20 +166,14 @@ function FlaggedCommentDetails() {
           <>
             <div className="flex flex-col gap-4">
               <TextField
-                label="Flag Type"
-                value={String(flagDetails?.flag_info.type)}
-                inputType="text"
-                id="Admin_EvacFlaggedFlagType"
-                readonly
-              />
-              <TextField
                 label="Flag Count"
                 value={String(flagDetails?.flag_info.flag_count)}
                 inputType="text"
                 id="Admin_EvacFlaggedFlagCount"
                 readonly
               />
-              {flagDetails?.flag_info.reasons.map((reason) => (
+
+              {flagDetails?.flag_info.manual.reasons.map((reason) => (
                 <div className="flex gap-2">
                   <TextField
                     label="Flag Reason"
@@ -187,9 +191,18 @@ function FlaggedCommentDetails() {
                   />
                 </div>
               ))}
-
+              {flagDetails?.flag_info.ai_moderation &&
+                flagDetails?.flag_info.ai_moderation.length > 0 && (
+                  <TextField
+                    label="FlagReason"
+                    value="AI Moderator"
+                    inputType="text"
+                    id="Admin_EvacFlaggedAIMod"
+                    readonly
+                  />
+                )}
               <TextField
-                label="Flag Id"
+                label="Comment Id"
                 value={String(flagDetails?.id)}
                 inputType="text"
                 id="Admin_EvacFlaggedId"
@@ -210,6 +223,13 @@ function FlaggedCommentDetails() {
                   <p>No Media</p>
                 )}
               </Field>
+              <TextField
+                label="Content"
+                value={String(flagDetails?.content)}
+                inputType="text"
+                id="Admin_EvacFlaggedContent"
+                readonly
+              />
               <TextField
                 label="Posted By"
                 value={String(flagDetails?.posted_by.username)}
@@ -243,7 +263,8 @@ function FlaggedCommentDetails() {
                 />
                 <div className="flex gap-4">
                   <p className="text-xs italic" id="Admin_EvacFlaggedIsDeac">
-                    Has deactivated: {String(flagDetails?.is_deactivated)}
+                    Has evacuation pin deactivated:
+                    {String(flagDetails?.evac_area.evac_deactivated)}
                   </p>
                 </div>
               </div>
