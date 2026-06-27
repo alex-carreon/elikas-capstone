@@ -189,7 +189,7 @@ function FlaggedCommentDetails() {
               ))}
 
               <TextField
-                label="Flag Id"
+                label="Comment Id"
                 value={String(flagDetails?.id)}
                 inputType="text"
                 id="Admin_EvacFlaggedId"
@@ -210,6 +210,13 @@ function FlaggedCommentDetails() {
                   <p>No Media</p>
                 )}
               </Field>
+              <TextField
+                label="Content"
+                value={String(flagDetails?.content)}
+                inputType="text"
+                id="Admin_EvacFlaggedContent"
+                readonly
+              />
               <TextField
                 label="Posted By"
                 value={String(flagDetails?.posted_by.username)}
