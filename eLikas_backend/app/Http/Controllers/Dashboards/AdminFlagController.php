@@ -132,8 +132,6 @@ class AdminFlagController extends Controller
      */
     public function commentDetail(Request $request, int $commentId)
     {
-        $type = $request->query('type', 'manual');
-
         $comment = Comment::with([
             'element.user:id,username',
             'element.media',
@@ -143,78 +141,81 @@ class AdminFlagController extends Controller
             return response()->json(['message' => 'Comment not found.'], 404);
         }
 
-       $evacArea = EvacArea::with('social_element')->where('element_id', $comment->parent_id)->first();
+        $evacArea = EvacArea::with('social_element')
+            ->where('element_id', $comment->parent_id)
+            ->first();
 
-        // Reuse same comment detail format
         $detail = [
-            'id'          => $comment->id,
-            'element_id' => $comment->element_id, 
-            'evac_area'   => [
-                'id'   => $evacArea?->id,
-                'name' => $evacArea?->name,
-                'evac_deactivated' => !is_null($evacArea?->social_element?->deactivated_at),
+            'id'         => $comment->id,
+            'element_id' => $comment->element_id,
+            'evac_area'  => [
+                'id'                 => $evacArea?->id,
+                'name'               => $evacArea?->name,
+                'evac_deactivated'   => !is_null($evacArea?->social_element?->deactivated_at),
             ],
-            'posted_by'   => [
+            'posted_by'  => [
                 'id'       => $comment->element?->user?->id,
                 'username' => $comment->element?->user?->username,
             ],
-            'content'      => $comment->content,
-            'upvotes'      => $comment->upvotes,
-            'downvotes'    => $comment->downvotes,
-            'posted_at'    => $comment->element?->posted_at
+            'content'    => $comment->content,
+            'upvotes'    => $comment->upvotes,
+            'downvotes'  => $comment->downvotes,
+            'posted_at'  => $comment->element?->posted_at
                 ?->timezone('Asia/Manila')
                 ->toDateTimeString(),
-            'media'        => $comment->element?->media
+            'media'      => $comment->element?->media
                 ->map(fn ($m) => config('app.media_base_url') . '/' . $m->file_path)
                 ->values()
                 ->toArray() ?? [],
         ];
 
-        // Append flag info
-        if ($type === 'moderation') {
-            $log = ModerationLog::where('element_id', $comment->element_id)
-                ->whereNull('is_approved')
-                ->first();
+        // Pending manual flags
+        $flags = Flag::with('flag_reason')
+            ->where('element_id', $comment->element_id)
+            ->whereNull('is_approved')
+            ->get();
 
-            $detail['flag_info'] = $log ? [
-                'type'       => 'AI Moderation',
-                'flagged_at' => $log->created_at
-                    ->timezone('Asia/Manila')
-                    ->toDateTimeString(),
-            ] : null;
+        // Pending AI moderation logs
+        $moderationLogs = ModerationLog::where('element_id', $comment->element_id)
+            ->whereNull('is_approved')
+            ->get();
 
-        } else {
-            $flags = Flag::with('flag_reason')
-                ->where('element_id', $comment->element_id)
-                ->whereNull('is_approved')
-                ->get();
+        $detail['flag_info'] = [
+            'flag_count' => $flags->count() + $moderationLogs->count(),
 
-            $detail['flag_info'] = [
-                'type'       => 'Manual',
+            'manual' => [
                 'flag_count' => $flags->count(),
-                'reasons'    => $flags
+                'reasons' => $flags
                     ->groupBy('reason_id')
                     ->map(fn ($group) => [
-                        'reason'     => $group->first()->flag_reason->reason_label,
+                        'reason' => $group->first()->flag_reason->reason_label,
                         'flag_count' => $group->count(),
                         'first_flagged_at' => $group->min('flagged_at')
                             ?->timezone('Asia/Manila')
                             ->toDateTimeString(),
                     ])
                     ->values(),
-            ];
-        }
+            ],
 
-        return response()->json(['comment' => $detail]);
+            'ai_moderation' => $moderationLogs->map(fn ($log) => [
+                'id' => $log->id,
+                'flagged_at' => $log->created_at
+                    ->timezone('Asia/Manila')
+                    ->toDateTimeString(),
+            ])->values(),
+        ];
+
+        return response()->json([
+            'comment' => $detail,
+        ]);
     }
+
 
     /**
      * GET /admin/flood-paths/flags/{floodPathId}
      */
     public function floodPathDetail(Request $request, int $floodPathId)
     {
-        $type = $request->query('type', 'manual');
-
         $floodPath = FloodPath::with([
             'floodLevel:id,level_name,description',
             'socialElement.user:id,username',
@@ -229,42 +230,44 @@ class AdminFlagController extends Controller
         // Reuse same flood path detail format
         $detail = $this->formatFloodPath($floodPath);
 
-        // Append flag info
-        if ($type === 'moderation') {
-            $log = ModerationLog::where('element_id', $floodPath->element_id)
-                ->whereNull('is_approved')
-                ->first();
+        // Pending manual flags
+        $flags = Flag::with('flag_reason')
+            ->where('element_id', $floodPath->element_id)
+            ->whereNull('is_approved')
+            ->get();
 
-            $detail['flag_info'] = $log ? [
-                'type'       => 'AI Moderation',
+        // Pending AI moderation logs
+        $moderationLogs = ModerationLog::where('element_id', $floodPath->element_id)
+            ->whereNull('is_approved')
+            ->get();
+
+        $detail['flag_info'] = [
+            // Keep existing fields
+            'type' => 'Manual',
+            'flag_count' => $flags->count() + $moderationLogs->count(),
+
+            'reasons' => $flags
+                ->groupBy('reason_id')
+                ->map(fn ($group) => [
+                    'reason' => $group->first()->flag_reason->reason_label,
+                    'flag_count' => $group->count(),
+                    'first_flagged_at' => $group->min('flagged_at')
+                        ?->timezone('Asia/Manila')
+                        ->toDateTimeString(),
+                ])
+                ->values(),
+
+            // New field (does not affect existing frontend)
+            'ai_moderation' => $moderationLogs->map(fn ($log) => [
                 'flagged_at' => $log->created_at
                     ->timezone('Asia/Manila')
                     ->toDateTimeString(),
-            ] : null;
+            ])->values(),
+        ];
 
-        } else {
-            $flags = Flag::with('flag_reason')
-                ->where('element_id', $floodPath->element_id)
-                ->whereNull('is_approved')
-                ->get();
-
-            $detail['flag_info'] = [
-                'type'       => 'Manual',
-                'flag_count' => $flags->count(),
-                'reasons'    => $flags
-                    ->groupBy('reason_id')
-                    ->map(fn ($group) => [
-                        'reason'           => $group->first()->flag_reason->reason_label,
-                        'flag_count'       => $group->count(),
-                        'first_flagged_at' => $group->min('flagged_at')
-                            ?->timezone('Asia/Manila')
-                            ->toDateTimeString(),
-                    ])
-                    ->values(),
-            ];
-        }
-
-        return response()->json(['flood_path' => $detail]);
+        return response()->json([
+            'flood_path' => $detail,
+        ]);
     }
 
     private function getAdmin(int $userId): ?\App\Models\Admin
