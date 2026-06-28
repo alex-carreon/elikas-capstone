@@ -40,6 +40,8 @@ class GetEvacAreasController extends Controller
                     })->orWhere(function ($expiry) {
                         $expiry->whereNotNull('expiry')
                             ->where('expiry', '<=', now('UTC'));
+                    })->orWhereHas('social_element.user', function ($social) {
+                        $social->whereNotNull('deactivated_at');
                     });
                 });
             } else {
@@ -125,6 +127,7 @@ class GetEvacAreasController extends Controller
                 ->select(['id', 'element_id', 'location_id', 'location', 'expiry', 'is_persistent'])
                 ->with([
                     'social_element:id,user_id,deactivated_at',
+                    'social_element.user:id,deactivated_at',
                     'location_info:id,name',
                 ])
                 // Strictly isolate to this user's own pins only
@@ -179,6 +182,7 @@ class GetEvacAreasController extends Controller
                 ->select(['id', 'element_id', 'location_id', 'location', 'expiry', 'is_persistent'])
                 ->with([
                     'social_element:id,user_id,deactivated_at',
+                    'social_element.user:id,deactivated_at',
                     'location_info:id,name',
                 ])
                 ->whereHas('social_element', function ($q) {
@@ -270,6 +274,7 @@ class GetEvacAreasController extends Controller
 
             $query = EvacArea::with([
                 'social_element',
+                'social_element.user:id,deactivated_at',
             ])
                 ->whereHas('social_element', function ($q) use ($user) {
                     $q->where('user_id', $user->id);
@@ -323,6 +328,7 @@ class GetEvacAreasController extends Controller
         try {
             $query = EvacArea::with([
                 'social_element',
+                'social_element.user:id,deactivated_at',
             ]);
 
             $this->applySearchFilter($query, $request);
@@ -395,6 +401,24 @@ class GetEvacAreasController extends Controller
                     });
                 }
             }
+
+            if ($request->filled('is_user_deactivated')) {
+                $isUserDeactivated = filter_var($request->query('is_user_deactivated'), FILTER_VALIDATE_BOOLEAN, FILTER_NULL_ON_FAILURE);
+
+                if ($isUserDeactivated === null) {
+                    return response()->json([
+                        'error' => 'Invalid is_user_deactivated value. Use true or false.',
+                    ], 422);
+                }
+
+                $query->whereHas('social_element.user', function ($q) use ($isUserDeactivated) {
+                    if ($isUserDeactivated) {
+                        $q->whereNotNull('deactivated_at');
+                    } else {
+                        $q->whereNull('deactivated_at');
+                    }
+                });
+            }
             $locationId = $request->filled('barangay_id')
                 ? (int) $request->query('barangay_id')
                 : ($request->filled('location_id') ? (int) $request->query('location_id') : null);
@@ -451,6 +475,7 @@ class GetEvacAreasController extends Controller
     {
         $isOwner = $forceOwner ? true : $this->isOwner($pin, $user);
         $isActive = $pin->social_element?->deactivated_at === null
+            && $pin->social_element?->user?->deactivated_at === null
             && (
                 $pin->expiry === null ||
                 $pin->expiry->gt(now('UTC'))
@@ -482,6 +507,7 @@ class GetEvacAreasController extends Controller
                 : null,
             'is_expired'     => $pin->expiry !== null && $pin->expiry->lte(now('UTC')),
             'is_deactivated' => $pin->social_element?->deactivated_at !== null,
+            'is_user_deactivated' => $pin->social_element?->user?->deactivated_at !== null,
             'deactivated_at' => $pin->social_element?->deactivated_at
                 ? $pin->social_element->deactivated_at->timezone('Asia/Manila')->toDateTimeString()
                 : null,
