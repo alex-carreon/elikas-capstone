@@ -163,30 +163,50 @@ export const handleUpdate = async ({
   e?.preventDefault();
 
   setDisabled?.(true);
-  if (!floodDetails) return;
+
+  if (!floodDetails) {
+    console.log("Passed here");
+    setDisabled?.(false);
+    return;
+  }
 
   if (!routePoints || routePoints.length < 2) {
+    console.log("Now here");
+
     toast.error("Please indicate the hazard on the map");
+    setDisabled?.(false);
     return;
   }
 
   if (!floodLevel) {
+    console.log("Then here");
+
+    setDisabled?.(false);
     return;
   }
 
   if (desc === null) {
+    console.log("Wow here");
+
     toast.error("Please fill the description field");
+    setDisabled?.(false);
+
     return;
   }
 
   if (!userExpiry) {
+    console.log("expiry here");
+
     toast.error("Please enter an expiry date.");
+    setDisabled?.(false);
     return;
   }
 
-  const expDate = userExpiry ?? addDays(new Date(), 3);
+  const expDate = userExpiry ? new Date(userExpiry) : addDays(new Date(), 3);
+  console.log("Date", expDate);
 
   const now = new Date();
+  console.log("now", now);
   const expDateWithTime = new Date(
     expDate.getFullYear(),
     expDate.getMonth(),
@@ -195,6 +215,7 @@ export const handleUpdate = async ({
     now.getMinutes(),
     now.getSeconds(),
   );
+  console.log("expDateWithTime", expDateWithTime);
 
   const dateTime = formatInTimeZone(
     expDateWithTime,
@@ -202,7 +223,7 @@ export const handleUpdate = async ({
     "MMMM dd, yyyy, h:mm a",
   );
 
-  console.log("Hazard Expiry", dateTime);
+  console.log("submitted date", dateTime);
 
   const response = api.patch(`/flood-paths/${id}`, {
     level_id: floodLevel,
@@ -211,9 +232,12 @@ export const handleUpdate = async ({
     path: routePoints,
   });
 
+  console.log(response);
+
   toast.promise(response, {
     loading: "Saving your updates...",
     success: "Pin successfully updated!",
+    error: "There was an error updating your flood hazard",
     position: "top-center",
   });
 
@@ -224,6 +248,7 @@ export const handleUpdate = async ({
     })
     .catch((err: string | any) => {
       console.log(err.message || "An error occurred");
+      toast.error("An unexpected error occurred.");
     })
     .finally(() => setDisabled?.(false));
 };
