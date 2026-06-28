@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Builder;
 use MatanYadaev\EloquentSpatial\Objects\Point;
 use MatanYadaev\EloquentSpatial\Traits\HasSpatial;
 use \OwenIt\Auditing\Contracts\Auditable;
@@ -41,7 +42,7 @@ class EvacArea extends Model implements Auditable
     protected $fillable = [
         'element_id',
         'location_id',
-        'location',              // ← added so Eloquent create() can set the Point
+        'location',
         'area_type',
         'address',
         'description',
@@ -67,6 +68,8 @@ class EvacArea extends Model implements Auditable
         'expiry',
     ];
 
+    // ── Relations ─────────────────────────────────────────────────────────────
+
     public function social_element()
     {
         return $this->belongsTo(SocialElement::class, 'element_id');
@@ -90,5 +93,40 @@ class EvacArea extends Model implements Auditable
     public function gov_op()
     {
         return $this->belongsTo(GovOp::class, 'verified_by');
+    }
+
+    // ── Query Scopes (mirrors FloodPath pattern) ──────────────────────────────
+
+    /** Exclude pins that have expired. */
+    public function scopeNotExpired(Builder $query): Builder
+    {
+        return $query->where(function ($q) {
+            $q->whereNull('expiry')
+              ->orWhere('expiry', '>', now('UTC'));
+        });
+    }
+
+    /** Exclude pins whose SocialElement has been deactivated. */
+    public function scopeNotDeactivated(Builder $query): Builder
+    {
+        return $query->whereHas('social_element', fn ($q) =>
+            $q->whereNull('deactivated_at')
+        );
+    }
+
+    /** Exclude pins whose posting user account has been deactivated. */
+    public function scopeNotUserDeactivated(Builder $query): Builder
+    {
+        return $query->whereDoesntHave('social_element.user', fn ($q) =>
+            $q->whereNotNull('deactivated_at')
+        );
+    }
+
+    /** Only pins owned by a specific user. */
+    public function scopeOwnedBy(Builder $query, int $userId): Builder
+    {
+        return $query->whereHas('social_element', fn ($q) =>
+            $q->where('user_id', $userId)
+        );
     }
 }
