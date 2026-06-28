@@ -92,7 +92,19 @@ export const handleSubmit = async ({
 
     const expDate = userExpiry ?? addDays(dateTime, 3);
 
-    formData.append("expiry", format(expDate, "yyyy-MM-dd"));
+    const now = new Date();
+    const expDateWithTime = new Date(
+      expDate.getFullYear(),
+      expDate.getMonth(),
+      expDate.getDate(),
+      now.getHours(),
+      now.getMinutes(),
+      now.getSeconds(),
+    );
+
+    console.log("Hazard Expiry", expDateWithTime);
+
+    formData.append("expiry", format(expDateWithTime, "yyyy-MM-dd"));
     routePoints.forEach((point, index) => {
       formData.append(`path[${index}][0]`, String(point[0]));
       formData.append(`path[${index}][1]`, String(point[1]));
@@ -172,13 +184,25 @@ export const handleUpdate = async ({
     return;
   }
 
-  const expDate = userExpiry;
+  const expDate = userExpiry ?? addDays(new Date(), 3);
+
+  const now = new Date();
+  const expDateWithTime = new Date(
+    expDate.getFullYear(),
+    expDate.getMonth(),
+    expDate.getDate(),
+    now.getHours(),
+    now.getMinutes(),
+    now.getSeconds(),
+  );
 
   const dateTime = formatInTimeZone(
-    expDate,
+    expDateWithTime,
     "Asia/Manila",
     "MMMM dd, yyyy, h:mm a",
   );
+
+  console.log("Hazard Expiry", dateTime);
 
   const response = api.patch(`/flood-paths/${id}`, {
     level_id: floodLevel,

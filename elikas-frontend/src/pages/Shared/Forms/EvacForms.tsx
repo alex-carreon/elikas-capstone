@@ -397,6 +397,18 @@ function EvacPin() {
 
     const expDate = expiry ?? addDays(new Date(), 7);
 
+    const now = new Date();
+    const expDateWithTime = new Date(
+      expDate.getFullYear(),
+      expDate.getMonth(),
+      expDate.getDate(),
+      now.getHours(),
+      now.getMinutes(),
+      now.getSeconds(),
+    );
+
+    console.log("Evac Expiry", expDateWithTime);
+
     if (fileName) {
       formData.append("file", fileName);
     }
@@ -483,7 +495,7 @@ function EvacPin() {
     formData.append("other_facilities", other);
     formData.append("contact_person", contactPerson);
     formData.append("contact_number", contactNumber);
-    formData.append("expiry", format(expDate, "yyyy-MM-dd"));
+    formData.append("expiry", format(expDateWithTime, "yyyy-MM-dd"));
 
     handleSubmit({
       e: e,
@@ -552,6 +564,20 @@ function EvacPin() {
       setBreastfeed("0");
     }
 
+    const expDate = expiry ?? addDays(new Date(), 7);
+
+    const now = new Date();
+    const expDateWithTime = new Date(
+      expDate.getFullYear(),
+      expDate.getMonth(),
+      expDate.getDate(),
+      now.getHours(),
+      now.getMinutes(),
+      now.getSeconds(),
+    );
+
+    console.log("Evac Expiry", expDateWithTime);
+
     handleUpdate({
       e: e,
       id: id,
@@ -576,7 +602,7 @@ function EvacPin() {
       ...(contactPerson && { contact_person: contactPerson }),
       ...(contactNumber && { contact_number: contactNumber }),
       role: role ? role : "",
-      expiry: String(expiry),
+      expiry: format(expDateWithTime, "yyyy-MM-dd"),
       setIsEditable: setIsEditable,
       setHasUpdated: setHasUpdated,
       setDisabled,
