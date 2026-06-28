@@ -31,6 +31,58 @@ class SMSBroadcastService
             ->get();
     }
 
+    /**
+     * Return just the count of verified active recipients for a location.
+     * Used by the broadcast screen to show recipient analytics before sending.
+     */
+    public function getRecipientCount(int $locationId): int
+    {
+        return PhoneNumber::whereHas('user', function ($query) use ($locationId) {
+                $query->whereNull('deactivated_at')
+                    ->whereHas('indivAcc', function ($q) use ($locationId) {
+                        $q->where('location_id', $locationId);
+                    });
+            })
+            ->whereNotNull('phone_no')
+            ->where('is_verified', true)
+            ->count();
+    }
+
+    /**
+     * Estimate SMS price before sending.
+     *
+     * iPROG charges ₱1.00 per SMS per recipient.
+     * A single SMS fits 160 characters. Every additional 160-char block
+     * is billed as another SMS per recipient.
+     *
+     * @param int    $recipientCount  Number of verified recipients.
+     * @param string $message         The message content to be sent.
+     * @return array{
+     *   recipient_count: int,
+     *   message_length: int,
+     *   sms_parts: int,
+     *   price_per_recipient: float,
+     *   estimated_total_price: float,
+     *   currency: string
+     * }
+     */
+    public function getEstimatedPrice(int $recipientCount, string $message): array
+    {
+        $messageLength  = mb_strlen($message);
+        $smsParts       = max(1, (int) ceil($messageLength / 160));
+        $pricePerSms    = 1.00; // ₱1.00 per SMS per recipient (iPROG rate)
+        $estimatedTotal = $recipientCount * $smsParts * $pricePerSms;
+
+        return [
+            'recipient_count'       => $recipientCount,
+            'message_length'        => $messageLength,
+            'sms_parts'             => $smsParts,
+            'price_per_recipient'   => (float) ($smsParts * $pricePerSms),
+            'estimated_total_price' => (float) $estimatedTotal,
+            'currency'              => 'PHP',
+        ];
+    }
+
     public function getAllUsersForLocation(int $locationId): Collection
     {
         return PhoneNumber::with([
@@ -91,7 +143,7 @@ class SMSBroadcastService
             if ($filters['state'] === 'active') {
                 $query->where('status', 1);
             } else {
-                $query->whereIn('status', [2, 3, 4]);
+                $query->whereIn('status', [2, 4, 5]);
             }
         }
 
@@ -180,13 +232,13 @@ class SMSBroadcastService
             ->values();
 
         if ($phoneNumbers->isEmpty()) {
-            $broadcast->update(['status' => 3]);
+            $broadcast->update(['status' => 5]);
             abort(422, 'No user phone numbers found for this GovOp location.');
         }
 
         $broadcast->update(['total_recipients' => $phoneNumbers->count()]);
 
-        if (config('services.iprogsms.mock', true)) {
+        if ((bool) config('services.iprogsms.mock', false) === true) {
             Log::info('IPROGSMS mock SMS', [
                 'broadcast_id' => $broadcast->id,
                 'phone_number' => $phoneNumbers->implode(','),
@@ -205,7 +257,7 @@ class SMSBroadcastService
         $resolvedToken = config('services.iprogsms.api_token');
 
         if (empty($resolvedToken)) {
-            $broadcast->update(['status' => 3]);
+            $broadcast->update(['status' => 5]);
             abort(422, 'No iPROG API token provided. Please set your token via the Verify Token screen.');
         }
 
@@ -216,30 +268,9 @@ class SMSBroadcastService
             'sms_provider' => (int) config('services.iprogsms.sms_provider', 0),
         ];
 
-        try {
-            $response = Http::timeout(15)
-                ->asForm()
-                ->post(rtrim(config('services.iprogsms.base_url'), '/') . '/sms_messages/send_bulk', $payload);
-        } catch (\Illuminate\Http\Client\ConnectionException $e) {
-            // The gateway never returned a response at all (timeout, DNS failure,
-            // connection refused).
-            $broadcast->update(['status' => 3]);
-
-            Log::error('IPROGSMS connection failed', [
-                'broadcast_id' => $broadcast->id,
-                'error'        => $e->getMessage(),
-            ]);
-
-            return [
-                'broadcast'        => $broadcast->fresh(['gov_op.user', 'location', 'broadcast_status']),
-                'mock'             => false,
-                'gateway_response' => null,
-                'gateway_status'   => null,
-                'gateway_message'  => 'Could not reach the iPROG SMS gateway. Please check your connection and try again.',
-                'error_code'       => 'GATEWAY_UNREACHABLE',
-                'failed'           => true,
-            ];
-        }
+        $response = Http::timeout(15)
+            ->asForm()
+            ->post(rtrim(config('services.iprogsms.base_url'), '/') . '/sms_messages/send_bulk', $payload);
 
         $responseBody = $response->json() ?? ['raw' => $response->body()];
 
@@ -248,7 +279,7 @@ class SMSBroadcastService
         $classified = $this->classifyGatewayResponse($response->status(), $responseBody);
 
         if ($classified['failed']) {
-            $broadcast->update(['status' => 3]);
+            $broadcast->update(['status' => 5]);
 
             Log::error('IPROGSMS send failed', [
                 'broadcast_id' => $broadcast->id,
@@ -350,7 +381,12 @@ class SMSBroadcastService
 
     public function formatBroadcast(SMSBroadcast $broadcast): array
     {
-        $sender = $broadcast->gov_op;
+        // Always re-resolve the sender from the broadcast's own sender_id
+        // to prevent a stale eager-loaded relation from bleeding across rows
+        // (which caused "Zach Abad" to appear for every entry).
+        $sender = $broadcast->relationLoaded('gov_op')
+            ? $broadcast->gov_op
+            : $broadcast->load('gov_op.user')->gov_op;
 
         return [
             'id'               => $broadcast->id,
@@ -359,8 +395,12 @@ class SMSBroadcastService
                 'id'   => $broadcast->status,
                 'name' => $broadcast->broadcast_status?->status_name ?? 'Unknown',
             ],
-            'scheduled_for'    => Carbon::parse($broadcast->scheduled_for)->timezone('Asia/Manila')->toDateTimeString(),
-            'sent_at'          => $broadcast->sent_at ? Carbon::parse($broadcast->sent_at)->timezone('Asia/Manila')->toDateTimeString() : null,
+            'scheduled_for'    => $broadcast->scheduled_for
+                ? Carbon::parse($broadcast->scheduled_for)->timezone('Asia/Manila')->toDateTimeString()
+                : null,
+            'sent_at'          => $broadcast->sent_at
+                ? Carbon::parse($broadcast->sent_at)->timezone('Asia/Manila')->toDateTimeString()
+                : null,
             'total_recipients' => $broadcast->total_recipients,
             'sender'           => [
                 'govop_id'       => $sender?->id,
@@ -433,6 +473,19 @@ class SMSBroadcastService
         return $query->orderByDesc('scheduled_for')->paginate($limit);
     }
 
+    /**
+     * Classify an iPROG gateway response into a specific error type.
+     *
+     * iPROG's API is inconsistent — it sometimes returns HTTP 200 with an error
+     * body, sometimes 4xx. This method normalizes both into a single structure
+     * so the controller always gets a clear, actionable error code.
+     *
+     * Known iPROG response shapes:
+     *   Invalid token  → { "status": "error", "message": "Unauthenticated." }  HTTP 401 or 200
+     *   No balance     → { "status": "error", "message": "Insufficient balance." } HTTP 200
+     *   No recipients  → { "status": "error", "message": "..." } HTTP 200
+     *   Success        → { "status": "success", "message": "...", "data": {...} } HTTP 200
+     */
     private function classifyGatewayResponse(int $httpStatus, array $body): array
     {
         $bodyStatus  = $body['status']  ?? null;
@@ -447,24 +500,18 @@ class SMSBroadcastService
         $lowerMessage = strtolower($bodyMessage);
 
         // ── Invalid / missing token ───────────────────────────────────────────
-        // IPROG's documented invalid-token shape is HTTP 200 with an integer
-        // status of 500 embedded in the JSON body, e.g.:
-        //   { "status": 500, "message": "Invalid Token" }
-        // The 401/403 and string-based checks below are kept as a fallback
-        // net in case other IPROG endpoints/versions use a different shape,
-        // but the (int) 500 check is the one confirmed signal we have.
         if (
-            $bodyStatus === 500
-            || in_array($httpStatus, [401, 403], true)
+            in_array($httpStatus, [401, 403], true)
             || str_contains($lowerMessage, 'unauthenticated')
             || str_contains($lowerMessage, 'unauthorized')
             || str_contains($lowerMessage, 'invalid token')
             || str_contains($lowerMessage, 'invalid api token')
+            || str_contains($lowerMessage, 'token')  && $bodyStatus === 'error'
         ) {
             return [
                 'failed'     => true,
                 'error_code' => 'INVALID_TOKEN',
-                'message'    => 'The iPROG API token is invalid or has expired. Please re-verify your token.',
+                'message'    => 'The iPROG API token is invalid or has insufficient funds. Please re-enter your token or top up your account.',
             ];
         }
 

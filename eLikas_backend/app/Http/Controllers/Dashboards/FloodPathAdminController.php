@@ -19,6 +19,7 @@ class FloodPathAdminController extends Controller
         $query = FloodPath::with([
             'floodLevel:id,level_name',
             'socialElement:id,user_id,posted_at,deactivated_at',
+            'socialElement.user:id,deactivated_at',
         ]);
 
         // Filter by flood level
@@ -42,12 +43,19 @@ class FloodPathAdminController extends Controller
             $isDeactivated = filter_var($isDeactivated, FILTER_VALIDATE_BOOLEAN);
 
             if ($isDeactivated) {
-                $query->whereHas('socialElement', function ($q) {
-                    $q->whereNotNull('deactivated_at');
+                $query->where(function ($q) {
+                    $q->whereHas('socialElement', function ($q) {
+                        $q->whereNotNull('deactivated_at');
+                    })->orWhereHas('socialElement.user', function ($q) {
+                        $q->whereNotNull('deactivated_at');
+                    });
                 });
             } else {
                 $query->whereHas('socialElement', function ($q) {
-                    $q->whereNull('deactivated_at');
+                    $q->whereNull('deactivated_at')
+                    ->whereHas('user', function ($q) {
+                        $q->whereNull('deactivated_at');
+                    });
                 });
             }
         }
@@ -70,6 +78,9 @@ class FloodPathAdminController extends Controller
                 'is_expired' => $fp->expiry < now(),
                 'is_deactivated' => !is_null(
                     $fp->socialElement->deactivated_at
+                ),
+                'is_user_deactivated' => !is_null(
+                    $fp->socialElement->user->deactivated_at
                 ),
             ]),
         ]);

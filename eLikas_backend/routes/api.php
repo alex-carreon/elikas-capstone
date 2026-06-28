@@ -145,6 +145,7 @@ Route::middleware(['firebase.auth', 'role:2'])->group(function () {
     // SMS SYSTEM
     // ---------------------------------------------------------------
     Route::get('/sms/recipients', [SMSController::class, 'recipients']);
+    Route::get('/sms/broadcast-info', [SMSController::class, 'broadcastInfo']);
 
     // SMS — Broadcasts / Direct Messages
     Route::post('/sms/broadcasts', [SMSController::class, 'store']);

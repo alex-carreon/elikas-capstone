@@ -24,6 +24,8 @@ import { toZonedTime, format } from "date-fns-tz";
 import { addDays } from "date-fns";
 import AlertDialogue from "@/components/AlertDialogue";
 import { toast } from "sonner";
+import { Skeleton } from "@/components/ui/skeleton";
+import Radio from "@/components/Radio";
 
 type EvacType = {
   id: number;
@@ -97,8 +99,10 @@ function EvacPin() {
   const [pinName, setPinName] = useState("");
   const [blkLot, setBlkLot] = useState<string>();
   const [houseNo, setHouseNo] = useState("");
+  const [buildingName, setBuildingName] = useState("");
   const [street, setStreet] = useState<string | undefined>();
   const [capacity, setCapacity] = useState("");
+  const [openCap, setOpenCap] = useState("");
   const [capacityLevels, setCapacityLevels] = useState<CapacityLevel[]>([]);
   const [address, setAddress] = useState("");
   const [latLng, setLatLng] = useState<[number, number]>();
@@ -395,7 +399,7 @@ function EvacPin() {
 
     const formData = new FormData();
 
-    const expDate = expiry ?? addDays(new Date(), 7);
+    const expDate = expiry ? new Date(expiry) : addDays(new Date(), 7);
 
     const now = new Date();
     const expDateWithTime = new Date(
@@ -454,7 +458,7 @@ function EvacPin() {
 
     if (hasBreastfeed) {
       if (!breastfeed || breastfeed == "" || breastfeed == "0") {
-        toast.error("Please fill in breastfeedubg area count.");
+        toast.error("Please fill in breastfeeding area count.");
         return;
       }
     } else {
@@ -469,7 +473,7 @@ function EvacPin() {
     formData.append("name", pinName);
     formData.append(
       "address",
-      `${blkLot ?? ""} ${houseNo ?? ""} ${street ?? ""}`,
+      `${blkLot ?? ""} ${houseNo ?? ""} ${buildingName ?? ""} ${street ?? ""}`,
     );
     formData.append("description", desc);
     formData.append("lat", String(center[0]));
@@ -557,14 +561,14 @@ function EvacPin() {
 
     if (hasBreastfeed) {
       if (!breastfeed || breastfeed == "" || breastfeed == "0") {
-        toast.error("Please fill in breastfeedubg area count.");
+        toast.error("Please fill in breastfeeding area count.");
         return;
       }
     } else {
       setBreastfeed("0");
     }
 
-    const expDate = expiry ?? addDays(new Date(), 7);
+    const expDate = expiry ? new Date(expiry) : addDays(new Date(), 7);
 
     const now = new Date();
     const expDateWithTime = new Date(
@@ -582,7 +586,7 @@ function EvacPin() {
       e: e,
       id: id,
       ...(pinName && { name: pinName }),
-      address: `${blkLot ?? ""} ${houseNo ?? ""} ${street ?? ""}`,
+      address: `${blkLot ?? ""} ${houseNo ?? ""} ${buildingName ?? ""} ${street ?? ""}`,
       description: desc,
       area_type: areaType,
       capacity_level: Number(capacity),
@@ -645,11 +649,17 @@ function EvacPin() {
       (level) => level.capacity_level === "Full",
     )?.id;
 
-    // if currently full, mark as open using selected capacity
-    // if not full, mark as full using the Full level id
-    const newCapacityLevel = isFull ? Number(capacity) : fullLevel;
+    if (isFull) {
+      if (!openCap) {
+        toast.error(
+          "You must specify a capacity level before opening an evacuation center.",
+        );
+        setDisabled(false);
+        return;
+      }
+    }
 
-    console.log(newCapacityLevel);
+    const newCapacityLevel = isFull ? Number(openCap) : fullLevel;
 
     const response = api.put(`/pins/${id}`, {
       capacity_level: newCapacityLevel,
@@ -670,7 +680,7 @@ function EvacPin() {
         setIsFull(!isFull);
       })
       .catch((err: any) => {
-        console.log(err.response.data);
+        console.log(err.response);
       })
       .finally(() => setDisabled(false));
   };
@@ -742,21 +752,39 @@ function EvacPin() {
           }}
           disabled={disabled}
         >
-          <SelectDropdown
-            value={capacity}
-            onValueChange={setCapacity}
-            label="Capacity Level*"
-            id="EvacPin_CapacityOpenField"
-            onSubmit={(e) => setCapacity(e.target.value)}
-            options={capacityLevels
-              ?.filter((level) => level.capacity_level !== "Full")
-              .map((level) => ({
-                label: level.capacity_level,
-                value: String(level.id),
+          {capLoad ? (
+            <div className="flex flex-col gap-4">
+              <div className="flex gap-2">
+                <Skeleton className="w-4 h-4 rounded-lg bg-[#59260B]/30" />
+                <Skeleton className="w-1/2 h-4 rounded-lg bg-[#59260B]/30" />
+              </div>
+              <div className="flex gap-2">
+                <Skeleton className="w-4 h-4 rounded-lg bg-[#59260B]/30" />
+                <Skeleton className="w-1/2 h-4 rounded-lg bg-[#59260B]/30" />
+              </div>
+              <div className="flex gap-2">
+                <Skeleton className="w-4 h-4 rounded-lg bg-[#59260B]/30" />
+                <Skeleton className="w-1/2 h-4 rounded-lg bg-[#59260B]/30" />
+              </div>
+              <div className="flex gap-2">
+                <Skeleton className="w-4 h-4 rounded-lg bg-[#59260B]/30" />
+                <Skeleton className="w-1/2 h-4 rounded-lg bg-[#59260B]/30" />
+              </div>
+            </div>
+          ) : (
+            <Radio
+              key={1}
+              isRequired
+              onValueChange={setOpenCap}
+              onSubmit={(e) => setOpenCap(e.target.value)}
+              options={capacityLevels.map((capacity) => ({
+                key: capacity.id,
+                id: String(capacity.id),
+                value: String(capacity.id),
+                label: capacity.capacity_level,
               }))}
-            isRequired
-            loading={capLoad}
-          />
+            />
+          )}
         </AlertDialogue>
       )}
       <div className="w-full h-full flex flex-col items-center p-12 mt-8 mb-2 gap-4">
@@ -822,7 +850,7 @@ function EvacPin() {
               {!id ? (
                 <>
                   <TextField
-                    label="Location Image (optional)"
+                    label="Attach an Image (optional)"
                     inputType="file"
                     id="EvacPin_PhotoField"
                     onSubmit={fileOnChange}
@@ -948,6 +976,12 @@ function EvacPin() {
                     id="EvacPin_HouseNumberField"
                     inputType="text"
                     onSubmit={(e) => setHouseNo(e.target.value)}
+                  ></TextField>
+                  <TextField
+                    label="Building Name (optional)"
+                    id="EvacPin_HouseNumberField"
+                    inputType="text"
+                    onSubmit={(e) => setBuildingName(e.target.value)}
                   ></TextField>
                   <FieldLabel
                     className={"text-sm w-s"}
@@ -1158,6 +1192,7 @@ function EvacPin() {
             ></TextField>
             <TextField
               label="Contact Number*"
+              placeholder="09XXXXXXXXX"
               id="EvacPin_ContactNumberField"
               inputType="text"
               onSubmit={(e) => setContactNumber(e.target.value)}
@@ -1208,7 +1243,7 @@ function EvacPin() {
                     <ButtonComp
                       text="Delete"
                       id="EvacPin_ClosePinBtn"
-                      variant="outline"
+                      variant="important"
                       heightSize="38px"
                       widthSize="20"
                       type="button"
@@ -1222,7 +1257,7 @@ function EvacPin() {
                         <ButtonComp
                           text="Mark as Open"
                           id="EvacPin_OpenPinBtn"
-                          variant="important"
+                          variant="outline"
                           heightSize="38px"
                           widthSize="100%"
                           type="button"
@@ -1233,7 +1268,7 @@ function EvacPin() {
                         <ButtonComp
                           text="Mark as Full"
                           id="EvacPin_FullPinBtn"
-                          variant="important"
+                          variant="outline"
                           heightSize="38px"
                           widthSize="100%"
                           type="button"

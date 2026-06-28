@@ -306,7 +306,7 @@ function Map() {
             />
           </MapContainer>
           {/* <div className="fixed w-full max-w-md"> */}
-          {closeAlert && (
+          {role ? (
             <div
               className="absolute top-0 left-0 w-full pointer-events-none z-[1000]"
               style={{ height: "100%" }}
@@ -319,6 +319,21 @@ function Map() {
                 </div>
               </div>
             </div>
+          ) : (
+            closeAlert && (
+              <div
+                className="absolute top-0 left-0 w-full pointer-events-none z-[1000]"
+                style={{ height: "100%" }}
+              >
+                <div className="flex justify-end px-4 pt-4">
+                  <div className="pointer-events-auto">
+                    <span>
+                      <Filter />
+                    </span>
+                  </div>
+                </div>
+              </div>
+            )
           )}
           <div className="absolute bottom-0 left-0 w-full flex justify-center items-center pointer-events-none">
             <div className="flex flex-col w-full max-w-md items-center justify-center mb-8 pointer-events-auto">

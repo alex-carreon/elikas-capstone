@@ -7,7 +7,7 @@ import { FormMapClickHandler, getMidpoint } from "@/lib/mapUtils";
 import { RoadMapping } from "@/lib/mapUtils";
 import React, { useState, useEffect, useRef } from "react";
 import { MapContainer, TileLayer, Marker, Polyline } from "react-leaflet";
-import { useNavigate, useParams } from "react-router";
+import { useLocation, useNavigate, useParams } from "react-router";
 import CheckBox from "@/components/CheckBox";
 import { renderToString } from "react-dom/server";
 import BlankPin from "@/assets/Map/BlankPin.svg?react";
@@ -78,6 +78,8 @@ function HazardForm() {
   const [willDeactivate, setWillDeactivate] = useState(false);
   const [error, setError] = useState("");
   const [disabled, setDisabled] = useState(false);
+
+  const location = useLocation();
 
   const { id } = useParams();
 
@@ -157,6 +159,14 @@ function HazardForm() {
       setLoading(false);
     }
   };
+
+  useEffect(() => {
+    if (location.state?.from === "/map") {
+      setIsEditable(true);
+    } else {
+      setIsEditable(false);
+    }
+  }, []);
 
   useEffect(() => {
     if (id) {
@@ -391,7 +401,7 @@ function HazardForm() {
           <div className="w-full max-w-md flex flex-col gap-5">
             <div className="flex flex-col gap-3">
               <TextField
-                label="Location Image*"
+                label="Attach an Image (optional)"
                 inputType="file"
                 id="HazardPin_PhotoField"
                 onSubmit={fileOnChange}
@@ -434,7 +444,7 @@ function HazardForm() {
                 className={"text-sm w-s"}
                 style={{ color: colors.label }}
               >
-                Marking a flood path on the road
+                Flood path length
               </FieldLabel>
               <FieldDescription>
                 <b>

@@ -235,8 +235,7 @@ function Map({ onLocationFound, showLocation, nearestRouteTrigger }: MapProps) {
           <AlertDialogue
             open={true}
             title="Turn on your Location/GPS"
-            description="Your location/GPS must be turned on to view routes. Plese turn
-              this on in your phone settings."
+            description="Location/GPS is required to view routes. Turn it on in Settings, then refresh or reopen the app."
             buttonText="Got it!"
             onClick={() => setLocateStatus("found")}
             onClose={() => setLocateStatus("found")}
