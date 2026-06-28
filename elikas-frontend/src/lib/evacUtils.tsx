@@ -54,8 +54,6 @@ export const handleSubmit = async ({
     },
   });
 
-  console.log(response);
-
   if (!response) {
     toast.error(
       "eLikas isn't responding right now. Please try later as the team is working on it!",
