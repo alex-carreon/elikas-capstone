@@ -54,27 +54,26 @@ function SensorDetails() {
     }
   };
 
-  useEffect(() => {
+  const getAll = async () => {
     const controller = new AbortController();
 
-    const getAll = async () => {
-      try {
-        setLoading(true);
-        await getSensorDetails(controller.signal);
-      } catch (err: any) {
-        if (err.name === "CanceledError") {
-          setLoading(false);
-          return;
-        }
-        console.log(err);
-      } finally {
+    try {
+      setLoading(true);
+      await getSensorDetails(controller.signal);
+    } catch (err: any) {
+      if (err.name === "CanceledError") {
         setLoading(false);
+        return;
       }
-    };
-
-    getAll();
-
+      console.log(err);
+    } finally {
+      setLoading(false);
+    }
     return () => controller.abort();
+  };
+
+  useEffect(() => {
+    getAll();
   }, []);
 
   return (

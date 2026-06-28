@@ -28,6 +28,7 @@ function SMS() {
   const [willDelete, setWillDelete] = useState(false);
   const [templateLoad, setTemplateLoad] = useState(false);
   const [templates, setTemplates] = useState<templateType[]>([]);
+  const [recipients, setRecipients] = useState(0);
   const [showDialog, setShowDialog] = useState(true);
   const [smsToken, setSMSToken] = useState<string | null>(null);
   const [disabled, setDisabled] = useState(false);
@@ -132,6 +133,16 @@ function SMS() {
     (message) => String(message.id) === String(templateId),
   );
 
+  const getRecipientCount = async () => {
+    try {
+      const response = await api.get("/sms/broadcast-info");
+      console.log(response);
+      setRecipients(response.data.recipient_count);
+    } catch (err: any) {
+      toast.error("An unexpected error occurred.");
+    }
+  };
+
   const handleSendNow = (e: React.FormEvent) => {
     e.preventDefault();
 
@@ -141,6 +152,7 @@ function SMS() {
 
     try {
       setDisabled(true);
+
       const response = api.post(
         "/sms/broadcasts/send-now",
         { message_content: message },
@@ -157,7 +169,13 @@ function SMS() {
         loading: "Sending your message now...",
         success: "Message sent!",
         error: (err: any) => {
-          return err.response.data;
+          if (
+            err.response.data.message === "Invalid api token or no load balance"
+          ) {
+            return "You don't have enough credits! Please check your IPROGSMS account.";
+          }
+
+          return "An unexpected error occurred";
         },
         position: "top-center",
       });
@@ -249,6 +267,7 @@ function SMS() {
       loading: "Verifying your token...",
       success: "Token verified!",
       error: (err: any) => {
+        setShowDialog(true);
         if (err.response?.data.error == "Unauthorized") {
           return "Your session has expired. Please log in again.";
         }
@@ -267,6 +286,7 @@ function SMS() {
         setShowDialog(false);
       })
       .catch((err: any) => {
+        setShowDialog(true);
         console.log(err.response.data);
         toast.error("An error ocurred. Please try again.");
       })
@@ -281,6 +301,7 @@ function SMS() {
 
   useEffect(() => {
     getTemplates();
+    getRecipientCount();
     setShowDialog(true);
   }, []);
 
@@ -421,10 +442,23 @@ function SMS() {
             </div>
 
             <div>
-              <p className="font-semibold text-xs">
-                Message (Max Characters: 160)
-              </p>
-              <div>
+              <div className="flex flex-col gap-1">
+                <p className="font-semibold text-xs">
+                  Total Recipients: {recipients}
+                </p>
+              </div>
+              <div className="">
+                <p
+                  className="italic text-xs justify-self-start"
+                  style={{ color: colors.label }}
+                >
+                  Estimated Price:{" "}
+                  {message
+                    ? message?.length <= 160
+                      ? `P${1 * recipients}`
+                      : `P${Math.ceil(message?.length / 153) * recipients}`
+                    : "P0"}
+                </p>
                 <p
                   className="italic text-xs justify-self-end"
                   style={{ color: colors.label }}
@@ -438,7 +472,6 @@ function SMS() {
                 onChange={(e) => setMessage(e.target.value)}
                 value={message}
                 id="SMS_MessageField"
-                maxLength={160}
               />
               <p className="text-xs text-red-500">{error.message}</p>
             </div>

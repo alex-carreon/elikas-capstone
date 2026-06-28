@@ -46,32 +46,34 @@ class GetEvacAreasController extends Controller
                 });
             } else {
                 $query
-                    ->whereHas('social_element', function ($q) {
-                        $q->whereNull('deactivated_at');
-                    })
-                    // Also exclude pins whose posting user account is deactivated
-                    ->whereHas('social_element.user', function ($q) {
-                        $q->whereNull('deactivated_at');
-                    })
-                    ->where(function ($q) {
-                        $q->whereNull('expiry')
-                          ->orWhere('expiry', '>', now('UTC'));
-                    });
+                    ->notDeactivated()
+                    ->notUserDeactivated()
+                    ->notExpired();
             }
 
-            // Filter by role
-            if ($request->filled('role')) {
-                $roleId = $this->resolveRoleId($request->query('role'));
+            // Filter by role — supports both single (?role=indiv) and array (?role[]=indiv&role[]=admin)
+            $rawRole = $request->query('role');
+            if (!empty($rawRole)) {
+                $roleInputs = is_array($rawRole) ? $rawRole : [$rawRole];
 
-                if ($roleId === null) {
+                $roleIds = collect($roleInputs)
+                    ->map(fn($r) => $this->resolveRoleId($r))
+                    ->filter(fn($id) => $id !== null)
+                    ->unique()
+                    ->values()
+                    ->all();
+
+                if (count($roleInputs) > 0 && count($roleIds) === 0) {
                     return response()->json([
                         'error' => 'Invalid role filter. Accepted values: admin, govop, indiv',
                     ], 422);
                 }
 
-                $query->whereHas('social_element.user', function ($q) use ($roleId) {
-                    $q->where('role_id', $roleId);
-                });
+                if (!empty($roleIds)) {
+                    $query->whereHas('social_element.user', function ($q) use ($roleIds) {
+                        $q->whereIn('role_id', $roleIds);
+                    });
+                }
             }
 
             // Filter by barangay/location (location_id on EvacAreas table)
@@ -185,22 +187,13 @@ class GetEvacAreasController extends Controller
                     'social_element.user:id,deactivated_at',
                     'location_info:id,name',
                 ])
-                ->whereHas('social_element', function ($q) {
-                    $q->whereNull('deactivated_at');
-                })
-                // Also exclude pins whose posting user account is deactivated
-                ->whereHas('social_element.user', function ($q) {
-                    $q->whereNull('deactivated_at');
-                })
-                ->where(function ($q) {
-                    $q->whereNull('expiry')
-                      ->orWhere('expiry', '>', now('UTC'));
-                });
+                ->notDeactivated()
+                ->notUserDeactivated()
+                ->notExpired();
 
             $this->applySearchFilter($query, $request);
 
-            // Filter by role across all profiles
-            // Supports both single (?role=indiv) and multi (?role[]=indiv&role[]=admin)
+            // Filter by role — supports both single (?role=indiv) and array (?role[]=indiv&role[]=admin)
             $rawRole = $request->query('role');
             if (!empty($rawRole)) {
                 $roleInputs = is_array($rawRole) ? $rawRole : [$rawRole];
@@ -419,6 +412,30 @@ class GetEvacAreasController extends Controller
                     }
                 });
             }
+
+            if ($request->filled('status')) {
+                $status = strtolower($request->query('status'));
+
+                if (!in_array($status, ['active', 'inactive'], true)) {
+                    return response()->json([
+                        'error' => 'Invalid status value. Use active or inactive.',
+                    ], 422);
+                }
+
+                if ($status === 'active') {
+                    $query
+                        ->notDeactivated()
+                        ->notUserDeactivated()
+                        ->notExpired();
+                } else {
+                    $query->where(function ($q) {
+                        $q->whereHas('social_element', fn ($s) => $s->whereNotNull('deactivated_at'))
+                          ->orWhere(fn ($e) => $e->whereNotNull('expiry')->where('expiry', '<=', now('UTC')))
+                          ->orWhereHas('social_element.user', fn ($s) => $s->whereNotNull('deactivated_at'));
+                    });
+                }
+            }
+
             $locationId = $request->filled('barangay_id')
                 ? (int) $request->query('barangay_id')
                 : ($request->filled('location_id') ? (int) $request->query('location_id') : null);
@@ -426,7 +443,6 @@ class GetEvacAreasController extends Controller
             if ($locationId !== null) {
                 $query->where('location_id', $locationId);
             }
-
 
             $pins  = $query->get();
             $user  = $request->attributes->get('firebase_user');
