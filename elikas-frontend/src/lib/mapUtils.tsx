@@ -367,37 +367,42 @@ export function PinMarking({ onPinClick }: { onPinClick: (pin: any) => void }) {
       id="Map_MarkerBubble"
     >
       {showGovPins &&
-        brgyPins.map((pin) => (
-          <Marker
-            key={pin.id}
-            position={[pin.lat, pin.lng]}
-            icon={icon}
-            eventHandlers={{ click: () => onPinClick(pin) }}
-          />
-        ))}
-
-      {showOtherPins
-        ? indivPins.map((pin) => (
+        brgyPins
+          .filter((pin) => !pin.my_pin)
+          .map((pin) => (
             <Marker
               key={pin.id}
               position={[pin.lat, pin.lng]}
-              icon={pin.my_pin ? myIcon : icon}
+              icon={icon}
               eventHandlers={{ click: () => onPinClick(pin) }}
             />
-          ))
-        : user &&
-          myPins.map((pin) => {
-            if (pin.my_pin && pin.status == "active") {
-              return (
-                <Marker
-                  key={pin.id}
-                  position={[pin.lat, pin.lng]}
-                  icon={myIcon}
-                  eventHandlers={{ click: () => onPinClick(pin) }}
-                />
-              );
-            }
-          })}
+          ))}
+
+      {showOtherPins &&
+        indivPins
+          .filter((pin) => !pin.my_pin)
+          .map((pin) => (
+            <Marker
+              key={pin.id}
+              position={[pin.lat, pin.lng]}
+              icon={icon}
+              eventHandlers={{ click: () => onPinClick(pin) }}
+            />
+          ))}
+
+      {user &&
+        myPins.map((pin) => {
+          if (pin.my_pin && pin.status == "active") {
+            return (
+              <Marker
+                key={pin.id}
+                position={[pin.lat, pin.lng]}
+                icon={myIcon}
+                eventHandlers={{ click: () => onPinClick(pin) }}
+              />
+            );
+          }
+        })}
     </MarkerClusterGroup>
   );
 }

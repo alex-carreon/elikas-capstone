@@ -127,8 +127,6 @@ function HazardDetails() {
       level_id: levelId,
     });
 
-    console.log(response);
-
     toast.promise(response, {
       loading: "Saving your updates...",
       success: "Pin successfully updated!",

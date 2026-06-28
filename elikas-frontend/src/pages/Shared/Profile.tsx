@@ -370,12 +370,12 @@ function Profile() {
       )}
       {showDeac && (
         <AlertDialogue
-          contentId="EvacPin_DeacContent"
-          closeId="EvacPin_DeacClose"
-          actionId="EvacPin_DeacBtn"
+          contentId="Profile_DeacContent"
+          closeId="Profile_DeacClose"
+          actionId="Profile_DeacBtn"
           open={showDeac}
           title="You are about to deactivate your account"
-          description="Deactivating your account will remove your access to online features."
+          description="Deactivating your account will remove your access to online features. This will also remove all your posts on the map."
           buttonText="Deactivate Account"
           onClose={() => {
             setShowDeac(false);

@@ -72,7 +72,6 @@ function UserDetails() {
 
   const getIndivDetails = async (signal?: AbortSignal) => {
     try {
-      setLoading(true);
       const response = await api.get(`/admin/users/${id}`, { signal });
 
       const userDetails = response.data;
@@ -164,27 +163,27 @@ function UserDetails() {
       .finally(() => setDisabled(false));
   };
 
-  useEffect(() => {
+  const getAll = async () => {
     const controller = new AbortController();
 
-    const getAll = async () => {
-      try {
-        setLoading(true);
-        await getIndivDetails(controller.signal);
-      } catch (err: any) {
-        if (err.name === "CanceledError") {
-          setLoading(false);
-          return;
-        }
-        console.log(err);
-      } finally {
+    try {
+      setLoading(true);
+      await getIndivDetails(controller.signal);
+    } catch (err: any) {
+      if (err.name === "CanceledError") {
         setLoading(false);
+        return;
       }
-    };
-
-    getAll();
+      console.log(err);
+    } finally {
+      setLoading(false);
+    }
 
     return () => controller.abort();
+  };
+
+  useEffect(() => {
+    getAll();
   }, []);
 
   useEffect(() => {
