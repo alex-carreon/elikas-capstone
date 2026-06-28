@@ -419,6 +419,29 @@ class GetEvacAreasController extends Controller
                     }
                 });
             }
+
+            if ($request->filled('status')) {
+                $status = strtolower($request->query('status'));
+
+                if (!in_array($status, ['active', 'inactive'], true)) {
+                    return response()->json([
+                        'error' => 'Invalid status value. Use active or inactive.',
+                    ], 422);
+                }
+
+                if ($status === 'active') {
+                    $query
+                        ->whereHas('social_element', fn ($q) => $q->whereNull('deactivated_at'))
+                        ->whereHas('social_element.user', fn ($q) => $q->whereNull('deactivated_at'))
+                        ->where(fn ($q) => $q->whereNull('expiry')->orWhere('expiry', '>', now('UTC')));
+                } else {
+                    $query->where(function ($q) {
+                        $q->whereHas('social_element', fn ($s) => $s->whereNotNull('deactivated_at'))
+                          ->orWhere(fn ($e) => $e->whereNotNull('expiry')->where('expiry', '<=', now('UTC')))
+                          ->orWhereHas('social_element.user', fn ($s) => $s->whereNotNull('deactivated_at'));
+                    });
+                }
+            }
             $locationId = $request->filled('barangay_id')
                 ? (int) $request->query('barangay_id')
                 : ($request->filled('location_id') ? (int) $request->query('location_id') : null);
