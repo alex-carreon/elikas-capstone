@@ -32,7 +32,7 @@ class SMSController extends Controller
         try {
             $validated = $request->validate([
                 'search' => 'nullable|string|max:255',
-                'status' => 'nullable|integer|in:1,2,3,4',
+                'status' => 'nullable|integer|in:1,2,4,5',
                 'limit'  => 'nullable|integer|min:1|max:100',
                 'state'  => 'nullable|string|in:active,inactive',
             ]);
@@ -256,19 +256,21 @@ class SMSController extends Controller
                 $validated['message_content'],
             );
 
-            $formatted = $this->smsService->formatBroadcast($result['broadcast']);
+            // Always re-fetch from DB before formatting so the status field
+            // reflects what was actually persisted (e.g. status=2 sent, not status=1 pending).
+            $freshBroadcast = $result['broadcast']->fresh(['gov_op.user', 'location', 'broadcast_status']);
+            $formatted = $this->smsService->formatBroadcast($freshBroadcast);
+
             if ($result['mock']) {
                 return response()->json(['message' => 'SMS dispatched in mock mode.', 'broadcast' => $formatted], 202);
             }
 
             if ($result['failed']) {
-                // Map error_code to the appropriate HTTP status for the frontend
                 $httpStatus = match ($result['error_code'] ?? '') {
                     'INVALID_TOKEN'        => 401,
                     'INSUFFICIENT_BALANCE' => 402,
                     'INVALID_RECIPIENTS'   => 422,
                     'GATEWAY_ERROR'        => 503,
-                    'GATEWAY_UNREACHABLE'  => 503,
                     default                => 502,
                 };
 
@@ -455,6 +457,49 @@ class SMSController extends Controller
         } catch (\Exception $e) {
             Log::error('SMSController@destroyTemplate', ['error' => $e->getMessage()]);
             return response()->json(['error' => 'Failed to delete template.', 'details' => $e->getMessage()], 500);
+        }
+    }
+
+    /**
+     * GET /api/sms/broadcast-info?message=...
+     *
+     * Returns recipient count and estimated price for the current GovOp's
+     * barangay. Accepts an optional ?message= query param to calculate
+     * price based on actual message length.
+     */
+    public function broadcastInfo(Request $request): JsonResponse
+    {
+        try {
+            $govOp = $this->resolveGovOp($request);
+            if ($govOp instanceof JsonResponse) {
+                return $govOp;
+            }
+
+            $message    = (string) $request->query('message', '');
+            $recipients = $this->smsService->getRecipientsForLocation($govOp->location_id);
+
+            $priceEstimate = $this->smsService->getEstimatedPrice($recipients->count(), $message);
+
+            $recipientList = $recipients->map(function ($phoneNumber) {
+                $name = $phoneNumber->user?->name;
+                $fullName = $name
+                    ? trim($name->first_name . ' ' . $name->last_name)
+                    : 'Unknown';
+
+                return [
+                    'phone_number' => $phoneNumber->phone_no,
+                    'name'         => $fullName,
+                ];
+            })->values();
+
+            return response()->json(array_merge(
+                ['location_id' => $govOp->location_id],
+                $priceEstimate,
+                ['recipients' => $recipientList],
+            ));
+        } catch (\Exception $e) {
+            Log::error('SMSController@broadcastInfo', ['error' => $e->getMessage()]);
+            return response()->json(['error' => 'Failed to fetch broadcast info.', 'details' => $e->getMessage()], 500);
         }
     }
 
