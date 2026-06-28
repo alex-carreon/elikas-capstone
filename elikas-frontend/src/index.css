@@ -32,6 +32,14 @@ html {
   scrollbar-gutter: stable;
 }
 
+@media (max-width: 768px) {
+  html,
+  body {
+    padding-right: 0 !important;
+    margin-right: 0 !important;
+  }
+}
+
 @custom-variant dark (&:is(.dark *));
 
 @theme inline {

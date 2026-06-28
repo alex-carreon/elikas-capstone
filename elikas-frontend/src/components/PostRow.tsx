@@ -357,7 +357,7 @@ function PostRow({
                   </div>
                   {isMyHazard && (
                     <div>
-                      <Link to={`/HazardForm/${id}`}>
+                      <Link to={`/HazardForm/${id}`} state={{ from: "/map" }}>
                         <ButtonComp
                           text="Edit"
                           variant="outline"

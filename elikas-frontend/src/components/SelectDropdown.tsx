@@ -55,6 +55,7 @@ function SelectDropdown({
       <FieldDescription>{description}</FieldDescription>
       <div className="w-full flex flex-row gap-2 overflow-hidden">
         <Select
+          modal={false}
           onValueChange={(val: string | null) => onValueChange(val ?? "")}
           required={isRequired}
           disabled={disabled}
@@ -68,7 +69,7 @@ function SelectDropdown({
 
             {/* <SelectValue placeholder={placeholder} /> */}
           </SelectTrigger>
-          <SelectContent className="z-[900] max-w-[calc(100vw-2rem)]">
+          <SelectContent className="z-[1600] max-w-[calc(100vw-2rem)]">
             <SelectGroup>
               {options.map((option) => (
                 <SelectItem key={option.value} value={option.value}>

@@ -222,6 +222,7 @@ function FormRegistration() {
             />
             <TextField
               label="Email Address"
+              description="Please make sure that this email address can receive emails from eLikas."
               inputType="text"
               id="RegisForm_EMAILfield"
               isRequired
