@@ -38,6 +38,9 @@ class FloodPathController extends Controller
                 'floodLevel:id,level_name',
                 'socialElement:id,user_id,posted_at,deactivated_at',
             ])
+            ->whereHas('socialElement.user', function ($query) {
+                $query->whereNull('deactivated_at');
+            })
             ->notExpired()
             ->notDeactivated()
             ->orderByDesc('last_confirmed')

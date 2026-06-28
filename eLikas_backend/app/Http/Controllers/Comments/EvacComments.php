@@ -47,7 +47,10 @@ class EvacComments extends Controller
                 'element.media',
             ])
             ->whereHas('element', function ($q) {
-                $q->whereNull('deactivated_at');
+                $q->whereNull('deactivated_at')
+                ->whereHas('user', function ($q) {
+                    $q->whereNull('deactivated_at');
+                });
             })
             ->where('parent_id', $evacArea->element_id)
             ->orderByDesc('id')
