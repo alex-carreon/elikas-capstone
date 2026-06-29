@@ -384,13 +384,20 @@ function HazardForm() {
                 : "Report Evacuation Road Status"}
           </p>
           {id ? null : (
-            <p
-              className="text-align italic text-sm"
-              style={{ color: colors.label }}
-            >
-              Help others avoid blocked or unsafe routes. All marked with an *
-              are required fields.
-            </p>
+            <>
+              <p
+                className="text-align italic text-sm max-w-sm"
+                style={{ color: colors.label }}
+              >
+                Help others avoid blocked or unsafe routes.
+              </p>
+              <b
+                className="text-align italic text-sm max-w-sm"
+                style={{ color: colors.label }}
+              >
+                All marked with an * are required fields.
+              </b>
+            </>
           )}
         </div>
         <form

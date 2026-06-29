@@ -75,6 +75,7 @@ function HotlinesForm() {
           setPrimaryNo(response.data.emergency_contact.phone_number);
           setSecondaryNo(response.data.emergency_contact.mobile_number);
           setBarangay(response.data.emergency_contact.location_name);
+          setBrgyId(response.data.emergency_contact.location_id);
         } catch (err: any) {
           console.log(err.response.data);
         } finally {
@@ -100,8 +101,8 @@ function HotlinesForm() {
           setCityLoad(false);
         }
       };
-
       getCity();
+      setCityId(2);
     }
   }, [id, isEditable]);
 
@@ -150,7 +151,7 @@ function HotlinesForm() {
       address: address,
       primaryNo: primaryNo,
       secondaryNo: secondaryNo,
-      brgyId: brgyId,
+      ...(brgyId && { brgyId: brgyId }),
       navigate: navigate,
       id: id,
       redirect: "/Hotlines",
