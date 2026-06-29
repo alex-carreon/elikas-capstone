@@ -90,7 +90,7 @@ export const handleUpdate = ({
     address: address,
     phone_number: primaryNo,
     mobile_number: secondaryNo,
-    location_id: brgyId,
+    ...(brgyId && { location_id: brgyId }),
   });
 
   console.log(response);

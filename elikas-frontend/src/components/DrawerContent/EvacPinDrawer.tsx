@@ -390,7 +390,7 @@ function EvacPinDrawer({
 
     try {
       setDisabled(true);
-      const response = api.patch(`/pins/${evacPinDetails?.id}/verify`, {
+      const response = await api.patch(`/pins/${evacPinDetails?.id}/verify`, {
         verified: !verified,
       });
 
@@ -400,7 +400,6 @@ function EvacPinDrawer({
       }
 
       setVerified(!verified);
-      toast.success("Pin Verified!");
 
       setDisabled(false);
     } catch (err: any) {
@@ -453,7 +452,10 @@ function EvacPinDrawer({
                 variant="outline"
                 id="Drawer_UnverifyBtn"
                 heightSize="34px"
-                onClick={(e) => verifyPin(e)}
+                onClick={(e) => {
+                  verifyPin(e);
+                  toast.success("Pin Unverified!");
+                }}
                 isDisabled={disabled}
               />
             ) : (
@@ -462,7 +464,10 @@ function EvacPinDrawer({
                 variant="primary"
                 id="Drawer_VerifyBtn"
                 heightSize="34px"
-                onClick={(e) => verifyPin(e)}
+                onClick={(e) => {
+                  verifyPin(e);
+                  toast.success("Pin Verified!");
+                }}
                 isDisabled={disabled}
               />
             )
