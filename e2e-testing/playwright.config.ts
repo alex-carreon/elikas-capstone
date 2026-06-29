@@ -26,8 +26,8 @@ export default defineConfig({
   /* Shared settings for all the projects below. See https://playwright.dev/docs/api/class-testoptions. */
   use: {
     /* Base URL to use in actions like `await page.goto('')`. */
-    // baseURL: 'http://localhost:3000',
-    baseURL: 'https://elikas.solarflare-tilapia.ts.net/',
+    baseURL: 'http://127.0.0.1:5173',
+    // baseURL: 'https://elikas.solarflare-tilapia.ts.net/',
 
     /* Collect trace when retrying the failed test. See https://playwright.dev/docs/trace-viewer */
     trace: 'on-first-retry',
@@ -76,9 +76,20 @@ export default defineConfig({
   ],
 
   /* Run your local dev server before starting the tests */
-  // webServer: {
-  //   command: 'npm run start',
-  //   url: 'http://localhost:3000',
-  //   reuseExistingServer: !process.env.CI,
-  // },
+  webServer: [
+    {
+      name: 'backend',
+      command: 'cd ../eLikas_backend && php artisan serve', 
+      url: 'http://127.0.0.1:8000/api/test',
+      reuseExistingServer: !process.env.CI,
+      timeout: 60 * 1000, 
+    },
+    {
+      name: 'frontend',
+      command: 'cd ../elikas-frontend && npm run dev', 
+      url: 'http://127.0.0.1:5173',
+      reuseExistingServer: !process.env.CI,
+      timeout: 120 * 1000, // Gives the server up to 2 minutes to boot
+    }
+  ]
 });
