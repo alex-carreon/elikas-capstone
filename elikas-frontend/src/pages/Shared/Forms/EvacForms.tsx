@@ -92,6 +92,13 @@ type EvacPin = {
   last_confirmed: string | null;
 };
 
+type Barangays = {
+  id: number;
+  name: string;
+  role: string;
+  location: string;
+};
+
 function EvacPin() {
   const [existingPin, setExistingPin] = useState(false);
   const [fileName, setFileName] = useState<File | undefined>();
@@ -143,6 +150,9 @@ function EvacPin() {
   const [disabled, setDisabled] = useState(false);
   const [typeLoad, setTypeLoad] = useState(false);
   const [capLoad, setCapLoad] = useState(false);
+  const [brgyLoad, setBrgyLoad] = useState(false);
+  const [barangays, setBarangays] = useState<Barangays[]>([]);
+  const [brgyId, setBrgyId] = useState(0);
 
   const location = useLocation();
   const navigate = useNavigate();
@@ -166,6 +176,20 @@ function EvacPin() {
   const contactValidate = /^09\d{9}$/;
 
   const defaultExpiry = addDays(new Date(), 7);
+
+  const getBrgy = async () => {
+    try {
+      setBrgyLoad(true);
+      const brgyRes = await api.get(`/locations/barangays?city_id=2`);
+
+      const barangays = brgyRes.data.Barangays;
+      setBarangays(barangays);
+    } catch (err: any) {
+      console.log(err.message);
+    } finally {
+      setBrgyLoad(false);
+    }
+  };
 
   useEffect(() => {
     if (location.state?.from === "/History") {
@@ -212,6 +236,8 @@ function EvacPin() {
       setLoading(true);
       setHasUpdated(false);
       const response = await api.get(`/pins/${id}`);
+      console.log(response);
+
       const evacDetails = await response.data;
 
       setRegFlood(evacDetails.for_reg_flood);
@@ -220,6 +246,7 @@ function EvacPin() {
       setPinName(evacDetails.name);
       setDesc(evacDetails.description);
       setAddress(evacDetails.address);
+      setBrgyId(evacDetails.location_id);
       setLatLng(evacDetails.coordinates);
       setCapacity(String(evacDetails.capacity_level));
       setIsFull(evacDetails.capacity_name === "Full");
@@ -283,6 +310,14 @@ function EvacPin() {
     }
   };
 
+  const getBrgyName = (brgyId: string) => {
+    const brgyName =
+      barangays.find((brgy) => String(brgy.id) === brgyId)?.name ??
+      "No Barangay";
+    console.log(brgyName);
+    return brgyName;
+  };
+
   const getCapacityLevels = async () => {
     try {
       setCapLoad(true);
@@ -299,6 +334,7 @@ function EvacPin() {
     if (id) {
       getEvacDetails();
       getCapacityLevels();
+      getBrgy();
     } else if (!id) {
       const getAreaTypes = async () => {
         try {
@@ -318,6 +354,7 @@ function EvacPin() {
         }
       };
 
+      getBrgy();
       getAreaTypes();
       getCapacityLevels();
     }
@@ -478,7 +515,7 @@ function EvacPin() {
     formData.append("description", desc);
     formData.append("lat", String(center[0]));
     formData.append("lng", String(center[1]));
-    formData.append("location_id", "16");
+    formData.append("location_id", String(brgyId));
     formData.append("area_type", String(areaType));
     formData.append("capacity_level", String(capacityCount));
     formData.append(
@@ -606,9 +643,10 @@ function EvacPin() {
       ...(contactPerson && { contact_person: contactPerson }),
       ...(contactNumber && { contact_number: contactNumber }),
       role: role ? role : "",
-      expiry: format(expDateWithTime, "yyyy-MM-dd"),
+      ...(isPersistent && { expiry: format(expDateWithTime, "yyyy-MM-dd") }),
       setIsEditable: setIsEditable,
       setHasUpdated: setHasUpdated,
+      location_id: brgyId,
       setDisabled,
     });
   };
@@ -798,13 +836,20 @@ function EvacPin() {
               : "Register an Evacuation Location"}
           </p>
           {existingPin ? null : (
-            <p
-              className="text-align italic text-sm"
-              style={{ color: colors.label }}
-            >
-              Help others find safe temporary shelter. All marked with an * are
-              required fields.
-            </p>
+            <>
+              <p
+                className="text-align italic text-sm max-w-sm text-center"
+                style={{ color: colors.label }}
+              >
+                Help others find safe temporary shelter.
+              </p>
+              <b
+                className="text-align italic text-sm max-w-sm text-center"
+                style={{ color: colors.label }}
+              >
+                All marked with an * are required fields.
+              </b>
+            </>
           )}
         </div>
         <div
@@ -994,8 +1039,29 @@ function EvacPin() {
                     placeholder={description}
                     id="EvacPin_StreetField"
                   ></Textarea>
+                  <SelectDropdown
+                    value={String(brgyId)}
+                    onValueChange={(val) => setBrgyId(Number(val))}
+                    label="Barangay*"
+                    id="EvacPin_BarangayDropdown"
+                    onSubmit={(e) => setBrgyId(Number(e.target.value))}
+                    options={barangays?.map((brgy) => ({
+                      label: brgy.name,
+                      value: String(brgy.id),
+                    }))}
+                    isRequired
+                    loading={brgyLoad}
+                  />
                 </>
-              ) : null}
+              ) : (
+                <TextField
+                  label="Barangay"
+                  value={getBrgyName(String(brgyId))}
+                  inputType="text"
+                  id="EvacPin_BarangayField"
+                  readonly
+                />
+              )}
             </Field>
             {isEditable || !id ? (
               <SelectDropdown
@@ -1229,28 +1295,6 @@ function EvacPin() {
             {id ? (
               !isEditable ? (
                 <>
-                  <div className="mx-2 flex justify-evenly shrink gap-4">
-                    <ButtonComp
-                      text="Edit"
-                      id="EvacPin_UpdatePinBtn"
-                      variant="primary"
-                      heightSize="38px"
-                      widthSize="20"
-                      onClick={() => setIsEditable(true)}
-                      type="button"
-                      isDisabled={disabled}
-                    ></ButtonComp>
-                    <ButtonComp
-                      text="Delete"
-                      id="EvacPin_ClosePinBtn"
-                      variant="important"
-                      heightSize="38px"
-                      widthSize="20"
-                      type="button"
-                      onClick={() => setWillDelete(true)}
-                      isDisabled={disabled}
-                    ></ButtonComp>
-                  </div>
                   <div className="w-full max-w-md flex justify-center">
                     {!isExpired &&
                       (isFull ? (
@@ -1277,6 +1321,28 @@ function EvacPin() {
                         ></ButtonComp>
                       ))}
                   </div>
+                  <div className="mx-2 flex justify-evenly shrink gap-4">
+                    <ButtonComp
+                      text="Edit"
+                      id="EvacPin_UpdatePinBtn"
+                      variant="primary"
+                      heightSize="38px"
+                      widthSize="20"
+                      onClick={() => setIsEditable(true)}
+                      type="button"
+                      isDisabled={disabled}
+                    ></ButtonComp>
+                    <ButtonComp
+                      text="Delete"
+                      id="EvacPin_ClosePinBtn"
+                      variant="important"
+                      heightSize="38px"
+                      widthSize="20"
+                      type="button"
+                      onClick={() => setWillDelete(true)}
+                      isDisabled={disabled}
+                    ></ButtonComp>
+                  </div>
                 </>
               ) : (
                 <>
@@ -1287,7 +1353,7 @@ function EvacPin() {
                       // type="button"
                       variant="primary"
                       heightSize="38px"
-                      widthSize="20"
+                      // widthSize="20"
                       onClick={(e) => {
                         update(e);
                         console.log(toiletCount);
@@ -1299,7 +1365,7 @@ function EvacPin() {
                       id="EvacPin_CancelUpdBtn"
                       variant="outline"
                       heightSize="38px"
-                      widthSize="20"
+                      // widthSize="20"
                       onClick={() => {
                         setIsEditable(false);
                       }}
