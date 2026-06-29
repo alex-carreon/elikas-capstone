@@ -59,6 +59,8 @@ function Profile() {
   const [brgyId, setBrgyId] = useState(0);
   const [contact, setContact] = useState("");
   const [newContact, setNewContact] = useState<string | null>("");
+  const [pointPerson, setPointPerson] = useState("");
+  const [pointPosition, setPointPosition] = useState("");
   const [contactTouched, setContactTouched] = useState(false);
   const [isVerified, setIsVerified] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -93,6 +95,8 @@ function Profile() {
       setContact(userData.phone || "No Registered Number");
       setSeed(userData?.avatar_seed);
       setIsVerified(userData?.is_verified);
+      setPointPerson(userData?.point_person);
+      setPointPosition(userData?.point_person_position);
 
       return userData;
     } catch (err: string | any) {
@@ -125,8 +129,6 @@ function Profile() {
       ...(contactTouched && { phone: newContact }),
       avatar_seed: seed,
     });
-
-    console.log(response);
 
     if (!response) {
       return;
@@ -443,25 +445,28 @@ function Profile() {
                       readonly
                     />
                   )}
-
-                  <TextField
-                    label="First Name"
-                    placeholder={firstName}
-                    inputType="text"
-                    id="Profile_Firstname"
-                    value={firstName}
-                    readonly={!isEditable}
-                    onSubmit={(e) => setFirstName(e.target.value)}
-                  />
-                  <TextField
-                    label="Last Name"
-                    placeholder={lastName}
-                    inputType="text"
-                    id="Profile_Lastname"
-                    readonly={!isEditable}
-                    value={lastName}
-                    onSubmit={(e) => setLastName(e.target.value)}
-                  />
+                  {role !== "brgy_op" && (
+                    <>
+                      <TextField
+                        label="First Name"
+                        placeholder={firstName}
+                        inputType="text"
+                        id="Profile_Firstname"
+                        value={firstName}
+                        readonly={!isEditable}
+                        onSubmit={(e) => setFirstName(e.target.value)}
+                      />
+                      <TextField
+                        label="Last Name"
+                        placeholder={lastName}
+                        inputType="text"
+                        id="Profile_Lastname"
+                        readonly={!isEditable}
+                        value={lastName}
+                        onSubmit={(e) => setLastName(e.target.value)}
+                      />
+                    </>
+                  )}
                   <div className="w-full flex flex-col gap-1">
                     <TextField
                       label="Email Address"
@@ -526,33 +531,60 @@ function Profile() {
                     </>
                   )}
                   <div className="flex flex-col gap-2">
-                    {isEditable ? (
-                      <TextField
-                        label="Contact Number"
-                        description="Please use (639#########) format"
-                        placeholder={
-                          newContact === null ? "No Registered Number" : contact
-                        }
-                        inputType="text"
-                        id="Profile_ContactNo"
-                        value={newContact ?? ""}
-                        onSubmit={(e) => {
-                          setNewContact(e.target.value);
-                          setContactTouched(true);
-                        }}
-                        error={error}
-                      />
-                    ) : (
-                      <TextField
-                        label="Contact Number"
-                        placeholder={
-                          newContact === null ? "No Registered Number" : contact
-                        }
-                        inputType="text"
-                        id="Profile_ContactNo"
-                        readonly={!isEditable}
-                        value={contact}
-                      />
+                    {role !== "brgy_op" &&
+                      (isEditable ? (
+                        <TextField
+                          label="Contact Number"
+                          description="Please use (639#########) format"
+                          placeholder={
+                            newContact === null
+                              ? "No Registered Number"
+                              : contact
+                          }
+                          inputType="text"
+                          id="Profile_ContactNo"
+                          value={newContact ?? ""}
+                          onSubmit={(e) => {
+                            setNewContact(e.target.value);
+                            setContactTouched(true);
+                          }}
+                          error={error}
+                        />
+                      ) : (
+                        <TextField
+                          label="Contact Number"
+                          placeholder={
+                            newContact === null
+                              ? "No Registered Number"
+                              : contact
+                          }
+                          inputType="text"
+                          id="Profile_ContactNo"
+                          readonly={!isEditable}
+                          value={contact}
+                        />
+                      ))}
+                    {role === "brgy_op" && (
+                      <div className="flex flex-col gap-4">
+                        <TextField
+                          label="Point Person"
+                          placeholder={pointPerson}
+                          inputType="text"
+                          id="Profile_PointPerson"
+                          value={pointPerson}
+                          readonly={!isEditable}
+                          onSubmit={(e) => setPointPerson(e.target.value)}
+                        />
+                        <TextField
+                          label="Point Person's Position"
+                          placeholder={pointPosition}
+                          inputType="text"
+                          id="Profile_PointPosition"
+                          readonly={!isEditable}
+                          value={pointPosition}
+                          onSubmit={(e) => setPointPosition(e.target.value)}
+                        />
+                      </div>
                     )}
 
                     {contact === "No Registered Number" ||
