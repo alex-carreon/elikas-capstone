@@ -370,9 +370,9 @@ function Profile() {
       )}
       {showDeac && (
         <AlertDialogue
-          contentId="Profile_DeacContent"
-          closeId="Profile_DeacClose"
-          actionId="Profile_DeacBtn"
+          contentId="Profile_DeacModallContent"
+          closeId="Profile_DeacModalClose"
+          actionId="Profile_DeacModalBtn"
           open={showDeac}
           title="You are about to deactivate your account"
           description="Deactivating your account will remove your access to online features. This will also remove all your posts on the map."
