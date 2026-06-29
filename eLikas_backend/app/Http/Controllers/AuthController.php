@@ -100,7 +100,6 @@ class AuthController extends Controller
             return response()->json([
                 'message' => 'Registration failed',
                 'error' => $e->getMessage(),
-                'trace' => $e->getTraceAsString(),
             ], 500);
         }
     }
