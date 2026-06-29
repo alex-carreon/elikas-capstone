@@ -122,18 +122,10 @@ export const handleUpdate = async ({
   setHasUpdated,
   role,
   setDisabled,
+  location_id,
 }: handleActionProps) => {
   e?.preventDefault();
   setDisabled?.(true);
-
-  console.log(
-    "Sending",
-    toilet_count,
-    kitchen_count,
-    child_prayer_count,
-    child_prayer_count,
-    other_facilities,
-  );
 
   const responsePromise = api.put(`/pins/${id}`, {
     ...(name && { name: name }),
@@ -154,6 +146,7 @@ export const handleUpdate = async ({
     child_prayer_count: child_prayer_count == 0 ? null : child_prayer_count,
     breastfeed_count: breastfeed_count == 0 ? null : child_prayer_count,
     other_facilities: other_facilities,
+    location_id: location_id,
     ...(contact_person && { contact_person: contact_person }),
     ...(contact_number && { contact_number: contact_number }),
     ...(role === "brgy_op" && { expiry: expiry }),
@@ -164,6 +157,12 @@ export const handleUpdate = async ({
     success: "Pin successfully updated!",
     error: (err: any) => {
       console.log(err.response?.data);
+      if (
+        err.response.data.error ===
+        "The expiry date cannot be modified for non-persistent (ad-hoc) evacuation pins. Set is_persistent to true before adjusting the expiry, or omit the expiry field."
+      ) {
+        return "Non-persistent evacuation pins does not allow change in expiry.";
+      }
       return err.response?.data?.message || "Please try again.";
     },
   });

@@ -45,18 +45,35 @@ function BrgyAdd() {
   const [confirmPw, setConfirmPw] = useState("");
   const [errors, setErrors] = useState({ email: "", pw: "", confirmPw: "" });
 
+  const isValidPassword = (password: string) => {
+    return /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^A-Za-z0-9]).{8,}$/.test(
+      password,
+    );
+  };
+
+  const pwHasWhiteSpace = (password: string) => {
+    console.log(/\s/.test(password));
+    return /\s/.test(password);
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    if (pw != confirmPw) {
-      setErrors({
-        email: "",
-        pw: "Passwords do not match",
-        confirmPw: "Passwords do not match",
-      });
-      return;
-    }
     try {
+      if (pw != confirmPw) {
+        throw new Error("Passwords do not match");
+      }
+
+      if (!isValidPassword(pw)) {
+        throw new Error(
+          "Password must be 8 characters minimum, and have at least one uppercase, one lowercase, one number, and one special character.",
+        );
+      }
+
+      if (pwHasWhiteSpace(pw)) {
+        throw new Error("Password should not have any spaces.");
+      }
+
       const createPromise = api.post("/admin/create-govop", {
         username: username,
         email: email,
@@ -95,6 +112,12 @@ function BrgyAdd() {
           pw: "Password must be at least 6 characters.",
           confirmPw: "",
           email: "",
+        });
+      } else if (err instanceof Error) {
+        setErrors({
+          email: " ",
+          pw: err.message,
+          confirmPw: err.message,
         });
       }
     }

@@ -35,6 +35,10 @@ class ProfileController extends Controller
                 'location' => $user->indivAcc?->location?->full_location
                     ?? $user->govOp?->location?->full_location,
 
+                // Point person details from GovOp relation
+                'point_person' => $user->govOp?->point_person,
+                'point_person_position' => $user->govOp?->point_position,
+
                 'created_at' => $user->created_at->timezone('Asia/Manila')->toDateTimeString(),
                 'deactivated_at' => $user->deactivated_at?->timezone('Asia/Manila')->toDateTimeString()
             ]);
