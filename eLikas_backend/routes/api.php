@@ -71,7 +71,6 @@ Route::post('/forgot-password', [AuthController::class, 'forgotPassword'])
 // ---------------------------------------------------------------
 Route::get('/pins/nearby', [GetNearbyEvacuationAreasController::class, 'getNearbyEvacuationAreas']);
 Route::get('/pins/routes', [GetEvacuationRoutesController::class, 'getEvacuationRoutes']);
-Route::get('/pins/{id}', [GetEvacAreaDetailsController::class, 'getEvacAreaDetails'])->whereNumber('id');
 
 
 
@@ -82,6 +81,7 @@ Route::middleware('optional.firebase.auth')->group(function () {
     Route::get('/flood-paths', [FloodPathController::class, 'index']);
     Route::get('/pins', [GetEvacAreasController::class, 'getEvacAreas']);
     Route::get('/evacpins/users/coords', [GetEvacAreasController::class, 'getRoleIndivCoords']);
+    Route::get('/pins/{id}', [GetEvacAreaDetailsController::class, 'getEvacAreaDetails'])->whereNumber('id');
 });
 
 // ---------------------------------------------------------------

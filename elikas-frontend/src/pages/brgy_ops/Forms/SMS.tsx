@@ -199,7 +199,6 @@ function SMS() {
 
   const handleSchedSend = (e: React.FormEvent) => {
     e.preventDefault();
-
     if (schedSend) {
       const dateTime = format(
         toZonedTime(schedSend, "Asia/Manila"),
@@ -229,7 +228,15 @@ function SMS() {
         toast.promise(response, {
           loading: "Scheduling your message now...",
           success: `Message scheduled! Your message will be sent on ${dateTime}`,
-          error: (err: any) => err.response.data.details,
+          error: (err: any) => {
+            const scheduledForError =
+              err.response?.data?.errors?.scheduled_for?.[0];
+
+            if (scheduledForError) {
+              return "Scheduled date must be past from now.";
+            }
+            return "An unexpected error occurred.";
+          },
         });
       } catch (err: any) {
         if (
@@ -245,13 +252,7 @@ function SMS() {
           toast.error("Your token is invalid. Please input it again.");
           return;
         }
-        if (
-          err.response.data.errors.scheduled_for[0] ===
-          "The scheduled for field must be a date after now."
-        ) {
-          toast.error("Scheduled date must be past from now.");
-          return;
-        }
+
         toast.error("An unexpected error occurred.");
       } finally {
         setDisabled(false);

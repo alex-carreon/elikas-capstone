@@ -837,7 +837,6 @@ function History() {
                       return (
                         <Row
                           title="Flood"
-                          desc={path.level}
                           address={path.description}
                           datePosted={path.last_confirmed}
                           link={`/HazardForm/${path.id}`}
@@ -849,27 +848,27 @@ function History() {
                             className={`mt-2 px-2 py-1 rounded-3xl w-fit text-sm`}
                             style={{
                               backgroundColor:
-                                path.level === "Gutter-Deep" ||
-                                path.level === "Half Knee-Deep"
+                                path.level === "Gutter" ||
+                                path.level === "Half Knee"
                                   ? colorHazard.lightBlue
-                                  : path.level === "Half Tire-Deep" ||
-                                      path.level === "Knee-Deep"
+                                  : path.level === "Half Tire" ||
+                                      path.level === "Knee"
                                     ? colorHazard.darkBlue
-                                    : path.level === "Tire-Deep" ||
-                                        path.level === "Waist-Deep" ||
-                                        path.level === "Chest-Deep"
+                                    : path.level === "Tire" ||
+                                        path.level === "Waist" ||
+                                        path.level === "Chest"
                                       ? colorHazard.red
                                       : colorHazard.fallback,
                               color:
-                                path.level === "Gutter-Deep" ||
-                                path.level === "Half Knee-Deep"
+                                path.level === "Gutter" ||
+                                path.level === "Half Knee"
                                   ? "Black"
-                                  : path.level === "Half Tire-Deep" ||
-                                      path.level === "Knee-Deep"
+                                  : path.level === "Half Tire" ||
+                                      path.level === "Knee"
                                     ? "White"
-                                    : path.level === "Tire-Deep" ||
-                                        path.level === "Waist-Deep" ||
-                                        path.level === "Chest-Deep"
+                                    : path.level === "Tire" ||
+                                        path.level === "Waist" ||
+                                        path.level === "Chest"
                                       ? "White"
                                       : colorHazard.fallback,
                             }}
