@@ -39,6 +39,10 @@ function Map() {
   >({});
   const [decidedCount, setDecidedCount] = useState(0);
   const [dismissed, setDismissed] = useState(false);
+  const [showRoute, setShowRoute] = useState(false);
+  const [showNearest, setShowNearest] = useState(false);
+  const [clearRoute, setClearRoute] = useState(false);
+
   const openDialog = useRef(false);
 
   const philippinesBounds: LatLngBoundsExpression = [
@@ -71,10 +75,6 @@ function Map() {
 
   const handleNearestRoute = () => {
     if (locationFound) {
-      // setShowNearestRoute(true);
-      // setShowRoute(false);
-      // setSelectedPin(null);
-      // setOpenFromRoute(true);
       setShowNearestRouteTrigger((prev) => prev + 1);
     } else console.log("Location not found");
   };
@@ -303,6 +303,9 @@ function Map() {
               onLocationFound={setLocationFound}
               showLocation={showLocation}
               nearestRouteTrigger={showNearestRouteTrigger}
+              setNearestRoute={setShowNearest}
+              setRoute={setShowRoute}
+              clearRoute={clearRoute}
             />
           </MapContainer>
           {/* <div className="fixed w-full max-w-md"> */}
@@ -350,14 +353,25 @@ function Map() {
                       : "Guest Mode - View only"}
                   </p>
                 </div>
-                <ButtonComp
-                  text="Find Nearest Evac Center"
-                  variant="important"
-                  id="Map_NearestRouteBtn"
-                  onClick={handleNearestRoute}
-                  widthSize="90%"
-                  heightSize="50px"
-                />
+                {showNearest || showRoute ? (
+                  <ButtonComp
+                    text="Clear Route"
+                    variant="important"
+                    id="Map_ClearRouteBtn"
+                    onClick={() => setClearRoute(!clearRoute)}
+                    widthSize="90%"
+                    heightSize="50px"
+                  />
+                ) : (
+                  <ButtonComp
+                    text="Find Nearest Evac Center"
+                    variant="important"
+                    id="Map_NearestRouteBtn"
+                    onClick={handleNearestRoute}
+                    widthSize="90%"
+                    heightSize="50px"
+                  />
+                )}
               </div>
             </div>
           </div>
