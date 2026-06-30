@@ -306,6 +306,7 @@ function Map() {
               setNearestRoute={setShowNearest}
               setRoute={setShowRoute}
               clearRoute={clearRoute}
+              setClearRoute={setClearRoute}
             />
           </MapContainer>
           {/* <div className="fixed w-full max-w-md"> */}
@@ -358,7 +359,7 @@ function Map() {
                     text="Clear Route"
                     variant="important"
                     id="Map_ClearRouteBtn"
-                    onClick={() => setClearRoute(!clearRoute)}
+                    onClick={() => setClearRoute(true)}
                     widthSize="90%"
                     heightSize="50px"
                   />
