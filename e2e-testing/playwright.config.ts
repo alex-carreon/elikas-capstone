@@ -38,11 +38,15 @@ export default defineConfig({
 
   /* Configure projects for major browsers */
   projects: [
-    // {
-    //   name: 'chromium',
-    //   use: { ...devices['Desktop Chrome'] },
-    // },
-
+    /* Desktop */
+    {
+      name: 'Desktop Chrome',
+      use: {
+        ...devices['Desktop Chrome'],
+        permissions: ['geolocation'],
+        geolocation: { latitude: 14.6049833, longitude: 121.0293302 }
+       },
+    },
     {
       name: 'Desktop Firefox',
       use: {
@@ -51,31 +55,54 @@ export default defineConfig({
         geolocation: { latitude: 14.6049833, longitude: 121.0293302 }
       },
     },
+    {
+      name: 'Desktop Safari',
+      use: {
+        ...devices['Desktop Safari'],
+        permissions: ['geolocation'],
+        geolocation: { latitude: 14.6049833, longitude: 121.0293302 }
+       },
+    },
 
-    // {
-    //   name: 'webkit',
-    //   use: { ...devices['Desktop Safari'] },
-    // },
+    /* Android */
+    {
+      name: 'mobile-android-standard',
+      use: {
+        ...devices['Pixel 7'],
+        permissions: ['geolocation'],
+        geolocation: { latitude: 14.6049833, longitude: 121.0293302 }
+        },
+    },
+    {
+      name: 'mobile-android-galaxy',
+      use: { ...devices['Galaxy S9+'],
+        permissions: ['geolocation'],
+        geolocation: { latitude: 14.6049833, longitude: 121.0293302 }
+       },
+    },
 
-    /* Test against mobile viewports. */
-    // {
-    //   name: 'Mobile Chrome',
-    //   use: { ...devices['Pixel 5'] },
-    // },
-    // {
-    //   name: 'Mobile Safari',
-    //   use: { ...devices['iPhone 12'] },
-    // },
-
-    /* Test against branded browsers. */
-    // {
-    //   name: 'Microsoft Edge',
-    //   use: { ...devices['Desktop Edge'], channel: 'msedge' },
-    // },
-    // {
-    //   name: 'Google Chrome',
-    //   use: { ...devices['Desktop Chrome'], channel: 'chrome' },
-    // },
+    /* iOS */
+    {
+      name: 'mobile-ios-standard',
+      use: { ...devices['iPhone 15'],
+        permissions: ['geolocation'],
+        geolocation: { latitude: 14.6049833, longitude: 121.0293302 }
+       },
+    },
+    {
+      name: 'mobile-ios-small',
+      use: { ...devices['iPhone SE'],
+        permissions: ['geolocation'],
+        geolocation: { latitude: 14.6049833, longitude: 121.0293302 }
+       },
+    },
+    {
+      name: 'mobile-ios-max',
+      use: { ...devices['iPhone 15 Pro Max'],
+        permissions: ['geolocation'],
+        geolocation: { latitude: 14.6049833, longitude: 121.0293302 }
+       },
+    },
   ],
 
   /* Run your local dev server before starting the tests */
