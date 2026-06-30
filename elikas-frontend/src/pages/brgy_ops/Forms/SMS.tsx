@@ -230,11 +230,16 @@ function SMS() {
         });
       } catch (err: any) {
         if (
-          err.response.data.message === "Invalid api token or no load balance"
+          err.response.data.iprogsms_response.message ===
+          "Invalid api token or no load balance"
         ) {
           toast.error(
             "You don't have enough credits! Please check your IPROGSMS account.",
           );
+          return;
+        }
+        if (err.response.data.iprogsms_response.message === "Invalid Token") {
+          toast.error("Your token is invalid. Please input it again.");
           return;
         }
         toast.error("An unexpected error occurred.");
@@ -274,7 +279,7 @@ function SMS() {
         if (err.response?.data.message == "Validation failed.") {
           return "Verification failed. Please be sure that the token is from your IPROGSMS account.";
         }
-        if (err.response.data.message === "Invalid Token") {
+        if (err.response.data.iprogsms_message.message === "Invalid Token") {
           return "The token is invalid. Please check your IPROGSMS account and try again.";
         }
       },
