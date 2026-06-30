@@ -8,6 +8,10 @@ import dotenv from 'dotenv';
 import path from 'path';
 dotenv.config({ path: path.resolve(__dirname, '.env') });
 
+// Determine base URL dynamically 
+const BASE_URL = process.env.PLAYWRIGHT_BASE_URL || 'http://127.0.0.1:5173'; // find playwright base url, use local if not defined (local test)
+const shouldRunLocalServers = BASE_URL.includes('127.0.0.1') || BASE_URL.includes('localhost'); // run servers if testing locally
+
 /**
  * See https://playwright.dev/docs/test-configuration.
  */
@@ -26,8 +30,7 @@ export default defineConfig({
   /* Shared settings for all the projects below. See https://playwright.dev/docs/api/class-testoptions. */
   use: {
     /* Base URL to use in actions like `await page.goto('')`. */
-    baseURL: 'http://127.0.0.1:5173',
-    // baseURL: 'https://elikas.solarflare-tilapia.ts.net/',
+    baseURL: BASE_URL,
 
     /* Collect trace when retrying the failed test. See https://playwright.dev/docs/trace-viewer */
     trace: 'on-first-retry',
@@ -76,7 +79,7 @@ export default defineConfig({
   ],
 
   /* Run your local dev server before starting the tests */
-  webServer: [
+  webServer: shouldRunLocalServers ? [
     {
       name: 'backend',
       command: 'cd ../eLikas_backend && php artisan serve', 
@@ -91,5 +94,5 @@ export default defineConfig({
       reuseExistingServer: !process.env.CI,
       timeout: 120 * 1000, // Gives the server up to 2 minutes to boot
     }
-  ]
+  ] :  undefined // if testing public deployment, do not boot
 });
