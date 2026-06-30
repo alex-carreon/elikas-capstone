@@ -48,3 +48,53 @@ function something()
 {
     // ..
 }
+
+function freshFirebaseIdToken(string $refreshToken): string
+{
+    $apiKey = env('FIREBASE_WEB_API_KEY');
+ 
+    if (! $apiKey) {
+        test()->fail('FIREBASE_WEB_API_KEY is not set in .env.testing.');
+    }
+ 
+    $response = Illuminate\Support\Facades\Http::asForm()->post(
+        "https://securetoken.googleapis.com/v1/token?key={$apiKey}",
+        [
+            'grant_type'    => 'refresh_token',
+            'refresh_token' => $refreshToken,
+        ]
+    );
+ 
+    if ($response->failed()) {
+        test()->fail(
+            'Failed to exchange Firebase refresh token. Response: '
+            . $response->body()
+        );
+    }
+ 
+    return $response->json('id_token');
+}
+ 
+/** Role 3 individual — email verified. */
+function individualToken(): string
+{
+    return freshFirebaseIdToken(env('FIREBASE_TEST_VERIFIED_REFRESH_TOKEN'));
+}
+ 
+/** Role 1 admin. */
+function adminToken(): string
+{
+    return freshFirebaseIdToken(env('FIREBASE_TEST_ADMIN_REFRESH_TOKEN'));
+}
+ 
+/** Role 2 govops. */
+function govopsToken(): string
+{
+    return freshFirebaseIdToken(env('FIREBASE_TEST_GOVOPS_REFRESH_TOKEN'));
+}
+ 
+/** Role 3 individual — email NOT verified (used only in AuthControllerTest). */
+function unverifiedTestIdToken(): string
+{
+    return freshFirebaseIdToken(env('FIREBASE_TEST_UNVERIFIED_REFRESH_TOKEN'));
+}

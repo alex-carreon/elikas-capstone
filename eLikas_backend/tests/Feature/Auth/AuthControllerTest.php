@@ -8,47 +8,6 @@ use App\Models\UserAuth;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Mail;
 
-function freshFirebaseIdToken(string $refreshToken): string
-{
-    $apiKey = env('FIREBASE_WEB_API_KEY');
- 
-    if (! $apiKey) {
-        test()->fail('FIREBASE_WEB_API_KEY is not set in .env.testing — required to exchange refresh tokens.');
-    }
- 
-    $response = Http::asForm()->post(
-        "https://securetoken.googleapis.com/v1/token?key={$apiKey}",
-        [
-            'grant_type'    => 'refresh_token',
-            'refresh_token' => $refreshToken,
-        ]
-    );
- 
-    if ($response->failed()) {
-        test()->fail(
-            'Failed to exchange Firebase refresh token for an ID token. '
-            . 'Response: ' . $response->body()
-        );
-    }
- 
-    return $response->json('id_token');
-}
- 
-/**
- * ID token for the test account that HAS verified its email in Firebase.
- */
-function verifiedTestIdToken(): string
-{
-    return freshFirebaseIdToken(env('FIREBASE_TEST_VERIFIED_REFRESH_TOKEN'));
-}
- 
-/**
- * ID token for the test account that has NOT verified its email in Firebase.
- */
-function unverifiedTestIdToken(): string
-{
-    return freshFirebaseIdToken(env('FIREBASE_TEST_UNVERIFIED_REFRESH_TOKEN'));
-}
  
 
 //----REGISTER----
@@ -236,7 +195,7 @@ test('login requires bearer token', function () {
 // Test 2.2
 test('user can login successfully', function () {
  
-    $idToken = verifiedTestIdToken();
+    $idToken = individualToken();
  
     $response = $this->withHeaders([
         'Authorization' => "Bearer {$idToken}",
@@ -251,6 +210,8 @@ test('user can login successfully', function () {
         'role',
     ]);
 });
+
+ 
 
 // Test 8
 test('login fails when email is not verified', function () {
@@ -271,7 +232,7 @@ test('login fails when email is not verified', function () {
 // Test 9
 test('login fails when account is deactivated', function () {
  
-    $idToken = verifiedTestIdToken();
+    $idToken = individualToken();
  
     $verifiedUid = env('FIREBASE_TEST_VERIFIED_UID');
  
@@ -320,7 +281,7 @@ test('login fails when token is invalid', function () {
 //Test 3.1
 test('user can logout', function () {
  
-    $idToken = verifiedTestIdToken();
+    $idToken = individualToken();
  
     $response = $this->withHeaders([
         'Authorization' => "Bearer {$idToken}",
