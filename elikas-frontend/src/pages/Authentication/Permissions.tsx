@@ -35,8 +35,6 @@ function Permissions() {
       avatarSeed: localStorage.getItem("avatarSeed"),
     };
 
-    console.log("FORM DATA:", formData);
-
     try {
       setDisabled(true);
       const userCredential = await createUserWithEmailAndPassword(
@@ -84,6 +82,12 @@ function Permissions() {
       } else if (err.code === "auth/email-already-in-use") {
         toast.error("This email is already in use.");
         setDisabled(false);
+        return;
+      } else if (
+        err.response.data.errors.phone[0] ===
+        "The phone has already been taken."
+      ) {
+        toast.error("This phone has already been taken.");
         return;
       } else {
         toast.error("Registration failed. Please try again.");
