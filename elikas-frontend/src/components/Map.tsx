@@ -1,4 +1,4 @@
-import { useRef, useEffect, useState } from "react";
+import { useRef, useEffect, useState, type SetStateAction } from "react";
 import { TileLayer, useMap, CircleMarker } from "react-leaflet";
 import "leaflet-routing-machine";
 import {
@@ -22,9 +22,21 @@ interface MapProps {
   onLocationFound: (found: boolean) => void;
   showLocation: boolean;
   nearestRouteTrigger: number;
+  setRoute: React.Dispatch<SetStateAction<boolean>>;
+  setNearestRoute: React.Dispatch<SetStateAction<boolean>>;
+  clearRoute: boolean;
+  setClearRoute: React.Dispatch<SetStateAction<boolean>>;
 }
 
-function Map({ onLocationFound, showLocation, nearestRouteTrigger }: MapProps) {
+function Map({
+  onLocationFound,
+  showLocation,
+  nearestRouteTrigger,
+  setRoute,
+  setNearestRoute,
+  clearRoute,
+  setClearRoute,
+}: MapProps) {
   const [showNearestRoute, setShowNearestRoute] = useState(false);
   const [showRoute, setShowRoute] = useState(false);
   const [open, setOpen] = useState(false);
@@ -107,15 +119,15 @@ function Map({ onLocationFound, showLocation, nearestRouteTrigger }: MapProps) {
     if (nearestRouteTrigger === 0) return;
 
     setShowNearestRoute(true);
+    setNearestRoute(true);
     setShowRoute(false);
-    // setSelectedPin(null);
+    setRoute(false);
     setOpenFromRoute(false);
     setIsSensor(false);
     setIsHazard(false);
     setNewPin(false);
   }, [nearestRouteTrigger]);
 
-  // Have pin's type to be needed information from db
   const handlePinClick = (pin: any) => {
     const normalizedPin = pin.coordinates
       ? { ...pin, lat: pin.coordinates[0], long: pin.coordinates[1] }
@@ -128,6 +140,8 @@ function Map({ onLocationFound, showLocation, nearestRouteTrigger }: MapProps) {
     setShowRoute(false);
     setOpenFromRoute(false);
     setLocationFound(true);
+    setRoute(false);
+    setNearestRoute(false);
 
     const isExisting = !!pin.id;
     setNewPin(!isExisting);
@@ -187,18 +201,26 @@ function Map({ onLocationFound, showLocation, nearestRouteTrigger }: MapProps) {
   const handlePressRoute = () => {
     if (locationFound) {
       setShowRoute(true);
+      setRoute(true);
+      setNearestRoute(false);
       setOpenFromRoute(true);
       toast("Routing...");
-    } else console.log("Location not found");
+    } else
+      toast.error("Trouble Routing. Please check your location or refresh.");
+  };
+
+  const handleClearRoute = () => {
+    setShowRoute(false);
+    setRoute(false);
+    setShowNearestRoute(false);
+    setNearestRoute(false);
+    setSelectedPin(null);
   };
 
   const handleDrawerClose = (isOpen: boolean) => {
     setOpen(isOpen);
 
     if (!isOpen) {
-      setShowRoute(false);
-      setShowNearestRoute(false);
-      setSelectedPin(null);
       setOpenFromRoute(false);
       setClickedLoc(null);
     }
@@ -219,6 +241,13 @@ function Map({ onLocationFound, showLocation, nearestRouteTrigger }: MapProps) {
       }, 100);
     }
   }, [showRoute, showNearestRoute]);
+
+  useEffect(() => {
+    if (clearRoute) {
+      handleClearRoute();
+      setClearRoute(false);
+    }
+  }, [clearRoute]);
 
   const createClusterCustomIcon = (cluster: any) => {
     return divIcon({
