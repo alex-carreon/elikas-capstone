@@ -189,7 +189,7 @@ function EvacPinDrawer({
   isExpanded,
   setIsExpanded,
 }: {
-  selectedPin: EvacPin | null;
+  selectedPin: { id: number } | null;
   onFindRoute?: (findRoute: boolean) => void;
   isExpanded?: boolean;
   setIsExpanded?: (val: boolean) => void;
