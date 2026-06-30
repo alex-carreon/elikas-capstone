@@ -179,11 +179,11 @@ function SMS() {
             return;
           }
           if (err.response.data.iprogsms_response.message === "Invalid Token") {
-            toast.error("Your token is invalid. Please input it again.");
+            toast.error(
+              "Your token is invalid. Please check your IPROGSMS account and try again.",
+            );
             return;
           }
-          toast.error("An unexpected error occurred.");
-
           return "An unexpected error occurred";
         },
         position: "top-center",
