@@ -170,10 +170,19 @@ function SMS() {
         success: "Message sent!",
         error: (err: any) => {
           if (
-            err.response.data.message === "Invalid api token or no load balance"
+            err.response.data.iprogsms_response.message ===
+            "Invalid api token or no load balance"
           ) {
-            return "You don't have enough credits! Please check your IPROGSMS account.";
+            toast.error(
+              "You don't have enough credits! Please check your IPROGSMS account.",
+            );
+            return;
           }
+          if (err.response.data.iprogsms_response.message === "Invalid Token") {
+            toast.error("Your token is invalid. Please input it again.");
+            return;
+          }
+          toast.error("An unexpected error occurred.");
 
           return "An unexpected error occurred";
         },
