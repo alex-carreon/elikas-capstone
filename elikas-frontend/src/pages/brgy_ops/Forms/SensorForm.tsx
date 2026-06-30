@@ -9,6 +9,7 @@ import { handleCreate, handleDeac, handleUpdate } from "@/lib/sensorUtils";
 import { Field, FieldLabel } from "@/components/ui/field";
 import AlertDialogue from "@/components/AlertDialogue";
 import FormSkeleton from "../../Skeletons/FormSkeleton";
+import { toast } from "sonner";
 
 type Barangays = {
   id: number;
@@ -35,8 +36,8 @@ function SensorForm() {
   const [sensorCode, setSensorCode] = useState("");
   const [name, setName] = useState("");
   const [mountHeight, setMountHeight] = useState<number | null>(null);
-  const [latitude, setLatitude] = useState<number | null>(null);
-  const [longitude, setLongitude] = useState<number | null>(null);
+  const [latitude, setLatitude] = useState<string>("");
+  const [longitude, setLongitude] = useState<string>("");
   const [address, setAddress] = useState("");
   const [yellowLevel, setYellowLevel] = useState<number | null>(null);
   const [orangeLevel, setOrangeLevel] = useState<number | null>(null);
@@ -59,6 +60,10 @@ function SensorForm() {
 
   const { id } = useParams();
   const navigate = useNavigate();
+
+  const filterDecimal = (number: string) => {
+    return /^-?\d*\.?\d*$/.test(number);
+  };
 
   useEffect(() => {
     if (id) {
@@ -143,11 +148,21 @@ function SensorForm() {
   const create = (e: React.FormEvent) => {
     e.preventDefault();
 
+    if (!latitude || latitude === "" || !longitude || longitude === "") {
+      toast.error("Please fill in the coordinate field.");
+      return;
+    }
+
+    if (!filterDecimal(latitude) || !filterDecimal(longitude)) {
+      toast.error("Please fill in valid coordinates.");
+      return;
+    }
+
     handleCreate({
       e: e,
       name: name,
       mountHeight: mountHeight ? mountHeight : 0,
-      location: [latitude ? latitude : 0, longitude ? longitude : 0],
+      location: [Number(latitude), Number(longitude)],
       address: address,
       yellowLevel: yellowLevel ? yellowLevel : 0,
       orangeLevel: orangeLevel ? orangeLevel : 0,
@@ -257,20 +272,20 @@ function SensorForm() {
           <TextField
             label="Latitude"
             description="The latitude of the sensor's location"
-            value={String(latitude)}
-            inputType="number"
+            value={latitude ? String(latitude) : ""}
+            inputType="text"
             id="Sensor_LatitudeField"
-            onSubmit={(e) => setLatitude(Number(e.target.value))}
+            onSubmit={(e) => setLatitude(e.target.value)}
             isRequired
             readonly={!id || isEditable ? false : true}
           />
           <TextField
             label="Longitude"
             description="The longitude of the sensor's location"
-            value={String(longitude)}
-            inputType="number"
+            value={longitude ? String(longitude) : ""}
+            inputType="text"
             id="Sensor_LongitudeField"
-            onSubmit={(e) => setLongitude(Number(e.target.value))}
+            onSubmit={(e) => setLongitude(e.target.value)}
             isRequired
             readonly={!id || isEditable ? false : true}
           />

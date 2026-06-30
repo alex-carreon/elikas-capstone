@@ -122,13 +122,17 @@ function Profile() {
 
     const response = api.put("/profile", {
       username: newUsername,
-      first_name: firstName,
-      last_name: lastName,
+      ...(role === "indiv" && { first_name: firstName }),
+      ...(role === "indiv" && { last_name: lastName }),
       email: email,
       ...(brgyId && { location_id: brgyId }),
       ...(contactTouched && { phone: newContact }),
       avatar_seed: seed,
+      ...(role === "brgy_op" && { point_person: pointPerson }),
+      ...(role === "brgy_op" && { point_person_position: pointPosition }),
     });
+
+    console.log(response);
 
     if (!response) {
       return;
@@ -143,6 +147,12 @@ function Profile() {
         ) {
           return "Username has already been taken.";
         }
+        if (
+          err.response.data.errors.phone[0] ===
+          "This phone number is already in use."
+        ) {
+          return "This phone number has already been taken";
+        }
         return "Update failed";
       },
     });
@@ -156,7 +166,7 @@ function Profile() {
         getProfile();
       })
       .catch((err: string | any) => {
-        console.log(err.response.data);
+        console.log(err.response.data.errors.phone[0]);
         setDisabled(false);
       })
       .finally(() => setDisabled(false));
@@ -489,7 +499,7 @@ function Profile() {
                     ></ButtonComp>
                   </div>
 
-                  {isEditable ? (
+                  {isEditable && role === "indiv" ? (
                     <>
                       <SelectDropdown
                         value={String(cityId)}
