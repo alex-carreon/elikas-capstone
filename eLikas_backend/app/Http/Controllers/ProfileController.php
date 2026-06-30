@@ -58,50 +58,126 @@ class ProfileController extends Controller
 
             $user = $request->attributes->get('firebase_user');
 
-            // Validation
-            $request->validate([
-                'username' => 'nullable|string|max:20|unique:Users,username',
-                'first_name' => 'nullable|string|max:50',
-                'last_name' => 'nullable|string|max:50',
-                'phone' => 'nullable|string|max:20',
-                'location_id' => 'nullable|integer',
-                'avatar_seed' => 'nullable|string|size:8',
-            ]);
+            if ($user->role_id == 2) { // govop
 
-            // Update users table
+                $forbidden = collect([
+                    'first_name',
+                    'last_name',
+                    'phone',
+                    'location_id',
+                ])->filter(fn ($field) => $request->has($field));
+
+                if ($forbidden->isNotEmpty()) {
+                    return response()->json([
+                        'message' => 'Validation failed.',
+                        'errors' => $forbidden->mapWithKeys(fn ($field) => [
+                            $field => ['This field cannot be updated by government operators.']
+                        ]),
+                    ], 422);
+                }
+            }
+
+            if ($user->role_id == 3) { // Individual
+
+                $forbidden = collect([
+                    'point_person',
+                    'point_person_position',
+                ])->filter(fn ($field) => $request->has($field));
+
+                if ($forbidden->isNotEmpty()) {
+                    return response()->json([
+                        'message' => 'Validation failed.',
+                        'errors' => $forbidden->mapWithKeys(fn ($field) => [
+                            $field => ['This field cannot be updated by individual users.']
+                        ]),
+                    ], 422);
+                }
+            }
+
+            $rules = [
+                'username' => 'nullable|string|max:20|unique:Users,username,' . $user->id,
+                'avatar_seed' => 'nullable|string|size:8',
+            ];
+
+            if ($user->role_id == 3) {
+                $rules += [
+                    'first_name' => 'nullable|string|max:50',
+                    'last_name' => 'nullable|string|max:50',
+                    'phone' => 'nullable|string|max:20',
+                    'location_id' => 'nullable|integer',
+                ];
+            }
+
+            if ($user->role_id == 2) {
+                $rules += [
+                    'point_person' => 'nullable|string|max:100',
+                    'point_person_position' => 'nullable|string|max:100',
+                ];
+            }
+
+            $request->validate($rules);
+
+            // Shared user fields (all roles)
             $user->update([
                 'username'    => $request->username ?? $user->username,
                 'avatar_seed' => $request->avatar_seed ?? $user->avatar_seed,
             ]);
 
-            // Update name table
-            if ($user->name) {
-                $user->name->update([
-                    'first_name' => $request->first_name ?? $user->name->first_name,
-                    'last_name'  => $request->last_name ?? $user->name->last_name,
-                ]);
+            // Individual account updates
 
+            if ($user->role_id == 3) {
+
+                if ($user->name) {
+                    $user->name->update([
+                        'first_name' => $request->first_name ?? $user->name->first_name,
+                        'last_name'  => $request->last_name ?? $user->name->last_name,
+                    ]);
+                }
+
+                if ($request->filled('phone')) {
+
+                    $currentPhone = $user->phoneNumber?->phone_no;
+
+                    // Only proceed if the phone actually changed
+                    if ($currentPhone !== $request->phone) {
+
+                        // Check if another user already owns this phone number
+                        $phoneExists = PhoneNumber::where('phone_no', $request->phone)
+                            ->where('user_id', '!=', $user->id)
+                            ->exists();
+
+                        if ($phoneExists) {
+                            return response()->json([
+                                'message' => 'Validation failed.',
+                                'errors' => [
+                                    'phone' => ['This phone number is already in use.']
+                                ]
+                            ], 422);
+                        }
+
+                        PhoneNumber::updateOrCreate(
+                            ['user_id' => $user->id],
+                            [
+                                'phone_no' => $request->phone,
+                                'is_verified' => false,
+                            ]
+                        );
+                    }
+                }
+
+                if ($user->indivAcc) {
+                    $user->indivAcc->update([
+                        'location_id' => $request->location_id ?? $user->indivAcc->location_id,
+                    ]);
+                }
             }
 
-            // Update or create phone number row
-            if ($request->filled('phone')) {
-
-                PhoneNumber::updateOrCreate(
-                    ['user_id' => $user->id],
-                    [
-                        'phone_no' => $request->phone,
-                        'is_verified' => false,
-                    ]
-                );
-            }
-
-            // Update individual account table
-            if ($user->indivAcc) {
-
-                $user->indivAcc->update([
-                    'location_id' => $request->location_id ?? $user->indivAcc->location_id,
+            //Government Operator updates
+            if ($user->role_id == 2 && $user->govOp) {
+                $user->govOp->update([
+                    'point_person' => $request->point_person ?? $user->govOp->point_person,
+                    'point_position' => $request->point_person_position ?? $user->govOp->point_position,
                 ]);
-
             }
 
             return response()->json([
@@ -116,7 +192,7 @@ class ProfileController extends Controller
             ], 500);
         }
     }
-
+    
 
     public function deactivateSelf(Request $request)
     {
