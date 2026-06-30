@@ -44,11 +44,16 @@ function LogIn() {
         email: email,
       });
 
+      console.log(response);
+
       toast.promise(response, {
         loading: "Sending you your verification email...",
         success: "Email verification has been sent.",
         error: (err: any) => {
-          return err.response.message;
+          if (err.response.data.error === "User not found.") {
+            return "User not found. Please contact eLikas to resolve this issue.";
+          }
+          return "An unexpected error occurred. Please try again later.";
         },
         position: "top-center",
       });
@@ -106,6 +111,8 @@ function LogIn() {
           },
         },
       );
+
+      console.log(response);
 
       toast.promise(response, {
         loading: "Logging you in...",
