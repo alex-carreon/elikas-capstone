@@ -25,6 +25,7 @@ interface MapProps {
   setRoute: React.Dispatch<SetStateAction<boolean>>;
   setNearestRoute: React.Dispatch<SetStateAction<boolean>>;
   clearRoute: boolean;
+  setClearRoute: React.Dispatch<SetStateAction<boolean>>;
 }
 
 function Map({
@@ -34,6 +35,7 @@ function Map({
   setRoute,
   setNearestRoute,
   clearRoute,
+  setClearRoute,
 }: MapProps) {
   const [showNearestRoute, setShowNearestRoute] = useState(false);
   const [showRoute, setShowRoute] = useState(false);
@@ -243,6 +245,7 @@ function Map({
   useEffect(() => {
     if (clearRoute) {
       handleClearRoute();
+      setClearRoute(false);
     }
   }, [clearRoute]);
 
