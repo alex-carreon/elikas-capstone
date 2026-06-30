@@ -173,16 +173,10 @@ function SMS() {
             err.response.data.iprogsms_response.message ===
             "Invalid api token or no load balance"
           ) {
-            toast.error(
-              "You don't have enough credits! Please check your IPROGSMS account.",
-            );
-            return;
+            return "You don't have enough credits! Please check your IPROGSMS account.";
           }
           if (err.response.data.iprogsms_response.message === "Invalid Token") {
-            toast.error(
-              "Your token is invalid. Please check your IPROGSMS account and try again.",
-            );
-            return;
+            return "Your token is invalid. Please check your IPROGSMS account and try again.";
           }
           return "An unexpected error occurred";
         },
@@ -249,6 +243,13 @@ function SMS() {
         }
         if (err.response.data.iprogsms_response.message === "Invalid Token") {
           toast.error("Your token is invalid. Please input it again.");
+          return;
+        }
+        if (
+          err.response.data.errors.scheduled_for[0] ===
+          "The scheduled for field must be a date after now."
+        ) {
+          toast.error("Scheduled date must be past from now.");
           return;
         }
         toast.error("An unexpected error occurred.");
