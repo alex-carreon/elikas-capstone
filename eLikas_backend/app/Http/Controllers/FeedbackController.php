@@ -18,7 +18,7 @@ class FeedbackController extends Controller
             $user = $request->attributes->get('firebase_user');
 
             $validated = $request->validate([
-                'rating'  => 'required|numeric|min:1|max:5',
+                'rating'  => 'required|numeric|min:0.5|max:5',
                 'message' => 'nullable|string',
             ]);
 
@@ -76,12 +76,12 @@ class FeedbackController extends Controller
             // --- Rating filter: match records within ±0.25 of the chosen 0.5 step ---
             if ($request->has('rating') && is_numeric($request->query('rating'))) {
                 $r = (float) $request->query('rating');
-                if ($r >= 1 && $r <= 5) {
+                if ($r >= 0.5 && $r <= 5) {
                     // Snap the requested value to a clean 0.5 step first
                     $snapped = $this->roundToHalf($r);
                     // Then match any stored rating whose 0.5-rounded value equals that step
                     $query->whereBetween('rating', [
-                        max(1.0, $snapped - 0.25),
+                        max(0.5, $snapped - 0.25),
                         min(5.0, $snapped + 0.249),
                     ]);
                 }
