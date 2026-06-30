@@ -32,7 +32,7 @@ class SMSController extends Controller
         try {
             $validated = $request->validate([
                 'search' => 'nullable|string|max:255',
-                'status' => 'nullable|integer|in:1,2,4,5',
+                'status' => 'nullable|integer|in:1,2,3,4',
                 'limit'  => 'nullable|integer|min:1|max:100',
                 'state'  => 'nullable|string|in:active,inactive',
             ]);

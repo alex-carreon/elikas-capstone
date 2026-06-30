@@ -283,6 +283,7 @@ function SMSHistory() {
                           ? "Canceled"
                           : `Sent on: ${convertDateTime(broadcast.sent_at)}`
                     }
+                    address={broadcast.status.name}
                     onClick={() => cancelSend({ id: broadcast.id })}
                     buttonId="SMSHistory_CancelSend"
                     btnText="Cancel Send"
