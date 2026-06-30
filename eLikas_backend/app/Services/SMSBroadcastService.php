@@ -143,7 +143,7 @@ class SMSBroadcastService
             if ($filters['state'] === 'active') {
                 $query->where('status', 1);
             } else {
-                $query->whereIn('status', [2, 4, 5]);
+                $query->whereIn('status', [2, 3, 4]);
             }
         }
 
@@ -232,7 +232,7 @@ class SMSBroadcastService
             ->values();
 
         if ($phoneNumbers->isEmpty()) {
-            $broadcast->update(['status' => 5]);
+            $broadcast->update(['status' => 4]);
             abort(422, 'No user phone numbers found for this GovOp location.');
         }
 
@@ -257,7 +257,7 @@ class SMSBroadcastService
         $resolvedToken = config('services.iprogsms.api_token');
 
         if (empty($resolvedToken)) {
-            $broadcast->update(['status' => 5]);
+            $broadcast->update(['status' => 4]);
             abort(422, 'No iPROG API token provided. Please set your token via the Verify Token screen.');
         }
 
@@ -279,7 +279,7 @@ class SMSBroadcastService
         $classified = $this->classifyGatewayResponse($response->status(), $responseBody);
 
         if ($classified['failed']) {
-            $broadcast->update(['status' => 5]);
+            $broadcast->update(['status' => 4]);
 
             Log::error('IPROGSMS send failed', [
                 'broadcast_id' => $broadcast->id,
@@ -449,7 +449,7 @@ class SMSBroadcastService
             return 'window_passed';
         }
 
-    $broadcast->update(['status' => 4]);
+    $broadcast->update(['status' => 3]);
 
     return 'cancelled';
 }

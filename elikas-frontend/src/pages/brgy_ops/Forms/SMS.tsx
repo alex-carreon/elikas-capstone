@@ -277,7 +277,6 @@ function SMS() {
         if (err.response.data.message === "Invalid Token") {
           return "The token is invalid. Please check your IPROGSMS account and try again.";
         }
-        return "An error occurred. Please try again.";
       },
     });
 
@@ -370,29 +369,31 @@ function SMS() {
           onClick={(e: any) => handleTemplateAdd(e)}
           disabled={disabled}
         >
-          <TextField
-            label="Template Title*"
-            placeholder="Enter a title for your message"
-            inputType="text"
-            id="SMS_TemplateTitleField"
-            onSubmit={(e) => setTemplateTitle(e.target.value)}
-          />
-          <p className="text-xs text-red-500">{error.title}</p>
-          <Field>
-            <FieldLabel style={{ color: colors.label }}>Message</FieldLabel>
-            <Textarea
-              className="mt-2 h-80 text-xs"
-              value={message}
-              placeholder={
-                message
-                  ? undefined
-                  : "Enter your message first before adding a template"
-              }
-              id="SMS_TemplateMessageField"
-              readOnly
+          <div className="flex flex-col gap-2 overflow-auto h-fit max-h-[30vh]">
+            <TextField
+              label="Template Title*"
+              placeholder="Enter a title for your message"
+              inputType="text"
+              id="SMS_TemplateTitleField"
+              onSubmit={(e) => setTemplateTitle(e.target.value)}
             />
-            <p className="text-xs text-red-500">{error.message}</p>
-          </Field>
+            <p className="text-xs text-red-500">{error.title}</p>
+            <Field>
+              <FieldLabel style={{ color: colors.label }}>Message</FieldLabel>
+              <Textarea
+                className="mt-2 h-80 text-xs"
+                value={message}
+                placeholder={
+                  message
+                    ? undefined
+                    : "Enter your message first before adding a template"
+                }
+                id="SMS_TemplateMessageField"
+                readOnly
+              />
+              <p className="text-xs text-red-500">{error.message}</p>
+            </Field>
+          </div>
         </AlertDialogue>
       )}
       <div className="w-full h-full flex flex-col items-center ">
