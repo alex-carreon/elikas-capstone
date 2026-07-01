@@ -3,6 +3,7 @@ import { TileLayer, useMap, CircleMarker } from "react-leaflet";
 import "leaflet-routing-machine";
 import {
   Routing,
+  EvacRouting,
   PinMarking,
   FlyToLocation,
   RoadMapping,
@@ -327,7 +328,7 @@ function Map({
         />
       )}
       {showRoute && !showNearestRoute && selectedPin && (
-        <Routing
+        <EvacRouting
           onPinSelected={setSelectedPin}
           selectedPin={selectedPin}
           userPosition={userPosition}
