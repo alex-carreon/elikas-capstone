@@ -255,7 +255,7 @@ test('remind later requires ids field', function () {
 // TEST 14.4
 test('remind later requires authentication', function () {
 
-    $response = $this->patchJson('/api/flood-reminders/remind-later', [
+    $response = $this->postJson('/api/flood-reminders/remind-later', [
         'ids' => [1],
     ]);
 
@@ -264,6 +264,7 @@ test('remind later requires authentication', function () {
 
 // ── DISMISS ───────────────────────────────────────────────────────────────────
 
+// TEST 15.1
 test('dismiss reminder sets dismissed_at on the given flood paths', function () {
 
     $token = individualToken();
@@ -273,7 +274,7 @@ test('dismiss reminder sets dismissed_at on the given flood paths', function () 
 
     $response = $this->withHeaders([
         'Authorization' => "Bearer {$token}",
-    ])->patchJson('/api/flood-reminders/dismiss', [
+    ])->postJson('/api/flood-reminders/dismiss', [
         'ids' => [$fp->id],
     ]);
 
@@ -285,6 +286,7 @@ test('dismiss reminder sets dismissed_at on the given flood paths', function () 
     ]);
 });
 
+// TEST 15.2
 test('dismiss only affects paths owned by the authenticated user', function () {
 
     $token    = individualToken();
@@ -298,7 +300,7 @@ test('dismiss only affects paths owned by the authenticated user', function () {
 
     $response = $this->withHeaders([
         'Authorization' => "Bearer {$token}",
-    ])->patchJson('/api/flood-reminders/dismiss', [
+    ])->postJson('/api/flood-reminders/dismiss', [
         'ids' => [$fp->id],
     ]);
 
@@ -307,22 +309,24 @@ test('dismiss only affects paths owned by the authenticated user', function () {
     $response->assertJson(['updated' => 0]);
 });
 
+// TEST 15.3
 test('dismiss requires ids field', function () {
 
     $token = individualToken();
 
     $response = $this->withHeaders([
         'Authorization' => "Bearer {$token}",
-    ])->patchJson('/api/flood-reminders/dismiss', []);
+    ])->postJson('/api/flood-reminders/dismiss', []);
 
     $response->assertStatus(422);
 
     $response->assertJsonValidationErrors(['ids']);
 });
 
+// TEST 15.4
 test('dismiss requires authentication', function () {
 
-    $response = $this->patchJson('/api/flood-reminders/dismiss', [
+    $response = $this->postJson('/api/flood-reminders/dismiss', [
         'ids' => [1],
     ]);
 
