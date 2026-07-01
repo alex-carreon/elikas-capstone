@@ -518,9 +518,9 @@ class FloodPathController extends Controller
             'expiry' => $floodPath->expiry
                 ? $floodPath->expiry->timezone('Asia/Manila')->toDateTimeString()
                 : null,
-            // 'posted_at' => $floodPath->socialElement->posted_at
-            //     ? $floodPath->socialElement->posted_at->timezone('Asia/Manila')->toDateTimeString()
-            //     : null,
+            'posted_at' => $floodPath->socialElement->posted_at
+                ? $floodPath->socialElement->posted_at->timezone('Asia/Manila')->toDateTimeString()
+                : null,
             'is_expired' => $floodPath->expiry < now(),
             'is_deactivated' => !is_null(
                 $floodPath->socialElement->deactivated_at
