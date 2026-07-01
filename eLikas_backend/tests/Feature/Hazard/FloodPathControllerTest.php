@@ -83,7 +83,7 @@ function createFloodPath(\App\Models\User $user, array $overrides = []): FloodPa
 
 // ── INDEX ─────────────────────────────────────────────────────────────────────
 
-// TEST 11.1
+// TEST 6.1
 test('flood paths index is accessible as guest', function () {
 
     $response = $this->getJson('/api/flood-paths');
@@ -96,7 +96,7 @@ test('flood paths index is accessible as guest', function () {
     ]);
 });
 
-// TEST 11.2
+// TEST 6.2
 test('flood paths index is accessible with token', function () {
 
     $token = individualToken();
@@ -115,7 +115,7 @@ test('flood paths index is accessible with token', function () {
     ]);
 });
 
-// TEST 11.3
+// TEST 6.3
 test('flood paths index marks my_path correctly for owner', function () {
 
     $token = individualToken();
@@ -139,7 +139,7 @@ test('flood paths index marks my_path correctly for owner', function () {
 
 // ── MY ────────────────────────────────────────────────────────────────────────
 
-// TEST 6.1
+// TEST 12.1
 test('my flood paths returns only the authenticated users paths', function () {
 
     $token = individualToken();
@@ -165,7 +165,7 @@ test('my flood paths returns only the authenticated users paths', function () {
     expect($ids)->toContain($fp->id);
 });
 
-// TEST 6.2
+// TEST 12.2
 test('my flood paths requires authentication', function () {
 
     $response = $this->getJson('/api/flood-paths/my');
@@ -173,7 +173,7 @@ test('my flood paths requires authentication', function () {
     $response->assertStatus(401);
 });
 
-// TEST 6.2
+// TEST 13.3
 test('my flood paths can be filtered by flood_level_id', function () {
 
     $token = individualToken();
@@ -277,25 +277,50 @@ test('show allows admin to view deactivated path', function () {
     $response->assertOk();
 });
 
-//TEST 11.5
-test('show allows owner to view their own deactivated path', function () {
+//TEST 12.4
+test('history excludes deactivated flood paths', function () {
 
     $token = individualToken();
     $uid   = env('FIREBASE_TEST_VERIFIED_UID');
     $user  = userForUid($uid);
 
-    $fp = createFloodPath($user);
-    $fp->socialElement->update(['deactivated_at' => now()]);
+    // Active path
+    $active = createFloodPath($user);
+
+    // Expired path
+    $expired = createFloodPath($user);
+    $expired->update([
+        'expiry' => now()->subHour(),
+    ]);
+
+    // Deactivated path
+    $deactivated = createFloodPath($user);
+    $deactivated->socialElement->update([
+        'deactivated_at' => now(),
+    ]);
 
     $response = $this->withHeaders([
         'Authorization' => "Bearer {$token}",
-    ])->getJson("/api/flood-paths/{$fp->id}");
+    ])->getJson('/api/flood-paths/my');
 
     $response->assertOk();
+
+    $response->assertJsonMissing([
+        'id' => $deactivated->id,
+    ]);
+
+    $response->assertJsonFragment([
+        'id' => $active->id,
+    ]);
+
+    $response->assertJsonFragment([
+        'id' => $expired->id,
+    ]);
 });
 
 // ── STORE ─────────────────────────────────────────────────────────────────────
 
+// TEST 1.1
 test('store creates flood path without media', function () {
 
     $this->mock(MediaUploadService::class);
@@ -317,6 +342,7 @@ test('store creates flood path without media', function () {
     $response->assertJson(['message' => 'Flood path created successfully.']);
 });
 
+// TEST 1.2
 test('store creates flood path with media', function () {
 
     $this->mock(MediaUploadService::class, function ($mock) {
@@ -343,6 +369,7 @@ test('store creates flood path with media', function () {
     $response->assertCreated();
 });
 
+// TEST 1.3
 test('store requires authentication', function () {
 
     $response = $this->postJson('/api/flood-paths', []);
@@ -350,6 +377,7 @@ test('store requires authentication', function () {
     $response->assertStatus(401);
 });
 
+// TEST 8.1
 test('store validates required fields', function () {
 
     $token = individualToken();
@@ -368,6 +396,7 @@ test('store validates required fields', function () {
     ]);
 });
 
+// TEST 8.2
 test('store rejects expiry in the past', function () {
 
     $token = individualToken();
@@ -387,6 +416,7 @@ test('store rejects expiry in the past', function () {
     $response->assertJsonValidationErrors(['expiry']);
 });
 
+// TEST 8.3
 test('store rejects path with fewer than 2 points', function () {
 
     $token = individualToken();
@@ -406,6 +436,7 @@ test('store rejects path with fewer than 2 points', function () {
     $response->assertJsonValidationErrors(['path']);
 });
 
+// TEST 14
 test('store rejects overlapping flood path', function () {
 
     $token = individualToken();
@@ -435,6 +466,7 @@ test('store rejects overlapping flood path', function () {
 
 // ── UPDATE ────────────────────────────────────────────────────────────────────
 
+// TEST 2.1
 test('update allows owner to patch their flood path', function () {
 
     $token = individualToken();
@@ -454,6 +486,7 @@ test('update allows owner to patch their flood path', function () {
     $response->assertJson(['message' => 'Flood path updated successfully.']);
 });
 
+// TEST 2.2
 test('update allows admin to patch any flood path', function () {
 
     $token    = adminToken();
@@ -471,6 +504,7 @@ test('update allows admin to patch any flood path', function () {
     $response->assertOk();
 });
 
+// TEST 2.3
 test('update blocks individual from patching another users path', function () {
 
     $token    = individualToken();
@@ -491,6 +525,7 @@ test('update blocks individual from patching another users path', function () {
     $response->assertNotFound();
 });
 
+// TEST 2.4
 test('update rejects expiry in the past', function () {
 
     $token = individualToken();
@@ -510,13 +545,14 @@ test('update rejects expiry in the past', function () {
     $response->assertJsonValidationErrors(['expiry']);
 });
 
+// TEST 2.5
 test('update rejects overlapping path', function () {
 
     $token = individualToken();
     $uid   = env('FIREBASE_TEST_VERIFIED_UID');
     $user  = userForUid($uid);
 
-    // Two existing paths — we'll try to update the second one's coordinates
+    // Two existing paths — try to update the second one's coordinates
     // to overlap the first
     $fp1 = createFloodPath($user);
 
@@ -556,6 +592,7 @@ test('update rejects overlapping path', function () {
     ]);
 });
 
+// TEST 2.6
 test('update requires authentication', function () {
 
     $response = $this->patchJson('/api/flood-paths/1', []);
@@ -565,6 +602,7 @@ test('update requires authentication', function () {
 
 // ── DESTROY (soft-delete / deactivate) ───────────────────────────────────────
 
+// TEST 10.1
 test('destroy deactivates flood path for owner', function () {
 
     $token = individualToken();
@@ -590,12 +628,12 @@ test('destroy deactivates flood path for owner', function () {
     // Confirm the SocialElement row was soft-deleted in DB
     $this->assertDatabaseHas('SocialElements', [
         'id'             => $fp->element_id,
-        // deactivated_at is set (non-null); we just confirm the record exists
-        // with the right id — checking non-null is enough since the transaction
-        // rolls back for the other fields
+        // deactivated_at is set (non-null); just confirm the record exists
+        // with the right id — checking non-null is enough since the transaction rolls back for the other fields
     ]);
 });
 
+// TEST 10.2
 test('destroy blocks individual from deactivating another users path', function () {
 
     $token    = individualToken();
@@ -611,6 +649,7 @@ test('destroy blocks individual from deactivating another users path', function 
     $response->assertNotFound();
 });
 
+// TEST 10.3
 test('destroy allows admin to deactivate any path', function () {
 
     $token    = adminToken();
@@ -626,6 +665,7 @@ test('destroy allows admin to deactivate any path', function () {
     $response->assertOk();
 });
 
+// TEST 10.4
 test('destroy requires authentication', function () {
 
     $response = $this->patchJson('/api/flood-paths/1/deactivate');
@@ -635,6 +675,7 @@ test('destroy requires authentication', function () {
 
 // ── ADD MEDIA ─────────────────────────────────────────────────────────────────
 
+// TEST 9.1
 test('addMedia attaches file to flood path', function () {
 
     $this->mock(MediaUploadService::class, function ($mock) {
@@ -662,6 +703,7 @@ test('addMedia attaches file to flood path', function () {
     $response->assertJsonStructure(['message', 'media_url']);
 });
 
+// TEST 9.2
 test('addMedia requires a file', function () {
 
     $token = individualToken();
@@ -698,6 +740,7 @@ test('addMedia blocks individual from adding media to another users path', funct
     $response->assertNotFound();
 });
 
+// TEST 9.3
 test('addMedia requires authentication', function () {
 
     $response = $this->postJson('/api/flood-paths/1/media', []);
