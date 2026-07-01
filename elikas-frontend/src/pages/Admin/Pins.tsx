@@ -825,16 +825,28 @@ function Pins() {
                             id="Admin_PinsActiveHazLevel"
                             style={{
                               backgroundColor:
-                                path.level === "Gutter" ||
-                                path.level === "Half Knee"
+                                path.level === "Gutter-Deep" ||
+                                path.level === "Half Knee-Deep"
                                   ? colorHazard.lightBlue
-                                  : path.level === "Half Tire" ||
-                                      path.level === "Knee"
+                                  : path.level === "Half Tire-Deep" ||
+                                      path.level === "Knee-Deep"
                                     ? colorHazard.darkBlue
-                                    : path.level === "Tire" ||
-                                        path.level === "Waist" ||
-                                        path.level === "chest"
+                                    : path.level === "Tire-Deep" ||
+                                        path.level === "Waist-Deep" ||
+                                        path.level === "Chest-Deep"
                                       ? colorHazard.red
+                                      : colorHazard.fallback,
+                              color:
+                                path.level === "Gutter-Deep" ||
+                                path.level === "Half Knee-Deep"
+                                  ? "Black"
+                                  : path.level === "Half Tire-Deep" ||
+                                      path.level === "Knee-Deep"
+                                    ? "White"
+                                    : path.level === "Tire-Deep" ||
+                                        path.level === "Waist-Deep" ||
+                                        path.level === "Chest-Deep"
+                                      ? "White"
                                       : colorHazard.fallback,
                             }}
                           >
@@ -884,16 +896,28 @@ function Pins() {
                             id="Admin_PinsInactiveHazLevel"
                             style={{
                               backgroundColor:
-                                path.level === "Gutter" ||
-                                path.level === "Half Knee"
+                                path.level === "Gutter-Deep" ||
+                                path.level === "Half Knee-Deep"
                                   ? colorHazard.lightBlue
-                                  : path.level === "Half Tire" ||
-                                      path.level === "Knee"
+                                  : path.level === "Half Tire-Deep" ||
+                                      path.level === "Knee-Deep"
                                     ? colorHazard.darkBlue
-                                    : path.level === "Tire" ||
-                                        path.level === "Waist" ||
-                                        path.level === "chest"
+                                    : path.level === "Tire-Deep" ||
+                                        path.level === "Waist-Deep" ||
+                                        path.level === "Chest-Deep"
                                       ? colorHazard.red
+                                      : colorHazard.fallback,
+                              color:
+                                path.level === "Gutter-Deep" ||
+                                path.level === "Half Knee-Deep"
+                                  ? "Black"
+                                  : path.level === "Half Tire-Deep" ||
+                                      path.level === "Knee-Deep"
+                                    ? "White"
+                                    : path.level === "Tire-Deep" ||
+                                        path.level === "Waist-Deep" ||
+                                        path.level === "Chest-Deep"
+                                      ? "White"
                                       : colorHazard.fallback,
                             }}
                           >

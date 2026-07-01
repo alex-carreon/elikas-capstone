@@ -65,7 +65,7 @@ class UpdateEvacuationAreaController extends Controller
             }
 
             // Individual users may only edit their own pins
-            if ($roleId == 3 && $pin->social_element->user_id != ($user?->id ?? null)) {
+            if ($roleId != 1 && $pin->social_element->user_id != ($user?->id ?? null)) {
                 return response()->json([
                     'error' => 'Forbidden. You may only update your own evacuation area pins',
                 ], 403);

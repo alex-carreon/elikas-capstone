@@ -5,7 +5,6 @@ import { toast } from "sonner";
 import { formatInTimeZone } from "date-fns-tz";
 import { addDays } from "date-fns";
 import api from "@/api";
-import { format } from "date-fns-tz";
 
 type FloodLevel = {
   id: number;
@@ -74,6 +73,7 @@ export const handleSubmit = async ({
   if (center && routePoints) {
     if (!routePoints || routePoints.length < 2) {
       toast("Please indicate the hazard on the map");
+      setDisabled?.(false);
       return;
     }
 
@@ -102,9 +102,14 @@ export const handleSubmit = async ({
       now.getSeconds(),
     );
 
-    console.log("Hazard Expiry", expDateWithTime);
-
-    formData.append("expiry", format(expDateWithTime, "yyyy-MM-dd"));
+    formData.append(
+      "expiry",
+      formatInTimeZone(
+        expDateWithTime,
+        "Asia/Manila",
+        "yyyy-MM-dd HH:mm:ssXXX",
+      ),
+    );
     routePoints.forEach((point, index) => {
       formData.append(`path[${index}][0]`, String(point[0]));
       formData.append(`path[${index}][1]`, String(point[1]));
@@ -124,7 +129,15 @@ export const handleSubmit = async ({
     toast.promise(response, {
       loading: "Adding your pin to the map...",
       success: "Pin successfully added!",
-      error: (err) => err?.message || "Please try again.",
+      error: (err) => {
+        if (
+          err.response.data.message ===
+          "The expiry field must be a date after now."
+        ) {
+          return "The expiry date must be a date after now.";
+        }
+        return "An error occurred while creating the pin. Please make sure that all required fields are filled.";
+      },
       position: "top-center",
     });
 
@@ -133,8 +146,6 @@ export const handleSubmit = async ({
         navigate?.("/map");
       })
       .catch((error: any) => {
-        console.error("Request failed");
-
         if (error.response) {
           console.error("Status:", error.response.status);
           console.error("Data:", error.response.data);
@@ -165,29 +176,22 @@ export const handleUpdate = async ({
   setDisabled?.(true);
 
   if (!floodDetails) {
-    console.log("Passed here");
     setDisabled?.(false);
     return;
   }
 
   if (!routePoints || routePoints.length < 2) {
-    console.log("Now here");
-
     toast.error("Please indicate the hazard on the map");
     setDisabled?.(false);
     return;
   }
 
   if (!floodLevel) {
-    console.log("Then here");
-
     setDisabled?.(false);
     return;
   }
 
   if (desc === null) {
-    console.log("Wow here");
-
     toast.error("Please fill the description field");
     setDisabled?.(false);
 
@@ -195,18 +199,14 @@ export const handleUpdate = async ({
   }
 
   if (!userExpiry) {
-    console.log("expiry here");
-
     toast.error("Please enter an expiry date.");
     setDisabled?.(false);
     return;
   }
 
   const expDate = userExpiry ? new Date(userExpiry) : addDays(new Date(), 3);
-  console.log("Date", expDate);
 
   const now = new Date();
-  console.log("now", now);
   const expDateWithTime = new Date(
     expDate.getFullYear(),
     expDate.getMonth(),
@@ -215,15 +215,12 @@ export const handleUpdate = async ({
     now.getMinutes(),
     now.getSeconds(),
   );
-  console.log("expDateWithTime", expDateWithTime);
 
   const dateTime = formatInTimeZone(
     expDateWithTime,
     "Asia/Manila",
     "MMMM dd, yyyy, h:mm a",
   );
-
-  console.log("submitted date", dateTime);
 
   const response = api.patch(`/flood-paths/${id}`, {
     level_id: floodLevel,
@@ -232,12 +229,18 @@ export const handleUpdate = async ({
     path: routePoints,
   });
 
-  console.log(response);
-
   toast.promise(response, {
     loading: "Saving your updates...",
     success: "Pin successfully updated!",
-    error: "There was an error updating your flood hazard",
+    error: (err: any) => {
+      if (
+        err.response?.data?.message ===
+        "The expiry field must be a date after now."
+      ) {
+        return "The expiry date must be a date after now.";
+      }
+      return "There was an error updating your flood hazard";
+    },
     position: "top-center",
   });
 
@@ -248,7 +251,6 @@ export const handleUpdate = async ({
     })
     .catch((err: string | any) => {
       console.log(err.message || "An error occurred");
-      toast.error("An unexpected error occurred.");
     })
     .finally(() => setDisabled?.(false));
 };

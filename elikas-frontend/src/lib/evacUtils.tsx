@@ -150,7 +150,10 @@ export const handleUpdate = async ({
     ...(contact_person && { contact_person: contact_person }),
     ...(contact_number && { contact_number: contact_number }),
     ...(role === "brgy_op" && { expiry: expiry }),
+    expiry: expiry,
   });
+
+  console.log(responsePromise);
 
   toast.promise(responsePromise, {
     loading: "Updating your pin...",

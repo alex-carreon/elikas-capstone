@@ -507,7 +507,10 @@ function EvacPinDrawer({
               </div>
               {evacPinDetails?.is_own_pin && (
                 <div>
-                  <Link to={`/EvacForm/${evacPinDetails?.id}`}>
+                  <Link
+                    to={`/EvacForm/${evacPinDetails?.id}`}
+                    state={{ from: "/map" }}
+                  >
                     <ButtonComp
                       text="Edit Pin"
                       variant="outline"
