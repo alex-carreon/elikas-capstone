@@ -100,6 +100,11 @@ Route::prefix('admin')->middleware(['firebase.auth', 'role:1'])->group(function 
 
     Route::get('flood-paths', [FloodPathAdminController::class, 'index']);
 
+    //USER DASHBOARD
+    Route::get('/users', [UserController::class, 'allUsers']);
+    Route::get('/users/{id}', [UserController::class, 'getUser']);
+    Route::patch('/users/{id}', [UserController::class, 'updateUser']); //can update any user
+
     //FLAGS
     Route::get('/comments/flags', [AdminFlagController::class, 'commentFlags']);
     Route::get('/comments/flags/{commentId}', [AdminFlagController::class, 'commentDetail']);
@@ -170,11 +175,6 @@ Route::middleware(['firebase.auth', 'role:2'])->group(function () {
 
 // BARANGAY OR ADMIN ROUTES
 Route::middleware(['firebase.auth', 'role:1,2'])->group(function () {
-    //USER DASHBOARD
-    Route::get('/admin/users', [UserController::class, 'allUsers']);
-    Route::get('/admin/users/{id}', [UserController::class, 'getUser']);
-    Route::patch('/admin/users/{id}', [UserController::class, 'updateUser']); //can update any user
-
     Route::get('/sensors', [SensorController::class, 'index']);
     Route::get('/sensors/{sensor}', [SensorController::class, 'show']);
     Route::get('sensors/{sensor_code}/logs', [SensorLogController::class, 'index']);
