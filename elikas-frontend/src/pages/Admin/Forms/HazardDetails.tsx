@@ -306,29 +306,45 @@ function HazardDetails() {
                   id="Admin_HazardExpiry"
                   readonly
                 />
-                <div className="flex gap-4">
-                  <p className="text-xs italic" id="Admin_HazardIsExpired">
-                    Has expired: {String(floodDetails?.is_expired)}
-                  </p>
+                <p className="text-xs italic" id="Admin_HazardIsExpired">
+                  Has expired: {String(floodDetails?.is_expired)}
+                </p>
+              </div>
+              {floodDetails?.is_deactivated && (
+                <div className="flex flex-col gap-1">
+                  <TextField
+                    label="Expiry Date"
+                    value={String(floodDetails?.expiry)}
+                    inputType="text"
+                    id="Admin_HazardExpiry"
+                    readonly
+                  />
                   <p className="text-xs italic" id="Admin_HazardIsDeac">
                     Has deactivated: {String(floodDetails?.is_deactivated)}
                   </p>
                 </div>
-                <TextField
-                  label="Posted By"
-                  value={String(floodDetails?.posted_by)}
-                  inputType="text"
-                  id="Admin_HazardPostedBy"
-                  readonly
-                />
-                <TextField
-                  label="Posted On"
-                  value={String(floodDetails?.posted_at)}
-                  inputType="text"
-                  id="Admin_HazardPostedOn"
-                  readonly
-                />
-              </div>
+              )}
+              <TextField
+                label="Posted By"
+                value={String(floodDetails?.posted_by)}
+                inputType="text"
+                id="Admin_HazardPostedBy"
+                readonly
+              />
+              <TextField
+                label="Posted On"
+                value={String(floodDetails?.posted_at)}
+                inputType="text"
+                id="Admin_HazardPostedOn"
+                readonly
+              />
+              <TextField
+                label="Last Updated"
+                value={String(floodDetails?.last_confirmed)}
+                inputType="text"
+                id="Admin_HazardLastUpdated"
+                readonly
+              />
             </form>
           </>
         )}

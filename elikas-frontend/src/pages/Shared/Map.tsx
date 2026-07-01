@@ -164,7 +164,6 @@ function Map() {
   }, [role]);
 
   useEffect(() => {
-    console.log("Decided", decidedCount);
     if (decidedCount === reminderCount) {
       setShowReminder(false);
     }

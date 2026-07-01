@@ -44,8 +44,6 @@ function LogIn() {
         email: email,
       });
 
-      console.log(response);
-
       toast.promise(response, {
         loading: "Sending you your verification email...",
         success: "Email verification has been sent.",
