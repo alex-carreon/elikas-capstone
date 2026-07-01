@@ -730,6 +730,14 @@ function EvacPin() {
       .finally(() => setDisabled(false));
   };
 
+  useEffect(() => {
+    if (location.state?.from === "/map") {
+      setIsEditable(true);
+    } else {
+      setIsEditable(false);
+    }
+  }, []);
+
   return loading ? (
     <div className="w-full h-full flex flex-col items-center p-12 mt-8 mb-2 gap-4">
       <FormSkeleton />
