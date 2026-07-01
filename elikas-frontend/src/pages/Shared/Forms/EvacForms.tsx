@@ -20,7 +20,7 @@ import { useUserContext } from "@/context/AuthContext";
 import api from "@/api";
 import FormSkeleton from "../../Skeletons/FormSkeleton";
 import DatePickerInput from "@/components/DateField";
-import { toZonedTime, format } from "date-fns-tz";
+import { toZonedTime, formatInTimeZone } from "date-fns-tz";
 import { addDays } from "date-fns";
 import AlertDialogue from "@/components/AlertDialogue";
 import { toast } from "sonner";
@@ -236,7 +236,6 @@ function EvacPin() {
       setLoading(true);
       setHasUpdated(false);
       const response = await api.get(`/pins/${id}`);
-      console.log(response);
 
       const evacDetails = await response.data;
 
@@ -314,7 +313,6 @@ function EvacPin() {
     const brgyName =
       barangays.find((brgy) => String(brgy.id) === brgyId)?.name ??
       "No Barangay";
-    console.log(brgyName);
     return brgyName;
   };
 
@@ -536,7 +534,14 @@ function EvacPin() {
     formData.append("other_facilities", other);
     formData.append("contact_person", contactPerson);
     formData.append("contact_number", contactNumber);
-    formData.append("expiry", format(expDateWithTime, "yyyy-MM-dd"));
+    formData.append(
+      "expiry",
+      formatInTimeZone(
+        expDateWithTime,
+        "Asia/Manila",
+        "yyyy-MM-dd HH:mm:ssXXX",
+      ),
+    );
 
     handleSubmit({
       e: e,
@@ -643,7 +648,13 @@ function EvacPin() {
       ...(contactPerson && { contact_person: contactPerson }),
       ...(contactNumber && { contact_number: contactNumber }),
       role: role ? role : "",
-      ...(isPersistent && { expiry: format(expDateWithTime, "yyyy-MM-dd") }),
+      ...(isPersistent && {
+        expiry: formatInTimeZone(
+          expDateWithTime,
+          "Asia/Manila",
+          "yyyy-MM-dd HH:mm:ssXXX",
+        ),
+      }),
       setIsEditable: setIsEditable,
       setHasUpdated: setHasUpdated,
       location_id: brgyId,
@@ -665,12 +676,10 @@ function EvacPin() {
 
     handleReOpen({
       e: e,
-      expiry: format(
+      expiry: formatInTimeZone(
         toZonedTime(expDate!, "Asia/Manila"),
-        "yyyy-MM-dd HH:mm:ss",
-        {
-          timeZone: "Asia/Manila",
-        },
+        "Asia/Manila",
+        "yyyy-MM-dd HH:mm:ssXXX",
       ),
       id: id,
       navigate: navigate,
@@ -703,8 +712,6 @@ function EvacPin() {
       capacity_level: newCapacityLevel,
     });
 
-    console.log(response);
-
     toast.promise(response, {
       loading: isFull ? "Marking as open..." : "Marking as full...",
       success: isFull ? "Pin marked as open!" : "Pin marked as full!",
@@ -722,6 +729,14 @@ function EvacPin() {
       })
       .finally(() => setDisabled(false));
   };
+
+  useEffect(() => {
+    if (location.state?.from === "/map") {
+      setIsEditable(true);
+    } else {
+      setIsEditable(false);
+    }
+  }, []);
 
   return loading ? (
     <div className="w-full h-full flex flex-col items-center p-12 mt-8 mb-2 gap-4">
@@ -1273,8 +1288,8 @@ function EvacPin() {
                 idBtn="EvacPin_CalendarBtn"
                 value={expiry}
                 onChange={setExpiry}
-                readonly={!id || isEditable ? false : true}
-                edit={isEditable || !id}
+                readonly={!id || (isPersistent && isEditable) ? false : true}
+                edit={(isPersistent && isEditable) || !id}
                 desc="The default expiration date is 7 days from now"
                 clearDate={!id}
               />
@@ -1356,7 +1371,6 @@ function EvacPin() {
                       // widthSize="20"
                       onClick={(e) => {
                         update(e);
-                        console.log(toiletCount);
                       }}
                       isDisabled={disabled}
                     ></ButtonComp>

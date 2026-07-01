@@ -116,6 +116,7 @@ function EvacDetails() {
   const [other, setOther] = useState("");
   const [contactPerson, setContactPerson] = useState("");
   const [contactNumber, setContactNumber] = useState("");
+  const [postedBy, setPostedBy] = useState<postedBy>();
   const [isPersistent, setIsPersistent] = useState(false);
   const [isEditable, setIsEditable] = useState(false);
   const [capacityLevels, setCapacityLevels] = useState<CapacityLevel[]>([]);
@@ -171,6 +172,7 @@ function EvacDetails() {
       setContactPerson(evacDetails.contact_person);
       setContactNumber(evacDetails.contact_number);
       setIsPersistent(evacDetails.is_persistent);
+      setPostedBy(evacDetails.posted_by);
       setPinDetails(evacDetails);
     } catch (err: any) {
       if (err.name === "CanceledError") {
@@ -760,6 +762,20 @@ function EvacDetails() {
                     Has expired: {String(pinDetails?.is_expired)}
                   </p>
                 </div>
+                <TextField
+                  label="Posted By"
+                  id="Admin_EvacDetailsPostedName"
+                  inputType="text"
+                  value={postedBy?.username}
+                  readonly
+                ></TextField>
+                <TextField
+                  label="Posted On"
+                  id="Admin_EvacDetailsPostedOn"
+                  inputType="text"
+                  value={postedBy?.posted_at}
+                  readonly
+                ></TextField>
                 {pinDetails?.is_deactivated && (
                   <div>
                     <TextField

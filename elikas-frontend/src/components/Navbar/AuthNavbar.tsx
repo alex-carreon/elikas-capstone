@@ -6,7 +6,6 @@ import { useUserContext } from "@/context/AuthContext";
 
 function AuthNavbar() {
   const { role } = useUserContext();
-  console.log(role);
 
   return (
     <>
