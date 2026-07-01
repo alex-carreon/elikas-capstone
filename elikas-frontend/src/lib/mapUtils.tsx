@@ -21,6 +21,7 @@ import { type Dispatch, type SetStateAction } from "react";
 import { useUserContext } from "@/context/AuthContext";
 
 const brouterBaseUrl = import.meta.env.VITE_BROUTER_BASE_URL;
+const apiBaseUrl = import.meta.env.VITE_API_BASE_URL;
 
 type EvacPin = {
   id: number;
@@ -290,6 +291,76 @@ export function Routing({
         console.log(err.message);
       }
     };
+
+    getRoutes();
+  }, [userPosition, selectedPin]);
+
+  return <Polyline positions={points} weight={6} color="#5F80AA" />;
+}
+
+export function EvacRouting({
+  onPinSelected,
+  selectedPin,
+  userPosition,
+}: {
+  onPinSelected: any;
+  selectedPin: any;
+  userPosition: LatLng | null; // add this
+}) {
+  const [points, setPoints] = useState<[number, number][]>([]);
+
+  //   For Routing
+  useEffect(() => {
+    if (!userPosition || !selectedPin) return;
+
+    const matchedPin = selectedPin;
+
+    if (matchedPin) {
+      onPinSelected(matchedPin);
+    }
+
+    const getRoutes = async () => {
+  try {
+    // 1. Map to exact names required by EvacRouteController's $request->validate()
+    const queryParams = new URLSearchParams({
+      start_lon: userPosition.lng.toString(),
+      start_lat: userPosition.lat.toString(),
+      end_lon: selectedPin.lng.toString(),
+      end_lat: selectedPin.lat.toString(),
+    });
+
+    // 2. Route directly to your local Laravel API backend instead of BRouter directly
+    // Assuming api.js exposes base configuration or handles authorization headers
+    const response = await fetch(`${apiBaseUrl}/route?${queryParams.toString()}`, {
+      method: "GET",  
+      headers: {
+        "Accept": "application/json",
+        // Include default application headers if required by your middleware stack
+      }
+    });
+
+    if (!response.ok) {
+      const errorData = await response.json();
+      console.error("Evacuation routing failed validation or backend error:", errorData);
+      return;
+    }
+
+    const data = await response.json();
+    
+    // 3. Map standard GeoJSON geometry back to Leaflet [lat, lon] array structure
+    if (data.features && data.features.length > 0) {
+      const points: [number, number][] =
+        data.features[0].geometry.coordinates.map(
+          ([lon, lat]: [number, number]) => [lat, lon],
+        );
+      setPoints(points);
+    } else {
+      console.warn("No geometric features returned in routing response.");
+    }
+      } catch (err: any) {
+        console.log("Internal gateway routing error:", err.message);
+      }
+  };
 
     getRoutes();
   }, [userPosition, selectedPin]);
