@@ -9,8 +9,7 @@ use Illuminate\Http\Client\RequestException;
 
 class RoutingService
 {
-    private const BBOX_BUFFER = 0.01;  // 1 km of padding to accomodate detours
-    private const SIMPLIFY_TOLERANCE = 0.0001;
+    private const BBOX_BUFFER = 0.03;  // 3 km of padding to accomodate detours
 
     // Cost penalties for different flood levels
     private const FLOOD_WEIGHTS = [
@@ -86,17 +85,14 @@ class RoutingService
 
         $rows = DB::select('
             SELECT
-                COALESCE(
-                    ST_AsText(ST_Simplify(fp.path, ?)),
-                    ST_AsText(fp.path)
-                ) AS path_wkt,
+                ST_AsText(fp.path) AS path_wkt,
                 fp.level_id
             FROM FloodPaths fp
             JOIN SocialElements se ON fp.element_id = se.id
             WHERE se.deactivated_at IS NULL
             AND fp.expiry > NOW()
             AND ST_Intersects(fp.path, ST_GeomFromText(?))
-        ', [self::SIMPLIFY_TOLERANCE, $bboxWkt]);
+        ', [$bboxWkt]);
 
         return array_map(fn(object $row) => $this->rowToPolyline($row), $rows);
     }
