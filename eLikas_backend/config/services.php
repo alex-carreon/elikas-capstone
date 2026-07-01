@@ -46,9 +46,9 @@ return [
     'sms_provider'    => env('IPROGSMS_SMS_PROVIDER', 0),
     'mock'            => env('IPROGSMS_MOCK', true),
     'default_status'  => env('IPROGSMS_DEFAULT_BROADCAST_STATUS', 1),
+    ],
 
     'brouter' => [
         'url' => env('BROUTER_URL', 'http://localhost:17777'),
     ],
-],
 ];

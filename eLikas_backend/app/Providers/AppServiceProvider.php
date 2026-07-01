@@ -12,8 +12,10 @@ class AppServiceProvider extends ServiceProvider
      */
     public function register(): void
     {
-        $this->app->bind(RoutingService::class, function () {
-            return new RoutingService(config('services.brouter.url'));
+        $this->app->singleton(RoutingService::class, function ($app) {
+            return new RoutingService(
+                config('services.brouter.url') ?? 'http://localhost:17777'
+            );
         });
     }
 
