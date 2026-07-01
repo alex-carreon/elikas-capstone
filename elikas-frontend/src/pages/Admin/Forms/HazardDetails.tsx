@@ -63,11 +63,11 @@ function HazardDetails() {
   };
 
   const getColor = (level: number | null | undefined): string => {
-    if (level === 1 || level === 2) {
+    if (level === 8 || level === 9) {
       return colorHazard.lightBlue;
-    } else if (level === 3 || level === 4) {
+    } else if (level === 10 || level === 11) {
       return colorHazard.darkBlue;
-    } else if (level === 5 || level === 6 || level === 7) {
+    } else if (level === 12 || level === 13 || level === 14) {
       return colorHazard.red;
     } else return colorHazard.fallback;
   };
@@ -268,14 +268,6 @@ function HazardDetails() {
                   readonly
                 />
               )}
-
-              <TextField
-                label="Posted By"
-                value={String(floodDetails?.posted_by)}
-                inputType="text"
-                id="Admin_HazardPostedBy"
-                readonly
-              />
               <TextField
                 label="Description"
                 value={String(floodDetails?.description)}
@@ -322,6 +314,20 @@ function HazardDetails() {
                     Has deactivated: {String(floodDetails?.is_deactivated)}
                   </p>
                 </div>
+                <TextField
+                  label="Posted By"
+                  value={String(floodDetails?.posted_by)}
+                  inputType="text"
+                  id="Admin_HazardPostedBy"
+                  readonly
+                />
+                <TextField
+                  label="Posted On"
+                  value={String(floodDetails?.posted_at)}
+                  inputType="text"
+                  id="Admin_HazardPostedOn"
+                  readonly
+                />
               </div>
             </form>
           </>

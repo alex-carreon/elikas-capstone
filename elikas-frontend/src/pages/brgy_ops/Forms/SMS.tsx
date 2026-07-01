@@ -280,8 +280,6 @@ function SMS() {
     console.log(response);
 
     toast.promise(response, {
-      loading: "Verifying your token...",
-      success: "Token verified!",
       error: (err: any) => {
         setShowDialog(true);
         if (err.response?.data.error == "Unauthorized") {
