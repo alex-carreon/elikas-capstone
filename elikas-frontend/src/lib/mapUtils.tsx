@@ -228,7 +228,6 @@ export function NearestRouting({
             method: "GET",
             headers: {
               Accept: "application/json",
-              // Include default application headers if required by middleware
             },
           },
         );
