@@ -19,6 +19,10 @@ echo "⚡ Optimizing application caches..."
 php artisan optimize
 php artisan view:cache
 
+# Refresh queue workers to pick up new code changes
+echo "🔄 Restarting background queue workers..."
+php artisan queue:restart
+
 # Reload PHP-FPM to flush OPcache (crucial for Debian/Ubuntu servers to see changes instantly)
 echo "🔄 Reloading PHP-FPM..."
 sudo systemctl restart php8.5-fpm
