@@ -37,6 +37,7 @@ use App\Http\Controllers\Votes\VoteCommentController;
 use App\Http\Controllers\Votes\VoteController;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\AdminSMSController;
+use App\Http\Controllers\EvacRouteController;
 use App\Http\Controllers\MediaCleanupController;
 
 Route::get('/test', function () {
@@ -66,6 +67,9 @@ Route::post('/sensor-logs', [SensorLogController::class, 'store']);
 Route::post('/email/resend-verification', [AuthController::class, 'resendVerification']);
 Route::post('/forgot-password', [AuthController::class, 'forgotPassword'])
     ->middleware('throttle:5,1');
+
+Route::get('/route', [EvacRouteController::class, 'getRoute']);
+
 // ---------------------------------------------------------------
 // PIN ROUTES
 // ---------------------------------------------------------------
