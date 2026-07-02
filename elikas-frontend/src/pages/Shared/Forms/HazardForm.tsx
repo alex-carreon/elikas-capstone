@@ -27,6 +27,7 @@ import {
 import FormSkeleton from "../../Skeletons/FormSkeleton";
 import { Separator } from "@/components/ui/separator";
 import DatePickerInput from "@/components/DateField";
+import { toast } from "sonner";
 
 const brouterBaseUrl = import.meta.env.VITE_BROUTER_BASE_URL;
 
@@ -114,7 +115,6 @@ function HazardForm() {
     setFileName(undefined);
 
     if (inputRef.current) {
-      console.log(inputRef.current);
       inputRef.current.value = "";
     }
   };
@@ -142,7 +142,6 @@ function HazardForm() {
       setLoading(true);
       const response = await api.get(`/flood-paths/${id}`);
       const floodDetails = await response.data.flood_path;
-      console.log("Details", floodDetails);
       setFloodDetails(floodDetails);
       setExpiry(floodDetails.expiry);
 
@@ -230,8 +229,6 @@ function HazardForm() {
       setRoutePoints(floodDetails.path);
       setFloodLevel(String(floodDetails.flood_levels.id));
       setDesc(floodDetails.description);
-
-      console.log(floodDetails.path);
     }
   }, [isEditable, floodDetails]);
 
@@ -274,7 +271,6 @@ function HazardForm() {
 
     const getRoute = async () => {
       const allPoints = [routePoints.at(-1)!, ...newRoutePoints];
-      console.log("All points update: ", allPoints);
       const lonlats = allPoints.map(([lat, lng]) => `${lng},${lat}`).join("|");
 
       try {
@@ -282,8 +278,6 @@ function HazardForm() {
           `${brouterBaseUrl}/brouter?lonlats=${lonlats}&profile=all&format=geojson`,
           { method: "GET" },
         );
-
-        console.log("Update routes: ", response);
 
         const data = await response.json();
         setNewSnapped(
@@ -301,8 +295,6 @@ function HazardForm() {
 
   const submit = (e: React.FormEvent) => {
     e.preventDefault();
-
-    console.log("Sending Submit: ", snapped);
 
     handleSubmit({
       e: e,
@@ -524,7 +516,9 @@ function HazardForm() {
                         </>
                       )
                     ) : (
-                      console.log("Can't find path")
+                      toast.error(
+                        "Flood details not found. Please try again later.",
+                      )
                     )}
                   </>
                 ) : (

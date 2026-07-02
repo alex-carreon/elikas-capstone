@@ -33,7 +33,7 @@ class DeleteEvacuationAreaController extends Controller
                 ], 404);
             }
 
-            if ($user->role_id == 3 && $pin->social_element?->user_id != $user->id) {
+            if ($user->role_id != 1 && $pin->social_element?->user_id != $user->id) {
                 return response()->json([
                     'error' => 'Forbidden. You may only deactivate your own evacuation area pins'
                 ], 403);
