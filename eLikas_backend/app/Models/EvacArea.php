@@ -28,14 +28,14 @@ class EvacArea extends Model implements Auditable
         'for_reg_flood'      => 'bool',
         'for_heavy_flood'    => 'bool',
         'has_accom'          => 'bool',
-        'toilet_count'       => 'int',
-        'kitchen_count'      => 'int',
+        'toilet_count'       => 'integer|nullable',
+        'kitchen_count'      => 'integer|nullable',
         'has_DRRMO'          => 'bool',
         'has_health'         => 'bool',
         'pwd_friendly'       => 'bool',
         'has_catchment'      => 'bool',
-        'child_prayer_count' => 'int',
-        'breastfeed_count'   => 'int',
+        'child_prayer_count' => 'integer|nullable',
+        'breastfeed_count'   => 'integer|nullable',
         'expiry'             => 'datetime',
     ];
 
