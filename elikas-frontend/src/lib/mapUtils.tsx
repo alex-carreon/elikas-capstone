@@ -321,7 +321,7 @@ export function EvacRouting({
 
     const getRoutes = async () => {
   try {
-    // 1. Map to exact names required by EvacRouteController's $request->validate()
+    // Map to requirements of EvacRouteController validation
     const queryParams = new URLSearchParams({
       start_lon: userPosition.lng.toString(),
       start_lat: userPosition.lat.toString(),
@@ -329,13 +329,12 @@ export function EvacRouting({
       end_lat: selectedPin.lat.toString(),
     });
 
-    // 2. Route directly to your local Laravel API backend instead of BRouter directly
-    // Assuming api.js exposes base configuration or handles authorization headers
+    // Route directly to new API endpoint
     const response = await fetch(`${apiBaseUrl}/route?${queryParams.toString()}`, {
       method: "GET",  
       headers: {
         "Accept": "application/json",
-        // Include default application headers if required by your middleware stack
+        // Include default application headers if required by middleware
       }
     });
 
@@ -347,7 +346,7 @@ export function EvacRouting({
 
     const data = await response.json();
     
-    // 3. Map standard GeoJSON geometry back to Leaflet [lat, lon] array structure
+    // Map standard GeoJSON to [lat, lon] array structure
     if (data.features && data.features.length > 0) {
       const points: [number, number][] =
         data.features[0].geometry.coordinates.map(
