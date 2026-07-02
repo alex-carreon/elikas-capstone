@@ -1,6 +1,5 @@
 import { useRef, useEffect, useState, type SetStateAction } from "react";
 import { TileLayer, useMap, CircleMarker } from "react-leaflet";
-import "leaflet-routing-machine";
 import {
   EvacRouting,
   PinMarking,
