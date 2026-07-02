@@ -4,6 +4,7 @@ import svgr from "vite-plugin-svgr";
 import tailwindcss from "@tailwindcss/vite";
 import path from "path";
 import { VitePWA } from "vite-plugin-pwa";
+import { visualizer } from "rollup-plugin-visualizer";
 
 // https://vite.dev/config/
 export default defineConfig({
@@ -100,6 +101,12 @@ export default defineConfig({
           },
         ],
       },
+    }),
+    visualizer({
+      open: true, // auto-opens the report in your browser after build
+      gzipSize: true, // shows gzipped size, which is what actually matters over network
+      brotliSize: true,
+      filename: "dist/stats.html",
     }),
   ],
   resolve: {
