@@ -339,23 +339,17 @@ function Pins() {
     const controller = new AbortController();
 
     try {
+      setLoading(true);
+
       if (!isEvac) {
-        setLoading(true);
         await getHazards(controller.signal);
-      }
-
-      if (isEvac && activeEvac) {
-        setLoading(true);
+      } else if (activeEvac) {
         await getActivePins(controller.signal);
-      }
-
-      if (isEvac && !activeEvac) {
-        setLoading(true);
+      } else if (isEvac && !activeEvac) {
         await getInactivePins(controller.signal);
       }
 
       if (flaggedCom) {
-        setLoading(true);
         await getFlaggedComments(controller.signal);
       }
     } catch (err: any) {
@@ -632,7 +626,7 @@ function Pins() {
                       <InputGroupAddon align="inline-end">
                         <Search
                           onClick={() => {
-                            activeEvac ? getActivePins() : getInactivePins();
+                            getFiltered();
                           }}
                           id="Admin_PinsEvacSearchBtn"
                         />
