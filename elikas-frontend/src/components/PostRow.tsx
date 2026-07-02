@@ -202,6 +202,8 @@ function PostRow({
           reason_id: reason,
         });
 
+        console.log(response);
+
         toast.promise(response, {
           loading: "Flagging this comment...",
           success:
@@ -212,7 +214,13 @@ function PostRow({
             ) {
               return "A reason is required to report a comment.";
             }
-            return "An error ocurred. Please try again.";
+            if (
+              err.response.data.message ===
+              "You cannot flag your own flood path."
+            ) {
+              return "You cannot flag your own flood path.";
+            }
+            return "An error occurred. Please try again.";
           },
           position: "top-center",
         });
@@ -270,6 +278,7 @@ function PostRow({
             contentId="Drawer_ReportDialogContent"
             closeId="Drawer_ReportDialogClose"
             actionId="Drawer_ReportDialogSubmit"
+            disabled={report}
           >
             {reasonLoad ? (
               <div className="flex flex-col gap-4">
