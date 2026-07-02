@@ -14,8 +14,9 @@
 ">
 
 @php
-    $diffInHours = now()->diffInHours($floodPath->expiry, false);
-    $daysRemaining = max(0, floor($diffInHours / 24));
+    $totalHours = max(0, floor(now()->diffInHours($floodPath->expiry, false)));
+    $days = intdiv($totalHours, 24);
+    $hours = $totalHours % 24;
 @endphp
 
 <table width="100%" cellpadding="0" cellspacing="0" border="0">
@@ -94,12 +95,16 @@
                     font-size:14px;
                     display:inline-block;
                 ">
-                    @if($diffInHours <= 0)
+                    @if($totalHours <= 0)
                         ⏳ Expired
-                    @elseif($diffInHours < 24)
-                        ⏳ {{ $diffInHours }} Hour{{ $diffInHours == 1 ? '' : 's' }} Remaining
+                    @elseif($days > 0)
+                        ⏳ {{ $days }} Day{{ $days == 1 ? '' : 's' }}
+                        @if($hours > 0)
+                            {{ $hours }} Hour{{ $hours == 1 ? '' : 's' }}
+                        @endif
+                        Remaining
                     @else
-                        ⏳ {{ $daysRemaining }} Day{{ $daysRemaining == 1 ? '' : 's' }} Remaining
+                        ⏳ {{ $hours }} Hour{{ $hours == 1 ? '' : 's' }} Remaining
                     @endif
                 </span>
             </div>
@@ -170,7 +175,7 @@
             <!-- CTA Button -->
             <div style="text-align:center; margin:35px 0;">
 
-                <a href="http://localhost:5173/"
+                <a href="https://elikas.solarflare-tilapia.ts.net/"
                    style="
                    background:#6A2E0A;
                    color:#ffffff;
