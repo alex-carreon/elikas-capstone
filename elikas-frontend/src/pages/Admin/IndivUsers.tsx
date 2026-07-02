@@ -330,7 +330,7 @@ function IndivUsers() {
                     onChange={(e) => setMessageFilter(e.target.value)}
                   ></InputGroupInput>
                   <InputGroupAddon align="inline-end">
-                    <Search onClick={() => getFeedbacks()} />
+                    <Search onClick={() => getFiltered()} />
                   </InputGroupAddon>
                 </InputGroup>
                 <CollapsibleTrigger

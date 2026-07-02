@@ -527,10 +527,18 @@ function EvacPin() {
     formData.append("has_health", hasHealth ? "1" : "0");
     formData.append("pwd_friendly", pwdFriendly ? "1" : "0");
     formData.append("has_catchment", hasCatchment ? "1" : "0");
-    formData.append("toilet_count", String(toiletCount));
-    formData.append("kitchen_count", String(kitchenCount));
-    formData.append("child_prayer_count", String(childPrayerCount));
-    formData.append("breastfeed_count", String(breastfeedCount));
+    if (toiletCount !== 0 || toiletCount !== null) {
+      formData.append("toilet_count", String(toiletCount));
+    }
+    if (kitchenCount !== 0 || kitchenCount !== null) {
+      formData.append("kitchen_count", String(kitchenCount));
+    }
+    if (childPrayerCount !== 0 || childPrayerCount !== null) {
+      formData.append("child_prayer_count", String(childPrayerCount));
+    }
+    if (breastfeedCount !== 0 || breastfeedCount !== null) {
+      formData.append("breastfeed_count", String(breastfeedCount));
+    }
     formData.append("other_facilities", other);
     formData.append("contact_person", contactPerson);
     formData.append("contact_number", contactNumber);
@@ -738,6 +746,11 @@ function EvacPin() {
     }
   }, []);
 
+  useEffect(() => {
+    console.log(hasToilet);
+    console.log(editedToilet);
+  }, [hasToilet]);
+
   return loading ? (
     <div className="w-full h-full flex flex-col items-center p-12 mt-8 mb-2 gap-4">
       <FormSkeleton />
@@ -853,13 +866,13 @@ function EvacPin() {
           {existingPin ? null : (
             <>
               <p
-                className="text-align italic text-sm max-w-sm text-center"
+                className="italic text-sm max-w-sm text-center"
                 style={{ color: colors.label }}
               >
                 Help others find safe temporary shelter.
               </p>
               <b
-                className="text-align italic text-sm max-w-sm text-center"
+                className="italic text-sm max-w-sm text-center"
                 style={{ color: colors.label }}
               >
                 All marked with an * are required fields.
