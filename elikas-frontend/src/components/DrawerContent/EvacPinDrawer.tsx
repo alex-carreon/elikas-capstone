@@ -488,7 +488,7 @@ function EvacPinDrawer({
                 <img src={DrawerIcon} className="w-10" />
                 <div>
                   <div className="flex flex-row">
-                    <p className="text-lg font-semibold">
+                    <p className="text-lg font-semibold text-left">
                       {evacPinDetails?.name}
                     </p>
                     {evacPinDetails?.verified_by.gov_op_id !== null ? (

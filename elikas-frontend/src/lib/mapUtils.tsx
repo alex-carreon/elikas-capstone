@@ -215,12 +215,21 @@ export function NearestRouting({
 
     const getRoutes = async () => {
       try {
-        const destination = [nearest.lng, nearest.lat];
-        const user = [userPosition.lng, userPosition.lat];
+        const queryParams = new URLSearchParams({
+          start_lon: userPosition.lng.toString(),
+          start_lat: userPosition.lat.toString(),
+          end_lon: nearest.lng.toString(),
+          end_lat: nearest.lat.toString(),
+        });
 
         const response = await fetch(
-          `${brouterBaseUrl}/brouter?lonlats=${user}|${destination}&profile=trekking&format=geojson`,
-          { method: "GET" },
+          `${apiBaseUrl}/route?${queryParams.toString()}`,
+          {
+            method: "GET",
+            headers: {
+              Accept: "application/json",
+            },
+          },
         );
 
         if (!response) {
@@ -320,46 +329,52 @@ export function EvacRouting({
     }
 
     const getRoutes = async () => {
-  try {
-    // Map to requirements of EvacRouteController validation
-    const queryParams = new URLSearchParams({
-      start_lon: userPosition.lng.toString(),
-      start_lat: userPosition.lat.toString(),
-      end_lon: selectedPin.lng.toString(),
-      end_lat: selectedPin.lat.toString(),
-    });
+      try {
+        // Map to requirements of EvacRouteController validation
+        const queryParams = new URLSearchParams({
+          start_lon: userPosition.lng.toString(),
+          start_lat: userPosition.lat.toString(),
+          end_lon: selectedPin.lng.toString(),
+          end_lat: selectedPin.lat.toString(),
+        });
 
-    // Route directly to new API endpoint
-    const response = await fetch(`${apiBaseUrl}/route?${queryParams.toString()}`, {
-      method: "GET",  
-      headers: {
-        "Accept": "application/json",
-        // Include default application headers if required by middleware
-      }
-    });
-
-    if (!response.ok) {
-      const errorData = await response.json();
-      console.error("Evacuation routing failed validation or backend error:", errorData);
-      return;
-    }
-
-    const data = await response.json();
-    
-    // Map standard GeoJSON to [lat, lon] array structure
-    if (data.features && data.features.length > 0) {
-      const points: [number, number][] =
-        data.features[0].geometry.coordinates.map(
-          ([lon, lat]: [number, number]) => [lat, lon],
+        // Route directly to new API endpoint
+        const response = await fetch(
+          `${apiBaseUrl}/route?${queryParams.toString()}`,
+          {
+            method: "GET",
+            headers: {
+              Accept: "application/json",
+              // Include default application headers if required by middleware
+            },
+          },
         );
-      setPoints(points);
-    } else {
-      console.warn("No geometric features returned in routing response.");
-    }
+
+        if (!response.ok) {
+          const errorData = await response.json();
+          console.error(
+            "Evacuation routing failed validation or backend error:",
+            errorData,
+          );
+          return;
+        }
+
+        const data = await response.json();
+
+        // Map standard GeoJSON to [lat, lon] array structure
+        if (data.features && data.features.length > 0) {
+          const points: [number, number][] =
+            data.features[0].geometry.coordinates.map(
+              ([lon, lat]: [number, number]) => [lat, lon],
+            );
+          setPoints(points);
+        } else {
+          console.warn("No geometric features returned in routing response.");
+        }
       } catch (err: any) {
         console.log("Internal gateway routing error:", err.message);
       }
-  };
+    };
 
     getRoutes();
   }, [userPosition, selectedPin]);
