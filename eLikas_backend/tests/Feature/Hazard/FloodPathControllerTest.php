@@ -721,6 +721,7 @@ test('addMedia requires a file', function () {
     $response->assertJsonValidationErrors(['file']);
 });
 
+// TEST 9.4
 test('addMedia blocks individual from adding media to another users path', function () {
 
     $this->mock(MediaUploadService::class);
