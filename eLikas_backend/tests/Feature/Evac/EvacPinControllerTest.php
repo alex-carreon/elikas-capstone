@@ -16,7 +16,6 @@ use MatanYadaev\EloquentSpatial\Objects\Point;
  *
  * Controllers covered:
  *   GetEvacAreasController       GET /api/pins, /api/pins/my-coords,
- *                                    /api/evacpins/users/coords,
  *                                    /api/evacpins/users, /api/evacpins/users/history,
  *                                    /api/admin/pins
  *   GetEvacAreaDetailsController GET /api/pins/{id}
@@ -125,6 +124,7 @@ function baseStorePayload(array $overrides = []): array
 
 // ── CAPACITY LEVELS ───────────────────────────────────────────────────────────
 
+// Test 11.1
 test('capacity levels index returns all levels publicly', function () {
 
     $response = $this->getJson('/api/capacity-levels');
@@ -138,6 +138,7 @@ test('capacity levels index returns all levels publicly', function () {
 
 // ── EVAC TYPES ────────────────────────────────────────────────────────────────
 
+// TEST 11.2
 test('evac types index returns all types publicly', function () {
 
     $response = $this->getJson('/api/evac-types');
@@ -151,6 +152,7 @@ test('evac types index returns all types publicly', function () {
 
 // ── GET /api/pins (public, optional auth) ─────────────────────────────────────
 
+// TEST 7.1
 test('pins index is accessible as guest', function () {
 
     $response = $this->getJson('/api/pins');
@@ -160,6 +162,7 @@ test('pins index is accessible as guest', function () {
     $response->assertJsonStructure(['count', 'pins']);
 });
 
+// TEST 7.2
 test('pins index is accessible with token', function () {
 
     $token = individualToken();
@@ -178,6 +181,7 @@ test('pins index is accessible with token', function () {
     ]);
 });
 
+// TEST 7.3
 test('pins index marks my_pin correctly for owner', function () {
 
     $token = individualToken();
@@ -196,6 +200,7 @@ test('pins index marks my_pin correctly for owner', function () {
     expect($match['my_pin'])->toBeTrue();
 });
 
+// TEST 7.4
 test('pins index returns only active pins by default', function () {
 
     $user        = evacUserForUid(env('FIREBASE_TEST_VERIFIED_UID'));
@@ -213,6 +218,7 @@ test('pins index returns only active pins by default', function () {
     expect($ids)->not->toContain($deactivated->id);
 });
 
+// TEST 7.5
 test('pins index with active=false returns only inactive pins', function () {
 
     $user        = evacUserForUid(env('FIREBASE_TEST_VERIFIED_UID'));
@@ -230,6 +236,7 @@ test('pins index with active=false returns only inactive pins', function () {
     expect($ids)->not->toContain($activePin->id);
 });
 
+// TEST 7.6
 test('pins index rejects invalid active value', function () {
 
     $response = $this->getJson('/api/pins?active=maybe');
@@ -239,6 +246,7 @@ test('pins index rejects invalid active value', function () {
     $response->assertJson(['error' => 'Invalid active value. Use true or false.']);
 });
 
+// TEST 7.7
 test('pins index filters by role', function () {
 
     $indivUser = evacUserForUid(env('FIREBASE_TEST_VERIFIED_UID'));
@@ -257,6 +265,7 @@ test('pins index filters by role', function () {
     expect($ids)->not->toContain($adminPin->id);
 });
 
+// TEST 7.8
 test('pins index rejects invalid role value', function () {
 
     $response = $this->getJson('/api/pins?role=superuser');
@@ -266,6 +275,7 @@ test('pins index rejects invalid role value', function () {
     $response->assertJson(['error' => 'Invalid role filter. Accepted values: admin, govop, indiv']);
 });
 
+// TEST 7.9
 test('pins index filters by is_persistent', function () {
 
     $user       = evacUserForUid(env('FIREBASE_TEST_VERIFIED_UID'));
@@ -282,6 +292,7 @@ test('pins index filters by is_persistent', function () {
     expect($ids)->not->toContain($adhoc->id);
 });
 
+// TEST 7.10
 test('pins index filters by barangay', function () {
 
     $user      = evacUserForUid(env('FIREBASE_TEST_VERIFIED_UID'));
@@ -300,6 +311,7 @@ test('pins index filters by barangay', function () {
     expect($ids)->not->toContain($pin2->id);
 });
 
+// TEST 7.11
 test('pins index filters by search term', function () {
 
     $user = evacUserForUid(env('FIREBASE_TEST_VERIFIED_UID'));
@@ -315,6 +327,7 @@ test('pins index filters by search term', function () {
 
 // ── GET /api/pins/my-coords (auth required, role:1,2,3) ───────────────────────
 
+// TEST 7.12
 test('my-coords returns only the authenticated users pins', function () {
 
     $token     = individualToken();
@@ -336,6 +349,7 @@ test('my-coords returns only the authenticated users pins', function () {
     expect($ids)->not->toContain($otherPin->id);
 });
 
+// Test 7.13
 test('my-coords response shape includes status and location fields', function () {
 
     $token = individualToken();
@@ -357,6 +371,7 @@ test('my-coords response shape includes status and location fields', function ()
     ]);
 });
 
+// Test 7.14
 test('my-coords requires authentication', function () {
 
     $response = $this->getJson('/api/pins/my-coords');
@@ -364,36 +379,9 @@ test('my-coords requires authentication', function () {
     $response->assertStatus(401);
 });
 
-// ── GET /api/evacpins/users/coords (public, optional auth) ───────────────────
-
-test('role indiv coords is publicly accessible', function () {
-
-    $response = $this->getJson('/api/evacpins/users/coords');
-
-    $response->assertOk();
-
-    $response->assertJsonStructure(['count', 'pins']);
-});
-
-test('role indiv coords only returns active pins', function () {
-
-    $user        = evacUserForUid(env('FIREBASE_TEST_VERIFIED_UID'));
-    $activePin   = createEvacPin($user);
-    $deactivated = createEvacPin($user);
-    $deactivated->social_element->update(['deactivated_at' => now()]);
-
-    $response = $this->getJson('/api/evacpins/users/coords');
-
-    $response->assertOk();
-
-    $ids = collect($response->json('pins'))->pluck('id');
-
-    expect($ids)->toContain($activePin->id);
-    expect($ids)->not->toContain($deactivated->id);
-});
-
 // ── GET /api/evacpins/users & /api/evacpins/users/history (auth required) ─────
 
+// Test 12.1
 test('evac history requires authentication', function () {
 
     $response = $this->getJson('/api/evacpins/users');
@@ -401,6 +389,7 @@ test('evac history requires authentication', function () {
     $response->assertStatus(401);
 });
 
+// Test 12.2
 test('evac history returns only the authenticated users pins', function () {
 
     $token     = individualToken();
@@ -422,6 +411,7 @@ test('evac history returns only the authenticated users pins', function () {
     expect($ids)->not->toContain($otherPin->id);
 });
 
+// Test 12.3
 test('evac history response shape includes deactivation and expiry fields', function () {
 
     $token = individualToken();
@@ -447,6 +437,7 @@ test('evac history response shape includes deactivation and expiry fields', func
     ]);
 });
 
+// Test 12.4
 test('evac history filters by is_persistent', function () {
 
     $token      = individualToken();
