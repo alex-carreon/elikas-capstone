@@ -22,6 +22,34 @@ class StoreEvacuationAreaController extends Controller
 
     public function storeEvacuationArea(Request $request)
     {
+        $request->validate([
+            'name' => 'required|string|max:50',
+            'address' => 'required|string',
+            'lat' => 'required|numeric|between:-90,90',
+            'lng' => 'required|numeric|between:-180,180',
+            'location_id' => 'required|integer|exists:Locations,id',
+            'area_type' => 'required|integer|exists:EvacTypes,id',
+            'capacity_level' => 'required|integer|exists:CapacityLevels,id',
+            'description' => 'nullable|string',
+            'is_persistent' => 'boolean',
+            'for_reg_flood' => 'boolean',
+            'for_heavy_flood' => 'boolean',
+            'has_accom' => 'boolean',
+            'has_DRRMO' => 'boolean',
+            'has_health' => 'boolean',
+            'pwd_friendly' => 'boolean',
+            'has_catchment' => 'boolean',
+            'toilet_count' => 'nullable|integer|min:0',
+            'kitchen_count' => 'nullable|integer|min:0',
+            'child_prayer_count' => 'nullable|integer|min:0',
+            'breastfeed_count' => 'nullable|integer|min:0',
+            'other_facilities' => 'nullable|string',
+            'contact_person' => 'nullable|string|max:100',
+            'contact_number' => 'nullable|string|max:15',
+           'expiry' => 'nullable|date|after:now',
+            'file' => ['nullable', 'file', 'image', 'mimes:jpg,jpeg,png', 'max:8192'],
+        ]);
+
         $uploadedPath = null;
 
         try {
@@ -32,34 +60,6 @@ class StoreEvacuationAreaController extends Controller
                     'error' => 'Authentication required to create evacuation area pins'
                 ], 401);
             }
-
-            $request->validate([
-                'name' => 'required|string|max:50',
-                'address' => 'required|string',
-                'lat' => 'required|numeric|between:-90,90',
-                'lng' => 'required|numeric|between:-180,180',
-                'location_id' => 'required|integer|exists:Locations,id',
-                'area_type' => 'required|integer|exists:EvacTypes,id',
-                'capacity_level' => 'required|integer|exists:CapacityLevels,id',
-                'description' => 'nullable|string',
-                'is_persistent' => 'boolean',
-                'for_reg_flood' => 'boolean',
-                'for_heavy_flood' => 'boolean',
-                'has_accom' => 'boolean',
-                'has_DRRMO' => 'boolean',
-                'has_health' => 'boolean',
-                'pwd_friendly' => 'boolean',
-                'has_catchment' => 'boolean',
-                'toilet_count' => 'nullable|integer|min:0',
-                'kitchen_count' => 'nullable|integer|min:0',
-                'child_prayer_count' => 'nullable|integer|min:0',
-                'breastfeed_count' => 'nullable|integer|min:0',
-                'other_facilities' => 'nullable|string',
-                'contact_person' => 'nullable|string|max:100',
-                'contact_number' => 'nullable|string|max:15',
-                'expiry' => 'nullable|date|after:now',
-                'file' => ['nullable', 'file', 'image', 'mimes:jpg,jpeg,png', 'max:8192'],
-            ]);
 
             $expiry = $request->expiry
                 ? Carbon::parse($request->expiry, 'Asia/Manila')->utc()
