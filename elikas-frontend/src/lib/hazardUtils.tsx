@@ -126,6 +126,8 @@ export const handleSubmit = async ({
       },
     });
 
+    console.log(response);
+
     toast.promise(response, {
       loading: "Adding your pin to the map...",
       success: "Pin successfully added!",
@@ -135,6 +137,12 @@ export const handleSubmit = async ({
           "The expiry field must be a date after now."
         ) {
           return "The expiry date must be a date after now.";
+        }
+        if (
+          err.response.data.message ===
+          "This flood path overlaps an existing active flood path."
+        ) {
+          return "The flood path overlaps an existing flood path.";
         }
         return "An error occurred while creating the pin. Please make sure that all required fields are filled.";
       },
@@ -238,6 +246,12 @@ export const handleUpdate = async ({
         "The expiry field must be a date after now."
       ) {
         return "The expiry date must be a date after now.";
+      }
+      if (
+        err.response.data.message ===
+        "This flood path overlaps an existing active flood path."
+      ) {
+        return "The flood path overlaps an existing flood path.";
       }
       return "There was an error updating your flood hazard";
     },

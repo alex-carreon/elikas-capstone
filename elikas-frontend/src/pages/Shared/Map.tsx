@@ -76,7 +76,7 @@ function Map() {
   const handleNearestRoute = () => {
     if (locationFound) {
       setShowNearestRouteTrigger((prev) => prev + 1);
-    } else console.log("Location not found");
+    } else toast.error("Please enable location to find a route.");
   };
 
   const handleSnoozeSingle = async (id: number, e: React.FormEvent) => {
