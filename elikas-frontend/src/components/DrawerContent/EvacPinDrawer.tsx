@@ -529,7 +529,7 @@ function EvacPinDrawer({
                 </p>
               )}
               <p className="text-left text-xs italic">
-                Expires in: {daysLeft} days
+                Expires in: {daysLeft === 0 ? "Today" : `${daysLeft} days`}
               </p>
               <p className="text-left text-xs italic">
                 Posted By: {evacPinDetails?.posted_by.username}

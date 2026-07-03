@@ -1,5 +1,5 @@
-import { Fragment, useEffect, useState } from "react";
-import { useMap, Marker, Polyline } from "react-leaflet";
+import { Fragment, useEffect, useRef, useState } from "react";
+import { useMap, Marker, Polyline, Popup } from "react-leaflet";
 import leaflet, { point, type LeafletMouseEvent } from "leaflet";
 import { LatLng, divIcon } from "leaflet";
 import colors from "@/constants/colors";
@@ -16,6 +16,7 @@ import api from "@/api";
 import { useMapFilterContext } from "@/context/MapFilterContext";
 import { type Dispatch, type SetStateAction } from "react";
 import { useUserContext } from "@/context/AuthContext";
+import type { Polyline as LeafletPolyline } from "leaflet";
 
 const brouterBaseUrl = import.meta.env.VITE_BROUTER_BASE_URL;
 const apiBaseUrl = import.meta.env.VITE_API_BASE_URL;
@@ -162,8 +163,6 @@ function getNearestWaypoint(
   let minDist = Infinity;
 
   waypoints.forEach((point: any) => {
-    console.log(point.lat);
-    console.log(point.long);
     const dist = userLatLng.distanceTo(leaflet.latLng(point.lat, point.lng));
     if (dist < minDist) {
       minDist = dist;
@@ -178,14 +177,22 @@ export function NearestRouting({
   onPinSelected,
   userPosition,
   nearestRouteTrigger,
+  setClear,
 }: {
   onPinSelected: any;
   userPosition: LatLng | null;
   showNearestRoute: boolean;
   nearestRouteTrigger: number;
+  setClear: React.Dispatch<React.SetStateAction<boolean>>;
 }) {
   const [points, setPoints] = useState<[number, number][]>([]);
   const [evacPins, setEvacPins] = useState<EvacPin[]>([]);
+  const [time, setTime] = useState("");
+  const [distance, setDistance] = useState("");
+
+  const map = useMap();
+
+  const polylineRef = useRef<LeafletPolyline>(null);
 
   useEffect(() => {
     const controller = new AbortController();
@@ -229,61 +236,13 @@ export function NearestRouting({
           },
         );
 
-        if (!response) {
-          toast.error("Failed to find route");
-          return;
-        } else toast.success("Found you a route!");
-
-        const data = await response.json();
-        const points: [number, number][] =
-          data.features[0].geometry.coordinates.map(
-            ([lon, lat]: [number, number]) => [lat, lon],
-          );
-        setPoints(points);
-      } catch (err: any) {
-        console.log(err.message);
-      }
-    };
-
-    getRoutes();
-  }, [nearestRouteTrigger, evacPins]);
-
-  return <Polyline positions={points} weight={6} color="#5F80AA" />;
-}
-
-export function Routing({
-  onPinSelected,
-  selectedPin,
-  userPosition,
-}: {
-  onPinSelected: any;
-  selectedPin: any;
-  userPosition: LatLng | null; // add this
-}) {
-  const [points, setPoints] = useState<[number, number][]>([]);
-
-  //   For Routing
-  useEffect(() => {
-    if (!userPosition || !selectedPin) return;
-
-    const matchedPin = selectedPin;
-
-    if (matchedPin) {
-      onPinSelected(matchedPin);
-    }
-
-    const getRoutes = async () => {
-      try {
-        const destination = [selectedPin.lng, selectedPin.lat];
-        const user = [userPosition.lng, userPosition.lat];
-
-        const response = await fetch(
-          `${brouterBaseUrl}/brouter?lonlats=${user}|${destination}&profile=trekking&format=geojson`,
-          { method: "GET" },
-        );
+        console.log(response);
 
         if (!response.ok) {
-          console.error("Fetch failed");
+          toast.error(
+            "Failed to find route. All paths may be blocked by unpassable flooding.",
+          );
+          setClear(true);
           return;
         }
 
@@ -292,28 +251,64 @@ export function Routing({
           data.features[0].geometry.coordinates.map(
             ([lon, lat]: [number, number]) => [lat, lon],
           );
+        const seconds = data.features[0].properties["total-time"];
+        setTime(String(Math.round(Number(seconds) / 60)));
+        setDistance(
+          String(
+            Math.round(
+              Number(data.features[0].properties["track-length"] / 1000) * 100,
+            ) / 100,
+          ),
+        );
         setPoints(points);
       } catch (err: any) {
-        console.log(err.message);
+        console.log(err.response);
       }
     };
 
     getRoutes();
-  }, [userPosition, selectedPin]);
+  }, [nearestRouteTrigger, evacPins]);
 
-  return <Polyline positions={points} weight={6} color="#5F80AA" />;
+  useEffect(() => {
+    if (points.length < 2) return;
+    map.fitBounds(points, { padding: [40, 40] });
+  }, [points, map]);
+
+  useEffect(() => {
+    if (points.length < 2 || !time) return;
+    polylineRef.current?.openPopup();
+  }, [points, time]);
+
+  return (
+    <Polyline ref={polylineRef} positions={points} weight={6} color="#FF8500">
+      <Popup position={points[Math.floor(points.length / 2)]}>
+        <div>
+          <p> {String(time)} minutes away</p>
+          <p> {String(distance)} km</p>
+        </div>
+      </Popup>
+    </Polyline>
+  );
 }
 
 export function EvacRouting({
   onPinSelected,
   selectedPin,
   userPosition,
+  setClear,
 }: {
   onPinSelected: any;
   selectedPin: any;
-  userPosition: LatLng | null; // add this
+  userPosition: LatLng | null;
+  setClear: React.Dispatch<React.SetStateAction<boolean>>;
 }) {
   const [points, setPoints] = useState<[number, number][]>([]);
+  const [time, setTime] = useState("");
+  const [distance, setDistance] = useState("");
+
+  const polylineRef = useRef<LeafletPolyline>(null);
+
+  const map = useMap();
 
   //   For Routing
   useEffect(() => {
@@ -348,11 +343,10 @@ export function EvacRouting({
         );
 
         if (!response.ok) {
-          const errorData = await response.json();
-          console.error(
-            "Evacuation routing failed validation or backend error:",
-            errorData,
+          toast.error(
+            "Failed to find route. All paths may be blocked by unpassable flooding.",
           );
+          setClear(true);
           return;
         }
 
@@ -364,7 +358,18 @@ export function EvacRouting({
             data.features[0].geometry.coordinates.map(
               ([lon, lat]: [number, number]) => [lat, lon],
             );
+          const seconds = data.features[0].properties["total-time"];
+
           setPoints(points);
+          setTime(String(Math.round(Number(seconds) / 60)));
+          setDistance(
+            String(
+              Math.round(
+                Number(data.features[0].properties["track-length"] / 1000) *
+                  100,
+              ) / 100,
+            ),
+          );
         } else {
           console.warn("No geometric features returned in routing response.");
         }
@@ -376,7 +381,24 @@ export function EvacRouting({
     getRoutes();
   }, [userPosition, selectedPin]);
 
-  return <Polyline positions={points} weight={6} color="#5F80AA" />;
+  useEffect(() => {
+    if (points.length < 2) return;
+    map.fitBounds(points, { padding: [40, 40] });
+  }, [points, map]);
+
+  useEffect(() => {
+    if (points.length < 2 || !time) return;
+    polylineRef.current?.openPopup();
+  }, [points, time]);
+
+  return (
+    <Polyline ref={polylineRef} positions={points} weight={6} color="#5F80AA">
+      <Popup position={points[Math.floor(points.length / 2)]}>
+        <p>{String(time)} minutes away</p>
+        <p>{String(distance)} km</p>
+      </Popup>
+    </Polyline>
+  );
 }
 
 // Add properties based on the pin info from db
@@ -400,13 +422,13 @@ export function PinMarking({ onPinClick }: { onPinClick: (pin: any) => void }) {
   const icon = divIcon({
     html: renderToString(<PinIcon width={50} height={50} />),
     className: "",
-    iconAnchor: [12, 12],
+    iconAnchor: [25, 50],
   });
 
   const myIcon = divIcon({
     html: renderToString(<MyPinIcon width={50} height={50} />),
     className: "",
-    iconAnchor: [12, 12],
+    iconAnchor: [25, 50],
   });
 
   const getData = async () => {
@@ -815,77 +837,9 @@ export function MapClickHandler({
     };
   }, [map]);
 
-  // localStorage.setItem("clickedPin", clickedLoc.JSON.stringify);
-
   return clickedLoc ? <Marker position={clickedLoc} icon={icon} /> : null;
 }
 
-// Calculates distance between two coordinates in meters
-const haversineDistance = (
-  [lat1, lng1]: [number, number],
-  [lat2, lng2]: [number, number],
-): number => {
-  const R = 6371000;
-  const dLat = ((lat2 - lat1) * Math.PI) / 180;
-  const dLng = ((lng2 - lng1) * Math.PI) / 180;
-  const a =
-    Math.sin(dLat / 2) ** 2 +
-    Math.cos((lat1 * Math.PI) / 180) *
-      Math.cos((lat2 * Math.PI) / 180) *
-      Math.sin(dLng / 2) ** 2;
-  return R * 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a));
-};
-
-// Checks the surroundings of a point in meters for road validation
-export const snapAllPointsToRoads = async (
-  points: [number, number][],
-): Promise<[number, number][] | null> => {
-  if (points.length < 2) return points;
-
-  const coords = points.map(([lat, lng]) => `${lng},${lat}`).join(";");
-  const radiuses = points.map(() => 3).join(";");
-
-  try {
-    const res = await fetch(
-      `https://router.project-osrm.org/match/v1/driving/${coords}` +
-        `?radiuses=${radiuses}&overview=full&geometries=geojson&steps=false`,
-    );
-    const data = await res.json();
-
-    if (data.code !== "Ok" || !data.matchings?.length) {
-      return null;
-    }
-
-    if (data.code === "NoMatch") {
-      console.log("Went off-road");
-      return null;
-    }
-
-    const offRoadPoints = data.tracepoints.filter((tp: any, i: number) => {
-      if (tp === null) return true;
-      const snappedLat = tp.location[1];
-      const snappedLng = tp.location[0];
-      const [origLat, origLng] = points[i];
-      const dist = haversineDistance(
-        [origLat, origLng],
-        [snappedLat, snappedLng],
-      );
-
-      return dist > 3;
-    });
-
-    if (offRoadPoints.length > 0) {
-      return points;
-    }
-
-    return points;
-  } catch (err) {
-    console.error("Snap error:", err);
-    return null;
-  }
-};
-
-// Add properties based on the pin info from db
 export function FormMapClickHandler({
   onPinClick,
   clickedLoc,
