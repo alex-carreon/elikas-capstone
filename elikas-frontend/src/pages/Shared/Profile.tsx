@@ -445,6 +445,7 @@ function Profile() {
                       inputType="text"
                       id="Profile_Username"
                       onSubmit={(e) => setNewUsername(e.target.value)}
+                      maxLength={50}
                     />
                   ) : (
                     <TextField
@@ -465,6 +466,7 @@ function Profile() {
                         value={firstName}
                         readonly={!isEditable}
                         onSubmit={(e) => setFirstName(e.target.value)}
+                        maxLength={50}
                       />
                       <TextField
                         label="Last Name"
@@ -474,6 +476,7 @@ function Profile() {
                         readonly={!isEditable}
                         value={lastName}
                         onSubmit={(e) => setLastName(e.target.value)}
+                        maxLength={50}
                       />
                     </>
                   )}
@@ -486,6 +489,7 @@ function Profile() {
                       readonly
                       value={email}
                       onSubmit={(e) => setEmail(e.target.value)}
+                      maxLength={50}
                     />
                     <ButtonComp
                       text="Change Email"
@@ -559,6 +563,7 @@ function Profile() {
                             setContactTouched(true);
                           }}
                           error={error}
+                          maxLength={12}
                         />
                       ) : (
                         <TextField
@@ -570,7 +575,7 @@ function Profile() {
                           }
                           inputType="text"
                           id="Profile_ContactNo"
-                          readonly={!isEditable}
+                          readonly
                           value={contact}
                         />
                       ))}

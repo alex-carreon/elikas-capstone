@@ -85,6 +85,7 @@ function ContactNo() {
                   onSubmit={(e) => setContact(e.target.value)}
                   isRequired
                   error={errors.contact}
+                  maxLength={12}
                 />
               </div>
             </div>

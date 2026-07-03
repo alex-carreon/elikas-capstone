@@ -65,6 +65,7 @@ function BrgyDetails() {
   const [cityId, setCityId] = useState(0);
   const [brgyLoad, setBrgyLoad] = useState(false);
   const [isCity, setIsCity] = useState(false);
+  const [disabled, setDisabled] = useState(false);
 
   const getGovopDetails = async (signal?: AbortSignal) => {
     try {
@@ -112,16 +113,19 @@ function BrgyDetails() {
 
     try {
       setLoading(true);
+      setDisabled(true);
       await getCity(controller.signal);
       await getGovopDetails(controller.signal);
     } catch (err: any) {
       if (err.name === "CanceledError") {
+        setDisabled(false);
         setLoading(false);
         return;
       }
       console.log(err);
     } finally {
       setLoading(false);
+      setDisabled(false);
     }
   };
 
@@ -129,6 +133,8 @@ function BrgyDetails() {
     e.preventDefault();
 
     try {
+      setDisabled(true);
+
       const response = api.patch(
         `/admin/users/${id}`,
         {
@@ -146,8 +152,6 @@ function BrgyDetails() {
         },
       );
 
-      console.log(response);
-
       if (!response) {
         console.log(response);
         return;
@@ -157,19 +161,24 @@ function BrgyDetails() {
         loading: "Updating this barangay user...",
         success: "Barangay user updated!",
         error: (err: any) => {
+          setDisabled(false);
           return err.response.data;
         },
         position: "top-center",
       });
       setIsEditable(false);
+      setDisabled(false);
       getGovopDetails();
     } catch (err: string | any) {
       console.log(err.response?.data);
+      setDisabled(false);
     }
   };
 
   const deacGovop = async () => {
     try {
+      setDisabled(true);
+
       const deacPromise = new Promise(async (resolve, reject) => {
         const response = await api.patch(`/admin/users/${id}/deactivate`, {
           headers: {
@@ -177,8 +186,6 @@ function BrgyDetails() {
             Authorization: `Bearer ${token}`,
           },
         });
-
-        console.log(response);
 
         const userDataDelete = await response.data;
 
@@ -198,6 +205,7 @@ function BrgyDetails() {
       });
     } catch (error) {
       console.error("Error during logout:", error);
+      setDisabled(false);
     }
   };
 
@@ -310,6 +318,8 @@ function BrgyDetails() {
           getGovopDetails();
         }}
         formId="Admin_GovopUpdateForm"
+        isDisabled={disabled}
+        isDeactivated={userData?.deactivated_at ? true : false}
       >
         {loading ? (
           <div className="flex justify-center">
@@ -336,6 +346,7 @@ function BrgyDetails() {
                 value={username}
                 readonly={!isEditable}
                 onSubmit={(e) => setUsername(e.target.value)}
+                maxLength={20}
               />
               <TextField
                 label="Email"
@@ -406,6 +417,7 @@ function BrgyDetails() {
                 value={pointPerson}
                 readonly={!isEditable}
                 onSubmit={(e) => setPointPerson(e.target.value)}
+                maxLength={100}
               />
               <TextField
                 label="Point person's position"
@@ -413,6 +425,7 @@ function BrgyDetails() {
                 id="Admin_GovopPointPositionField"
                 value={pointPosition}
                 readonly
+                maxLength={50}
               />
               <TextField
                 label="Created At"

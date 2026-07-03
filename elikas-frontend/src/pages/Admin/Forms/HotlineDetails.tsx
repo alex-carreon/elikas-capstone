@@ -51,6 +51,7 @@ function HotlineDetails() {
     const controller = new AbortController();
     try {
       setLoading(true);
+
       await getDetails(controller.signal);
     } catch (err: any) {
       if (err.name === "CanceledError") {

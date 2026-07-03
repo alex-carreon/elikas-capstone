@@ -103,15 +103,19 @@ function FlaggedDetails() {
 
     try {
       setLoading(true);
+      setDisabled(true);
+
       await getFloodDetails(controller.signal);
     } catch (err: any) {
       if (err.name === "CanceledError") {
         setLoading(false);
+        setDisabled(false);
         return;
       }
       console.log(err);
     } finally {
       setLoading(false);
+      setDisabled(false);
     }
   };
 
@@ -183,6 +187,7 @@ function FlaggedDetails() {
         updateClick={(e) => ignoreFlag(e)}
         deleteClick={(e) => rejectFlag(e)}
         isDisabled={disabled}
+        isDeactivated={pathDetails?.is_deactivated}
       >
         {loading ? (
           <div className="flex justify-center">
