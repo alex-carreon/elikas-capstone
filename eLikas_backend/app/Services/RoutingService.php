@@ -115,8 +115,10 @@ class RoutingService
         // Resolve the weight for the flood level, defaulting to a high penalty if unknown
         $weight = self::FLOOD_WEIGHTS[$row->level_name] ?? 10000;
 
-        //
+        // Build an array of comma-separated coordinates
         $points = $this->parseWkt($row->path_wkt);
+
+        // Return the polyline in the format expected by BRouter
         return "{$points},{$weight}";
     }
 
