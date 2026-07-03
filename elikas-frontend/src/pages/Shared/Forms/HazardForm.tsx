@@ -141,6 +141,7 @@ function HazardForm() {
       setHasUpdated(false);
       setLoading(true);
       const response = await api.get(`/flood-paths/${id}`);
+      console.log(response);
       const floodDetails = await response.data.flood_path;
       setFloodDetails(floodDetails);
       setExpiry(floodDetails.expiry);
@@ -159,12 +160,17 @@ function HazardForm() {
     }
   };
 
-  useEffect(() => {
+  const getDataFromMap = async () => {
     if (location.state?.from === "/map") {
+      await getFloodDetails();
       setIsEditable(true);
     } else {
       setIsEditable(false);
     }
+  };
+
+  useEffect(() => {
+    getDataFromMap();
   }, []);
 
   useEffect(() => {
