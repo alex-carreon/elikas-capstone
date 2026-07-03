@@ -177,6 +177,70 @@ test('registration fails if user registers an existing username', function () {
     Mail::assertNotSent(VerifyEmailMail::class);
 });
 
+// Test 6.3
+test('registration fails if user registers an existing phone number', function () {
+
+    Mail::fake();
+
+    $location = Location::where('level_id', 3)->first();
+
+    $user = User::factory()->create([
+        'role_id' => 3,
+    ]);
+
+    $user->phoneNumber()->create([
+        'phone_no' => '09171234567',
+    ]);
+
+    $response = $this->postJson('/api/auth/register', [
+        'username' => 'newusername',
+        'email' => 'freshemail@gmail.com',
+        'first_name' => 'new',
+        'last_name' => 'user',
+        'phone' => '09171234567',
+        'firebase_uid' => 'TDfpcldrRxZWyC8yPShuaESwZ843',
+        'location_id' => $location->id,
+        'avatar_seed' => 'PHONE123',
+    ]);
+
+    $response->assertStatus(422);
+
+    $response->assertJsonValidationErrors(['phone']);
+
+    Mail::assertNotSent(VerifyEmailMail::class);
+});
+
+// TEST 6.4
+test('registration fails if user registers an existing firebase uid', function () {
+
+    Mail::fake();
+
+    $location = Location::where('level_id', 3)->first();
+
+    $user = User::factory()->create([
+        'role_id' => 3,
+    ]);
+
+    $user->userAuth()->create([
+        'identity_uid' => 'TDfpcldrRxZWyC8yPShuaESwZ843',
+    ]);
+
+    $response = $this->postJson('/api/auth/register', [
+        'username' => 'newusername',
+        'email' => 'freshemail@gmail.com',
+        'first_name' => 'new',
+        'last_name' => 'user',
+        'firebase_uid' => 'TDfpcldrRxZWyC8yPShuaESwZ843',
+        'location_id' => $location->id,
+        'avatar_seed' => 'FIREBASE',
+    ]);
+
+    $response->assertStatus(422);
+
+    $response->assertJsonValidationErrors(['firebase_uid']);
+
+    Mail::assertNotSent(VerifyEmailMail::class);
+});
 
 //----LOGIN----
 

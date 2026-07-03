@@ -421,7 +421,7 @@ test('evac history response shape includes deactivation and expiry fields', func
 
     $response = $this->withHeaders([
         'Authorization' => "Bearer {$token}",
-    ])->getJson('/api/evacpins/users/history');
+    ])->getJson('/api/evacpins/users');
 
     $response->assertOk();
 
@@ -459,6 +459,7 @@ test('evac history filters by is_persistent', function () {
 
 // ── GET /api/pins/{id} (public, optional auth) ────────────────────────────────
 
+// Test 7.14
 test('pin detail returns full info for a valid id', function () {
 
     $user = evacUserForUid(env('FIREBASE_TEST_VERIFIED_UID'));
@@ -486,6 +487,7 @@ test('pin detail returns full info for a valid id', function () {
     $response->assertJsonPath('id', $pin->id);
 });
 
+// Test 7.15
 test('pin detail returns 404 for missing pin', function () {
 
     $response = $this->getJson('/api/pins/999999');
@@ -495,6 +497,7 @@ test('pin detail returns 404 for missing pin', function () {
     $response->assertJson(['error' => 'Evacuation area not found']);
 });
 
+// Test 7.16
 test('pin detail marks is_own_pin correctly for owner', function () {
 
     $token = individualToken();
@@ -510,6 +513,7 @@ test('pin detail marks is_own_pin correctly for owner', function () {
     $response->assertJsonPath('is_own_pin', true);
 });
 
+// Test 7.17
 test('pin detail expiry_label shows correct message for active pin', function () {
 
     $user = evacUserForUid(env('FIREBASE_TEST_VERIFIED_UID'));
@@ -519,10 +523,12 @@ test('pin detail expiry_label shows correct message for active pin', function ()
 
     $response->assertOk();
 
-    // 5 days from now → "Expires in 5 days"
+    // 5 days from now -> "Expires in 5 days"
     expect($response->json('expiry_label'))->toContain('Expires in');
 });
 
+
+// Test 7.18
 test('pin detail expiry_label shows Expired for past expiry', function () {
 
     $user = evacUserForUid(env('FIREBASE_TEST_VERIFIED_UID'));
@@ -537,6 +543,7 @@ test('pin detail expiry_label shows Expired for past expiry', function () {
 
 // ── GET /api/admin/pins (admin only) ─────────────────────────────────────────
 
+// Test 
 test('admin pins index returns all pins for admin', function () {
 
     $token = adminToken();
@@ -666,6 +673,7 @@ test('admin pins index filters by is_user_deactivated=true', function () {
 
 // ── POST /api/pins (auth required, role:1,2,3) ────────────────────────────────
 
+// Test 6.1
 test('store creates evacuation area without media', function () {
 
     $this->mock(MediaUploadService::class);
@@ -683,6 +691,7 @@ test('store creates evacuation area without media', function () {
     $response->assertJson(['message' => 'Evacuation area created successfully']);
 });
 
+// Test 6.2
 test('store creates evacuation area with media', function () {
 
     $this->mock(MediaUploadService::class, function ($mock) {
@@ -705,14 +714,16 @@ test('store creates evacuation area with media', function () {
     $response->assertCreated();
 });
 
-test('store requires authentication', function () {
+// Test 6.3
+test('store pin requires authentication', function () {
 
     $response = $this->postJson('/api/pins', []);
 
     $response->assertStatus(401);
 });
 
-test('store validates required fields', function () {
+// Test 6.4
+test('store pin validates required fields', function () {
 
     $token = individualToken();
 
@@ -727,6 +738,7 @@ test('store validates required fields', function () {
     ]);
 });
 
+// Test 6.5
 test('store rejects past expiry date', function () {
 
     $this->mock(MediaUploadService::class);
@@ -746,6 +758,7 @@ test('store rejects past expiry date', function () {
 
 // ── PUT /api/pins/{id} (auth required, role:1,2,3) ────────────────────────────
 
+// Test 2.1
 test('update allows owner to change their pin details', function () {
 
     $token = individualToken();
@@ -763,6 +776,7 @@ test('update allows owner to change their pin details', function () {
     $response->assertJson(['message' => 'Evacuation area updated successfully']);
 });
 
+// Test 2.2
 test('update blocks individual from editing another users pin', function () {
 
     $token     = individualToken();
@@ -780,6 +794,7 @@ test('update blocks individual from editing another users pin', function () {
     $response->assertJson(['error' => 'Forbidden. You may only update your own evacuation area pins']);
 });
 
+// Test 2.7
 test('update allows admin to edit any pin', function () {
 
     $token = adminToken();
@@ -795,6 +810,7 @@ test('update allows admin to edit any pin', function () {
     $response->assertOk();
 });
 
+// Test 2.3
 test('update returns 404 for missing pin', function () {
 
     $token = individualToken();
@@ -806,6 +822,7 @@ test('update returns 404 for missing pin', function () {
     $response->assertNotFound();
 });
 
+// Test 2.4
 test('update rejects expiry change on non-persistent pin', function () {
 
     $token = individualToken();
@@ -823,6 +840,7 @@ test('update rejects expiry change on non-persistent pin', function () {
     $response->assertJsonStructure(['error']);
 });
 
+// Test 2.5
 test('update allows expiry change on persistent pin', function () {
 
     $token = individualToken();
@@ -838,7 +856,8 @@ test('update allows expiry change on persistent pin', function () {
     $response->assertOk();
 });
 
-test('update rejects partial lat/lng (only lat provided)', function () {
+// Test 2.6
+test('update rejects partial lat/lng', function () {
 
     $token = individualToken();
     $user  = evacUserForUid(env('FIREBASE_TEST_VERIFIED_UID'));
@@ -856,7 +875,8 @@ test('update rejects partial lat/lng (only lat provided)', function () {
     $response->assertJson(['error' => 'Both lat and lng are required when updating location']);
 });
 
-test('update requires authentication', function () {
+// Test 2.7
+test('update pin requires authentication', function () {
 
     $response = $this->putJson('/api/pins/1', []);
 
@@ -865,6 +885,7 @@ test('update requires authentication', function () {
 
 // ── PATCH /api/pins/{id}/deactivate (auth required, role:1,2,3) ───────────────
 
+// Test 3.1
 test('deactivate soft-deletes an owned pin', function () {
 
     $token = individualToken();
@@ -885,6 +906,7 @@ test('deactivate soft-deletes an owned pin', function () {
     $response->assertJson(['message' => 'Evacuation area deactivated successfully']);
 });
 
+// Test 3.2
 test('deactivate blocks individual from deactivating another users pin', function () {
 
     $token     = individualToken();
@@ -900,6 +922,7 @@ test('deactivate blocks individual from deactivating another users pin', functio
     $response->assertJson(['error' => 'Forbidden. You may only deactivate your own evacuation area pins']);
 });
 
+// Test 3.3
 test('deactivate allows admin to deactivate any pin', function () {
 
     $token = adminToken();
@@ -913,6 +936,7 @@ test('deactivate allows admin to deactivate any pin', function () {
     $response->assertOk();
 });
 
+// Test 3.4
 test('deactivate returns 404 for already-deactivated pin', function () {
 
     $token = individualToken();
@@ -929,6 +953,7 @@ test('deactivate returns 404 for already-deactivated pin', function () {
     $response->assertNotFound();
 });
 
+// Test 3.5
 test('deactivate requires authentication', function () {
 
     $response = $this->patchJson('/api/pins/1/deactivate');
@@ -938,6 +963,7 @@ test('deactivate requires authentication', function () {
 
 // ── PATCH /api/pins/{id}/restore (auth required, role:1,2,3) ─────────────────
 
+// Test 10
 test('restore reactivates an owned deactivated pin', function () {
 
     $token = individualToken();
@@ -1009,6 +1035,7 @@ test('restore requires authentication', function () {
 
 // ── PATCH /api/pins/{id}/verify (auth required, role:1,2) ────────────────────
 
+// Test 8.1
 test('govops can verify a pin', function () {
 
     $token     = govopsToken();
@@ -1031,6 +1058,7 @@ test('govops can verify a pin', function () {
     ]);
 });
 
+// Test 9
 test('govops can remove verification from a pin', function () {
 
     $token    = govopsToken();
@@ -1051,6 +1079,7 @@ test('govops can remove verification from a pin', function () {
     ]);
 });
 
+// Test 8.2
 test('verify blocks individual users', function () {
 
     $token    = individualToken();
@@ -1066,6 +1095,7 @@ test('verify blocks individual users', function () {
     $response->assertStatus(403);
 });
 
+// Test 8.3
 test('verify requires the verified field', function () {
 
     $token    = govopsToken();
@@ -1081,6 +1111,7 @@ test('verify requires the verified field', function () {
     $response->assertJsonValidationErrors(['verified']);
 });
 
+// Test 8.4
 test('verify returns 404 for deactivated pin', function () {
 
     $token    = govopsToken();
@@ -1097,6 +1128,7 @@ test('verify returns 404 for deactivated pin', function () {
     $response->assertNotFound();
 });
 
+// Test 8.5
 test('verify requires authentication', function () {
 
     $response = $this->patchJson('/api/pins/1/verify', ['verified' => true]);
