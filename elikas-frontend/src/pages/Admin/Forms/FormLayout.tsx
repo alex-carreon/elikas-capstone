@@ -22,6 +22,7 @@ interface FormLayoutProps {
   formTitle?: string;
   singleUpd?: () => void;
   isDisabled?: boolean;
+  isDeactivated?: boolean;
 }
 
 function FormLayout({
@@ -41,6 +42,7 @@ function FormLayout({
   formTitle,
   singleUpd,
   isDisabled,
+  isDeactivated,
 }: FormLayoutProps) {
   const navigate = useNavigate();
 
@@ -87,65 +89,41 @@ function FormLayout({
                   {children}
                 </div>
               </div>
-              {isEditable && submitUpdId && closeUpdId ? (
-                <>
+              {!isDeactivated &&
+                (isEditable && submitUpdId && closeUpdId ? (
+                  <>
+                    <div className="mx-4 flex justify-evenly shrink gap-4 mb-8">
+                      <ButtonComp
+                        text="Submit"
+                        variant="primary"
+                        id={submitUpdId}
+                        heightSize="38px"
+                        type="submit"
+                        formId={formId}
+                        isDisabled={isDisabled}
+                      />
+                      <ButtonComp
+                        text="Cancel"
+                        variant="outline"
+                        id={closeUpdId}
+                        heightSize="38px"
+                        type="button"
+                        onClick={closeUpdClick}
+                        isDisabled={isDisabled}
+                      />
+                    </div>
+                  </>
+                ) : updateId && deleteId ? (
                   <div className="mx-4 flex justify-evenly shrink gap-4 mb-8">
                     <ButtonComp
-                      text="Submit"
-                      variant="primary"
-                      id={submitUpdId}
-                      heightSize="38px"
-                      type="submit"
-                      formId={formId}
-                      isDisabled={isDisabled}
-                    />
-                    <ButtonComp
-                      text="Cancel"
-                      variant="outline"
-                      id={closeUpdId}
-                      heightSize="38px"
-                      type="button"
-                      onClick={closeUpdClick}
-                      isDisabled={isDisabled}
-                    />
-                  </div>
-                </>
-              ) : updateId && deleteId ? (
-                <div className="mx-4 flex justify-evenly shrink gap-4 mb-8">
-                  <ButtonComp
-                    text={updBtnLabel ? updBtnLabel : "Update"}
-                    variant="primary"
-                    id={updateId}
-                    heightSize="38px"
-                    type="button"
-                    onClick={updateClick}
-                    isDisabled={isDisabled}
-                  />
-                  <ButtonComp
-                    text="Delete"
-                    variant="important"
-                    id={deleteId}
-                    heightSize="38px"
-                    type="button"
-                    onClick={deleteClick}
-                    isDisabled={isDisabled}
-                  />
-                </div>
-              ) : (
-                <div className="w-full flex justify-center items-center px-4 mb-8">
-                  {updateId && updBtnLabel && (
-                    <ButtonComp
-                      text={updBtnLabel}
+                      text={updBtnLabel ? updBtnLabel : "Update"}
                       variant="primary"
                       id={updateId}
                       heightSize="38px"
-                      type={btnType}
-                      onClick={singleUpd}
-                      formId={formId}
+                      type="button"
+                      onClick={updateClick}
                       isDisabled={isDisabled}
                     />
-                  )}
-                  {deleteId && (
                     <ButtonComp
                       text="Delete"
                       variant="important"
@@ -155,9 +133,34 @@ function FormLayout({
                       onClick={deleteClick}
                       isDisabled={isDisabled}
                     />
-                  )}
-                </div>
-              )}
+                  </div>
+                ) : (
+                  <div className="w-full flex justify-center items-center px-4 mb-8">
+                    {updateId && updBtnLabel && (
+                      <ButtonComp
+                        text={updBtnLabel}
+                        variant="primary"
+                        id={updateId}
+                        heightSize="38px"
+                        type={btnType}
+                        onClick={singleUpd}
+                        formId={formId}
+                        isDisabled={isDisabled}
+                      />
+                    )}
+                    {deleteId && (
+                      <ButtonComp
+                        text="Delete"
+                        variant="important"
+                        id={deleteId}
+                        heightSize="38px"
+                        type="button"
+                        onClick={deleteClick}
+                        isDisabled={isDisabled}
+                      />
+                    )}
+                  </div>
+                ))}
             </div>
           </div>
         </div>
