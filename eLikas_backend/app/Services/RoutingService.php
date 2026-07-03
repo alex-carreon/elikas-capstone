@@ -13,13 +13,13 @@ class RoutingService
 
     // Cost penalties for different flood levels
     private const FLOOD_WEIGHTS = [
-        1 => 50,
-        2 => 200,
-        3 => 600,
-        4 => 1500,
-        5 => 3000,
-        6 => 6000,
-        7 => 10000,
+        'Gutter-Deep' => 50,
+        'Half Knee-Deep' => 200,
+        'Half Tire-Deep' => 600,
+        'Knee-Deep' => 1500,
+        'Tire-Deep' => 3000,
+        'Waist-Deep' => 6000,
+        'Chest-Deep' => 10000,
     ];
 
     public function __construct(private readonly string $brouterUrl) {}
@@ -86,9 +86,10 @@ class RoutingService
         $rows = DB::select('
             SELECT
                 ST_AsText(fp.path) AS path_wkt,
-                fp.level_id
+                fl.level_name
             FROM FloodPaths fp
             JOIN SocialElements se ON fp.element_id = se.id
+            JOIN FloodLevels fl ON fp.level_id = fl.id
             WHERE se.deactivated_at IS NULL
             AND fp.expiry > NOW()
             AND ST_Intersects(fp.path, ST_GeomFromText(?))
@@ -99,7 +100,7 @@ class RoutingService
 
     private function rowToPolyline(object $row): string
     {
-        $weight = self::FLOOD_WEIGHTS[$row->level_id] ?? 10000;
+        $weight = self::FLOOD_WEIGHTS[$row->level_name] ?? 10000;
         $points = $this->parseWkt($row->path_wkt);
         return "{$points},{$weight}";
     }
