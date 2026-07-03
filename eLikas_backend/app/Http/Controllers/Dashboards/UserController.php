@@ -260,14 +260,14 @@ class UserController extends Controller
             }
             $validated = $request->validate([
 
-                'username' => 'sometimes|string|max:255|unique:Users,username,' . $user->id,
+                'username' => 'sometimes|string|max:20|unique:Users,username,' . $user->id,
 
-                'email' => 'sometimes|email|max:255|unique:Users,email,' . $user->id,
+                'email' => 'sometimes|email|max:50|unique:Users,email,' . $user->id,
 
                 'first_name' => 'sometimes|string|max:50',
                 'last_name' => 'sometimes|string|max:50',
 
-                'phone' => 'sometimes|string|max:15',
+                'phone' => 'sometimes|string|max:12',
 
                 // Individual
                 'indiv_location_id' => 'sometimes|integer|exists:Locations,id',
