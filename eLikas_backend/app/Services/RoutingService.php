@@ -19,19 +19,24 @@ class RoutingService
         'Knee-Deep' => 1500,
         'Tire-Deep' => 3000,
         'Waist-Deep' => 6000,
-        'Chest-Deep' => 10000,
+        'Chest-Deep' => -1,  // Impassable
     ];
 
+    // Inject base URL of the BRouter instance
     public function __construct(private readonly string $brouterUrl) {}
 
+
+    // Calculates the safest route avoiding flood barriers from a start point to an end point
     public function getEvacuationRoute(
         float $startLon,
         float $startLat,
         float $endLon,
         float $endLat
     ): array {
+        // Get all active flood paths intersecting the bounding box of the start and end points
         $polylines = $this->buildPolylines($startLon, $startLat, $endLon, $endLat);
 
+        // Prepare the parameters for the BRouter request
         $params = [
             'lonlats'        => "{$startLon},{$startLat}|{$endLon},{$endLat}",
             'profile'        => 'elikas_flood',
@@ -48,6 +53,7 @@ class RoutingService
             $response = Http::timeout(15)
                 ->get("{$this->brouterUrl}/brouter", $params);
         } catch (RequestException $e) {
+            // Handle network or request errors
             throw new NoRouteFoundException(
                 'Could not reach the routing engine: ' . $e->getMessage()
             );
@@ -62,6 +68,8 @@ class RoutingService
         return $response->json();
     }
 
+
+    // Builds an array of polylines representing flood paths that intersect the bounding box of the start and end points
     private function buildPolylines(
         float $startLon,
         float $startLat,
@@ -74,6 +82,7 @@ class RoutingService
         $maxLon = max($startLon, $endLon) + self::BBOX_BUFFER;
         $maxLat = max($startLat, $endLat) + self::BBOX_BUFFER;
 
+        // Format a WKT polygon for the bounding box
         $bboxWkt = sprintf(
             'POLYGON((%f %f,%f %f,%f %f,%f %f,%f %f))',
             $minLon, $minLat,
@@ -83,6 +92,7 @@ class RoutingService
             $minLon, $minLat
         );
 
+        // Query the database for flood paths that intersect the bounding box
         $rows = DB::select('
             SELECT
                 ST_AsText(fp.path) AS path_wkt,
@@ -98,26 +108,37 @@ class RoutingService
         return array_map(fn(object $row) => $this->rowToPolyline($row), $rows);
     }
 
+
+    // Converts a flood path database row into a polyline string with weight for BRouter
     private function rowToPolyline(object $row): string
     {
+        // Resolve the weight for the flood level, defaulting to a high penalty if unknown
         $weight = self::FLOOD_WEIGHTS[$row->level_name] ?? 10000;
+
+        //
         $points = $this->parseWkt($row->path_wkt);
         return "{$points},{$weight}";
     }
 
+    // Converts a WKT LINESTRING into a comma-separated string of coordinates for BRouter
     private function parseWkt(string $wkt): string
     {
         // Input:  "LINESTRING(121.025 14.605, 121.026 14.604)"
         // Output: "121.025,14.605,121.026,14.604"
 
+        // Strip the spatial prefix envelope "LINESTRING(" and the trailing closure bracket ")"
         $inner = substr($wkt, strlen('LINESTRING('), -1);  // strip "LINESTRING(" and ")"
+
+        // Explode coordinates into pairs by matching commas
         $pairs = preg_split('/,\s*/', trim($inner));   // split by comma
 
+        // Loop through pairs and switch the space into a comma
         $points = array_map(
             fn(string $pair) => str_replace(' ', ',', trim($pair)),
             $pairs
         );
 
+        // Flatten the array into a comma-separated line parameter
         return implode(',', $points);
     }
 }
