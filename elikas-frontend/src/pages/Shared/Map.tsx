@@ -50,6 +50,11 @@ function Map() {
     [21.5, 127.0], // northeast corner
   ];
 
+  // const manilaBounds: LatLngBoundsExpression = [
+  //   [14.5495, 120.9205], // southwest corner
+  //   [14.6434, 121.0343], // northeast corner
+  // ];
+
   const mapRef = useRef<LeafletMap | null>(null);
 
   // let authorized = false;
@@ -76,7 +81,7 @@ function Map() {
   const handleNearestRoute = () => {
     if (locationFound) {
       setShowNearestRouteTrigger((prev) => prev + 1);
-    } else console.log("Location not found");
+    } else toast.error("Please enable location to find a route.");
   };
 
   const handleSnoozeSingle = async (id: number, e: React.FormEvent) => {
@@ -295,6 +300,7 @@ function Map() {
             style={{ height: "93dvh", width: "100%" }}
             maxBounds={philippinesBounds}
             maxBoundsViscosity={1.0}
+            // minZoom={12}
             minZoom={6}
             ref={mapRef}
           >
