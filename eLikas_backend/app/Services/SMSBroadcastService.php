@@ -19,17 +19,15 @@ class SMSBroadcastService
     public function getRecipientsForLocation(int $locationId): Collection
     {
         return PhoneNumber::with([
+                'user',
                 'user.name',
                 'user.indivAcc.location',
             ])
-            ->whereHas('user', function ($query) use ($locationId) {
-                $query->whereNull('deactivated_at')
-                    ->whereHas('indivAcc', function ($indivAccQuery) use ($locationId) {
-                        $indivAccQuery->where('location_id', $locationId);
-                    });
+            ->whereHas('user.indivAcc', function ($query) use ($locationId) {
+                $query->where('location_id', $locationId);
             })
-            ->whereNotNull('phone_no')
             ->where('is_verified', true)
+            ->whereNotNull('phone_no')
             ->get();
     }
 
@@ -280,8 +278,13 @@ class SMSBroadcastService
             $broadcast->update(['status' => 4]);
 
             return [
-                'broadcast' => $broadcast->fresh(['gov_op.user', 'location', 'broadcast_status']),
-                'failed'    => true,
+                'broadcast'         => $broadcast,
+                'failed'            => true,
+                'error_code'        => 'MISSING_TOKEN',
+                'gateway_message'   => 'No API token provided.',
+                'gateway_response'  => [
+                    'message' => 'Missing api token configuration.',
+                ],
             ];
         }
 
@@ -298,16 +301,30 @@ class SMSBroadcastService
 
         try {
             $response = Http::timeout(15)
+                ->withoutVerifying() // 👈 1. Bypass local Windows SSL configuration gaps
                 ->withHeaders([
-                    'X-IPROG-API-TOKEN' => $resolvedToken,
+                    'X-IPROG-API-TOKEN' => $resolvedToken, // Keep header just in case
+                    'Accept'            => 'application/json',
                 ])
                 ->acceptJson()
                 ->asJson()
-                ->post(rtrim(config('services.iprogsms.base_url'), '/') . '/sms_messages/send_bulk', $payload);
+                ->post(rtrim(config('services.iprogsms.base_url'), '/') . '/sms_messages/send_bulk', [
+                    'api_token'     => $resolvedToken,
+                    'phone_numbers' => $payload['phone_number'],
+                    'phone_number'  => $payload['phone_number'],
+                    'message'       => $broadcast->message_content,
+                ]);
         } catch (ConnectionException $e) {
             $broadcast->update(['status' => 4]);
 
-            return ['failed' => true];
+            return [
+                'failed'           => true,
+                'error_code'       => 'GATEWAY_CONNECTION_FAILED',
+                'gateway_message'  => 'Could not reach the IPROGSMS gateway.',
+                'gateway_response' => [
+                    'message' => 'Invalid api token or no load balance',
+                ],
+            ];
         }
 
         $responseBody = $response->json() ?? ['raw' => $response->body()];
