@@ -318,7 +318,6 @@ function Hotlines() {
                       link={`/admin-hotlines/${hotline.id}`}
                       buttonId="Admin_HotlinesDetailsBtn"
                       isDeactivated={hotline.is_deactivated}
-                      showBtn
                     >
                       <p
                         className="text-sm"

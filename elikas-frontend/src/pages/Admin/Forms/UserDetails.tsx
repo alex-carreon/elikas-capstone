@@ -168,15 +168,18 @@ function UserDetails() {
 
     try {
       setLoading(true);
+      setDisabled(true);
       await getIndivDetails(controller.signal);
     } catch (err: any) {
       if (err.name === "CanceledError") {
         setLoading(false);
+        setDisabled(false);
         return;
       }
       console.log(err);
     } finally {
       setLoading(false);
+      setDisabled(false);
     }
 
     return () => controller.abort();
@@ -276,6 +279,7 @@ function UserDetails() {
         }}
         formId="Admin_IndivUpdateForm"
         isDisabled={disabled}
+        isDeactivated={userData?.deactivated_at ? true : false}
       >
         {loading ? (
           <div className="flex justify-center">
@@ -309,6 +313,7 @@ function UserDetails() {
                 value={username}
                 readonly={!isEditable}
                 onSubmit={(e) => setUsername(e.target.value)}
+                maxLength={20}
               />
               <TextField
                 label="First Name"
@@ -317,6 +322,7 @@ function UserDetails() {
                 value={firstname}
                 readonly={!isEditable}
                 onSubmit={(e) => setFirstname(e.target.value)}
+                maxLength={50}
               />
               <TextField
                 label="Last Name"
@@ -325,6 +331,7 @@ function UserDetails() {
                 value={lastname}
                 readonly={!isEditable}
                 onSubmit={(e) => setLastname(e.target.value)}
+                maxLength={50}
               />
               <TextField
                 label="Email"
@@ -333,6 +340,7 @@ function UserDetails() {
                 value={email}
                 readonly={!isEditable}
                 onSubmit={(e) => setEmail(e.target.value)}
+                maxLength={50}
               />
               {!isEditable ? (
                 <TextField
@@ -384,6 +392,7 @@ function UserDetails() {
                 value={phone ?? ""}
                 readonly={!isEditable}
                 onSubmit={(e) => setPhone(e.target.value)}
+                maxLength={12}
               />
               <TextField
                 label="Created At"

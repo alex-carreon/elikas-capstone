@@ -210,6 +210,8 @@ function EvacDetails() {
 
     try {
       setLoading(true);
+      setDisabled(true);
+
       await Promise.all([
         getEvacDetails(controller.signal),
         getCapacityLevels(controller.signal),
@@ -219,6 +221,7 @@ function EvacDetails() {
       console.log(err);
     } finally {
       setLoading(false);
+      setDisabled(false);
     }
 
     return () => controller.abort();
@@ -342,8 +345,11 @@ function EvacDetails() {
     if (isEditable) {
       const fetch = async () => {
         setLoading(true);
+        setDisabled(true);
+
         await getEditDetails();
         setLoading(false);
+        setDisabled(false);
       };
       fetch();
     }
@@ -444,6 +450,7 @@ function EvacDetails() {
         }}
         deleteClick={() => deac()}
         isDisabled={disabled}
+        isDeactivated={pinDetails?.is_deactivated}
       >
         {loading ? (
           <div className="flex justify-center">

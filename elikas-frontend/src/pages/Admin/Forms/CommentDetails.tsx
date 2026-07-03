@@ -25,7 +25,7 @@ type commentDetail = {
   upvotes: number;
   downvotes: number;
   posted_at: string;
-  is_deactivated: string;
+  is_deactivated: boolean;
   media: string[];
 };
 
@@ -51,12 +51,14 @@ function CommentDetails() {
     const controller = new AbortController();
     try {
       setLoading(true);
+      setDisabled(true);
       await commentDetails(controller.signal);
     } catch (err: any) {
       if (err.name === "CanceledError") return;
       console.log(err);
     } finally {
       setLoading(false);
+      setDisabled(false);
     }
     return () => controller.abort();
   };
@@ -96,6 +98,7 @@ function CommentDetails() {
         deleteId="Admin_EvacCommentDelete"
         deleteClick={() => delComment()}
         isDisabled={disabled}
+        isDeactivated={comment?.is_deactivated}
       >
         {loading ? (
           <div className="flex justify-center">

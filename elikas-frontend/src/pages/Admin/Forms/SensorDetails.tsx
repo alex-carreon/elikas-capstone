@@ -21,6 +21,7 @@ function SensorDetails() {
   const [mountLocation, setMountLocation] = useState("");
   const [registeredBy, setRegisteredBy] = useState("");
   const [deactivatedAt, setDeactivatedAt] = useState("");
+  const [disabled, setDisabled] = useState(false);
 
   const navigate = useNavigate();
 
@@ -59,15 +60,18 @@ function SensorDetails() {
 
     try {
       setLoading(true);
+      setDisabled(true);
       await getSensorDetails(controller.signal);
     } catch (err: any) {
       if (err.name === "CanceledError") {
         setLoading(false);
+        setDisabled(false);
         return;
       }
       console.log(err);
     } finally {
       setLoading(false);
+      setDisabled(false);
     }
     return () => controller.abort();
   };
@@ -85,6 +89,8 @@ function SensorDetails() {
         singleUpd={() => {
           navigate(`/admin-sensorlogs/${sensorCode}`);
         }}
+        isDeactivated={deactivatedAt ? true : false}
+        isDisabled={disabled}
       >
         {loading ? (
           <div className="flex justify-center">
