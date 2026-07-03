@@ -174,85 +174,6 @@ class GetEvacAreasController extends Controller
         }
     }
 
-    // GET /api/evacpins/users/coords   (public — optional token)
-    public function getRoleIndivCoords(Request $request)
-    {
-        try {
-            $user = $request->attributes->get('firebase_user');
-
-            $query = EvacArea::query()
-                ->select(['id', 'element_id', 'location_id', 'location', 'expiry', 'is_persistent'])
-                ->with([
-                    'social_element:id,user_id,deactivated_at',
-                    'social_element.user:id,deactivated_at',
-                    'location_info:id,name',
-                ])
-                ->notDeactivated()
-                ->notUserDeactivated()
-                ->notExpired();
-
-            $this->applySearchFilter($query, $request);
-
-            // Filter by role — supports both single (?role=indiv) and array (?role[]=indiv&role[]=admin)
-            $rawRole = $request->query('role');
-            if (!empty($rawRole)) {
-                $roleInputs = is_array($rawRole) ? $rawRole : [$rawRole];
-
-                $roleIds = collect($roleInputs)
-                    ->map(fn($r) => $this->resolveRoleId($r))
-                    ->filter(fn($id) => $id !== null)
-                    ->unique()
-                    ->values()
-                    ->all();
-
-                if (count($roleInputs) > 0 && count($roleIds) === 0) {
-                    return response()->json([
-                        'error' => 'Invalid role filter. Accepted values: admin, govop, indiv',
-                    ], 422);
-                }
-
-                if (!empty($roleIds)) {
-                    $query->whereHas('social_element.user', function ($q) use ($roleIds) {
-                        $q->whereIn('role_id', $roleIds);
-                    });
-                }
-            }
-
-            // Filter by barangay/location
-            if ($request->filled('barangay')) {
-                $query->where('location_id', (int) $request->query('barangay'));
-            }
-
-            // Filter by is_persistent
-            if ($request->has('is_persistent')) {
-                $isPersistent = filter_var($request->query('is_persistent'), FILTER_VALIDATE_BOOLEAN, FILTER_NULL_ON_FAILURE);
-
-                if ($isPersistent === null) {
-                    return response()->json([
-                        'error' => 'Invalid is_persistent value. Use true or false.',
-                    ], 422);
-                }
-
-                $query->where('is_persistent', $isPersistent);
-            }
-
-            $pins = $query->get();
-
-            return response()->json([
-                'count' => $pins->count(),
-                'pins'  => $pins->map(function ($pin) use ($user) {
-                    return $this->formatCoordsOnly($pin, $user);
-                }),
-            ], 200);
-
-        } catch (\Exception $e) {
-            return response()->json([
-                'error'   => 'Failed to fetch pin coordinates',
-                'details' => $e->getMessage(),
-            ], 500);
-        }
-    }
-
     // GET /api/evacpins/users/history  OR  /api/evacpins/users
     public function getMyEvacHistory(Request $request)
     {
@@ -485,7 +406,7 @@ class GetEvacAreasController extends Controller
     }
 
     /**
-     * Coordinates-only format used for both getMyCoords and getRoleIndivCoords.
+     * Coordinates-only format used for both getMyCoords.
      */
     private function formatCoordsOnly(EvacArea $pin, $user = null, bool $forceOwner = false): array
     {

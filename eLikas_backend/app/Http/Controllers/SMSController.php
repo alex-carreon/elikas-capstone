@@ -173,7 +173,6 @@ class SMSController extends Controller
         }
     }
 
-    // ── Existing methods (copy these in exactly as-is) ───────────────────────
 
     public function recipients(Request $request): JsonResponse
     {
@@ -241,9 +240,7 @@ class SMSController extends Controller
                 'message_content' => 'required|string|max:600',
             ]);
 
-            if ($token = $request->header('X-iPROG-API-Token')) {
-                config(['services.iprogsms.api_token' => $token]);
-            }
+            $apiToken = $request->header('X-iPROG-API-Token');
 
             $govOp = $this->resolveGovOp($request);
             if ($govOp instanceof JsonResponse) {
@@ -254,10 +251,9 @@ class SMSController extends Controller
                 $govOp->id,
                 $govOp->location_id,
                 $validated['message_content'],
+                $apiToken,
             );
 
-            // Always re-fetch from DB before formatting so the status field
-            // reflects what was actually persisted (e.g. status=2 sent, not status=1 pending).
             $freshBroadcast = $result['broadcast']->fresh(['gov_op.user', 'location', 'broadcast_status']);
             $formatted = $this->smsService->formatBroadcast($freshBroadcast);
 
@@ -267,11 +263,14 @@ class SMSController extends Controller
 
             if ($result['failed']) {
                 $httpStatus = match ($result['error_code'] ?? '') {
-                    'INVALID_TOKEN'        => 401,
-                    'INSUFFICIENT_BALANCE' => 402,
-                    'INVALID_RECIPIENTS'   => 422,
-                    'GATEWAY_ERROR'        => 503,
-                    default                => 502,
+                    'INVALID_TOKEN'             => 401,
+                    'MISSING_TOKEN'             => 422,
+                    'INSUFFICIENT_BALANCE'     => 402,
+                    'INVALID_RECIPIENTS'        => 422,
+                    'NO_MESSAGE_IDS'            => 502,
+                    'GATEWAY_CONNECTION_FAILED' => 503,
+                    'GATEWAY_ERROR'             => 503,
+                    default                     => 502,
                 };
 
                 return response()->json([
@@ -304,9 +303,8 @@ class SMSController extends Controller
                 'scheduled_for'   => 'required|date|after:now',
             ]);
 
-            if ($token = $request->header('X-iPROG-API-Token')) {
-                config(['services.iprogsms.api_token' => $token]);
-            }
+            // Read the header from the frontend request
+            $apiToken = $request->header('X-iPROG-API-Token');
 
             $govOp = $this->resolveGovOp($request);
             if ($govOp instanceof JsonResponse) {
@@ -318,6 +316,7 @@ class SMSController extends Controller
                 $govOp->location_id,
                 $validated['message_content'],
                 $validated['scheduled_for'],
+                $apiToken,
             );
 
             return response()->json([

@@ -104,7 +104,7 @@ class ProfileController extends Controller
                 $rules += [
                     'first_name' => 'nullable|string|max:50',
                     'last_name' => 'nullable|string|max:50',
-                    'phone' => 'nullable|string|max:20',
+                    'phone' => 'nullable|string|max:12',
                     'location_id' => 'nullable|integer',
                 ];
             }
@@ -112,7 +112,7 @@ class ProfileController extends Controller
             if ($user->role_id == 2) {
                 $rules += [
                     'point_person' => 'nullable|string|max:100',
-                    'point_person_position' => 'nullable|string|max:100',
+                    'point_person_position' => 'nullable|string|max:50',
                 ];
             }
 
