@@ -213,7 +213,6 @@ function Map({
     setRoute(false);
     setShowNearestRoute(false);
     setNearestRoute(false);
-    setSelectedPin(null);
   };
 
   const handleDrawerClose = (isOpen: boolean) => {
@@ -323,6 +322,7 @@ function Map({
           userPosition={userPosition}
           showNearestRoute={showNearestRoute}
           nearestRouteTrigger={nearestRouteTrigger}
+          setClear={setClearRoute}
         />
       )}
       {showRoute && !showNearestRoute && selectedPin && (
@@ -330,6 +330,7 @@ function Map({
           onPinSelected={setSelectedPin}
           selectedPin={selectedPin}
           userPosition={userPosition}
+          setClear={setClearRoute}
         />
       )}
 

@@ -8,6 +8,7 @@ use App\Models\PhoneNumber;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Mail;
 use Kreait\Firebase\Contract\Auth as FirebaseAuth;
+use Illuminate\Validation\ValidationException;
 
 class ProfileController extends Controller
 {
@@ -184,12 +185,17 @@ class ProfileController extends Controller
                 'message' => 'Profile updated successfully'
             ]);
 
+        } catch (ValidationException $e) {
+             
+            throw $e;
+        
         } catch (\Exception $e) {
 
             return response()->json([
                 'error' => 'Failed to update profile',
                 'details' => $e->getMessage()
             ], 500);
+            
         }
     }
     
