@@ -84,7 +84,6 @@ Route::get('/pins/routes', [GetEvacuationRoutesController::class, 'getEvacuation
 Route::middleware('optional.firebase.auth')->group(function () {
     Route::get('/flood-paths', [FloodPathController::class, 'index']);
     Route::get('/pins', [GetEvacAreasController::class, 'getEvacAreas']);
-    Route::get('/evacpins/users/coords', [GetEvacAreasController::class, 'getRoleIndivCoords']);
     Route::get('/pins/{id}', [GetEvacAreaDetailsController::class, 'getEvacAreaDetails'])->whereNumber('id');
 });
 
