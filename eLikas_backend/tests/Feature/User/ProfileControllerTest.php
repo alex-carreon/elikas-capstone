@@ -30,7 +30,7 @@ use Illuminate\Support\Facades\Mail;
 
 // ── GET /api/profile ──────────────────────────────────────────────────────────
 
-
+// Test 1.1
 test('profile returns authenticated users data', function () {
 
     $token = individualToken();
@@ -49,6 +49,7 @@ test('profile returns authenticated users data', function () {
     ]);
 });
 
+// Test 1.2
 test('profile returns the authenticated users own information', function () {
 
     $token = individualToken();
@@ -67,6 +68,7 @@ test('profile returns the authenticated users own information', function () {
     ]);
 });
 
+// Test 1.3
 test('profile requires authentication', function () {
 
     $response = $this->getJson('/api/profile');
@@ -74,6 +76,7 @@ test('profile requires authentication', function () {
     $response->assertStatus(401);
 });
 
+// Test 1.4
 test('profile returns govops point person fields', function () {
 
     $token = govopsToken();
@@ -90,6 +93,7 @@ test('profile returns govops point person fields', function () {
 
 // ── PUT /api/profile ──────────────────────────────────────────────────────────
 
+// Test 2.1
 test('individual user can update username and avatar_seed', function () {
 
     $token = individualToken();
@@ -106,6 +110,7 @@ test('individual user can update username and avatar_seed', function () {
     $response->assertJson(['message' => 'Profile updated successfully']);
 });
 
+// Test 2.2
 test('individual user can update first and last name', function () {
 
     $token = individualToken();
@@ -122,6 +127,7 @@ test('individual user can update first and last name', function () {
     $response->assertJson(['message' => 'Profile updated successfully']);
 });
 
+// Test 2.3
 test('individual user can update phone number', function () {
 
     $token = individualToken();
@@ -140,6 +146,7 @@ test('individual user can update phone number', function () {
     $response->assertOk();
 });
 
+// Test 2.4
 test('update profile rejects duplicate phone number', function () {
 
     $token = individualToken();
@@ -164,6 +171,7 @@ test('update profile rejects duplicate phone number', function () {
     $response->assertJsonPath('errors.phone.0', 'This phone number is already in use.');
 });
 
+// Test 2.5
 test('individual user cannot update govop fields', function () {
 
     $token = individualToken();
@@ -182,6 +190,7 @@ test('individual user cannot update govop fields', function () {
     );
 });
 
+// Test 2.6
 test('govop user cannot update individual fields', function () {
 
     $token = govopsToken();
@@ -199,6 +208,7 @@ test('govop user cannot update individual fields', function () {
     );
 });
 
+// Test 2.7
 test('govop user can update point person fields', function () {
 
     $token = govopsToken();
@@ -215,6 +225,7 @@ test('govop user can update point person fields', function () {
     $response->assertJson(['message' => 'Profile updated successfully']);
 });
 
+// Test 2.8
 test('update profile rejects duplicate username', function () {
 
     $token = individualToken();
@@ -233,6 +244,7 @@ test('update profile rejects duplicate username', function () {
     $response->assertJsonValidationErrors(['username']);
 });
 
+// Test 2.9
 test('update profile requires authentication', function () {
 
     $response = $this->putJson('/api/profile', ['username' => 'ghost']);
@@ -240,13 +252,46 @@ test('update profile requires authentication', function () {
     $response->assertStatus(401);
 });
 
+test('update profile rejects fields exceeding maximum length', function () {
+
+    $token = individualToken();
+
+    $response = $this->withHeaders([
+        'Authorization' => "Bearer {$token}",
+    ])->putJson('/api/profile', [
+        'username'   => str_repeat('a', 21), // max 20
+        'first_name' => str_repeat('a', 51), // max 50
+        'last_name'  => str_repeat('a', 51), // max 50
+        'phone'      => str_repeat('1', 21), // max 20
+    ]);
+
+    $response->assertStatus(422);
+
+    $response->assertJsonValidationErrors([
+        'username',
+        'first_name',
+        'last_name',
+        'phone',
+    ]);
+});
+
 // ── PATCH /api/profile/deactivate ─────────────────────────────────────────────
 
-test('user can deactivate their own account', function () {
+// Test 13.1
+test('user can only deactivate their own account', function () {
 
     $token = individualToken();
     $uid   = env('FIREBASE_TEST_VERIFIED_UID');
-    $user  = UserAuth::with('user')->where('identity_uid', $uid)->firstOrFail()->user;
+
+    $me = UserAuth::with('user')
+        ->where('identity_uid', $uid)
+        ->firstOrFail()
+        ->user;
+
+    // Another user that should remain active
+    $otherUser = User::factory()->create([
+        'deactivated_at' => null,
+    ]);
 
     $response = $this->withHeaders([
         'Authorization' => "Bearer {$token}",
@@ -254,14 +299,14 @@ test('user can deactivate their own account', function () {
 
     $response->assertOk();
 
-    $response->assertJsonStructure(['message', 'deactivated_at']);
+    $me->refresh();
+    $otherUser->refresh();
 
-    $response->assertJson(['message' => 'Account deactivated successfully']);
-
-    // DatabaseTransactions rolls the deactivated_at back so subsequent tests
-    // using the same account aren't affected
+    expect($me->deactivated_at)->not->toBeNull();
+    expect($otherUser->deactivated_at)->toBeNull();
 });
 
+// Test 13.2
 test('deactivate self requires authentication', function () {
 
     $response = $this->patchJson('/api/profile/deactivate');
@@ -271,6 +316,7 @@ test('deactivate self requires authentication', function () {
 
 // ── PATCH /api/profile/change-email ──────────────────────────────────────────
 
+// Test 6.1
 test('change email updates email and sends verification', function () {
 
     Mail::fake();
@@ -305,6 +351,7 @@ test('change email updates email and sends verification', function () {
     Mail::assertSent(VerifyEmailMail::class);
 });
 
+// Test 8
 test('change email rejects same email as current', function () {
 
     $token = individualToken();
@@ -324,6 +371,7 @@ test('change email rejects same email as current', function () {
     ]);
 });
 
+// Test 7
 test('change email rejects duplicate email already in use', function () {
 
     $token = individualToken();
@@ -341,6 +389,7 @@ test('change email rejects duplicate email already in use', function () {
     $response->assertJsonValidationErrors(['email']);
 });
 
+// Test 6.2
 test('change email requires authentication', function () {
 
     $response = $this->patchJson('/api/profile/change-email', [
