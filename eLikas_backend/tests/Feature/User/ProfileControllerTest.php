@@ -7,6 +7,7 @@ use App\Models\User;
 use App\Models\UserAuth;
 use Illuminate\Support\Facades\Mail;
 
+
 /**
  * ProfileController tests.
  *
@@ -252,6 +253,7 @@ test('update profile requires authentication', function () {
     $response->assertStatus(401);
 });
 
+// Test 9
 test('update profile rejects fields exceeding maximum length', function () {
 
     $token = individualToken();
@@ -262,7 +264,7 @@ test('update profile rejects fields exceeding maximum length', function () {
         'username'   => str_repeat('a', 21), // max 20
         'first_name' => str_repeat('a', 51), // max 50
         'last_name'  => str_repeat('a', 51), // max 50
-        'phone'      => str_repeat('1', 21), // max 20
+        'phone'      => str_repeat('1', 13), // max 12
     ]);
 
     $response->assertStatus(422);
@@ -272,6 +274,24 @@ test('update profile rejects fields exceeding maximum length', function () {
         'first_name',
         'last_name',
         'phone',
+    ]);
+});
+
+// Test 3
+test('update profile rejects invalid field types', function () {
+
+    $token = individualToken();
+
+    $response = $this->withHeaders([
+        'Authorization' => "Bearer {$token}",
+    ])->putJson('/api/profile', [
+        'location_id' => 'not-an-integer',
+    ]);
+
+    $response->assertStatus(422);
+
+    $response->assertJsonValidationErrors([
+        'location_id',
     ]);
 });
 
@@ -365,9 +385,10 @@ test('change email rejects same email as current', function () {
     ]);
 
     $response->assertStatus(422);
+    $response->assertJsonValidationErrors('email');
 
-    $response->assertJson([
-        'error' => 'The new email must be different from your current email.',
+    $response->assertJsonFragment([
+        'message' => 'The email has already been taken.',
     ]);
 });
 
@@ -397,4 +418,29 @@ test('change email requires authentication', function () {
     ]);
 
     $response->assertStatus(401);
+});
+
+// Test 6.3
+test('change email sends verification email', function () {
+
+    Mail::fake();
+
+    $token = individualToken();
+
+    $uid = env('FIREBASE_TEST_VERIFIED_UID');
+    $user = UserAuth::with('user')->where('identity_uid', $uid)->firstOrFail()->user;
+
+    $newEmail = 'verification-test@example.com';
+
+    $response = $this->withHeaders([
+        'Authorization' => "Bearer {$token}",
+    ])->patchJson('/api/profile/change-email', [
+        'email' => $newEmail,
+    ]);
+
+    $response->assertOk();
+
+    Mail::assertSent(VerifyEmailMail::class, function ($mail) use ($newEmail) {
+        return $mail->hasTo($newEmail);
+    });
 });
