@@ -286,7 +286,6 @@ class SMSBroadcastService
         }
 
         $payload = [
-            'api_token'    => $resolvedToken,
             'phone_number' => $formattedPhoneNumbers->implode(','),
             'message'      => $broadcast->message_content,
         ];
@@ -299,6 +298,9 @@ class SMSBroadcastService
 
         try {
             $response = Http::timeout(15)
+                ->withHeaders([
+                    'X-IPROG-API-TOKEN' => $resolvedToken,
+                ])
                 ->acceptJson()
                 ->asJson()
                 ->post(rtrim(config('services.iprogsms.base_url'), '/') . '/sms_messages/send_bulk', $payload);
