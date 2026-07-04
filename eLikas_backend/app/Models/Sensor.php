@@ -58,7 +58,9 @@ class Sensor extends Model implements Auditable
         'yellow_level',
         'red_level',
         'orange_level',
-        'location_id'
+        'location_id',
+        'last_online',
+        'current_status',
 	];
 
     protected $auditExclude = [
@@ -85,5 +87,20 @@ class Sensor extends Model implements Auditable
     public function mount_location()
     {
         return $this->belongsTo(Location::class, 'location_id');
+    }
+
+    public function determineStatusLevel(float $waterLevel): string
+    {
+        if ($waterLevel >= $this->red_level) {
+            return 'red';
+        }
+        if ($waterLevel >= $this->orange_level) {
+            return 'orange';
+        }
+        if ($waterLevel >= $this->yellow_level) {
+            return 'yellow';
+        }
+
+        return 'normal'; // Fallback / Safe status
     }
 }

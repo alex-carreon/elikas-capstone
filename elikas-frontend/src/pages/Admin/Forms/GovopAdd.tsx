@@ -189,6 +189,7 @@ function BrgyAdd() {
               id="Admin_NewBrgyUsernameField"
               onSubmit={(e) => setUsername(e.target.value)}
               isRequired
+              maxLength={20}
             />
             <TextField
               label="Email"
@@ -197,6 +198,7 @@ function BrgyAdd() {
               onSubmit={(e) => setEmail(e.target.value)}
               isRequired
               error={errors.email}
+              maxLength={50}
             />
             <SelectDropdown
               value={String(levelId)}
@@ -244,12 +246,14 @@ function BrgyAdd() {
               inputType="text"
               id="Admin_NewBrgyPointPersonField"
               onSubmit={(e) => setPointPerson(e.target.value)}
+              maxLength={100}
             />
             <TextField
               label="Point person's position"
               inputType="text"
               id="Admin_NewBrgyPointPositionField"
               onSubmit={(e) => setPointPosition(e.target.value)}
+              maxLength={50}
             />
             <TextField
               label="Password"

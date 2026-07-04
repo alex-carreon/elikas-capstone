@@ -76,15 +76,19 @@ function FlaggedCommentDetails() {
 
     try {
       setLoading(true);
+      setDisabled(true);
+
       await getFlaggedDetails(controller.signal);
     } catch (err: any) {
       if (err.name === "CanceledError") {
         setLoading(false);
+        setDisabled(false);
         return;
       }
       console.log(err);
     } finally {
       setLoading(false);
+      setDisabled(false);
     }
 
     return () => controller.abort();

@@ -18,20 +18,13 @@ class SensorLogService
 
     public function create(array $validated): SensorLog
     {
-        return DB::transaction(function () use ($validated) {
-            $sensor = Sensor::where('sensor_code', $validated['sensor_code'])->first();
-            $water_level = $validated['water_level'];
+        // Fetch the parent sensor using the validated sensor_code
+        $sensor = Sensor::where('sensor_code', $validated['sensor_code'])->firstOrFail();
 
-            if ($water_level < $sensor?->yellow_level) {
-                $status_level = 'normal';
-            } elseif ($water_level < $sensor?->orange_level) {
-                $status_level = 'yellow';
-            } elseif ($water_level < $sensor?->red_level) {
-                $status_level = 'orange';
-            } else {
-                $status_level = 'red';
-            }
+        // Calculate the status using the sensor's individual thresholds
+        $status_level = $sensor->determineStatusLevel((float) $validated['water_level']);
 
+        return DB::transaction(function () use ($validated, $sensor, $status_level) {
             $sensorlog = SensorLog::create([
                 'sensor_code' => $validated['sensor_code'],
                 'water_level' => $validated['water_level'],
@@ -40,8 +33,13 @@ class SensorLogService
                 'log_time' => now()->toDateTimeString()
             ]);
 
-            $sensorlog->refresh();
-            return $sensorlog;
+            // Update the parent sensor's last_online and current_status fields
+            $sensor->update([
+                'last_online'    => now()->toDateTimeString(),
+                'current_status' => $status_level
+            ]);
+
+            return $sensorlog->refresh();
         });
     }
 }
