@@ -49,8 +49,12 @@ Route::get('/test', function () {
 // ---------------------------------------------------------------
 // PUBLIC ROUTES — no token required
 // ---------------------------------------------------------------
-Route::post('/auth/register', [AuthController::class, 'register']);
-Route::post('/auth/login',    [AuthController::class, 'login']);
+Route::post('/auth/register', [AuthController::class, 'register'])
+    ->middleware(['appcheck', 'throttle:5,1']);
+
+Route::post('/auth/login',    [AuthController::class, 'login'])
+    ->middleware('throttle:5,1');
+
 Route::get('/public/sensors', [PublicSensorController::class, 'index']);
 Route::get('/public/sensors/{sensor}', [PublicSensorController::class, 'show']);
 
@@ -64,7 +68,9 @@ Route::get('/capacity-levels', [CapacityLevelController::class, 'index']);
 
 Route::post('/sensor-logs', [SensorLogController::class, 'store']);
 
-Route::post('/email/resend-verification', [AuthController::class, 'resendVerification']);
+Route::post('/email/resend-verification', [AuthController::class, 'resendVerification'])
+    ->middleware('throttle:5,1');
+
 Route::post('/forgot-password', [AuthController::class, 'forgotPassword'])
     ->middleware('throttle:5,1');
 
