@@ -35,7 +35,10 @@ class SensorLogController extends Controller
     {
         try {
             $sensorlog = $service->create($request->validated());
-            return new SensorLogResource($sensorlog);
+            return response()->json([
+                'message' => 'Sensor log recorded and parent updated successfully.',
+                'data'    => new SensorLogResource($sensorlog)
+            ], 210);
         } catch (\Exception $e) {
             return response()->json([
                 'error' => $e->getMessage(),
