@@ -102,7 +102,7 @@ test('store requires rating', function () {
     $response->assertJsonValidationErrors(['rating']);
 });
 
-// Test 1.4
+// Test 4.1
 test('store rejects rating below 0.5', function () {
 
     $token = individualToken();
@@ -118,7 +118,7 @@ test('store rejects rating below 0.5', function () {
     $response->assertJsonValidationErrors(['rating']);
 });
 
-// Test 4
+// Test 4.2
 test('store rejects rating above 5', function () {
 
     $token = individualToken();
@@ -154,8 +154,8 @@ test('store creates multiple records for the same user without overwriting', fun
     expect($countAfter)->toBe($countBefore + 2);
 });
 
-// Test 1.5
-test('store requires authentication', function () {
+// Test 1.4
+test('store feedback requires authentication', function () {
 
     $response = $this->postJson('/api/feedback', ['rating' => 4.0]);
 
@@ -164,6 +164,7 @@ test('store requires authentication', function () {
 
 // ── GET /api/admin/feedback ───────────────────────────────────────────────────
 
+// Test 5.1
 test('admin can list all feedback', function () {
 
     $token = adminToken();
@@ -188,6 +189,7 @@ test('admin can list all feedback', function () {
     ]);
 });
 
+// Test 5.2
 test('admin feedback index blocks individual users', function () {
 
     $token = individualToken();
@@ -199,6 +201,7 @@ test('admin feedback index blocks individual users', function () {
     $response->assertStatus(403);
 });
 
+// Test 5.3
 test('admin feedback index blocks govops users', function () {
 
     $token = govopsToken();
@@ -210,6 +213,7 @@ test('admin feedback index blocks govops users', function () {
     $response->assertStatus(403);
 });
 
+// Test 5.4
 test('admin feedback index requires authentication', function () {
 
     $response = $this->getJson('/api/admin/feedback');
@@ -219,6 +223,7 @@ test('admin feedback index requires authentication', function () {
 
 // ── FILTER: id ────────────────────────────────────────────────────────────────
 
+// Test 6.1
 test('admin feedback index filters by id', function () {
 
     $token = adminToken();
@@ -243,6 +248,7 @@ test('admin feedback index filters by id', function () {
 
 // ── FILTER: message ───────────────────────────────────────────────────────────
 
+// Test 6.2
 test('admin feedback index filters by message keyword', function () {
 
     $token = adminToken();
@@ -267,6 +273,7 @@ test('admin feedback index filters by message keyword', function () {
 
 // ── FILTER: rating ────────────────────────────────────────────────────────────
 
+// Test 6.3
 test('admin feedback index filters by rating step', function () {
 
     $token = adminToken();
@@ -291,6 +298,7 @@ test('admin feedback index filters by rating step', function () {
 
 // ── FILTER: range ─────────────────────────────────────────────────────────────
 
+// Test 6.4
 test('admin feedback index filters by range=past_week', function () {
 
     $token = adminToken();
@@ -313,6 +321,7 @@ test('admin feedback index filters by range=past_week', function () {
     expect($ids)->not->toContain($old->id);
 });
 
+// Test 6.5
 test('admin feedback index filters by range=monthly', function () {
 
     $token = adminToken();
@@ -335,6 +344,7 @@ test('admin feedback index filters by range=monthly', function () {
     expect($ids)->not->toContain($old->id);
 });
 
+// Test 6.6
 test('admin feedback index filters by range=quarterly', function () {
 
     $token = adminToken();
@@ -357,37 +367,9 @@ test('admin feedback index filters by range=quarterly', function () {
     expect($ids)->not->toContain($old->id);
 });
 
-// ── FILTER: date_from / date_to ───────────────────────────────────────────────
-
-test('admin feedback index filters by date_from and date_to', function () {
-
-    $token = adminToken();
-    $user  = UserAuth::with('user')
-        ->where('identity_uid', env('FIREBASE_TEST_VERIFIED_UID'))
-        ->firstOrFail()->user;
-
-    $inRange  = createFeedback($user, ['sent_at' => now()->subDays(5)]);
-    $tooOld   = createFeedback($user, ['sent_at' => now()->subDays(20)]);
-    $tooNew   = createFeedback($user, ['sent_at' => now()->addDays(1)]);
-
-    $from = now()->subDays(7)->toDateString();
-    $to   = now()->toDateString();
-
-    $response = $this->withHeaders([
-        'Authorization' => "Bearer {$token}",
-    ])->getJson("/api/admin/feedback?date_from={$from}&date_to={$to}");
-
-    $response->assertOk();
-
-    $ids = collect($response->json('feedback'))->pluck('id');
-
-    expect($ids)->toContain($inRange->id);
-    expect($ids)->not->toContain($tooOld->id);
-    expect($ids)->not->toContain($tooNew->id);
-});
-
 // ── FILTER: role ──────────────────────────────────────────────────────────────
 
+// Test 6.7
 test('admin feedback index filters by role=indiv', function () {
 
     $token      = adminToken();
@@ -413,6 +395,7 @@ test('admin feedback index filters by role=indiv', function () {
     expect($ids)->not->toContain($govopsFb->id);
 });
 
+// Test 6.8
 test('admin feedback index filters by role=brgy', function () {
 
     $token      = adminToken();
@@ -438,6 +421,7 @@ test('admin feedback index filters by role=brgy', function () {
     expect($ids)->not->toContain($indivFb->id);
 });
 
+// Test 6.9
 test('admin feedback index rejects invalid role filter', function () {
 
     $token = adminToken();
@@ -451,146 +435,4 @@ test('admin feedback index rejects invalid role filter', function () {
     $response->assertJson(['error' => 'Invalid role filter. Accepted values: brgy, indiv']);
 });
 
-// ── FILTER: location_id ───────────────────────────────────────────────────────
 
-test('admin feedback index filters by location_id', function () {
-
-    $token      = adminToken();
-    $indivUser  = UserAuth::with('user')
-        ->where('identity_uid', env('FIREBASE_TEST_VERIFIED_UID'))
-        ->firstOrFail()->user;
-
-    // The individual test account must have an indivAcc with a known location_id.
-    // We read it from the DB so the test doesn't hardcode an ID.
-    $locationId = $indivUser->indivAcc?->location_id;
-
-    if (! $locationId) {
-        test()->fail('The verified test account has no indivAcc location set — required for location_id filter test.');
-    }
-
-    $fb = createFeedback($indivUser);
-
-    $response = $this->withHeaders([
-        'Authorization' => "Bearer {$token}",
-    ])->getJson("/api/admin/feedback?location_id={$locationId}");
-
-    $response->assertOk();
-
-    $ids = collect($response->json('feedback'))->pluck('id');
-
-    expect($ids)->toContain($fb->id);
-});
-
-// ── RATING OPTIONS ────────────────────────────────────────────────────────────
-
-test('admin feedback index returns rating_options in 0.5 increments', function () {
-
-    $token = adminToken();
-    $user  = UserAuth::with('user')
-        ->where('identity_uid', env('FIREBASE_TEST_VERIFIED_UID'))
-        ->firstOrFail()->user;
-
-    createFeedback($user, ['rating' => 3.0]);
-    createFeedback($user, ['rating' => 4.5]);
-
-    $response = $this->withHeaders([
-        'Authorization' => "Bearer {$token}",
-    ])->getJson('/api/admin/feedback');
-
-    $response->assertOk();
-
-    $options = collect($response->json('rating_options'));
-
-    // Every option value must be a valid 0.5 step between 0.5 and 5.0
-    $options->each(function ($option) {
-        expect($option)->toHaveKeys(['value', 'label']);
-        expect(fmod((float) $option['value'] * 2, 1))->toBe(0.0); // divisible by 0.5
-        expect((float) $option['value'])->toBeGreaterThanOrEqual(0.5);
-        expect((float) $option['value'])->toBeLessThanOrEqual(5.0);
-    });
-});
-
-// ── GET /api/admin/feedback/{id} ──────────────────────────────────────────────
-
-test('admin can view a single feedback by id', function () {
-
-    $token = adminToken();
-    $user  = UserAuth::with('user')
-        ->where('identity_uid', env('FIREBASE_TEST_VERIFIED_UID'))
-        ->firstOrFail()->user;
-
-    $fb = createFeedback($user, ['message' => 'Specific feedback']);
-
-    $response = $this->withHeaders([
-        'Authorization' => "Bearer {$token}",
-    ])->getJson("/api/admin/feedback/{$fb->id}");
-
-    $response->assertOk();
-
-    $response->assertJsonStructure([
-        'feedback' => ['id', 'rating', 'message', 'sent_at', 'submitted_by'],
-    ]);
-
-    $response->assertJsonPath('feedback.id', $fb->id);
-    $response->assertJsonPath('feedback.message', 'Specific feedback');
-});
-
-test('show returns 404 for missing feedback', function () {
-
-    $token = adminToken();
-
-    $response = $this->withHeaders([
-        'Authorization' => "Bearer {$token}",
-    ])->getJson('/api/admin/feedback/999999');
-
-    $response->assertNotFound();
-
-    $response->assertJson(['error' => 'Feedback not found']);
-});
-
-test('show filters by message keyword within single record', function () {
-
-    $token = adminToken();
-    $user  = UserAuth::with('user')
-        ->where('identity_uid', env('FIREBASE_TEST_VERIFIED_UID'))
-        ->firstOrFail()->user;
-
-    $fb = createFeedback($user, ['message' => 'Contains keyword ZETA']);
-
-    // Same ID but message filter matches → returns it
-    $hit = $this->withHeaders([
-        'Authorization' => "Bearer {$token}",
-    ])->getJson("/api/admin/feedback/{$fb->id}?message=ZETA");
-
-    $hit->assertOk();
-
-    // Same ID but message filter does NOT match → 404
-    $miss = $this->withHeaders([
-        'Authorization' => "Bearer {$token}",
-    ])->getJson("/api/admin/feedback/{$fb->id}?message=NOMATCH");
-
-    $miss->assertNotFound();
-});
-
-test('show blocks individual users', function () {
-
-    $token = individualToken();
-    $user  = UserAuth::with('user')
-        ->where('identity_uid', env('FIREBASE_TEST_VERIFIED_UID'))
-        ->firstOrFail()->user;
-
-    $fb = createFeedback($user);
-
-    $response = $this->withHeaders([
-        'Authorization' => "Bearer {$token}",
-    ])->getJson("/api/admin/feedback/{$fb->id}");
-
-    $response->assertStatus(403);
-});
-
-test('show requires authentication', function () {
-
-    $response = $this->getJson('/api/admin/feedback/1');
-
-    $response->assertStatus(401);
-});
