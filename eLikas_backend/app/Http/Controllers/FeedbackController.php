@@ -14,13 +14,13 @@ class FeedbackController extends Controller
     // ---------------------------------------------------------------
     public function store(Request $request)
     {
-        try {
-            $user = $request->attributes->get('firebase_user');
-
-            $validated = $request->validate([
+        $validated = $request->validate([
                 'rating'  => 'required|numeric|min:0.5|max:5',
                 'message' => 'nullable|string',
             ]);
+
+        try {
+            $user = $request->attributes->get('firebase_user');
 
             // Round submitted rating to nearest 0.5 before storing
             $cleanRating = $this->roundToHalf((float) $validated['rating']);
