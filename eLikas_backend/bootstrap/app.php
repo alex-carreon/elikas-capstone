@@ -16,6 +16,7 @@ return Application::configure(basePath: dirname(__DIR__))
         'firebase.auth' => \App\Http\Middleware\FirebaseAuthMiddleware::class,
         'role' => \App\Http\Middleware\isRoleMiddleware::class,
         'optional.firebase.auth' => \App\Http\Middleware\OptionalFirebaseAuthMiddleware::class,
+        'appcheck' => \App\Http\Middleware\VerifyFirebaseAppCheck::class,
     ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
