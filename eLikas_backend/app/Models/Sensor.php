@@ -58,7 +58,9 @@ class Sensor extends Model implements Auditable
         'yellow_level',
         'red_level',
         'orange_level',
-        'location_id'
+        'location_id',
+        'last_online',
+        'current_status',
 	];
 
     protected $auditExclude = [
