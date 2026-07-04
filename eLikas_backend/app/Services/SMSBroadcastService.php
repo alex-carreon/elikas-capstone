@@ -135,15 +135,16 @@ class SMSBroadcastService
             $query->where('message_content', 'LIKE', '%' . $filters['search'] . '%');
         }
 
-        if (isset($filters['status'])) {
+        // 🔥 FIX: If an explicit status is given, use it and IGNORE the broad state filter
+        if (isset($filters['status']) && $filters['status'] !== '') {
             $query->where('status', (int) $filters['status']);
         }
-
-        if (!empty($filters['state'])) {
+        // Otherwise, if no specific status is requested, fall back to the tab state grouping
+        elseif (!empty($filters['state'])) {
             if ($filters['state'] === 'active') {
-                $query->where('status', 1);
+                $query->where('status', 1); // Only Scheduled
             } else {
-                $query->whereIn('status', [2, 3, 4]);
+                $query->whereIn('status', [2, 3, 4]); // Sent, Cancelled, Failed
             }
         }
 
@@ -301,7 +302,7 @@ class SMSBroadcastService
 
         try {
             $response = Http::timeout(15)
-                ->withoutVerifying() // 👈 1. Bypass local Windows SSL configuration gaps
+                ->withoutVerifying()
                 ->withHeaders([
                     'X-IPROG-API-TOKEN' => $resolvedToken, // Keep header just in case
                     'Accept'            => 'application/json',
@@ -421,6 +422,28 @@ class SMSBroadcastService
             ? $broadcast->gov_op
             : $broadcast->load('gov_op.user')->gov_op;
 
+        // 1. Parse the timestamps safely
+        $scheduledFor = $broadcast->scheduled_for
+            ? Carbon::parse($broadcast->scheduled_for)->timezone('Asia/Manila')->toDateTimeString()
+            : null;
+
+        $sentAt = $broadcast->sent_at
+            ? Carbon::parse($broadcast->sent_at)->timezone('Asia/Manila')->toDateTimeString()
+            : null;
+
+        $updatedAt = $broadcast->updated_at
+            ? Carbon::parse($broadcast->updated_at)->timezone('Asia/Manila')->toDateTimeString()
+            : null;
+
+        // 2. Generate a dynamic, fallback-safe display date based on status ID
+        $displayDate = match ((int) $broadcast->status) {
+            1 => $scheduledFor ? "Sending on: " . Carbon::parse($scheduledFor)->format('M j, Y g:i A') : "Scheduled",
+            2 => $sentAt ? "Sent on: " . Carbon::parse($sentAt)->format('M j, Y g:i A') : "Sent",
+            3 => "Cancelled",
+            4 => "Failed to send",
+            default => "Unknown state",
+        };
+
         return [
             'id'               => $broadcast->id,
             'message_content'  => $broadcast->message_content,
@@ -428,12 +451,9 @@ class SMSBroadcastService
                 'id'   => $broadcast->status,
                 'name' => $broadcast->broadcast_status?->status_name ?? 'Unknown',
             ],
-            'scheduled_for'    => $broadcast->scheduled_for
-                ? Carbon::parse($broadcast->scheduled_for)->timezone('Asia/Manila')->toDateTimeString()
-                : null,
-            'sent_at'          => $broadcast->sent_at
-                ? Carbon::parse($broadcast->sent_at)->timezone('Asia/Manila')->toDateTimeString()
-                : null,
+            'scheduled_for'    => $scheduledFor,
+            'sent_at'          => $sentAt,
+            'display_date'     => $displayDate,
             'total_recipients' => $broadcast->total_recipients,
             'sender'           => [
                 'govop_id'       => $sender?->id,
