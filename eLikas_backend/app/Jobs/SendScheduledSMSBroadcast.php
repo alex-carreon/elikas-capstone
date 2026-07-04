@@ -23,24 +23,34 @@ class SendScheduledSMSBroadcast implements ShouldQueue, ShouldBeEncrypted
 
     public function handle(SMSBroadcastService $smsService): void
     {
-        // This guards only against truly unexpected exceptions
-        // (e.g. DB errors) so a queue worker crash doesn't retry forever
-        // without ever marking the broadcast as failed.
         try {
-            $smsService->sendScheduledBroadcast($this->broadcastId, $this->apiToken);
+
+            $broadcast = SMSBroadcast::find($this->broadcastId);
+
+            if (!$broadcast || $broadcast->status === 3) {
+                return;
+            }
+
+            $result = $smsService->sendScheduledBroadcast($this->broadcastId, $this->apiToken);
+
+            if (is_array($result) && (isset($result['failed']) && $result['failed'])) {
+                throw new \Exception($result['message'] ?? 'Gateway dispatch failed.');
+            }
+
         } catch (Throwable $e) {
-            Log::error('SendScheduledSMSBroadcast@handle unexpected exception', [
+            Log::error('SendScheduledSMSBroadcast@handle execution failed', [
                 'broadcast_id' => $this->broadcastId,
                 'attempt'      => $this->attempts(),
                 'error'        => $e->getMessage(),
             ]);
 
+            // Re-throw the exception so Laravel knows the job failed and can retry or fail.
             throw $e;
         }
     }
 
     /**
-     * Called once all retry attempts are exhausted.
+     * Called once all retry attempts are exhausted or a fatal error occurs.
      */
     public function failed(?Throwable $exception): void
     {
@@ -49,8 +59,7 @@ class SendScheduledSMSBroadcast implements ShouldQueue, ShouldBeEncrypted
             'error'        => $exception?->getMessage(),
         ]);
 
-        // status 4 = Failed (3 = Cancelled). Mark broadcast as failed
-        // since all retry attempts have been exhausted.
+        // status 4 = Failed. Mark broadcast as failed in the database.
         SMSBroadcast::where('id', $this->broadcastId)->update(['status' => 4]);
     }
 }
