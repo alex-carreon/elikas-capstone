@@ -86,4 +86,19 @@ class Sensor extends Model implements Auditable
     {
         return $this->belongsTo(Location::class, 'location_id');
     }
+
+    public function determineStatusLevel(float $waterLevel): string
+    {
+        if ($waterLevel >= $this->red_level) {
+            return 'red';
+        }
+        if ($waterLevel >= $this->orange_level) {
+            return 'orange';
+        }
+        if ($waterLevel >= $this->yellow_level) {
+            return 'yellow';
+        }
+
+        return 'normal'; // Fallback / Safe status
+    }
 }
