@@ -32,7 +32,7 @@ String getFormattedTime();
 void trackTrendAndEvaluateState(float newMedian);
 float getMedianReading();
 
-const char* currentFirmwareVersion = "1.2.0";
+const char* currentFirmwareVersion = "1.2.1";
 //const char* sensorCode = SECRET_SENSOR;
 String sensorCode = "";
 
@@ -568,34 +568,32 @@ void trackTrendAndEvaluateState(float newMedian) {
   // Store the newly calculated burst median at the end of the history array
   recentMedians[REQUIRED_CONSECUTIVE_RISES] = newMedian;
 
-  // Maintain a counter so trend validation doesn't run until the history array is full
+  // Wait for more readings if less than required for debouncing 
   if (storedMediansCount <= REQUIRED_CONSECUTIVE_RISES) {
     storedMediansCount++;
-    return; // Need historical data depth before detecting trends
+    return; 
   }
 
-  // Evaluate if the water level is rising consistently across N steps
-  bool isSustainedRise = true;
-  for (int i = 0; i < REQUIRED_CONSECUTIVE_RISES; i++) {
-    float previousDistance = recentMedians[i];
-    float currentDistance = recentMedians[i + 1];
-    
-    // Water is rising when current distance to sensor is strictly less than previous distance
-    // verify it crosses minimal elevation threshold
-    if ((previousDistance - currentDistance) < ELEVATION_THRESHOLD) {
-      isSustainedRise = false;
-      break;
-    }
-  }
+  // Compare oldest reading in the window to newest reading
+  float oldestDistance = recentMedians[0];
+  float newestDistance = recentMedians[REQUIRED_CONSECUTIVE_RISES];
+  
+  // Total rise over the last 3 minutes
+  float netRise = oldestDistance - newestDistance; 
 
-  // Shift into Active mode 
+  // Over 3 minutes, the total cumulative rise must exceed 3 times the single-minute threshold (e.g., 3cm * 3 = 9cm)
+  float totalRequiredRise = ELEVATION_THRESHOLD * REQUIRED_CONSECUTIVE_RISES;
+
+  bool isSustainedRise = (netRise >= totalRequiredRise);
+
+  // State change logic
   if (isSustainedRise && !isActiveMode) {
     isActiveMode = true;
-    WebSerial.println("!!! Critical Surge Trend Detected! Escalating to ACTIVE Mode (1-min intervals) !!!");
+    WebSerial.printf("!!! CRITICAL SURGE DETECTED !!! Net rise of %.2fm in 3 mins. Escalating to ACTIVE Mode!\n", netRise);
   } 
   else if (!isSustainedRise && isActiveMode) {
-    // Bring it back to quiescent/normal mode if the surge subsides
+    // Only drop back to normal mode if the water stops rising over a 3-minute average
     isActiveMode = false;
-    WebSerial.println("Sustained surge ended. Reverting to Normal Mode (10-min intervals)");
+    WebSerial.println("Sustained surge ended. Reverting to Normal Mode (10-min intervals).");
   }
 }
