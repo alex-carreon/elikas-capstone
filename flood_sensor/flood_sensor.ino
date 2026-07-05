@@ -32,8 +32,7 @@ String getFormattedTime();
 void trackTrendAndEvaluateState(float newMedian);
 float getMedianReading();
 
-const char* currentFirmwareVersion = "1.3.0";
-//const char* sensorCode = SECRET_SENSOR;
+const char* currentFirmwareVersion = "1.3.1";
 String sensorCode = "";
 
 // Github Repo Details
@@ -90,7 +89,7 @@ void setup() {
 
   // load stored sensor code from nvs
   preferences.begin("sensor", true); // true = read-only mode
-  sensorCode = preferences.getString("sensor_code", SECRET_SENSOR); // defaults to SECRET_SENSOR if empty
+  sensorCode = preferences.getString("sensor_code"); 
   preferences.end();
 
   manageConnection(true);
