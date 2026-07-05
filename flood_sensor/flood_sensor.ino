@@ -29,8 +29,10 @@ void downloadAndApplyFirmware(String url);
 void sendFloodData(float distance);
 void timeAvailable(struct timeval *t);
 String getFormattedTime();
+void trackTrendAndEvaluateState(float newMedian);
+float getMedianReading();
 
-const char* currentFirmwareVersion = "1.1.1";
+const char* currentFirmwareVersion = "1.2.0";
 //const char* sensorCode = SECRET_SENSOR;
 String sensorCode = "";
 
@@ -56,8 +58,27 @@ bool timeSynchronized = false;
 Preferences preferences;
 AsyncWebServer server(80);
 
-unsigned long lastSendTime = 0;
-const unsigned long sendInterval = 15000;
+// Filtering and Sampling Specs 
+const int BURST_SIZE = 5;               // Number of readings per 1-minute burst
+const unsigned long BURST_INTERVAL = 60000; // 1 minute between sampling bursts
+
+// Relay Specs 
+const unsigned long QUIESCENT_INTERVAL = 600000; // 10 minutes (600,000 ms)
+const unsigned long ACTIVE_INTERVAL = 60000;     // 1 minute (60,000 ms)
+
+// Trend Detection Specs
+const float ELEVATION_THRESHOLD = 0.03; // 3 cm (0.03m) threshold to count as a "rise"
+const int REQUIRED_CONSECUTIVE_RISES = 3; // N stable readings to confirm trend (Debouncing)
+
+// State Tracking Variables
+unsigned long lastBurstTime = 0;
+unsigned long lastTransmissionTime = 0;
+bool isActiveMode = false;
+
+// Historical Tracking for Trend Analysis
+float recentMedians[REQUIRED_CONSECUTIVE_RISES + 1] = {0}; 
+int storedMediansCount = 0;
+
 
 void setup() {
   Serial.begin(115200);
@@ -126,21 +147,42 @@ void loop() {
   WebSerial.loop();
 
   unsigned long now = millis();
-  if (now - lastSendTime >= sendInterval) {
-    lastSendTime = now;
+
+  // Per Minute Sampling Burst & Trend Evaluation
+  if (now - lastBurstTime >= BURST_INTERVAL) {
+    lastBurstTime = now;
+
     if (timeSynchronized) {
-      float distance = readDistance();
-      if (distance < 0) {
-        WebSerial.println("No reading / out of range");
+      float currentMedian = getMedianReading();
+      
+      if (currentMedian < 0) {
+        WebSerial.println("[Burst Error] Out of range or invalid reading.");
       } else {
-        sendFloodData(distance);
+        WebSerial.printf("[Burst Success] Minute Median Distance: %.2fm\n", currentMedian);
+        trackTrendAndEvaluateState(currentMedian);
       }
     } else {
       WebSerial.println("Waiting for NTP sync...");
     }
   }
-}
 
+  // Adaptive Transmission Strategy
+  unsigned long currentTransmissionInterval = isActiveMode ? ACTIVE_INTERVAL : QUIESCENT_INTERVAL;
+
+  if (now - lastTransmissionTime >= currentTransmissionInterval) {
+    lastTransmissionTime = now;
+
+    if (timeSynchronized) {
+      // Fetch a fresh filtered median directly for the transmission payload
+      float transmissionDistance = getMedianReading(); 
+      
+      if (transmissionDistance >= 0) {
+        WebSerial.printf("Transmitting data. Mode: %s\n", isActiveMode ? "ACTIVE" : "QUIESCENT");
+        sendFloodData(transmissionDistance);
+      }
+    }
+  }
+}
 
 float readDistance() {
   digitalWrite(TRIG_PIN, LOW); 
@@ -480,4 +522,80 @@ String getFormattedTime() {
   strftime(buffer, sizeof(buffer), "%Y-%m-%d %H:%M:%S", &timeinfo);   // formats time into "YYYY-MM-DD HH:MM:SS" if successful
 
   return String(buffer);
+}
+
+float getMedianReading() {
+  float readings[BURST_SIZE];
+  int validCount = 0;
+
+  // Collect a rapid burst of ultrasonic measurements
+  for (int i = 0; i < BURST_SIZE; i++) {
+    float raw = readDistance();
+    if (raw > 0) {   // filter out immediate out-of-range (-1) errors
+      readings[validCount] = raw;
+      validCount++;
+    }
+    delay(40);   // small delay between pulses to prevent echo overlap
+  }
+
+  // if no valid readings were collected at all, return error
+  if (validCount == 0) return -1.0;
+
+  // Sort the valid readings (Simple Bubble Sort)
+  for (int i = 0; i < validCount - 1; i++) {
+    for (int j = 0; j < validCount - i - 1; j++) {
+      if (readings[j] > readings[j + 1]) {
+        float temp = readings[j];
+        readings[j] = readings[j + 1];
+        readings[j + 1] = temp;
+      }
+    }
+  }
+
+  // Return the median 
+  return readings[validCount / 2];
+}
+
+void trackTrendAndEvaluateState(float newMedian) {
+  if (newMedian < 0) return; // Ignore invalid burst measurements
+
+  // Shift history array to make room for the latest median
+  // [Index 0: Oldest Reading] <--- [Index 1] <--- [Index 2] <--- [Index 3: Newest Reading]
+  for (int i = 0; i < REQUIRED_CONSECUTIVE_RISES; i++) {
+    recentMedians[i] = recentMedians[i + 1];
+  }
+
+  // Store the newly calculated burst median at the end of the history array
+  recentMedians[REQUIRED_CONSECUTIVE_RISES] = newMedian;
+
+  // Maintain a counter so trend validation doesn't run until the history array is full
+  if (storedMediansCount <= REQUIRED_CONSECUTIVE_RISES) {
+    storedMediansCount++;
+    return; // Need historical data depth before detecting trends
+  }
+
+  // Evaluate if the water level is rising consistently across N steps
+  bool isSustainedRise = true;
+  for (int i = 0; i < REQUIRED_CONSECUTIVE_RISES; i++) {
+    float previousDistance = recentMedians[i];
+    float currentDistance = recentMedians[i + 1];
+    
+    // Water is rising when current distance to sensor is strictly less than previous distance
+    // verify it crosses minimal elevation threshold
+    if ((previousDistance - currentDistance) < ELEVATION_THRESHOLD) {
+      isSustainedRise = false;
+      break;
+    }
+  }
+
+  // Shift into Active mode 
+  if (isSustainedRise && !isActiveMode) {
+    isActiveMode = true;
+    WebSerial.println("!!! Critical Surge Trend Detected! Escalating to ACTIVE Mode (1-min intervals) !!!");
+  } 
+  else if (!isSustainedRise && isActiveMode) {
+    // Bring it back to quiescent/normal mode if the surge subsides
+    isActiveMode = false;
+    WebSerial.println("Sustained surge ended. Reverting to Normal Mode (10-min intervals)");
+  }
 }
