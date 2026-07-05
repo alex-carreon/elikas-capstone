@@ -18,8 +18,8 @@
 #include <Update.h>
 #include <ArduinoOTA.h>
 
-const char* currentFirmwareVersion = "1.0.1";
-const char* sensorId = SECRET_SENSOR;
+const char* currentFirmwareVersion = "1.0.2";
+const char* sensorCode = SECRET_SENSOR;
 
 // Github Repo Details
 const char* github_owner = GITHUB_OWNER;
@@ -44,7 +44,7 @@ Preferences preferences;
 AsyncWebServer server(80);
 
 unsigned long lastSendTime = 0;
-const unsigned long sendInterval = 10000;
+const unsigned long sendInterval = 15000;
 
 void setup() {
   Serial.begin(115200);
@@ -58,6 +58,7 @@ void setup() {
 
   ArduinoOTA.begin();
 
+  Serial.begin(115200);
   WebSerial.begin(&server);
 
   WebSerial.onMessage([](uint8_t *data, size_t len) {
@@ -99,7 +100,7 @@ void setup() {
   // Start AsyncWebServer
   server.begin();
 
-  checkForFirmwareUpdate();
+  //checkForFirmwareUpdate();
 }
 
 
@@ -143,6 +144,9 @@ float readDistance() {
   // if reading is outside reliable sensor range (20 cm – 450 cm)
   if (distance < 20 || distance > 450) return -1; 
 
+  // convert into meters
+  distance /= 100;
+
   return distance;
 }
 
@@ -181,6 +185,7 @@ void manageConnection(bool isInitialSetup) {
   WiFiManager wm;
   String savedPass = getPortalPassword();
   WebSerial.println("Current Setup Password: " + savedPass);
+  Serial.println("Current Setup Password: " + savedPass);
 
   // hides custom password field under advanced settings
   String html = "<details><summary><b>Advanced Settings</b></summary><br>Set New Setup Password";
@@ -392,10 +397,10 @@ void sendFloodData(float distance) {
   String currentTimestamp = getFormattedTime();
 
   JsonDocument doc;
-  doc["api_key"] = api_key;
-  doc["sensor_id"] = sensorId;
-  doc["distance_cm"] = distance;
-  doc["log_time"] = currentTimestamp;
+  doc["apiKey"] = api_key;
+  doc["sensorCode"] = sensorCode;
+  doc["waterLevel"] = distance;
+  doc["sensorTimestamp"] = currentTimestamp;
 
   String payload;
   serializeJson(doc, payload);
