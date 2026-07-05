@@ -76,8 +76,9 @@ class StoreEvacuationAreaController extends Controller
                 ], 401);
             }
 
-            // Enforces the max-10-active-pins-per-user rule before doing any work.
-            if ($this->activePinCount((int) $user->id) >= self::MAX_ACTIVE_PINS) {
+            // Enforce the max-10-active-pins rule for individual users only (role_id 3).
+            // Admins (1) and govop/barangay operators (2) are exempt.
+            if ($user->role_id === 3 && $this->activePinCount((int) $user->id) >= self::MAX_ACTIVE_PINS) {
                 return response()->json([
                     'error' => 'Maximum active pin limit reached. You may only have '
                         . self::MAX_ACTIVE_PINS . ' active evacuation pins at a time. '
