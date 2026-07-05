@@ -32,7 +32,7 @@ String getFormattedTime();
 void trackTrendAndEvaluateState(float newMedian);
 float getMedianReading();
 
-const char* currentFirmwareVersion = "1.2.1";
+const char* currentFirmwareVersion = "1.2.2";
 //const char* sensorCode = SECRET_SENSOR;
 String sensorCode = "";
 
@@ -67,7 +67,7 @@ const unsigned long QUIESCENT_INTERVAL = 600000; // 10 minutes (600,000 ms)
 const unsigned long ACTIVE_INTERVAL = 60000;     // 1 minute (60,000 ms)
 
 // Trend Detection Specs
-const float ELEVATION_THRESHOLD = 0.03; // 3 cm (0.03m) threshold to count as a "rise"
+const float ELEVATION_THRESHOLD = 0.02; // 3 cm (0.03m) threshold to count as a "rise"
 const int REQUIRED_CONSECUTIVE_RISES = 3; // N stable readings to confirm trend (Debouncing)
 
 // State Tracking Variables
