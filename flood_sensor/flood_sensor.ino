@@ -69,10 +69,10 @@ void setup() {
   sensorCode = preferences.getString("sensor_code", SECRET_SENSOR); // defaults to SECRET_SENSOR if empty
   preferences.end();
 
+  manageConnection(true);
+
   WebSerial.begin(&server);
   server.begin();   // start AsyncWebServer
-
-  manageConnection(true);
 
   // initialize ntp and OTA after a live wifi connection
   sntp_set_time_sync_notification_cb(timeAvailable);   // trip time sync flag
@@ -256,35 +256,18 @@ void manageConnection(bool isInitialSetup) {
       preferences.end();
       WebSerial.println("New password saved to memory: " + newPass);
     } else {
-      WebSerial.println("Error: Password too short! Ignored.");
+      Serial.println("Error: Password too short! Ignored.");
     } 
 
     sensorCode = String(sensor_code.getValue());
     preferences.begin("sensor", false);
     preferences.putString("ap_pass", newPass);  // write new password into nvs if valid
     preferences.end();
-    WebSerial.println("Assigned Sensor Code: " + sensorCode);
+    Serial.println("Assigned Sensor Code: " + sensorCode);
 
     shouldSaveConfig = false; // reset the flag so it doesn't loop save
 
-    // Connect to the network after config
-    WebSerial.println("Applying changes and connecting to network...");
-    WiFi.disconnect(); 
-    WiFi.begin();      
-    
-    int attempts = 0;
-    while (WiFi.status() != WL_CONNECTED && attempts < 20) {
-      delay(500);
-      Serial.print(".");
-      attempts++;
-    }
-    
-    if(WiFi.status() == WL_CONNECTED) {
-      WebSerial.println("\nSuccessfully Connected! No restart required.");
-      printStatus();
-    } else {
-      WebSerial.println("Failed to connect with new credentials.");
-    }
+    ESP.restart();
   }
 }
 
