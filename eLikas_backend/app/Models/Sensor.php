@@ -103,4 +103,11 @@ class Sensor extends Model implements Auditable
 
         return 'normal'; // Fallback / Safe status
     }
+
+    public function calculateWaterLevel(float $waterLevel): float
+    {
+        // Assuming the water level is measured from the bottom of the sensor
+        // and mount_height is the height of the sensor from the ground.
+        return $this->mount_height - $waterLevel;
+    }
 }
