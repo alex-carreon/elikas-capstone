@@ -50,10 +50,15 @@ function Map() {
   //   [21.5, 127.0], // northeast corner
   // ];
 
-  const manilaBounds: LatLngBoundsExpression = [
-    [14.5495, 120.9205], // southwest corner
-    [14.6434, 121.0343], // northeast corner
+  const luzonBounds: LatLngBoundsExpression = [
+    [14.28, 120.85], // Southwest
+    [14.8, 121.15], // Northeast
   ];
+
+  // const manilaBounds: LatLngBoundsExpression = [
+  //   [14.5495, 120.9205], // southwest corner
+  //   [14.6434, 121.0343], // northeast corner
+  // ];
 
   const mapRef = useRef<LeafletMap | null>(null);
 
@@ -298,10 +303,10 @@ function Map() {
           <MapContainer
             id="Map_Container"
             style={{ height: "93dvh", width: "100%" }}
-            maxBounds={manilaBounds}
+            maxBounds={luzonBounds}
             maxBoundsViscosity={1.0}
-            minZoom={12}
-            // minZoom={6}
+            // minZoom={12}
+            minZoom={11}
             ref={mapRef}
           >
             <MapComp

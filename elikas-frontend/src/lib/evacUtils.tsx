@@ -70,7 +70,10 @@ export const handleSubmit = async ({
       ) {
         return "The expiry date must be a date after now.";
       }
-      return "Creating Pin failed. Please make sure that all required fields are filled";
+      if (err.response.data.message === "Too Many Attempts") {
+        return "Too many attempts. Please try again later.";
+      }
+      return err.response.data.error;
     },
     position: "top-center",
   });
