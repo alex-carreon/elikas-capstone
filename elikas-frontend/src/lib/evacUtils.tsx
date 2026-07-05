@@ -64,16 +64,16 @@ export const handleSubmit = async ({
     loading: "Adding your pin to the map...",
     success: "Pin successfully added!",
     error: (err: any) => {
-      if (
-        err.response.data.details ===
-        "The expiry field must be a date after now."
-      ) {
-        return "The expiry date must be a date after now.";
+      if (err.response.data.details) {
+        return err.response.data.details;
       }
-      if (err.response.data.message === "Too Many Attempts") {
-        return "Too many attempts. Please try again later.";
+      if (err.response.data.message) {
+        return err.response.data.message;
       }
-      return err.response.data.error;
+      if (err.response.data.error) {
+        return err.response.data.error;
+      }
+      return "An unexpected error has occurred";
     },
     position: "top-center",
   });
@@ -156,8 +156,6 @@ export const handleUpdate = async ({
     expiry: expiry,
   });
 
-  console.log(responsePromise);
-
   toast.promise(responsePromise, {
     loading: "Updating your pin...",
     success: "Pin successfully updated!",
@@ -168,6 +166,15 @@ export const handleUpdate = async ({
         "The expiry date cannot be modified for non-persistent (ad-hoc) evacuation pins. Set is_persistent to true before adjusting the expiry, or omit the expiry field."
       ) {
         return "Non-persistent evacuation pins does not allow change in expiry.";
+      }
+      if (
+        err.response.data.error ===
+        "Forbidden. You may only update your own evacuation area pins"
+      ) {
+        return "You may only update your own evacuation area pins.";
+      }
+      if (err.response.data.error === "Evacuation area not found") {
+        return "This evacuation pin does not exist.";
       }
       return err.response?.data?.message || "Please try again.";
     },
@@ -210,7 +217,10 @@ export const handleDelete = async ({
         return "Pin Deactivated!";
       },
       error: (err: any) => {
-        return err.response?.data?.message || "Please try again.";
+        if (err.response.data.error) {
+          return err.response.data.error;
+        }
+        return "An unexpected error occurred. Please try again.";
       },
       position: "top-center",
     });
@@ -278,7 +288,10 @@ export const handleReactivate = ({
     loading: "Re-activating this pin...",
     success: "Pin Re-activated!",
     error: (err: any) => {
-      return err.response.data;
+      if (err.response.data.error) {
+        return err.response.data.error;
+      }
+      return "An unexpected error occurred. Please try again.";
     },
     position: "top-center",
   });

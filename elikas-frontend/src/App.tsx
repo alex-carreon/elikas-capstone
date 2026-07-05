@@ -178,13 +178,13 @@ function App() {
               <Route element={<ConstNavbar />}>
                 <Route path="/EvacForm" element={<EvacForm />} />
                 <Route path="/HazardForm" element={<HazardForm />} />
+                <Route path="/EvacForm/:id" element={<EvacForm />} />
+                <Route path="/HazardForm/:id" element={<HazardForm />} />
               </Route>
             </Route>
 
             <Route element={<ProtectedRoute userRole={["indiv", "brgy_op"]} />}>
               <Route element={<ConstNavbar />}>
-                <Route path="/EvacForm/:id" element={<EvacForm />} />
-                <Route path="/HazardForm/:id" element={<HazardForm />} />
                 <Route path="/Feedback" element={<Feedback />} />
                 <Route path="/ChangeEmail" element={<ChangeEmail />} />
               </Route>

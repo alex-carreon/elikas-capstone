@@ -175,14 +175,32 @@ function PostRow({
       setVoteLoad(true);
 
       if (isHazardPost) {
-        await api.post(`/flood-paths/${id}/vote`, {
+        const response = api.post(`/flood-paths/${id}/vote`, {
           vote: voteValue,
+        });
+
+        toast.promise(response, {
+          error: (err: any) => {
+            if (err.response.data.message) {
+              return err.response.data.message;
+            }
+            return "An unexpected error occurred. Please try again.";
+          },
         });
       }
 
       if (isEvacComments) {
-        await api.post(`/comments/${id}/vote`, {
+        const response = api.post(`/comments/${id}/vote`, {
           vote: voteValue,
+        });
+
+        toast.promise(response, {
+          error: (err: any) => {
+            if (err.response.data.message) {
+              return err.response.data.message;
+            }
+            return "An unexpected error occurred. Please try again.";
+          },
         });
       }
 
@@ -209,18 +227,10 @@ function PostRow({
           success:
             "Comment has been flagged! Thank you for making this community safer for everyone.",
           error: (err: any) => {
-            if (
-              err.response.data.message === "The reason id field is required."
-            ) {
-              return "A reason is required to report a comment.";
+            if (err.response.data.message) {
+              return err.response.data.message;
             }
-            if (
-              err.response.data.message ===
-              "You cannot flag your own flood path."
-            ) {
-              return "You cannot flag your own flood path.";
-            }
-            return "An error occurred. Please try again.";
+            return "An unexpected error occurred. Please try again.";
           },
           position: "top-center",
         });
@@ -242,12 +252,10 @@ function PostRow({
             "Comment has been flagged! Thank you for making this community safer for everyone.",
 
           error: (err: any) => {
-            if (
-              err.response.data.message === "The reason id field is required."
-            ) {
-              return "A reason is required to report a comment.";
+            if (err.response.data.message) {
+              return err.response.data.message;
             }
-            return "An error ocurred. Please try again.";
+            return "An unexpected error occurred. Please try again.";
           },
           position: "top-center",
         });
