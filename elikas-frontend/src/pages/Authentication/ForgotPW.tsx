@@ -14,14 +14,16 @@ function ForgotPW() {
     setDisabled(true);
     const response = api.post("/forgot-password", { email: email });
 
-    console.log(response);
-
     toast.promise(response, {
       loading: "Verifying your email...",
-      success: "An email has been sent!",
+      success:
+        "Check your email for password reset instructions if this account exists.",
       error: (err: any) => {
         if (err.response.data.details === "RESET_PASSWORD_EXCEED_LIMIT") {
           return "Too many attempts. Please try again later.";
+        }
+        if (err.response.data.error) {
+          return err.response.data.error;
         }
         return "An unexpected error occurred.";
       },

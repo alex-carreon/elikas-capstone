@@ -124,7 +124,6 @@ function Profile() {
       username: newUsername,
       ...(role === "indiv" && { first_name: firstName }),
       ...(role === "indiv" && { last_name: lastName }),
-      email: email,
       ...(brgyId && { location_id: brgyId }),
       ...(contactTouched && { phone: newContact }),
       avatar_seed: seed,
@@ -132,9 +131,10 @@ function Profile() {
       ...(role === "brgy_op" && { point_person_position: pointPosition }),
     });
 
-    console.log(response);
-
     if (!response) {
+      toast.error(
+        "Updating your profile was unsuccessful. Please try again later.",
+      );
       return;
     }
 
@@ -142,18 +142,24 @@ function Profile() {
       loading: "Updating your profile...",
       success: "Profile updated!",
       error: (err: any) => {
-        if (
-          err.response.data.details === "The username has already been taken."
-        ) {
-          return "Username has already been taken.";
+        if (err.response.data.details) {
+          return err.response.data.details;
         }
-        if (
-          err.response.data.errors.phone[0] ===
-          "This phone number is already in use."
-        ) {
+        if (err.response.data.errors.phone?.[0]) {
           return "This phone number has already been taken";
         }
-        return "Update failed";
+        if (
+          err.response.data.errors.point_person?.[0] ||
+          err.response.data.errors.point_position?.[0] ||
+          err.response.data.errors.first_name?.[0] ||
+          err.response.data.errors.last_name?.[0]
+        ) {
+          return "You cannot update this field";
+        }
+        if (err.response.data.errors.username?.[0]) {
+          return err.response.data.errors.username?.[0];
+        }
+        return "An unexpected error occurred. Please try again.";
       },
     });
 
@@ -483,13 +489,10 @@ function Profile() {
                   <div className="w-full flex flex-col gap-1">
                     <TextField
                       label="Email Address"
-                      placeholder={email}
-                      inputType="text"
+                      inputType="email"
                       id="Profile_Email"
                       readonly
                       value={email}
-                      onSubmit={(e) => setEmail(e.target.value)}
-                      maxLength={50}
                     />
                     <ButtonComp
                       text="Change Email"
@@ -589,6 +592,7 @@ function Profile() {
                           value={pointPerson}
                           readonly={!isEditable}
                           onSubmit={(e) => setPointPerson(e.target.value)}
+                          maxLength={100}
                         />
                         <TextField
                           label="Point Person's Position"
@@ -598,6 +602,7 @@ function Profile() {
                           readonly={!isEditable}
                           value={pointPosition}
                           onSubmit={(e) => setPointPosition(e.target.value)}
+                          maxLength={50}
                         />
                       </div>
                     )}

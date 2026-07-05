@@ -52,75 +52,100 @@ function BrgyAdd() {
   };
 
   const pwHasWhiteSpace = (password: string) => {
-    console.log(/\s/.test(password));
     return /\s/.test(password);
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
-    try {
-      if (pw != confirmPw) {
-        throw new Error("Passwords do not match");
-      }
-
-      if (!isValidPassword(pw)) {
-        throw new Error(
-          "Password must be 8 characters minimum, and have at least one uppercase, one lowercase, one number, and one special character.",
-        );
-      }
-
-      if (pwHasWhiteSpace(pw)) {
-        throw new Error("Password should not have any spaces.");
-      }
-
-      const createPromise = api.post("/admin/create-govop", {
-        username: username,
-        email: email,
-        password: pw,
-        level_id: levelId,
-        location_id: brgyId ? brgyId : cityId,
-        point_person: pointPerson,
-        point_position: pointPosition,
+    if (pw != confirmPw) {
+      setErrors({
+        email: "",
+        pw: "Passwords do not match.",
+        confirmPw: "Passwords do not match.",
       });
-
-      createPromise.catch((err) => console.log(err.response?.data));
-
-      toast.promise(createPromise, {
-        loading: "Creating Govop User...",
-        success: () => {
-          navigate(-1);
-          return "Govop user has been created!";
-        },
-        error: "Govop creation failed",
-        position: "top-center",
+      return;
+    } else {
+      setErrors({
+        email: "",
+        pw: "",
+        confirmPw: "",
       });
-
-      createPromise.then(() => {
-        navigate("/admin-brgy");
-      });
-    } catch (err: any) {
-      console.log(err.response?.data);
-      if (err.code === "auth/email-already-in-use") {
-        setErrors({
-          email: "This email is already registered.",
-          pw: "",
-          confirmPw: "",
-        });
-      } else if (err.code === "auth/weak-password") {
-        setErrors({
-          pw: "Password must be at least 6 characters.",
-          confirmPw: "",
-          email: "",
-        });
-      } else if (err instanceof Error) {
-        setErrors({
-          email: " ",
-          pw: err.message,
-          confirmPw: err.message,
-        });
-      }
     }
+
+    if (!isValidPassword(pw)) {
+      setErrors({
+        email: "",
+        pw: "Password must be 8 characters minimum, and have at least one uppercase, one lowercase, one number, and one special character.",
+        confirmPw: "",
+      });
+      return;
+    } else {
+      setErrors({
+        email: "",
+        pw: "",
+        confirmPw: "",
+      });
+    }
+
+    if (pwHasWhiteSpace(pw)) {
+      setErrors({
+        email: "",
+        pw: "",
+        confirmPw: "Password must not have spaces.",
+      });
+      return;
+    } else {
+      setErrors({
+        email: "",
+        pw: "",
+        confirmPw: "",
+      });
+    }
+
+    const createPromise = api.post("/admin/create-govop", {
+      username: username,
+      email: email,
+      password: pw,
+      level_id: levelId,
+      location_id: brgyId ? brgyId : cityId,
+      point_person: pointPerson,
+      point_position: pointPosition,
+    });
+
+    toast.promise(createPromise, {
+      loading: "Creating Govop User...",
+      success: "Govop user has been created!",
+      error: (err: any) => {
+        if (err.response.data.errors.username?.[0]) {
+          return err.response.data.errors.username?.[0];
+        }
+        if (err.response.data.errors.email?.[0]) {
+          setErrors({
+            email: err.response.data.errors.email?.[0],
+            pw: "",
+            confirmPw: "",
+          });
+          return err.response.data.errors.email?.[0];
+        }
+        return "An unexpected error occurred. Please try again.";
+      },
+      position: "top-center",
+    });
+
+    createPromise
+      .then(() => {
+        navigate(-1);
+      })
+      .catch((error: any) => {
+        if (error.response) {
+          console.error(error.response);
+        } else if (error.request) {
+          console.error(error.request);
+        } else {
+          console.error(error.message);
+        }
+      });
   };
 
   useEffect(() => {

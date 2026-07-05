@@ -126,28 +126,17 @@ export const handleSubmit = async ({
       },
     });
 
-    console.log(response);
-
     toast.promise(response, {
       loading: "Adding your pin to the map...",
       success: "Pin successfully added!",
       error: (err) => {
-        if (
-          err.response.data.message ===
-          "The expiry field must be a date after now."
-        ) {
-          return "The expiry date must be a date after now.";
+        if (err.response.data.message) {
+          return err.response.data.message;
         }
-        if (
-          err.response.data.message ===
-          "This flood path overlaps an existing active flood path."
-        ) {
-          return "The flood path overlaps an existing flood path.";
+        if (err.response.errors > 0) {
+          return "Please fill all fields mark with a *";
         }
-        if (err.response.data.message === "Too Many Attempts") {
-          return "Too many attempts. Please try again later.";
-        }
-        return "An error occurred while creating the pin. Please make sure that all required fields are filled.";
+        return "An unexpected error occurred. Please try again.";
       },
       position: "top-center",
     });
@@ -158,8 +147,7 @@ export const handleSubmit = async ({
       })
       .catch((error: any) => {
         if (error.response) {
-          console.error("Status:", error.response.status);
-          console.error("Data:", error.response.data);
+          console.error("Status:", error.response);
         } else if (error.request) {
           console.error("No response received:", error.request);
         } else {
@@ -244,19 +232,10 @@ export const handleUpdate = async ({
     loading: "Saving your updates...",
     success: "Pin successfully updated!",
     error: (err: any) => {
-      if (
-        err.response?.data?.message ===
-        "The expiry field must be a date after now."
-      ) {
-        return "The expiry date must be a date after now.";
+      if (err.response.data.message) {
+        return err.response.data.message;
       }
-      if (
-        err.response.data.message ===
-        "This flood path overlaps an existing active flood path."
-      ) {
-        return "The flood path overlaps an existing flood path.";
-      }
-      return "There was an error updating your flood hazard";
+      return "An unexpected error occurred. Please try again.";
     },
     position: "top-center",
   });
@@ -285,8 +264,10 @@ export const handleDelete = async ({
     loading: "Deleting your pin...",
     success: "Pin Deleted!",
     error: (err: any) => {
-      console.log(err.response?.data);
-      return err.response?.data?.message || "Please try again.";
+      if (err.response.data.message) {
+        return err.response.data.message;
+      }
+      return "An unexpected error occurred. Please try again.";
     },
     position: "top-center",
   });
@@ -327,7 +308,10 @@ export const handleAddMedia = async ({
       loading: "Adding your photo...",
       success: "Photo added. Do the same if you want to add another!",
       error: (err: any) => {
-        return err.response.data;
+        if (err.response.data.message) {
+          return err.response.data.message;
+        }
+        return "An unexpected error has occurred. Please try again later.";
       },
       position: "top-center",
     });

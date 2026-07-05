@@ -29,7 +29,7 @@ function AdminSidebar() {
     {
       id: "map",
       label: "Map",
-      description: "Live view of the map (View only)",
+      description: "Live map",
       icon: Map,
       link: "/admin-map",
       testId: "Admin_BurgerNavMap",

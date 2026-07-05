@@ -260,7 +260,7 @@ function IndivUsers() {
 
   useEffect(() => {
     getFiltered();
-  }, [brgyFilter, ratingFilter, roleFilter, messageFilter, rangeFilter]);
+  }, [brgyFilter, ratingFilter, roleFilter, rangeFilter]);
 
   return (
     <>

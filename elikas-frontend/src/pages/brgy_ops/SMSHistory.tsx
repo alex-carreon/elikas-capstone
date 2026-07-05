@@ -19,6 +19,7 @@ import {
 } from "@/components/ui/input-group";
 import { Separator } from "@/components/ui/separator";
 import { toast } from "sonner";
+import PaginationComp from "@/components/Pagination";
 
 type StatusType = {
   id: number;
@@ -46,6 +47,7 @@ function SMSHistory() {
   const [loading, setLoading] = useState(false);
   const [openCollapse, setOpenCollapse] = useState(false);
   const [searchFor, setSearchFor] = useState("");
+  const [next, setNext] = useState(1);
 
   const params = new URLSearchParams();
 
@@ -81,6 +83,32 @@ function SMSHistory() {
       if (err.name === "CanceledError") return;
       console.log(err);
     }
+  };
+
+  const getByPage = async (page: number) => {
+    const controller = new AbortController();
+    try {
+      setLoading(true);
+      const response = await api.get(`/sms/broadcasts?page=${String(page)}`, {
+        signal: controller.signal,
+      });
+
+      console.log(response);
+
+      setBroadcasts(response.data.broadcasts);
+    } catch (err: any) {
+      if (err.name === "CanceledError") {
+        return;
+      }
+      console.log(err.response?.data);
+      toast.error(
+        "An unexpected occurred. Please wait while we try to fix this!",
+      );
+    } finally {
+      setLoading(false);
+    }
+
+    return () => controller.abort();
   };
 
   const getAll = async () => {
@@ -148,8 +176,17 @@ function SMSHistory() {
       toast.promise(response, {
         loading: "Canceling this message...",
         success: "Message canceled!",
-        error: (err: any) =>
-          err.response.message ? err.response.message : err.response.data,
+        error: (err: any) => {
+          if (err.response.data.errors.broadcast[0]) {
+            return err.response.data.errors.broadcast[0];
+          }
+          if (err.response.data.errors.status[0]) {
+            return err.response.data.errors.status[0];
+          }
+          if (err.response.data.errors.scheduled_for[0]) {
+            return "The SMS broadcast is about to send soon. Cancelling this message is no longer possible.";
+          }
+        },
         position: "top-center",
       });
 
@@ -246,6 +283,31 @@ function SMSHistory() {
               </CollapsibleContent>
             </Collapsible>
           </div>
+          <PaginationComp
+            onClickPrev={() => {
+              const updated = next - 1;
+              setNext(updated);
+              getByPage(updated);
+            }}
+            onClick1={() => {
+              setNext(1);
+              getByPage(1);
+            }}
+            onClick2={() => {
+              setNext(2);
+              getByPage(2);
+            }}
+            onClick3={() => {
+              setNext(3);
+              getByPage(3);
+            }}
+            onClickNext={() => {
+              const updated = next + 1;
+              setNext(updated);
+              getByPage(updated);
+            }}
+            next={next}
+          />
         </div>
         {loading ? (
           <>
@@ -281,7 +343,9 @@ function SMSHistory() {
                         ? `Sending on: ${convertDateTime(broadcast.scheduled_for)}`
                         : broadcast.status.name === "Cancelled"
                           ? "Canceled"
-                          : `Sent on: ${convertDateTime(broadcast.sent_at)}`
+                          : broadcast.status.name === "Failed"
+                            ? undefined
+                            : `Sent on: ${convertDateTime(broadcast.sent_at)}`
                     }
                     address={broadcast.status.name}
                     onClick={() => cancelSend({ id: broadcast.id })}

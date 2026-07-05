@@ -191,12 +191,6 @@ function EvacPin() {
     }
   };
 
-  useEffect(() => {
-    if (location.state?.from === "/History") {
-      setExistingPin(true);
-    }
-  }, [[location.state?.from]]);
-
   const fileOnChange = (e: any) => {
     const file = e.target.files?.[0];
 
@@ -304,6 +298,7 @@ function EvacPin() {
       setEvacPins(evacDetails);
     } catch (err: string | any) {
       console.log(err.response.data);
+      toast.error(err.response.data.error);
     } finally {
       setLoading(false);
     }
@@ -676,12 +671,12 @@ function EvacPin() {
   };
 
   const reOpen = (e: React.FormEvent) => {
-    const expDate = expiry ?? addDays(new Date(), 7);
+    const expDate = addDays(new Date(), 7);
 
     handleReOpen({
       e: e,
       expiry: formatInTimeZone(
-        toZonedTime(expDate!, "Asia/Manila"),
+        toZonedTime(expDate, "Asia/Manila"),
         "Asia/Manila",
         "yyyy-MM-dd HH:mm:ssXXX",
       ),
@@ -735,6 +730,12 @@ function EvacPin() {
   };
 
   useEffect(() => {
+    if (location.state?.from === "/History") {
+      setExistingPin(true);
+    }
+  }, [[location.state?.from]]);
+
+  useEffect(() => {
     if (location.state?.from === "/map") {
       setIsEditable(true);
     } else {
@@ -755,25 +756,14 @@ function EvacPin() {
           actionId="EvacPin_ReopenBtn"
           open={willReopen}
           title="You are about to re-open this pin"
-          description="Re-opening this pin add it to the map. The expiration date will default to 7 days unless specified."
+          description="Re-opening this pin add it to the map. The expiration date will default to 7 days."
           buttonText="Re-open"
           onClose={() => {
             setWillReopen(false);
           }}
           onClick={(e) => reOpen(e)}
           disabled={disabled}
-        >
-          <DatePickerInput
-            label="Expiry Date"
-            desc="The default date is 7 days from now"
-            idField="EvacPin_ReopenExpiryField"
-            idBtn="EvacPin_ReopenCalendarBtn"
-            value={expiry}
-            onChange={setExpiry}
-            edit
-            showTime
-          />
-        </AlertDialogue>
+        ></AlertDialogue>
       )}
       {willDelete && (
         <AlertDialogue
@@ -868,12 +858,14 @@ function EvacPin() {
               >
                 All marked with an * are required fields.
               </b>
-              <b
-                className="italic text-sm max-w-sm text-center"
-                style={{ color: colors.label }}
-              >
-                You may only create 10 active evacuation pins.
-              </b>
+              {role === "indiv" && (
+                <b
+                  className="italic text-sm max-w-sm text-center"
+                  style={{ color: colors.label }}
+                >
+                  You may only create 10 active evacuation pins.
+                </b>
+              )}
             </div>
           )}
         </div>
@@ -979,6 +971,7 @@ function EvacPin() {
               onSubmit={(e) => setPinName(e.target.value)}
               isRequired
               readonly={!id || isEditable ? false : true}
+              maxLength={50}
             />
             <Field>
               <FieldLabel
@@ -1280,6 +1273,7 @@ function EvacPin() {
               value={contactPerson}
               readonly={!id || isEditable ? false : true}
               isRequired
+              maxLength={100}
             ></TextField>
             <TextField
               label="Contact Number*"
@@ -1290,6 +1284,7 @@ function EvacPin() {
               value={contactNumber}
               readonly={!id || isEditable ? false : true}
               isRequired
+              maxLength={15}
             ></TextField>
             {role === "brgy_op" && (
               <DatePickerInput
@@ -1346,28 +1341,43 @@ function EvacPin() {
                         ></ButtonComp>
                       ))}
                   </div>
-                  <div className="mx-2 flex justify-evenly shrink gap-4">
-                    <ButtonComp
-                      text="Edit"
-                      id="EvacPin_UpdatePinBtn"
-                      variant="primary"
-                      heightSize="38px"
-                      widthSize="20"
-                      onClick={() => setIsEditable(true)}
-                      type="button"
-                      isDisabled={disabled}
-                    ></ButtonComp>
-                    <ButtonComp
-                      text="Delete"
-                      id="EvacPin_ClosePinBtn"
-                      variant="important"
-                      heightSize="38px"
-                      widthSize="20"
-                      type="button"
-                      onClick={() => setWillDelete(true)}
-                      isDisabled={disabled}
-                    ></ButtonComp>
-                  </div>
+                  {isExpired && isPersistent && (
+                    <div className="w-full max-w-md flex justify-center">
+                      <ButtonComp
+                        text="Re-Open Pin"
+                        variant="outline"
+                        id="EvacPin_ReOpenPin"
+                        heightSize="38px"
+                        widthSize="100%"
+                        onClick={() => setWillReopen(true)}
+                        isDisabled={disabled}
+                      />
+                    </div>
+                  )}
+                  {!isExpired && (
+                    <div className="mx-2 flex justify-evenly shrink gap-4">
+                      <ButtonComp
+                        text="Edit"
+                        id="EvacPin_UpdatePinBtn"
+                        variant="primary"
+                        heightSize="38px"
+                        widthSize="20"
+                        onClick={() => setIsEditable(true)}
+                        type="button"
+                        isDisabled={disabled}
+                      ></ButtonComp>
+                      <ButtonComp
+                        text="Delete"
+                        id="EvacPin_ClosePinBtn"
+                        variant="important"
+                        heightSize="38px"
+                        widthSize="20"
+                        type="button"
+                        onClick={() => setWillDelete(true)}
+                        isDisabled={disabled}
+                      ></ButtonComp>
+                    </div>
+                  )}
                 </>
               ) : (
                 <>
@@ -1435,19 +1445,6 @@ or account restriction."
                   />
                 </div>
               </>
-            )}
-            {isExpired && isPersistent && (
-              <div className="w-full max-w-md flex justify-center">
-                <ButtonComp
-                  text="Re-Open Pin"
-                  variant="primary"
-                  id="EvacPin_ReOpenPin"
-                  heightSize="38px"
-                  widthSize="100%"
-                  onClick={() => setWillReopen(true)}
-                  isDisabled={disabled}
-                />
-              </div>
             )}
           </div>
         </div>

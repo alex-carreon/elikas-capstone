@@ -20,6 +20,7 @@ import SelectDropdown from "@/components/SelectDropdown";
 import { toZonedTime } from "date-fns-tz";
 import { format } from "date-fns";
 import { Toggle } from "@/components/ui/toggle";
+import { toast } from "sonner";
 
 type Barangays = {
   id: number;
@@ -110,7 +111,8 @@ function Sensors() {
         setCountLoad(false);
         return;
       }
-      console.log(err.response?.data);
+      toast.error(err.response.data.error);
+      console.log(err.response?.data.details);
     } finally {
       setCountLoad(false);
     }
@@ -162,6 +164,7 @@ function Sensors() {
         setLoading(false);
         return;
       }
+      toast.error(err.response.data.error);
     } finally {
       setLoading(false);
     }
@@ -211,6 +214,7 @@ function Sensors() {
         setLoading(false);
         return;
       }
+      toast.error(err.response.data.error);
       console.log(err.response?.data);
     } finally {
       setLoading(false);
