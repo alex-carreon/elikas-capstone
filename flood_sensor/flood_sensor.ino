@@ -215,9 +215,11 @@ void manageConnection(bool isInitialSetup) {
     sensor_code_html.c_str(),  // html string preceding input
     currentSensorCode.c_str(),  // pre-fill input with sensor code if saved
     20,  // max length
-    "maxlength='20' required title='Fill in the sensor code after registering it in eLikas'" 
+    "maxlength='20' required " 
   );
   WiFiManagerParameter sc_html_closer("<br>");
+
+  WiFiManagerParameter sc_note("<p><em>Fill in the sensor code after registration of the unit on the eLikas platform. Make sure the code is correct to see readings on the app.</em></p><br>");
 
   // hides custom password field under advanced settings
   String ap_html = "<details><summary><b>Advanced Settings</b></summary><br>Set New Setup Password";
@@ -231,6 +233,7 @@ void manageConnection(bool isInitialSetup) {
   WiFiManagerParameter pw_html_closer("</details><br>");
   
   wm.addParameter(&sensor_code);
+  wm.addParameter(&sc_note);
   wm.addParameter(&sc_html_closer);
   wm.addParameter(&custom_ap_pass);
   wm.addParameter(&pw_html_closer);
