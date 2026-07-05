@@ -4,6 +4,7 @@ import { DrawerClose } from "@/components/ui/drawer";
 import { CircleX } from "lucide-react";
 import { useEffect, useState } from "react";
 import Skeleton from "@mui/material/Skeleton";
+import { toZonedTime, format } from "date-fns-tz";
 
 type Sensors = {
   id: number;
@@ -24,6 +25,15 @@ type SensorsDetails = {
   currentStatus: string;
   barangay: string;
 };
+
+const TIMEZONE = "Asia/Manila";
+
+function formatDate(date: Date | undefined) {
+  if (!date) return "";
+  return format(toZonedTime(date, TIMEZONE), "yyyy-MM-dd hh:mm a", {
+    timeZone: TIMEZONE,
+  });
+}
 
 function SensorDrawer({ selectedPin }: { selectedPin: Sensors | null }) {
   const [sensorDetails, setSensorDetails] = useState<
@@ -143,7 +153,7 @@ function SensorDrawer({ selectedPin }: { selectedPin: Sensors | null }) {
               <p className="text-xs text-left font-semibold italic">
                 Last Online:{" "}
                 {sensorDetails?.lastOnline
-                  ? sensorDetails?.lastOnline
+                  ? formatDate(sensorDetails?.lastOnline)
                   : "No online record"}
               </p>
             </div>

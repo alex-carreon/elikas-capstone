@@ -446,8 +446,6 @@ function EvacPin() {
       now.getSeconds(),
     );
 
-    console.log("Evac Expiry", expDateWithTime);
-
     if (fileName) {
       formData.append("file", fileName);
     }
@@ -460,7 +458,7 @@ function EvacPin() {
       !contactPerson ||
       !contactNumber
     ) {
-      toast.error("Please fill in the required fields marked with an *.");
+      toast.error("Please fill in the required fields marked with *.");
       return;
     }
 
@@ -630,8 +628,6 @@ function EvacPin() {
       now.getSeconds(),
     );
 
-    console.log("Evac Expiry", expDateWithTime);
-
     handleUpdate({
       e: e,
       id: id,
@@ -746,11 +742,6 @@ function EvacPin() {
     }
   }, []);
 
-  useEffect(() => {
-    console.log(hasToilet);
-    console.log(editedToilet);
-  }, [hasToilet]);
-
   return loading ? (
     <div className="w-full h-full flex flex-col items-center p-12 mt-8 mb-2 gap-4">
       <FormSkeleton />
@@ -864,7 +855,7 @@ function EvacPin() {
               : "Register an Evacuation Location"}
           </p>
           {existingPin ? null : (
-            <>
+            <div className="flex flex-col gap-1">
               <p
                 className="italic text-sm max-w-sm text-center"
                 style={{ color: colors.label }}
@@ -877,7 +868,13 @@ function EvacPin() {
               >
                 All marked with an * are required fields.
               </b>
-            </>
+              <b
+                className="italic text-sm max-w-sm text-center"
+                style={{ color: colors.label }}
+              >
+                You may only create 10 active evacuation pins.
+              </b>
+            </div>
           )}
         </div>
         <div
@@ -1025,8 +1022,8 @@ function EvacPin() {
                 id="EvacPin_MapContainer"
               >
                 <TileLayer
-                  attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-                  url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+                  attribution='&copy; <a href="https://www.maptiler.com/copyright/">MapTiler</a> &copy; <a href="https://openstreetmap.org">OpenStreetMap</a> contributors'
+                  url={`https://api.maptiler.com/maps/base-v4/{z}/{x}/{y}.png?key=6RBKItdaX8o4QX31GhTm`}
                 />
                 <MapClickHandler
                   onPinClick={() => {}}

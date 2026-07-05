@@ -22,12 +22,13 @@ class SensorLogService
         $sensor = Sensor::where('sensor_code', $validated['sensor_code'])->firstOrFail();
 
         // Calculate the status using the sensor's individual thresholds
-        $status_level = $sensor->determineStatusLevel((float) $validated['water_level']);
+        $calculated_level = $sensor->calculateWaterLevel((float) $validated['water_level']);
+        $status_level = $sensor->determineStatusLevel($calculated_level);
 
-        return DB::transaction(function () use ($validated, $sensor, $status_level) {
+        return DB::transaction(function () use ($validated, $sensor, $status_level, $calculated_level) {
             $sensorlog = SensorLog::create([
                 'sensor_code' => $validated['sensor_code'],
-                'water_level' => $validated['water_level'],
+                'water_level' => $calculated_level,
                 'status_level' => $status_level,
                 'sensor_timestamp' => $validated['sensor_timestamp'],
                 'log_time' => now()->toDateTimeString()

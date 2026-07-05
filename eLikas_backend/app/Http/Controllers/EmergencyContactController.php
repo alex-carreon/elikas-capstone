@@ -163,7 +163,7 @@ class EmergencyContactController extends Controller
 
             $validated = $request->validate([
                 'location_id' => 'required|integer|exists:Locations,id',
-                'name' => 'required|string|max:50',
+                'name' => 'required|string|max:50|unique:EmergencyContacts,name',
                 'phone_number' => 'nullable|string|max:15',
                 'mobile_number' => 'nullable|string|max:15',
                 'address' => 'required|string',
@@ -209,6 +209,13 @@ class EmergencyContactController extends Controller
                 'emergency_contact' => $this->formatContact($contact, $user),
             ], 201);
 
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            DB::rollBack();
+
+            return response()->json([
+                'error' => 'Validation failed',
+                'details' => $e->errors(),
+            ], 422);
         } catch (\Exception $e) {
             DB::rollBack();
 
@@ -224,9 +231,9 @@ class EmergencyContactController extends Controller
         try {
             $validated = $request->validate([
                 'location_id' => 'sometimes|integer|exists:Locations,id',
-                'name' => 'sometimes|string|max:255',
-                'phone_number' => 'sometimes|nullable|string|max:50',
-                'mobile_number' => 'sometimes|nullable|string|max:50',
+                'name' => 'sometimes|string|max:50|unique:EmergencyContacts,name,' . $id,
+                'phone_number' => 'sometimes|nullable|string|max:15',
+                'mobile_number' => 'sometimes|nullable|string|max:15',
                 'address' => 'sometimes|string|max:255',
             ]);
 
@@ -259,6 +266,11 @@ class EmergencyContactController extends Controller
                 'emergency_contact' => $this->formatContact($contact),
             ], 200);
 
+        } catch (\Illuminate\Validation\ValidationException $e) {
+            return response()->json([
+                'error' => 'Validation failed',
+                'details' => $e->errors(),
+            ], 422);
         } catch (\Exception $e) {
             return response()->json([
                 'error' => 'Failed to update emergency contact',

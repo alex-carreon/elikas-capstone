@@ -122,7 +122,7 @@ class SMSController extends Controller
                 default => response()->json([
                     'message'      => 'Broadcast cancelled successfully.',
                     'broadcast_id' => $broadcastId,
-                    'status'       => ['id' => 4, 'name' => 'Cancelled'],
+                    'status'       => ['id' => 3, 'name' => 'Cancelled'],
                 ]),
             };
         } catch (\Exception $e) {
@@ -355,6 +355,18 @@ class SMSController extends Controller
 
     public function schedule(Request $request): JsonResponse
     {
+        if (!config('services.iprogsms.mock') && !$request->hasHeader('X-iPROG-API-TOKEN')) {
+            return response()->json([
+                'message' => 'Validation failed.',
+                'errors'  => [
+                    'X-iPROG-API-TOKEN' => ['The X-iPROG-API-TOKEN header is required for scheduling broadcasts.'],
+                ],
+                'iprogsms_response' => [
+                    'message' => 'Missing token string.'
+                ]
+            ], 422);
+        }
+
         try {
             $validated = $request->validate([
                 'message_content' => 'required|string|max:600',
@@ -431,8 +443,8 @@ class SMSController extends Controller
     {
         try {
             $validated = $request->validate([
-                'template_name'   => 'required|string|max:255',
-                'message_content' => 'required|string|max:600',
+                'template_name'   => 'required|string|max:50|unique:SMSTemplates,template_name',
+                'message_content' => 'required|string',
             ]);
 
             $govOp = $this->resolveGovOp($request);

@@ -129,4 +129,12 @@ class EvacArea extends Model implements Auditable
             $q->where('user_id', $userId)
         );
     }
+
+    public function scopeActive(Builder $query): Builder
+    {
+        return $query
+            ->notExpired()
+            ->notDeactivated()
+            ->notUserDeactivated();
+    }
 }

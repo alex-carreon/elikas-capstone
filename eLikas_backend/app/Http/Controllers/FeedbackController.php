@@ -14,13 +14,13 @@ class FeedbackController extends Controller
     // ---------------------------------------------------------------
     public function store(Request $request)
     {
-        try {
-            $user = $request->attributes->get('firebase_user');
-
-            $validated = $request->validate([
+        $validated = $request->validate([
                 'rating'  => 'required|numeric|min:0.5|max:5',
                 'message' => 'nullable|string',
             ]);
+
+        try {
+            $user = $request->attributes->get('firebase_user');
 
             // Round submitted rating to nearest 0.5 before storing
             $cleanRating = $this->roundToHalf((float) $validated['rating']);
@@ -47,7 +47,7 @@ class FeedbackController extends Controller
 
     // ---------------------------------------------------------------
     // GET /admin/feedback
-    // Query params: id, message, rating, range, date_from, date_to, role, location_id
+    // Query params: id, rating, range, date_from, date_to, role, location_id
     // Also returns: rating_options (clean 0.5-increment distinct list)
     // ---------------------------------------------------------------
     public function index(Request $request)
@@ -59,18 +59,6 @@ class FeedbackController extends Controller
             // --- ID filter ---
             if ($request->filled('id') && is_numeric($request->query('id')) && (int) $request->query('id') > 0) {
                 $query->where('id', (int) $request->query('id'));
-            }
-
-            // --- Message keyword filter ---
-            if ($request->has('message')) {
-                $rawMsg = $request->query('message');
-                if (is_string($rawMsg)) {
-                    $trimmed = trim($rawMsg);
-                    if ($trimmed !== '') {
-                        $term = '%' . $this->escapeLike($trimmed) . '%';
-                        $query->where('message', 'LIKE', $term);
-                    }
-                }
             }
 
             // --- Rating filter: match records within ±0.25 of the chosen 0.5 step ---
@@ -89,14 +77,21 @@ class FeedbackController extends Controller
 
             if ($request->filled('range')) {
                 switch ($request->query('range')) {
+                    case 'today':
+                        // Looks back exactly from the start of the current calendar day (12:00 AM) and the week starts on Monday
+                        $query->where('sent_at', '>=', Carbon::now()->startOfDay());
+                        break;
+                    case 'this_week':
+                        $query->where('sent_at', '>=', Carbon::now()->startOfWeek());
+                        break;
                     case 'past_week':
-                        $query->where('sent_at', '>=', Carbon::now()->subDays(7)->startOfDay());
+                        $query->where('sent_at', '>=', Carbon::now()->subDays(7));
                         break;
                     case 'monthly':
-                        $query->where('sent_at', '>=', Carbon::now()->subDays(30)->startOfDay());
+                        $query->where('sent_at', '>=', Carbon::now()->subDays(30));
                         break;
                     case 'quarterly':
-                        $query->where('sent_at', '>=', Carbon::now()->subDays(90)->startOfDay());
+                        $query->where('sent_at', '>=', Carbon::now()->subDays(180));
                         break;
                 }
             } else {
@@ -150,11 +145,10 @@ class FeedbackController extends Controller
                 });
             }
 
-            $feedbackList = $query->get();
+            $ratingOptions = $this->buildRatingOptions($query);
 
-            // Build clean rating options from the FULL unfiltered dataset
-            // (so the dropdown always shows all available steps, not just current results)
-            $ratingOptions = $this->buildRatingOptions();
+            // Execute the query to get the final matching feedback dataset
+            $feedbackList = $query->get();
 
             return response()->json([
                 'count'          => $feedbackList->count(),
@@ -177,11 +171,6 @@ class FeedbackController extends Controller
     {
         try {
             $query = Feedback::with(['user.role'])->where('id', $id);
-
-            if ($request->filled('message')) {
-                $term = '%' . $this->escapeLike((string) $request->query('message')) . '%';
-                $query->where('message', 'LIKE', $term);
-            }
 
             $feedback = $query->first();
 
@@ -241,9 +230,11 @@ class FeedbackController extends Controller
         return round($value * 2) / 2;
     }
 
-    private function buildRatingOptions(): array
+    // ─── ✅ FIXED HERE: Accepts the cloned query builder state
+    private function buildRatingOptions($query): array
     {
-        $rawRatings = Feedback::pluck('rating');
+        // Clone the builder state so we don't accidentally compromise the final ->get() data
+        $rawRatings = (clone $query)->pluck('rating');
 
         $steps = $rawRatings
             ->map(fn($r) => $this->roundToHalf((float) $r))
