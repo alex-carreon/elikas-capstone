@@ -47,7 +47,7 @@ class FeedbackController extends Controller
 
     // ---------------------------------------------------------------
     // GET /admin/feedback
-    // Query params: id, message, rating, range, date_from, date_to, role, location_id
+    // Query params: id, rating, range, date_from, date_to, role, location_id
     // Also returns: rating_options (clean 0.5-increment distinct list)
     // ---------------------------------------------------------------
     public function index(Request $request)
@@ -59,18 +59,6 @@ class FeedbackController extends Controller
             // --- ID filter ---
             if ($request->filled('id') && is_numeric($request->query('id')) && (int) $request->query('id') > 0) {
                 $query->where('id', (int) $request->query('id'));
-            }
-
-            // --- Message keyword filter ---
-            if ($request->has('message')) {
-                $rawMsg = $request->query('message');
-                if (is_string($rawMsg)) {
-                    $trimmed = trim($rawMsg);
-                    if ($trimmed !== '') {
-                        $term = '%' . $this->escapeLike($trimmed) . '%';
-                        $query->where('message', 'LIKE', $term);
-                    }
-                }
             }
 
             // --- Rating filter: match records within ±0.25 of the chosen 0.5 step ---
@@ -183,11 +171,6 @@ class FeedbackController extends Controller
     {
         try {
             $query = Feedback::with(['user.role'])->where('id', $id);
-
-            if ($request->filled('message')) {
-                $term = '%' . $this->escapeLike((string) $request->query('message')) . '%';
-                $query->where('message', 'LIKE', $term);
-            }
 
             $feedback = $query->first();
 

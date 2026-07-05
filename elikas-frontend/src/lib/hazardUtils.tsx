@@ -144,6 +144,9 @@ export const handleSubmit = async ({
         ) {
           return "The flood path overlaps an existing flood path.";
         }
+        if (err.response.data.message === "Too Many Attempts") {
+          return "Too many attempts. Please try again later.";
+        }
         return "An error occurred while creating the pin. Please make sure that all required fields are filled.";
       },
       position: "top-center",

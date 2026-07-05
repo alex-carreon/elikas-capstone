@@ -49,8 +49,12 @@ Route::get('/test', function () {
 // ---------------------------------------------------------------
 // PUBLIC ROUTES — no token required
 // ---------------------------------------------------------------
-Route::post('/auth/register', [AuthController::class, 'register']);
-Route::post('/auth/login',    [AuthController::class, 'login']);
+Route::post('/auth/register', [AuthController::class, 'register'])
+    ->middleware(['appcheck', 'throttle:5,1']);
+
+Route::post('/auth/login',    [AuthController::class, 'login'])
+    ->middleware('throttle:5,1');
+
 Route::get('/public/sensors', [PublicSensorController::class, 'index']);
 Route::get('/public/sensors/{sensor}', [PublicSensorController::class, 'show']);
 
@@ -64,7 +68,9 @@ Route::get('/capacity-levels', [CapacityLevelController::class, 'index']);
 
 Route::post('/sensor-logs', [SensorLogController::class, 'store']);
 
-Route::post('/email/resend-verification', [AuthController::class, 'resendVerification']);
+Route::post('/email/resend-verification', [AuthController::class, 'resendVerification'])
+    ->middleware('throttle:5,1');
+
 Route::post('/forgot-password', [AuthController::class, 'forgotPassword'])
     ->middleware('throttle:5,1');
 
@@ -222,7 +228,9 @@ Route::middleware(['firebase.auth', 'role:1,2,3'])->group(function () {
     Route::get('flood-levels', [FloodLevelController::class, 'index']);
 
     //FLOODS
-    Route::post('flood-paths', [FloodPathController::class, 'store']);
+    Route::post('flood-paths', [FloodPathController::class, 'store'])
+        ->middleware('throttle:5,1');
+
     Route::get('/flood-paths/my', [FloodPathController::class, 'my']);
     Route::get('/flood-paths/{id}', [FloodPathController::class, 'show'])
         ->whereNumber('id');
@@ -231,7 +239,9 @@ Route::middleware(['firebase.auth', 'role:1,2,3'])->group(function () {
     Route::post('/flood-paths/{id}/media', [FloodPathController::class, 'addMedia']);
 
     //EVAC PINS
-    Route::post('/pins', [StoreEvacuationAreaController::class, 'storeEvacuationArea']);
+    Route::post('/pins', [StoreEvacuationAreaController::class, 'storeEvacuationArea'])
+        ->middleware('throttle:5,1');
+
     Route::put('/pins/{id}', [UpdateEvacuationAreaController::class, 'updateEvacuationArea']);
     Route::delete('/pins/{id}', [DeleteEvacuationAreaController::class, 'deleteEvacuationArea']); //hard delete for admins
     Route::patch('/pins/{id}/deactivate', [DeleteEvacuationAreaController::class, 'deleteEvacuationArea']); //everyone else uses soft delete

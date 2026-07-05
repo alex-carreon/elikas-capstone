@@ -45,10 +45,7 @@ class GetEvacAreasController extends Controller
                     });
                 });
             } else {
-                $query
-                    ->notDeactivated()
-                    ->notUserDeactivated()
-                    ->notExpired();
+                $query->active();
             }
 
             // Filter by role — supports both single (?role=indiv) and array (?role[]=indiv&role[]=admin)
@@ -344,10 +341,7 @@ class GetEvacAreasController extends Controller
                 }
 
                 if ($status === 'active') {
-                    $query
-                        ->notDeactivated()
-                        ->notUserDeactivated()
-                        ->notExpired();
+                    $query->active();
                 } else {
                     $query->where(function ($q) {
                         $q->whereHas('social_element', fn ($s) => $s->whereNotNull('deactivated_at'))

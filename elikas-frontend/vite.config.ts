@@ -62,8 +62,7 @@ export default defineConfig({
           },
           {
             // Cache map tiles (Leaflet/OpenStreetMap)
-            urlPattern: ({ url }) =>
-              url.hostname.includes("tile.openstreetmap.org"),
+            urlPattern: ({ url }) => url.hostname.includes("api.maptiler.com"),
             handler: "CacheFirst",
             options: {
               cacheName: "map-tiles",

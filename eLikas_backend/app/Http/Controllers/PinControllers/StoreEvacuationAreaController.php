@@ -16,9 +16,24 @@ use Illuminate\Support\Facades\Storage;
 
 class StoreEvacuationAreaController extends Controller
 {
+    /** Maximum number of concurrently active pins allowed per user. */
+    private const MAX_ACTIVE_PINS = 10;
+
     public function __construct(
         protected MediaUploadService $mediaUploadService
     ) {}
+
+    /**
+     * Count how many active pins (visible, not expired, not deactivated)
+     * currently belong to the given user.
+     */
+    private function activePinCount(int $userId): int
+    {
+        return EvacArea::query()
+            ->ownedBy($userId)
+            ->active()
+            ->count();
+    }
 
     public function storeEvacuationArea(Request $request)
     {
@@ -59,6 +74,16 @@ class StoreEvacuationAreaController extends Controller
                 return response()->json([
                     'error' => 'Authentication required to create evacuation area pins'
                 ], 401);
+            }
+
+            // Enforce the max-10-active-pins rule for individual users only (role_id 3).
+            // Admins (1) and govop/barangay operators (2) are exempt.
+            if ($user->role_id === 3 && $this->activePinCount((int) $user->id) >= self::MAX_ACTIVE_PINS) {
+                return response()->json([
+                    'error' => 'Maximum active pin limit reached. You may only have '
+                        . self::MAX_ACTIVE_PINS . ' active evacuation pins at a time. '
+                        . 'Please wait for an existing pin to expire or deactivate one before adding a new one.'
+                ], 422);
             }
 
             $expiry = $request->expiry
