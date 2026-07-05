@@ -51,6 +51,9 @@ function LogIn() {
           if (err.response.data.error === "User not found.") {
             return "User not found. Please contact eLikas to resolve this issue.";
           }
+          if (err.response.data.message === "Email is already verified") {
+            return "Email is already verified";
+          }
           return "An unexpected error occurred. Please try again later.";
         },
         position: "top-center",

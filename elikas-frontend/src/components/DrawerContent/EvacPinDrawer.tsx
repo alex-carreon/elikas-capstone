@@ -312,9 +312,14 @@ function EvacPinDrawer({
     );
 
     toast.promise(response, {
-      loading: "Adding your comment...",
-      success: "Comment successfully added!",
-      error: (err) => err?.message || "Please try again.",
+      loading: "Posting your comment...",
+      success: "Comment successfully posted!",
+      error: (err) => {
+        if (err.response.data.message) {
+          return err.response.data.message;
+        }
+        return "An unexpected error occurred. Please try again.";
+      },
       position: "top-center",
     });
 
@@ -347,8 +352,6 @@ function EvacPinDrawer({
       try {
         setLoading(true);
         const response = await api.get(`/pins/${selectedPin.id}`);
-
-        console.log(response);
 
         const evacPinDetails = await response.data;
         setEvacPinDetails(evacPinDetails);
@@ -390,14 +393,25 @@ function EvacPinDrawer({
 
     try {
       setDisabled(true);
-      const response = await api.patch(`/pins/${evacPinDetails?.id}/verify`, {
+      const response = api.patch(`/pins/${evacPinDetails?.id}/verify`, {
         verified: !verified,
       });
 
       if (!response) {
         toast.error("Failed to verify pin. Please try again.");
-        console.log(response);
+        return;
       }
+
+      toast.promise(response, {
+        loading: "Processing verification...",
+        success: !verified ? "Pin verified!" : "Pin unverified!",
+        error: (err: any) => {
+          if (err.response.data.error) {
+            return err.response.data.error;
+          }
+          return "An unexpected error occurred. Please try again later.";
+        },
+      });
 
       setVerified(!verified);
 
@@ -454,7 +468,6 @@ function EvacPinDrawer({
                 heightSize="34px"
                 onClick={(e) => {
                   verifyPin(e);
-                  toast.success("Pin Unverified!");
                 }}
                 isDisabled={disabled}
               />
@@ -466,7 +479,6 @@ function EvacPinDrawer({
                 heightSize="34px"
                 onClick={(e) => {
                   verifyPin(e);
-                  toast.success("Pin Verified!");
                 }}
                 isDisabled={disabled}
               />
@@ -771,6 +783,7 @@ function EvacPinDrawer({
                           id="Drawer_CommentField"
                           onChange={(e) => setNewComment(e.target.value)}
                           value={!newComment ? "" : newComment}
+                          maxLength={1000}
                         ></InputGroupInput>
                         <InputGroupAddon
                           align="inline-end"
@@ -796,7 +809,6 @@ function EvacPinDrawer({
                           accept="image/png, image/jpeg, image/heic"
                           id="Drawer_FileInput"
                         />
-                        {/* To test when PWA is done  */}
                         <input
                           style={{ display: "none" }}
                           type="file"
