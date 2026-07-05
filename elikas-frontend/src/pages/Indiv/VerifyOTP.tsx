@@ -37,7 +37,7 @@ function VerifyOTP() {
     toast.promise(response, {
       loading: "Processing your verification...",
       success: "Contact Number verified!",
-      error: "Contact Number verification failed. Please try agian.",
+      error: "Contact Number verification failed. Please try again.",
       position: "top-center",
     });
 

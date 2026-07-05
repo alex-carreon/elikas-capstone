@@ -50,6 +50,9 @@ export const handleSubmit = ({
       if (err.response.data.error === "Failed to create emergency contact") {
         return "Please fill in all the fields.";
       }
+      if (err.response.data.details.name[0]) {
+        return err.response.data.details.name[0];
+      }
       return "An error occurred. Please try again.";
     },
     position: "top-center",

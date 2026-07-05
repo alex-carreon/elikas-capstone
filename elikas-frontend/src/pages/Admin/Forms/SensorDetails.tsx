@@ -6,6 +6,7 @@ import { useEffect, useState } from "react";
 import FormSkeleton from "@/pages/Skeletons/FormSkeleton";
 import { toZonedTime } from "date-fns-tz";
 import { format } from "date-fns";
+import { toast } from "sonner";
 
 function SensorDetails() {
   const [loading, setLoading] = useState(false);
@@ -51,6 +52,7 @@ function SensorDetails() {
       setDeactivatedAt(details.deactivatedAt);
     } catch (err: any) {
       if (err.name === "CanceledError") return;
+      toast.error(err.response.data.error);
       console.log(err);
     }
   };

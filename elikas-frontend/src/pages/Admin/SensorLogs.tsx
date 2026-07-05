@@ -7,6 +7,7 @@ import Row from "@/components/Row";
 import { Skeleton } from "@/components/ui/skeleton";
 import { toZonedTime } from "date-fns-tz";
 import { format } from "date-fns";
+import { toast } from "sonner";
 
 type sensorLog = {
   waterLevel: number;
@@ -34,7 +35,8 @@ function SensorLogs() {
       if (err.name === "CanceledError") {
         return;
       }
-      console.log(err.response?.data);
+      toast.error(err.response.data.error);
+      console.log(err.response?.data.details);
     }
   };
 

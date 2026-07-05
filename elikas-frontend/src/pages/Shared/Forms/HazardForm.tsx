@@ -596,6 +596,7 @@ function HazardForm() {
                 value={desc}
                 readOnly={!id || isEditable ? false : true}
                 required
+                maxLength={1000}
               />
               <p className="text-xs text-red-500">{error}</p>
             </Field>

@@ -77,16 +77,13 @@ function SMS() {
         loading: "Adding to your templates...",
         success: "Template added!",
         error: (err: any) => {
-          if (err.response?.data.error == "Unauthorized") {
+          if (err.response.data.error == "Unauthorized") {
             return "Your session has expired. Please log in again.";
           }
-          if (
-            err.response?.data.details ==
-            "SQLSTATE[23000]: Integrity constraint violation: 1062 Duplicate entry 'new' for key 'template_name' (Connection: mysql, Host: 100.124.244.40, Port: 3306, Database: elikas_db, SQL: insert into `SMSTemplates` (`optr_id`, `template_name`, `message_content`) values (6, new, bnew))"
-          ) {
-            return "This title already exists.";
+          if (err.response.data.errors.template_name[0]) {
+            return err.response.data.errors.template_name[0];
           }
-          return "An error occurred. Please try again.";
+          return "An unexpected error occurred. Please try again.";
         },
         position: "top-center",
       });
@@ -114,8 +111,10 @@ function SMS() {
           if (err.response?.data.error == "Unauthorized") {
             return "Your session has expired. Please log in again.";
           }
-
-          return "An error occurred. Please try again.";
+          if (err.response.data.message) {
+            return err.response.data.message;
+          }
+          return "An unexpected error occurred. Please try again.";
         },
         position: "top-center",
       });
@@ -148,6 +147,7 @@ function SMS() {
 
     if (!message) {
       setError({ title: "", message: "This field is required" });
+      return;
     }
 
     try {
@@ -390,6 +390,8 @@ function SMS() {
               inputType="text"
               id="SMS_TemplateTitleField"
               onSubmit={(e) => setTemplateTitle(e.target.value)}
+              maxLength={50}
+              readonly={message ? false : true}
             />
             <p className="text-xs text-red-500">{error.title}</p>
             <Field>
@@ -405,8 +407,8 @@ function SMS() {
                 id="SMS_TemplateMessageField"
                 readOnly
               />
-              <p className="text-xs text-red-500">{error.message}</p>
             </Field>
+            <p className="text-xs text-red-500">{error.message}</p>
           </div>
         </AlertDialogue>
       )}
@@ -487,6 +489,7 @@ function SMS() {
                 onChange={(e) => setMessage(e.target.value)}
                 value={message}
                 id="SMS_MessageField"
+                maxLength={600}
               />
               <p className="text-xs text-red-500">{error.message}</p>
             </div>
