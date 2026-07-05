@@ -18,8 +18,9 @@
 #include <Update.h>
 #include <ArduinoOTA.h>
 
-const char* currentFirmwareVersion = "1.0.2";
-const char* sensorCode = SECRET_SENSOR;
+const char* currentFirmwareVersion = "1.1.0";
+//const char* sensorCode = SECRET_SENSOR;
+String sensorCode = "";
 
 // Github Repo Details
 const char* github_owner = GITHUB_OWNER;
@@ -51,6 +52,11 @@ void setup() {
   pinMode(TRIG_PIN, OUTPUT);
   pinMode(ECHO_PIN, INPUT);
 
+  // load stored sensor code from nvs
+  preferences.begin("sensor", true); // true = read-only mode
+  sensorCode = preferences.getString("sensor_code", SECRET_SENSOR); // defaults to SECRET_SENSOR if empty
+  preferences.end();
+
   manageConnection(true);
 
   sntp_set_time_sync_notification_cb(timeAvailable);   // trip time sync flag
@@ -58,7 +64,6 @@ void setup() {
 
   ArduinoOTA.begin();
 
-  Serial.begin(115200);
   WebSerial.begin(&server);
 
   WebSerial.onMessage([](uint8_t *data, size_t len) {
@@ -184,22 +189,42 @@ void manageConnection(bool isInitialSetup) {
 
   WiFiManager wm;
   String savedPass = getPortalPassword();
+
+  // fetch current sensor code to pre-fill the form
+  preferences.begin("sensor", true);
+  String currentSensorCode = preferences.getString("sensor_code", "SR-");
+  preferences.end();
+
+  WebSerial.println("Assigned Sensor Code: " + currentSensorCode);
+  Serial.println("Assigned Sensor Code: " + currentSensorCode);
   WebSerial.println("Current Setup Password: " + savedPass);
   Serial.println("Current Setup Password: " + savedPass);
 
+  String sensor_code_html = "<br>Sensor Code (Required)";
+  WiFiManagerParameter sensor_code(
+    "sensor_code",  // key for nvs
+    sensor_code_html.c_str(),  // html string preceding input
+    currentSensorCode.c_str(),  // pre-fill input with sensor code if saved
+    20,  // max length
+    "maxlength='20' required title='Fill in the sensor code after registering it in eLikas'" 
+  );
+  WiFiManagerParameter sc_html_closer("<br>");
+
   // hides custom password field under advanced settings
-  String html = "<details><summary><b>Advanced Settings</b></summary><br>Set New Setup Password";
+  String ap_html = "<details><summary><b>Advanced Settings</b></summary><br>Set New Setup Password";
   WiFiManagerParameter custom_ap_pass(
     "ap_pass",  // key for nvs
-    html.c_str(),  // html string preceding input
+    ap_html.c_str(),  // html string preceding input
     savedPass.c_str(),  // pre-fill input with current password
     32,  // max length
     "minlength='8' required title='Password must be at least 8 characters'" // textbox enforcement of 8-char minimum
   );
-  WiFiManagerParameter html_closer("</details><br>");
-
+  WiFiManagerParameter pw_html_closer("</details><br>");
+  
+  wm.addParameter(&sensor_code);
+  wm.addParameter(&sc_html_closer);
   wm.addParameter(&custom_ap_pass);
-  wm.addParameter(&html_closer);
+  wm.addParameter(&pw_html_closer);
 
   // configure basic timeouts
   wm.setConfigPortalTimeout(300); 
@@ -223,7 +248,14 @@ void manageConnection(bool isInitialSetup) {
       WebSerial.println("New password saved to memory: " + newPass);
     } else {
       WebSerial.println("Error: Password too short! Ignored.");
-    }
+    } 
+
+    sensorCode = String(sensor_code.getValue());
+    preferences.begin("sensor", false);
+    preferences.putString("sensor_code", sensorCode);  // save sensor code into nvs
+    preferences.end();
+    WebSerial.println("Assigned Sensor Code: " + sensorCode);
+
     shouldSaveConfig = false; // reset the flag so it doesn't loop save
   }
 }
