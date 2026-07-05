@@ -18,7 +18,19 @@
 #include <Update.h>
 #include <ArduinoOTA.h>
 
-const char* currentFirmwareVersion = "1.1.0";
+float readDistance();
+void saveConfigCallback ();
+String getPortalPassword ();
+String getUniqueDefaultPass();
+void manageConnection(bool isInitialSetup);
+void printStatus();
+void checkForFirmwareUpdate();
+void downloadAndApplyFirmware(String url);
+void sendFloodData(float distance);
+void timeAvailable(struct timeval *t);
+String getFormattedTime();
+
+const char* currentFirmwareVersion = "1.1.1";
 //const char* sensorCode = SECRET_SENSOR;
 String sensorCode = "";
 
@@ -57,14 +69,16 @@ void setup() {
   sensorCode = preferences.getString("sensor_code", SECRET_SENSOR); // defaults to SECRET_SENSOR if empty
   preferences.end();
 
+  WebSerial.begin(&server);
+  server.begin();   // start AsyncWebServer
+
   manageConnection(true);
 
+  // initialize ntp and OTA after a live wifi connection
   sntp_set_time_sync_notification_cb(timeAvailable);   // trip time sync flag
   configTime(gmtOffset_sec, daylightOffset_sec, ntpServer1, ntpServer2);
 
   ArduinoOTA.begin();
-
-  WebSerial.begin(&server);
 
   WebSerial.onMessage([](uint8_t *data, size_t len) {
     Serial.printf("Received %lu bytes from WebSerial: ", len);
@@ -101,9 +115,6 @@ void setup() {
       checkForFirmwareUpdate();
     } 
   });
- 
-  // Start AsyncWebServer
-  server.begin();
 
   //checkForFirmwareUpdate();
 }
@@ -184,7 +195,7 @@ void manageConnection(bool isInitialSetup) {
   if (WiFi.status() == WL_CONNECTED && !isInitialSetup) return;
 
   if (!isInitialSetup) {
-    WebSerial.println("WiFi Connection Lost! Re-launching Config Portal...");
+    Serial.println("WiFi Connection Lost! Re-launching Config Portal...");
   }
 
   WiFiManager wm;
@@ -195,9 +206,7 @@ void manageConnection(bool isInitialSetup) {
   String currentSensorCode = preferences.getString("sensor_code", "SR-");
   preferences.end();
 
-  WebSerial.println("Assigned Sensor Code: " + currentSensorCode);
   Serial.println("Assigned Sensor Code: " + currentSensorCode);
-  WebSerial.println("Current Setup Password: " + savedPass);
   Serial.println("Current Setup Password: " + savedPass);
 
   String sensor_code_html = "<br>Sensor Code (Required)";
@@ -238,7 +247,7 @@ void manageConnection(bool isInitialSetup) {
     ESP.restart();
   }
 
-  // if sensor is wifi configured, save the ap password
+  // once connected OR when user hits "Save"
   if (shouldSaveConfig) {
     String newPass = String(custom_ap_pass.getValue());  // retrieve value of portal textbox
     if (newPass.length() >= 8) {
@@ -252,13 +261,34 @@ void manageConnection(bool isInitialSetup) {
 
     sensorCode = String(sensor_code.getValue());
     preferences.begin("sensor", false);
-    preferences.putString("sensor_code", sensorCode);  // save sensor code into nvs
+    preferences.putString("ap_pass", newPass);  // write new password into nvs if valid
     preferences.end();
     WebSerial.println("Assigned Sensor Code: " + sensorCode);
 
     shouldSaveConfig = false; // reset the flag so it doesn't loop save
+
+    // Connect to the network after config
+    WebSerial.println("Applying changes and connecting to network...");
+    WiFi.disconnect(); 
+    WiFi.begin();      
+    
+    int attempts = 0;
+    while (WiFi.status() != WL_CONNECTED && attempts < 20) {
+      delay(500);
+      Serial.print(".");
+      attempts++;
+    }
+    
+    if(WiFi.status() == WL_CONNECTED) {
+      WebSerial.println("\nSuccessfully Connected! No restart required.");
+      printStatus();
+    } else {
+      WebSerial.println("Failed to connect with new credentials.");
+    }
   }
 }
+
+
 
 void printStatus() {
   WebSerial.println("Connected! IP: " + WiFi.localIP().toString());
