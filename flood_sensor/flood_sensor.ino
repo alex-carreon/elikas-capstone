@@ -32,7 +32,7 @@ String getFormattedTime();
 void trackTrendAndEvaluateState(float newMedian);
 float getMedianReading();
 
-const char* currentFirmwareVersion = "1.2.2";
+const char* currentFirmwareVersion = "1.3.0";
 //const char* sensorCode = SECRET_SENSOR;
 String sensorCode = "";
 
@@ -63,8 +63,8 @@ const int BURST_SIZE = 5;               // Number of readings per 1-minute burst
 const unsigned long BURST_INTERVAL = 60000; // 1 minute between sampling bursts
 
 // Relay Specs 
-const unsigned long QUIESCENT_INTERVAL = 600000; // 10 minutes (600,000 ms)
-const unsigned long ACTIVE_INTERVAL = 60000;     // 1 minute (60,000 ms)
+const unsigned long QUIESCENT_INTERVAL = 600000; // 10 minutes 
+const unsigned long ACTIVE_INTERVAL = 60000;     // 1 minute 
 
 // Trend Detection Specs
 const float ELEVATION_THRESHOLD = 0.02; // 3 cm (0.03m) threshold to count as a "rise"
@@ -78,6 +78,9 @@ bool isActiveMode = false;
 // Historical Tracking for Trend Analysis
 float recentMedians[REQUIRED_CONSECUTIVE_RISES + 1] = {0}; 
 int storedMediansCount = 0;
+
+int activeModeCooldownTimer = 0; // Tracks remaining minutes to hold ACTIVE mode
+const int MINIMUM_ACTIVE_MINUTES = 10; // Hold high-frequency reporting for at least 10 minutes
 
 
 void setup() {
@@ -587,13 +590,24 @@ void trackTrendAndEvaluateState(float newMedian) {
   bool isSustainedRise = (netRise >= totalRequiredRise);
 
   // State change logic
-  if (isSustainedRise && !isActiveMode) {
-    isActiveMode = true;
-    WebSerial.printf("!!! CRITICAL SURGE DETECTED !!! Net rise of %.2fm in 3 mins. Escalating to ACTIVE Mode!\n", netRise);
+  if (isSustainedRise) {
+    // trigger/renew the cooldown lock
+    activeModeCooldownTimer = MINIMUM_ACTIVE_MINUTES; 
+    
+    if (!isActiveMode) {
+      isActiveMode = true;
+      WebSerial.printf("!!! CRITICAL SURGE DETECTED !!! Net rise of %.2fm in 3 mins. Escalating to ACTIVE Mode!\n", netRise);
+    }
   } 
-  else if (!isSustainedRise && isActiveMode) {
-    // Only drop back to normal mode if the water stops rising over a 3-minute average
-    isActiveMode = false;
-    WebSerial.println("Sustained surge ended. Reverting to Normal Mode (10-min intervals).");
+  else if (isActiveMode) {
+    // If the 3-minute net rise target isn't met, tick down our safe lockout timer
+    if (activeModeCooldownTimer > 0) {
+      activeModeCooldownTimer--;
+      WebSerial.printf("[Safety Lock] Surge tapering. Holding ACTIVE mode for %d more minutes...\n", activeModeCooldownTimer);
+    } else {
+      // Cooldown has completely expired, safe to revert
+      isActiveMode = false;
+      WebSerial.println("Sustained surge ended and cooldown expired. Reverting to Normal Mode (10-min intervals).");
+    }
   }
 }
