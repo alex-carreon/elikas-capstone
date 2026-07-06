@@ -15,6 +15,7 @@
         "league/flysystem-sftp-v3": "^3.33",
         "matanyadaev/laravel-eloquent-spatial": "^4.7",
         "openai-php/client": "^0.19.2",
+        "orangehill/iseed": "^3.8",
         "owen-it/laravel-auditing": "^14.0"
     },
     "require-dev": {
