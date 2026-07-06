@@ -215,7 +215,7 @@ class SMSController extends Controller
         try {
             $validated = $request->validate([
                 'message_content' => 'required|string|max:600',
-                'scheduled_for'   => 'nullable|date|after_or_equal:now',
+                'scheduled_for'   => 'nullable|date|after_or_equal:' . now('Asia/Manila')->toDateTimeString(),
             ]);
 
             $govOp = $this->resolveGovOp($request);
@@ -370,7 +370,7 @@ class SMSController extends Controller
         try {
             $validated = $request->validate([
                 'message_content' => 'required|string|max:600',
-                'scheduled_for'   => 'required|date|after:now',
+                'scheduled_for'   => 'required|date|after:' . now('Asia/Manila')->toDateTimeString(),
             ]);
 
             // Read the header from the frontend request
