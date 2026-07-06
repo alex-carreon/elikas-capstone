@@ -165,8 +165,8 @@ function LogIn() {
 
   return (
     <>
-      <div className="min-h-screen flex justify-center p-6">
-        <div className="w-full max-w-sm flex justify-evenly flex-col">
+      <div className="flex justify-center p-6">
+        <div className="w-full max-w-sm flex gap-8 justify-center flex-col">
           <div className="justify-center content-center">
             <img src={eLikasLogo} className="flex justify-self-center"></img>
             <p
