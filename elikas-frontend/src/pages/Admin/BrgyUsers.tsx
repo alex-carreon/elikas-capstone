@@ -488,7 +488,8 @@ function BrgyUsers() {
                       postId={String(sms.id)}
                       title={`Sent to: ${sms.total_recipients} recipient/s`}
                       address={`Sender: ${sms.sender.point_person} - ${sms.sender.username}`}
-                      desc={
+                      desc={sms.status.name}
+                      datePosted={
                         sms.status.name === "Scheduled"
                           ? `Sending on: ${sms.scheduled_for}`
                           : `Sent on: ${sms.sent_at ? sms.sent_at : "Not sent"}`
