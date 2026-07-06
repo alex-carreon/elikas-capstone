@@ -72,6 +72,7 @@ function LogIn() {
     e.preventDefault();
 
     try {
+      setErrors({ ...errors, general: "" });
       setDisabled(true);
       await auth.signOut();
 
@@ -112,8 +113,6 @@ function LogIn() {
           },
         },
       );
-
-      console.log(response);
 
       toast.promise(response, {
         loading: "Logging you in...",
