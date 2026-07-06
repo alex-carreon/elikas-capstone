@@ -7,6 +7,8 @@ use App\Models\SocialElement;
 use App\Models\TargetTable;
 use App\Models\User;
 use MatanYadaev\EloquentSpatial\Objects\Point;
+use App\Services\SensorService;
+
 
 /**
  * Sensor / SensorLog controller tests.
@@ -28,35 +30,37 @@ use MatanYadaev\EloquentSpatial\Objects\Point;
 /**
  * Create a Sensor directly in the DB, owned by the given user.
  */
+
 function createSensor(User $owner, array $overrides = []): Sensor
 {
     static $counter = 0;
     $counter++;
 
-    $targetTable = TargetTable::where('table_name', 'Sensors')->firstOrFail();
-    $location    = Location::where('level_id', 3)->first();
+    $location = Location::where('level_id', 3)->firstOrFail();
 
-    $element = SocialElement::create([
-        'user_id'   => $owner->id,
-        'posted_at' => now(),
-        'type_id'   => $targetTable->id,
-        'has_media' => false,
-    ]);
-
-    return Sensor::create(array_merge([
-        'element_id'     => $element->id,
-        'sensor_code'    => 'SNS-TEST-' . $counter . '-' . uniqid(),
+    $validated = array_merge([
         'name'           => 'Test Sensor ' . $counter,
         'mount_height'   => 5.0,
-        'location'       => new Point(round(12.0 + $counter * 0.001, 6), round(174.0 + $counter * 0.001, 6)),
+        'location'       => new Point(
+            round(12.0 + $counter * 0.001, 6),
+            round(174.0 + $counter * 0.001, 6),
+        ),
         'address'        => 'Test Sensor Address ' . $counter,
         'location_id'    => $location->id,
         'yellow_level'   => 1.0,
         'orange_level'   => 2.0,
         'red_level'      => 3.0,
-        'last_online'    => now(),
-        'current_status' => 'normal',
-    ], $overrides));
+    ], $overrides);
+
+    $sensor = app(SensorService::class)->create($validated, $owner);
+
+    // These fields aren't set by SensorService, so apply them afterwards if needed.
+    $sensor->update([
+        'last_online'    => $overrides['last_online'] ?? now(),
+        'current_status' => $overrides['current_status'] ?? 'normal',
+    ]);
+
+    return $sensor->fresh();
 }
 
 /**
@@ -87,7 +91,7 @@ function createSensorLog(string $sensorCode, array $overrides = []): SensorLog
 
 // ── GET /api/public/sensors ────────────────────────────────────────────────────
 
-// Test 8.1
+// Test 9.1
 test('public sensors index returns only active sensors', function () {
 
     $admin = adminUser();
@@ -111,7 +115,7 @@ test('public sensors index returns only active sensors', function () {
 
 // ── GET /api/public/sensors/{sensor} ───────────────────────────────────────────
 
-// Test 8.2
+// Test 1.1
 test('public sensor show returns sensor details', function () {
 
     $admin = adminUser();
@@ -127,7 +131,7 @@ test('public sensor show returns sensor details', function () {
     ]);
 });
 
-// Test 8.3
+// Test 1.2
 test('public sensor show returns 404 for deactivated sensor', function () {
 
     $admin = adminUser();
@@ -140,7 +144,7 @@ test('public sensor show returns 404 for deactivated sensor', function () {
     $response->assertJson(['error' => 'Sensor is deactivated']);
 });
 
-// Test 8.4
+// Test 1.3
 test('public sensor show returns 404 for non-existent sensor', function () {
 
     $response = $this->getJson('/api/public/sensors/999999');
@@ -148,10 +152,10 @@ test('public sensor show returns 404 for non-existent sensor', function () {
     $response->assertNotFound();
 });
 
-// ── POST /api/sensor-logs (public) ─────────────────────────────────────────────
+// ── POST /api/sensor-logs ─────────────────────────────────────────────
 
-// Test 8.5
-test('anyone can submit a sensor log for an existing sensor', function () {
+// Test 7.1
+test('can submit a sensor log for an existing sensor', function () {
 
     $admin = adminUser();
     $sensor = createSensor($admin);
@@ -172,7 +176,7 @@ test('anyone can submit a sensor log for an existing sensor', function () {
     ]);
 });
 
-// Test 8.6
+// Test 7.2
 test('sensor log submission fails when sensor_code does not exist', function () {
 
     $payload = [
@@ -183,18 +187,18 @@ test('sensor log submission fails when sensor_code does not exist', function () 
 
     $response = $this->postJson('/api/sensor-logs', $payload);
 
-    $response->assertStatus(500);
+    $response->assertStatus(422);
 });
 
-// Test 8.7
+// Test 7.3
 test('sensor log submission fails validation when fields are missing', function () {
 
     $response = $this->postJson('/api/sensor-logs', []);
 
-    $response->assertStatus(500);
+    $response->assertStatus(422);
 });
 
-// Test 8.8
+// Test 7.4
 test('sensor log submission rejects zero or negative water level', function () {
 
     $admin = adminUser();
@@ -208,12 +212,12 @@ test('sensor log submission rejects zero or negative water level', function () {
 
     $response = $this->postJson('/api/sensor-logs', $payload);
 
-    $response->assertStatus(500);
+    $response->assertStatus(422);
 });
 
 // ── GET /api/sensors/{sensor_code}/logs (role:1,2) ─────────────────────────────
 
-// Test 8.9
+// Test 8.1
 test('govops can fetch logs for a sensor', function () {
 
     $token = govopsToken();
@@ -234,7 +238,7 @@ test('govops can fetch logs for a sensor', function () {
     ]);
 });
 
-// Test 8.10
+// Test 8.2
 test('sensor logs returns 404 for a sensor code that does not exist', function () {
 
     $token = govopsToken();
@@ -246,7 +250,7 @@ test('sensor logs returns 404 for a sensor code that does not exist', function (
     $response->assertNotFound();
 });
 
-// Test 8.11
+// Test 8.3
 test('individual user cannot fetch sensor logs', function () {
 
     $token = individualToken();
@@ -262,7 +266,7 @@ test('individual user cannot fetch sensor logs', function () {
 
 // ── GET /api/sensors (role:1,2) ─────────────────────────────────────────────────
 
-// Test 8.12
+// Test 10.1
 test('admin can list sensors', function () {
 
     $token = adminToken();
@@ -282,7 +286,7 @@ test('admin can list sensors', function () {
     ]);
 });
 
-// Test 8.13
+// Test 10.2
 test('individual user cannot list sensors', function () {
 
     $token = individualToken();
@@ -294,10 +298,10 @@ test('individual user cannot list sensors', function () {
     $response->assertForbidden();
 });
 
-// ── GET /api/sensors/{sensor} (role:1,2 — first matching route wins) ──────────
+// ── GET /api/sensors/{sensor} (role:1,2) ──────────
 
-// Test 8.14
-test('govops can view a single sensor', function () {
+// Test 8.5
+test('govops can view sensor private details', function () {
 
     $token = govopsToken();
     $admin = adminUser();
@@ -308,14 +312,11 @@ test('govops can view a single sensor', function () {
     ])->getJson("/api/sensors/{$sensor->id}");
 
     $response->assertOk();
-    $response->assertJsonPath('id', $sensor->id);
+    $response->assertJsonPath('data.id', $sensor->id);
 });
 
-// Test 8.15
-// NOTE: this documents *current* behavior given the duplicate route registration
-// described above — role 3 hits the role:1,2-guarded route first and is
-// forbidden, even though a later role:1,2,3 route exists for this same URI.
-test('individual user is currently forbidden from viewing a single sensor', function () {
+// Test 8.6
+test('indiv user is forbidden from viewing sensor private details', function () {
 
     $token = individualToken();
     $admin = adminUser();
@@ -330,7 +331,7 @@ test('individual user is currently forbidden from viewing a single sensor', func
 
 // ── POST /api/sensors (role:2 only) ────────────────────────────────────────────
 
-// Test 8.16
+// Test 2.1
 test('govops can create a sensor', function () {
 
     $token = govopsToken();
@@ -351,12 +352,12 @@ test('govops can create a sensor', function () {
         'Authorization' => "Bearer {$token}",
     ])->postJson('/api/sensors', $payload);
 
-    $response->assertOk();
-    $response->assertJsonPath('name', $payload['name']);
+    $response->assertStatus(201);
+    $response->assertJsonPath('data.name', $payload['name']);
 });
 
-// Test 8.17
-test('admin cannot create a sensor (govops-only route)', function () {
+// Test 2.2
+test('admin cannot create a sensor, govops-only route', function () {
 
     $token = adminToken();
     $location = Location::where('level_id', 3)->first();
@@ -379,7 +380,7 @@ test('admin cannot create a sensor (govops-only route)', function () {
     $response->assertForbidden();
 });
 
-// Test 8.18
+// Test 5
 test('store sensor fails validation when level ordering is invalid', function () {
 
     $token = govopsToken();
@@ -405,7 +406,7 @@ test('store sensor fails validation when level ordering is invalid', function ()
 
 // ── PATCH /api/sensors/{sensor} (role:2 only) ──────────────────────────────────
 
-// Test 8.19
+// Test 3.1
 test('govops can update a sensor', function () {
 
     $token = govopsToken();
@@ -419,10 +420,10 @@ test('govops can update a sensor', function () {
     ]);
 
     $response->assertOk();
-    $response->assertJsonPath('address', 'Updated Sensor Address');
+    $response->assertJsonPath('data.address', 'Updated Sensor Address');
 });
 
-// Test 8.20
+// Test 3.2
 test('update sensor fails when resulting level order is invalid', function () {
 
     $token = govopsToken();
@@ -440,7 +441,7 @@ test('update sensor fails when resulting level order is invalid', function () {
 
 // ── PATCH /api/sensors/{sensor}/deactivate (role:2 only) ──────────────────────
 
-// Test 8.21
+// Test 4.1
 test('govops can deactivate a sensor', function () {
 
     $token = govopsToken();
@@ -458,8 +459,8 @@ test('govops can deactivate a sensor', function () {
     expect($sensor->social_element->deactivated_at)->not->toBeNull();
 });
 
-// Test 8.22
-test('deactivate returns 500 for non-existent sensor', function () {
+// Test 4.2
+test('deactivate returns 404 for non-existent sensor', function () {
 
     $token = govopsToken();
 
