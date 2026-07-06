@@ -9,25 +9,25 @@ use App\Models\SMSTemplate;
 use Carbon\Carbon;
 use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Collection;
+use Illuminate\Http\Client\ConnectionException;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
+use RuntimeException;
 
 class SMSBroadcastService
 {
     public function getRecipientsForLocation(int $locationId): Collection
     {
         return PhoneNumber::with([
+                'user',
                 'user.name',
                 'user.indivAcc.location',
             ])
-            ->whereHas('user', function ($query) use ($locationId) {
-                $query->whereNull('deactivated_at')
-                    ->whereHas('indivAcc', function ($indivAccQuery) use ($locationId) {
-                        $indivAccQuery->where('location_id', $locationId);
-                    });
+            ->whereHas('user.indivAcc', function ($query) use ($locationId) {
+                $query->where('location_id', $locationId);
             })
-            ->whereNotNull('phone_no')
             ->where('is_verified', true)
+            ->whereNotNull('phone_no')
             ->get();
     }
 
@@ -135,22 +135,23 @@ class SMSBroadcastService
             $query->where('message_content', 'LIKE', '%' . $filters['search'] . '%');
         }
 
-        if (isset($filters['status'])) {
+        // 🔥 FIX: If an explicit status is given, use it and IGNORE the broad state filter
+        if (isset($filters['status']) && $filters['status'] !== '') {
             $query->where('status', (int) $filters['status']);
         }
-
-        if (!empty($filters['state'])) {
+        // Otherwise, if no specific status is requested, fall back to the tab state grouping
+        elseif (!empty($filters['state'])) {
             if ($filters['state'] === 'active') {
-                $query->where('status', 1);
+                $query->where('status', 1); // Only Scheduled
             } else {
-                $query->whereIn('status', [2, 4, 5]);
+                $query->whereIn('status', [2, 3, 4]); // Sent, Cancelled, Failed
             }
         }
 
         return $query->orderByDesc('scheduled_for')->paginate($limit);
     }
 
-    public function sendImmediate(int $govOpId, int $locationId, string $messageContent): array
+    public function sendImmediate(int $govOpId, int $locationId, string $messageContent, ?string $apiToken = null): array
     {
         $phoneNumbers = $this->getRecipientsForLocation($locationId)
             ->pluck('phone_no')
@@ -172,19 +173,30 @@ class SMSBroadcastService
             'total_recipients' => $phoneNumbers->count(),
         ]);
 
-        return $this->dispatchBroadcastToGateway($broadcast);
+        return $this->dispatchBroadcastToGateway($broadcast, $apiToken);
     }
 
-    public function scheduleBroadcast(int $govOpId, int $locationId, string $messageContent, string $scheduledFor): array
+    public function scheduleBroadcast(
+        int $govOpId,
+        int $locationId,
+        string $messageContent,
+        string $scheduledFor,
+        ?string $apiToken = null
+    ): array
     {
         $scheduledAt = Carbon::parse($scheduledFor, 'Asia/Manila');
         $scheduledAtUtc = $scheduledAt->copy()->setTimezone('UTC');
 
-        $broadcast = $this->createDraft($govOpId, $locationId, $messageContent, $scheduledAtUtc->toDateTimeString());
+        $broadcast = $this->createDraft(
+            $govOpId,
+            $locationId,
+            $messageContent,
+            $scheduledAtUtc->toDateTimeString()
+        );
 
         $delaySeconds = now('Asia/Manila')->diffInSeconds($scheduledAt, false);
         $finalDelay = $delaySeconds > 0 ? $delaySeconds : 0;
-        SendScheduledSMSBroadcast::dispatch($broadcast->id)->delay($finalDelay);
+        SendScheduledSMSBroadcast::dispatch($broadcast->id, $apiToken)->delay($finalDelay);
 
         return [
             'broadcast'      => $broadcast->fresh(['gov_op.user', 'location', 'broadcast_status']),
@@ -193,7 +205,7 @@ class SMSBroadcastService
         ];
     }
 
-    public function sendScheduledBroadcast(int $broadcastId): array
+    public function sendScheduledBroadcast(int $broadcastId, ?string $apiToken = null): array
     {
         $broadcast = SMSBroadcast::find($broadcastId);
 
@@ -220,10 +232,16 @@ class SMSBroadcastService
             ];
         }
 
-        return $this->dispatchBroadcastToGateway($broadcast);
+        $result = $this->dispatchBroadcastToGateway($broadcast, $apiToken);
+
+        if ($result['failed'] ?? false) {
+            throw new RuntimeException($result['gateway_message'] ?? 'Scheduled SMS broadcast failed.');
+        }
+
+        return $result;
     }
 
-    private function dispatchBroadcastToGateway(SMSBroadcast $broadcast): array
+    private function dispatchBroadcastToGateway(SMSBroadcast $broadcast, ?string $apiToken = null): array
     {
         $phoneNumbers = $this->getRecipientsForLocation($broadcast->location_id)
             ->pluck('phone_no')
@@ -231,79 +249,98 @@ class SMSBroadcastService
             ->unique()
             ->values();
 
-        if ($phoneNumbers->isEmpty()) {
-            $broadcast->update(['status' => 5]);
+        // Format numbers cleanly into standard '09...' local format
+        // (Many local PH student-tier gateways look for standard domestic 11-digit string patterns)
+        $formattedPhoneNumbers = $phoneNumbers
+            ->map(function ($phone) {
+                $num = trim((string) $phone);
+
+                if (str_starts_with($num, '63')) {
+                    $num = '0' . substr($num, 2);
+                } elseif (!str_starts_with($num, '0')) {
+                    $num = '0' . $num;
+                }
+
+                return $num;
+            })
+            ->filter()
+            ->unique()
+            ->values();
+
+        if ($formattedPhoneNumbers->isEmpty()) {
+            $broadcast->update(['status' => 4]);
             abort(422, 'No user phone numbers found for this GovOp location.');
         }
 
-        $broadcast->update(['total_recipients' => $phoneNumbers->count()]);
+        $broadcast->update(['total_recipients' => $formattedPhoneNumbers->count()]);
 
-        if ((bool) config('services.iprogsms.mock', false) === true) {
-            Log::info('IPROGSMS mock SMS', [
-                'broadcast_id' => $broadcast->id,
-                'phone_number' => $phoneNumbers->implode(','),
-                'message'      => $broadcast->message_content,
-            ]);
-
-            $broadcast->update(['status' => 2, 'sent_at' => now()]);
+        $resolvedToken = $apiToken ?: config('services.iprogsms.api_token');
+        if (empty($resolvedToken)) {
+            $broadcast->update(['status' => 4]);
 
             return [
-                'broadcast'        => $broadcast->fresh(['gov_op.user', 'location', 'broadcast_status']),
-                'mock'             => true,
-                'gateway_response' => null,
+                'broadcast'         => $broadcast,
+                'failed'            => true,
+                'error_code'        => 'MISSING_TOKEN',
+                'gateway_message'   => 'No API token provided.',
+                'gateway_response'  => [
+                    'message' => 'Missing api token configuration.',
+                ],
             ];
-        }
-
-        $resolvedToken = config('services.iprogsms.api_token');
-
-        if (empty($resolvedToken)) {
-            $broadcast->update(['status' => 5]);
-            abort(422, 'No iPROG API token provided. Please set your token via the Verify Token screen.');
         }
 
         $payload = [
-            'api_token'    => $resolvedToken,
-            'phone_number' => $phoneNumbers->implode(','),
+            'phone_number' => $formattedPhoneNumbers->implode(','),
             'message'      => $broadcast->message_content,
-            'sms_provider' => (int) config('services.iprogsms.sms_provider', 0),
         ];
 
-        $response = Http::timeout(15)
-            ->asForm()
-            ->post(rtrim(config('services.iprogsms.base_url'), '/') . '/sms_messages/send_bulk', $payload);
+        Log::info('IPROGSMS bulk payload debug', [
+            'broadcast_id'   => $broadcast->id,
+            'phone_number'   => $payload['phone_number'],
+            'message_length' => mb_strlen($broadcast->message_content),
+        ]);
+
+        try {
+            $response = Http::timeout(15)
+                ->withoutVerifying()
+                ->withHeaders([
+                    'X-IPROG-API-TOKEN' => $resolvedToken, // Keep header just in case
+                    'Accept'            => 'application/json',
+                ])
+                ->acceptJson()
+                ->asJson()
+                ->post(rtrim(config('services.iprogsms.base_url'), '/') . '/sms_messages/send_bulk', [
+                    'api_token'     => $resolvedToken,
+                    'phone_numbers' => $payload['phone_number'],
+                    'phone_number'  => $payload['phone_number'],
+                    'message'       => $broadcast->message_content,
+                ]);
+        } catch (ConnectionException $e) {
+            $broadcast->update(['status' => 4]);
+
+            return [
+                'failed'           => true,
+                'error_code'       => 'GATEWAY_CONNECTION_FAILED',
+                'gateway_message'  => 'Could not reach the IPROGSMS gateway.',
+                'gateway_response' => [
+                    'message' => 'Invalid api token or no load balance',
+                ],
+            ];
+        }
 
         $responseBody = $response->json() ?? ['raw' => $response->body()];
-
-        // Classify the iPROG response into a specific error type.
-        // iPROG sometimes returns HTTP 200 even on failure — check the body too.
         $classified = $this->classifyGatewayResponse($response->status(), $responseBody);
 
         if ($classified['failed']) {
-            $broadcast->update(['status' => 5]);
+            $broadcast->update(['status' => 4]);
 
-            Log::error('IPROGSMS send failed', [
-                'broadcast_id' => $broadcast->id,
-                'http_status'  => $response->status(),
-                'error_code'   => $classified['error_code'],
-                'body'         => $responseBody,
-            ]);
-
-            return [
-                'broadcast'        => $broadcast->fresh(['gov_op.user', 'location', 'broadcast_status']),
-                'mock'             => false,
-                'gateway_response' => $responseBody,
-                'gateway_status'   => $response->status(),
-                'gateway_message'  => $classified['message'],
-                'error_code'       => $classified['error_code'],
-                'failed'           => true,
-            ];
+            return ['failed' => true, 'gateway_response' => $responseBody];
         }
 
         $broadcast->update(['status' => 2, 'sent_at' => now()]);
 
         return [
             'broadcast'        => $broadcast->fresh(['gov_op.user', 'location', 'broadcast_status']),
-            'mock'             => false,
             'gateway_response' => $responseBody,
             'failed'           => false,
         ];
@@ -381,12 +418,31 @@ class SMSBroadcastService
 
     public function formatBroadcast(SMSBroadcast $broadcast): array
     {
-        // Always re-resolve the sender from the broadcast's own sender_id
-        // to prevent a stale eager-loaded relation from bleeding across rows
-        // (which caused "Zach Abad" to appear for every entry).
         $sender = $broadcast->relationLoaded('gov_op')
             ? $broadcast->gov_op
             : $broadcast->load('gov_op.user')->gov_op;
+
+        // 1. Parse the timestamps safely
+        $scheduledFor = $broadcast->scheduled_for
+            ? Carbon::parse($broadcast->scheduled_for)->timezone('Asia/Manila')->toDateTimeString()
+            : null;
+
+        $sentAt = $broadcast->sent_at
+            ? Carbon::parse($broadcast->sent_at)->timezone('Asia/Manila')->toDateTimeString()
+            : null;
+
+        $updatedAt = $broadcast->updated_at
+            ? Carbon::parse($broadcast->updated_at)->timezone('Asia/Manila')->toDateTimeString()
+            : null;
+
+        // 2. Generate a dynamic, fallback-safe display date based on status ID
+        $displayDate = match ((int) $broadcast->status) {
+            1 => $scheduledFor ? "Sending on: " . Carbon::parse($scheduledFor)->format('M j, Y g:i A') : "Scheduled",
+            2 => $sentAt ? "Sent on: " . Carbon::parse($sentAt)->format('M j, Y g:i A') : "Sent",
+            3 => "Cancelled",
+            4 => "Failed to send",
+            default => "Unknown state",
+        };
 
         return [
             'id'               => $broadcast->id,
@@ -395,12 +451,9 @@ class SMSBroadcastService
                 'id'   => $broadcast->status,
                 'name' => $broadcast->broadcast_status?->status_name ?? 'Unknown',
             ],
-            'scheduled_for'    => $broadcast->scheduled_for
-                ? Carbon::parse($broadcast->scheduled_for)->timezone('Asia/Manila')->toDateTimeString()
-                : null,
-            'sent_at'          => $broadcast->sent_at
-                ? Carbon::parse($broadcast->sent_at)->timezone('Asia/Manila')->toDateTimeString()
-                : null,
+            'scheduled_for'    => $scheduledFor,
+            'sent_at'          => $sentAt,
+            'display_date'     => $displayDate,
             'total_recipients' => $broadcast->total_recipients,
             'sender'           => [
                 'govop_id'       => $sender?->id,
@@ -449,7 +502,7 @@ class SMSBroadcastService
             return 'window_passed';
         }
 
-    $broadcast->update(['status' => 4]);
+    $broadcast->update(['status' => 3]);
 
     return 'cancelled';
 }
@@ -491,13 +544,26 @@ class SMSBroadcastService
         $bodyStatus  = $body['status']  ?? null;
         $bodyMessage = $body['message'] ?? '';
 
-        // ── Success ───────────────────────────────────────────────────────────
-        if ($httpStatus >= 200 && $httpStatus < 300 && $bodyStatus === 'success') {
-            return ['failed' => false, 'error_code' => null, 'message' => null];
-        }
-
         // ── Normalize message to lowercase for keyword matching ───────────────
         $lowerMessage = strtolower($bodyMessage);
+
+        // ── Success ───────────────────────────────────────────────────────────
+        if ($httpStatus >= 200 && $httpStatus < 300) {
+            $messageIds = trim((string) ($body['message_ids'] ?? ''));
+            $looksSuccessful = (
+                $bodyStatus === 'success'
+                || $bodyStatus === true
+                || (int) $bodyStatus === 200
+                || ($body['success'] ?? false) === true
+                || str_contains($lowerMessage, 'successfully')
+                || str_contains($lowerMessage, 'added to the queue')
+                || str_contains($lowerMessage, 'processed shortly')
+            );
+
+            if ($looksSuccessful) {
+                return ['failed' => false, 'error_code' => null, 'message' => null];
+            }
+        }
 
         // ── Invalid / missing token ───────────────────────────────────────────
         if (

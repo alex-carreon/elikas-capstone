@@ -6,9 +6,14 @@ use App\Http\Controllers\Controller;
 use App\Models\Flag;
 use App\Models\FloodPath;
 use Illuminate\Http\Request;
+use App\Mail\ContentFlaggedMail;
+use Illuminate\Support\Facades\Mail;
 
 class FlagFloodController extends Controller
 {
+    /** Flags needed before admins are alerted */
+    protected int $flagThreshold = 3;
+
     /**
      * POST /flood-paths/{floodPathId}/flag
      */
@@ -60,6 +65,25 @@ class FlagFloodController extends Controller
             'flagged_at'  => now(),
             'is_approved' => null,
         ]);
+
+         // Notify admins once the flag count hits the threshold 
+        $flagCount = Flag::where('element_id', $floodPath->element_id)->count();
+
+        if ($flagCount === $this->flagThreshold) {
+            $posterName = $floodPath->socialElement?->user?->name;
+
+            Mail::to(config('mail.admin_notification_emails'))->send(
+                new ContentFlaggedMail([
+                    'type' => 'flood_path',
+                    'content_id' => $floodPath->id,
+                    'element_id' => $floodPath->element_id,
+                    'flag_count' => $flagCount,
+                    'content' => $floodPath->description ?? null,
+                    'posted_by' => $posterName ? trim($posterName->first_name . ' ' . $posterName->last_name) : 'Unknown',
+                    'posted_by_id' => $floodPath->socialElement?->user_id,
+                ])
+            );
+        }
 
         return response()->json([
             'message' => 'Flood path flagged successfully.',

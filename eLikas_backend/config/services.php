@@ -40,11 +40,15 @@ return [
     ],
 
     'iprogsms' => [
-    'base_url'        => env('IPROGSMS_BASE_URL', 'https://www.iprogsms.com/api/v1'),
-    'otp_base_url'    => env('IPROGSMS_OTP_BASE_URL', 'https://sms.iprogtech.com/api/v1'),
-    'api_token'       => env('IPROGSMS_API_TOKEN'),
-    'sms_provider'    => env('IPROGSMS_SMS_PROVIDER', 0),
-    'mock'            => env('IPROGSMS_MOCK', true),
-    'default_status'  => env('IPROGSMS_DEFAULT_BROADCAST_STATUS', 1),
-],
+        'base_url'        => env('IPROGSMS_BASE_URL', 'https://www.iprogsms.com/api/v1'),
+        'otp_base_url'    => env('IPROGSMS_OTP_BASE_URL', 'https://sms.iprogtech.com/api/v1'),
+        'api_token'       => env('IPROGSMS_API_TOKEN'),
+        'sender_id'       => env('IPROGSMS_SENDER_ID', 'Benilde eLikas Team'),
+        'mock'            => env('IPROGSMS_MOCK', false),
+        'default_status'  => env('IPROGSMS_DEFAULT_BROADCAST_STATUS', 1),
+    ],
+
+    'brouter' => [
+        'url' => env('BROUTER_URL', 'http://localhost:17777'),
+    ],
 ];

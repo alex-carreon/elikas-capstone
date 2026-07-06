@@ -8,9 +8,14 @@ use Illuminate\Http\Request;
 use App\Models\Comment;
 use App\Models\Flag;
 use App\Models\FlagReason;
+use App\Mail\ContentFlaggedMail;
+use Illuminate\Support\Facades\Mail;
 
 class FlagCommentController extends Controller
 {
+    /** Flags needed before admins are alerted */
+    protected int $flagThreshold = 3;
+
     /**
      * POST /comments/{commentId}/flag
      */
@@ -55,6 +60,25 @@ class FlagCommentController extends Controller
             'flagged_at'  => now(),
             'is_approved' => null,
         ]);
+
+        // Notify admins once the flag count hits the threshold
+        $flagCount = Flag::where('element_id', $comment->element_id)->count();
+
+        if ($flagCount === $this->flagThreshold) {
+            $posterName = $comment->element?->user?->name;
+
+            Mail::to(config('mail.admin_notification_emails'))->send(
+                new ContentFlaggedMail([
+                    'type' => 'comment',
+                    'content_id' => $comment->id,
+                    'element_id' => $comment->element_id,
+                    'flag_count' => $flagCount,
+                    'content' => $comment->content ?? null,
+                    'posted_by' => $posterName ? trim($posterName->first_name.' '.$posterName->last_name) : 'Unknown',
+                    'posted_by_id' => $comment->element?->user_id,
+                ])
+            );
+        }
 
         return response()->json([
             'message' => 'Comment flagged successfully.',

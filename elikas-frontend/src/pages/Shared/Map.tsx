@@ -39,12 +39,26 @@ function Map() {
   >({});
   const [decidedCount, setDecidedCount] = useState(0);
   const [dismissed, setDismissed] = useState(false);
+  const [showRoute, setShowRoute] = useState(false);
+  const [showNearest, setShowNearest] = useState(false);
+  const [clearRoute, setClearRoute] = useState(false);
+
   const openDialog = useRef(false);
 
-  const philippinesBounds: LatLngBoundsExpression = [
-    [4.5, 116.0], // southwest corner
-    [21.5, 127.0], // northeast corner
+  // const philippinesBounds: LatLngBoundsExpression = [
+  //   [4.5, 116.0], // southwest corner
+  //   [21.5, 127.0], // northeast corner
+  // ];
+
+  const luzonBounds: LatLngBoundsExpression = [
+    [14.28, 120.85], // Southwest
+    [14.8, 121.15], // Northeast
   ];
+
+  // const manilaBounds: LatLngBoundsExpression = [
+  //   [14.5495, 120.9205], // southwest corner
+  //   [14.6434, 121.0343], // northeast corner
+  // ];
 
   const mapRef = useRef<LeafletMap | null>(null);
 
@@ -71,12 +85,8 @@ function Map() {
 
   const handleNearestRoute = () => {
     if (locationFound) {
-      // setShowNearestRoute(true);
-      // setShowRoute(false);
-      // setSelectedPin(null);
-      // setOpenFromRoute(true);
       setShowNearestRouteTrigger((prev) => prev + 1);
-    } else console.log("Location not found");
+    } else toast.error("Please enable location to find a route.");
   };
 
   const handleSnoozeSingle = async (id: number, e: React.FormEvent) => {
@@ -164,7 +174,6 @@ function Map() {
   }, [role]);
 
   useEffect(() => {
-    console.log("Decided", decidedCount);
     if (decidedCount === reminderCount) {
       setShowReminder(false);
     }
@@ -294,15 +303,20 @@ function Map() {
           <MapContainer
             id="Map_Container"
             style={{ height: "93dvh", width: "100%" }}
-            maxBounds={philippinesBounds}
+            maxBounds={luzonBounds}
             maxBoundsViscosity={1.0}
-            minZoom={6}
+            // minZoom={12}
+            minZoom={11}
             ref={mapRef}
           >
             <MapComp
               onLocationFound={setLocationFound}
               showLocation={showLocation}
               nearestRouteTrigger={showNearestRouteTrigger}
+              setNearestRoute={setShowNearest}
+              setRoute={setShowRoute}
+              clearRoute={clearRoute}
+              setClearRoute={setClearRoute}
             />
           </MapContainer>
           {/* <div className="fixed w-full max-w-md"> */}
@@ -350,14 +364,25 @@ function Map() {
                       : "Guest Mode - View only"}
                   </p>
                 </div>
-                <ButtonComp
-                  text="Find Nearest Evac Center"
-                  variant="important"
-                  id="Map_NearestRouteBtn"
-                  onClick={handleNearestRoute}
-                  widthSize="90%"
-                  heightSize="50px"
-                />
+                {showNearest || showRoute ? (
+                  <ButtonComp
+                    text="Clear Route"
+                    variant="important"
+                    id="Map_ClearRouteBtn"
+                    onClick={() => setClearRoute(true)}
+                    widthSize="90%"
+                    heightSize="50px"
+                  />
+                ) : (
+                  <ButtonComp
+                    text="Find Nearest Evac Center"
+                    variant="important"
+                    id="Map_NearestRouteBtn"
+                    onClick={handleNearestRoute}
+                    widthSize="90%"
+                    heightSize="50px"
+                  />
+                )}
               </div>
             </div>
           </div>

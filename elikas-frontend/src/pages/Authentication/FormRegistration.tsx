@@ -211,6 +211,7 @@ function FormRegistration() {
               isRequired
               value={last_name}
               onSubmit={(e) => filterSpecial(e, setLn)}
+              maxLength={50}
             />
             <TextField
               label="First Name"
@@ -219,16 +220,18 @@ function FormRegistration() {
               isRequired
               value={first_name}
               onSubmit={(e) => filterSpecial(e, setFn)}
+              maxLength={50}
             />
             <TextField
               label="Email Address"
               description="Please make sure that this email address can receive emails from eLikas."
-              inputType="text"
+              inputType="email"
               id="RegisForm_EMAILfield"
               isRequired
               value={email}
               onSubmit={(e) => setEmail(e.target.value)}
               error={errors.email}
+              maxLength={50}
             />
             <SelectDropdown
               value={String(cityId)}

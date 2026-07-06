@@ -116,6 +116,7 @@ function EvacDetails() {
   const [other, setOther] = useState("");
   const [contactPerson, setContactPerson] = useState("");
   const [contactNumber, setContactNumber] = useState("");
+  const [postedBy, setPostedBy] = useState<postedBy>();
   const [isPersistent, setIsPersistent] = useState(false);
   const [isEditable, setIsEditable] = useState(false);
   const [capacityLevels, setCapacityLevels] = useState<CapacityLevel[]>([]);
@@ -171,6 +172,7 @@ function EvacDetails() {
       setContactPerson(evacDetails.contact_person);
       setContactNumber(evacDetails.contact_number);
       setIsPersistent(evacDetails.is_persistent);
+      setPostedBy(evacDetails.posted_by);
       setPinDetails(evacDetails);
     } catch (err: any) {
       if (err.name === "CanceledError") {
@@ -208,6 +210,8 @@ function EvacDetails() {
 
     try {
       setLoading(true);
+      setDisabled(true);
+
       await Promise.all([
         getEvacDetails(controller.signal),
         getCapacityLevels(controller.signal),
@@ -217,6 +221,7 @@ function EvacDetails() {
       console.log(err);
     } finally {
       setLoading(false);
+      setDisabled(false);
     }
 
     return () => controller.abort();
@@ -340,8 +345,11 @@ function EvacDetails() {
     if (isEditable) {
       const fetch = async () => {
         setLoading(true);
+        setDisabled(true);
+
         await getEditDetails();
         setLoading(false);
+        setDisabled(false);
       };
       fetch();
     }
@@ -442,6 +450,7 @@ function EvacDetails() {
         }}
         deleteClick={() => deac()}
         isDisabled={disabled}
+        isDeactivated={pinDetails?.is_deactivated}
       >
         {loading ? (
           <div className="flex justify-center">
@@ -556,8 +565,8 @@ function EvacDetails() {
                     id="Admin_EvacDetailsMapContainer"
                   >
                     <TileLayer
-                      attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-                      url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+                      attribution='&copy; <a href="https://www.maptiler.com/copyright/">MapTiler</a> &copy; <a href="https://openstreetmap.org">OpenStreetMap</a> contributors'
+                      url={`https://api.maptiler.com/maps/base-v4/{z}/{x}/{y}.png?key=6RBKItdaX8o4QX31GhTm`}
                     />
                     <MapClickHandler
                       onPinClick={() => {}}
@@ -760,6 +769,20 @@ function EvacDetails() {
                     Has expired: {String(pinDetails?.is_expired)}
                   </p>
                 </div>
+                <TextField
+                  label="Posted By"
+                  id="Admin_EvacDetailsPostedName"
+                  inputType="text"
+                  value={postedBy?.username}
+                  readonly
+                ></TextField>
+                <TextField
+                  label="Posted On"
+                  id="Admin_EvacDetailsPostedOn"
+                  inputType="text"
+                  value={postedBy?.posted_at}
+                  readonly
+                ></TextField>
                 {pinDetails?.is_deactivated && (
                   <div>
                     <TextField

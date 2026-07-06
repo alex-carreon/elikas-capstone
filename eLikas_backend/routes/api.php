@@ -37,6 +37,7 @@ use App\Http\Controllers\Votes\VoteCommentController;
 use App\Http\Controllers\Votes\VoteController;
 use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\AdminSMSController;
+use App\Http\Controllers\EvacRouteController;
 use App\Http\Controllers\MediaCleanupController;
 
 Route::get('/test', function () {
@@ -48,8 +49,12 @@ Route::get('/test', function () {
 // ---------------------------------------------------------------
 // PUBLIC ROUTES — no token required
 // ---------------------------------------------------------------
-Route::post('/auth/register', [AuthController::class, 'register']);
-Route::post('/auth/login',    [AuthController::class, 'login']);
+Route::post('/auth/register', [AuthController::class, 'register'])
+    ->middleware(['appcheck', 'throttle:5,1']);
+
+Route::post('/auth/login',    [AuthController::class, 'login'])
+    ->middleware('throttle:5,1');
+
 Route::get('/public/sensors', [PublicSensorController::class, 'index']);
 Route::get('/public/sensors/{sensor}', [PublicSensorController::class, 'show']);
 
@@ -63,15 +68,19 @@ Route::get('/capacity-levels', [CapacityLevelController::class, 'index']);
 
 Route::post('/sensor-logs', [SensorLogController::class, 'store']);
 
-Route::post('/email/resend-verification', [AuthController::class, 'resendVerification']);
+Route::post('/email/resend-verification', [AuthController::class, 'resendVerification'])
+    ->middleware('throttle:5,1');
+
 Route::post('/forgot-password', [AuthController::class, 'forgotPassword'])
     ->middleware('throttle:5,1');
+
+Route::get('/route', [EvacRouteController::class, 'getRoute']);
+
 // ---------------------------------------------------------------
 // PIN ROUTES
 // ---------------------------------------------------------------
 Route::get('/pins/nearby', [GetNearbyEvacuationAreasController::class, 'getNearbyEvacuationAreas']);
 Route::get('/pins/routes', [GetEvacuationRoutesController::class, 'getEvacuationRoutes']);
-Route::get('/pins/{id}', [GetEvacAreaDetailsController::class, 'getEvacAreaDetails'])->whereNumber('id');
 
 
 
@@ -81,7 +90,7 @@ Route::get('/pins/{id}', [GetEvacAreaDetailsController::class, 'getEvacAreaDetai
 Route::middleware('optional.firebase.auth')->group(function () {
     Route::get('/flood-paths', [FloodPathController::class, 'index']);
     Route::get('/pins', [GetEvacAreasController::class, 'getEvacAreas']);
-    Route::get('/evacpins/users/coords', [GetEvacAreasController::class, 'getRoleIndivCoords']);
+    Route::get('/pins/{id}', [GetEvacAreaDetailsController::class, 'getEvacAreaDetails'])->whereNumber('id');
 });
 
 // ---------------------------------------------------------------
@@ -99,6 +108,11 @@ Route::prefix('admin')->middleware(['firebase.auth', 'role:1'])->group(function 
     Route::get('/emergency-contacts', [EmergencyContactController::class, 'indexAdmin']);
 
     Route::get('flood-paths', [FloodPathAdminController::class, 'index']);
+
+    //USER DASHBOARD
+    Route::get('/users', [UserController::class, 'allUsers']);
+    Route::get('/users/{id}', [UserController::class, 'getUser']);
+    Route::patch('/users/{id}', [UserController::class, 'updateUser']); //can update any user
 
     //FLAGS
     Route::get('/comments/flags', [AdminFlagController::class, 'commentFlags']);
@@ -170,11 +184,6 @@ Route::middleware(['firebase.auth', 'role:2'])->group(function () {
 
 // BARANGAY OR ADMIN ROUTES
 Route::middleware(['firebase.auth', 'role:1,2'])->group(function () {
-    //USER DASHBOARD
-    Route::get('/admin/users', [UserController::class, 'allUsers']);
-    Route::get('/admin/users/{id}', [UserController::class, 'getUser']);
-    Route::patch('/admin/users/{id}', [UserController::class, 'updateUser']); //can update any user
-
     Route::get('/sensors', [SensorController::class, 'index']);
     Route::get('/sensors/{sensor}', [SensorController::class, 'show']);
     Route::get('sensors/{sensor_code}/logs', [SensorLogController::class, 'index']);
@@ -219,7 +228,9 @@ Route::middleware(['firebase.auth', 'role:1,2,3'])->group(function () {
     Route::get('flood-levels', [FloodLevelController::class, 'index']);
 
     //FLOODS
-    Route::post('flood-paths', [FloodPathController::class, 'store']);
+    Route::post('flood-paths', [FloodPathController::class, 'store'])
+        ->middleware('throttle:5,1');
+
     Route::get('/flood-paths/my', [FloodPathController::class, 'my']);
     Route::get('/flood-paths/{id}', [FloodPathController::class, 'show'])
         ->whereNumber('id');
@@ -228,7 +239,9 @@ Route::middleware(['firebase.auth', 'role:1,2,3'])->group(function () {
     Route::post('/flood-paths/{id}/media', [FloodPathController::class, 'addMedia']);
 
     //EVAC PINS
-    Route::post('/pins', [StoreEvacuationAreaController::class, 'storeEvacuationArea']);
+    Route::post('/pins', [StoreEvacuationAreaController::class, 'storeEvacuationArea'])
+        ->middleware('throttle:5,1');
+
     Route::put('/pins/{id}', [UpdateEvacuationAreaController::class, 'updateEvacuationArea']);
     Route::delete('/pins/{id}', [DeleteEvacuationAreaController::class, 'deleteEvacuationArea']); //hard delete for admins
     Route::patch('/pins/{id}/deactivate', [DeleteEvacuationAreaController::class, 'deleteEvacuationArea']); //everyone else uses soft delete

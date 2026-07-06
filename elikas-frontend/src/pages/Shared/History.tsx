@@ -391,7 +391,7 @@ function History() {
                     }}
                     id="History_EvacTrigger"
                   >
-                    Evacuation Pins
+                    Evacuation
                   </TabsTrigger>
                   <TabsTrigger
                     value="Hazard"
@@ -401,7 +401,7 @@ function History() {
                     }}
                     id="History_HazardTrigger"
                   >
-                    Hazard Pins
+                    Hazard
                   </TabsTrigger>
                   {role === "brgy_op" && (
                     <TabsTrigger
@@ -497,7 +497,7 @@ function History() {
                     }}
                     id="History_EvacTrigger"
                   >
-                    Evacuation Pins
+                    Evacuation
                   </TabsTrigger>
                   <TabsTrigger
                     value="Hazard"
@@ -507,7 +507,7 @@ function History() {
                     }}
                     id="History_HazardTrigger"
                   >
-                    Hazard Pins
+                    Hazard
                   </TabsTrigger>
                   {role === "brgy_op" && (
                     <TabsTrigger
@@ -837,7 +837,6 @@ function History() {
                       return (
                         <Row
                           title="Flood"
-                          desc={path.level}
                           address={path.description}
                           datePosted={path.last_confirmed}
                           link={`/HazardForm/${path.id}`}

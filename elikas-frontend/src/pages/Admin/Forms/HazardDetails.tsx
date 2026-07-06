@@ -63,11 +63,11 @@ function HazardDetails() {
   };
 
   const getColor = (level: number | null | undefined): string => {
-    if (level === 1 || level === 2) {
+    if (level === 8 || level === 9) {
       return colorHazard.lightBlue;
-    } else if (level === 3 || level === 4) {
+    } else if (level === 10 || level === 11) {
       return colorHazard.darkBlue;
-    } else if (level === 5 || level === 6 || level === 7) {
+    } else if (level === 12 || level === 13 || level === 14) {
       return colorHazard.red;
     } else return colorHazard.fallback;
   };
@@ -106,15 +106,19 @@ function HazardDetails() {
 
     try {
       setLoading(true);
+      setDisabled(true);
+
       await getFloodDetails(controller.signal);
     } catch (err: any) {
       if (err.name === "CanceledError") {
         setLoading(false);
+        setDisabled(false);
         return;
       }
       console.log(err);
     } finally {
       setLoading(false);
+      setDisabled(false);
     }
   };
 
@@ -126,8 +130,6 @@ function HazardDetails() {
     const response = api.patch(`/flood-paths/${id}`, {
       level_id: levelId,
     });
-
-    console.log(response);
 
     toast.promise(response, {
       loading: "Saving your updates...",
@@ -197,6 +199,7 @@ function HazardDetails() {
         deleteClick={() => deleteHaz()}
         isEditable={isEditable}
         isDisabled={disabled}
+        isDeactivated={floodDetails?.is_deactivated}
       >
         {loading ? (
           <div className="flex justify-center">
@@ -232,8 +235,8 @@ function HazardDetails() {
                 id="Admin_HazardMapContainer"
               >
                 <TileLayer
-                  attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-                  url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+                  attribution='&copy; <a href="https://www.maptiler.com/copyright/">MapTiler</a> &copy; <a href="https://openstreetmap.org">OpenStreetMap</a> contributors'
+                  url={`https://api.maptiler.com/maps/base-v4/{z}/{x}/{y}.png?key=6RBKItdaX8o4QX31GhTm`}
                 />
                 <Marker
                   position={midpoint as LatLngExpression}
@@ -270,14 +273,6 @@ function HazardDetails() {
                   readonly
                 />
               )}
-
-              <TextField
-                label="Posted By"
-                value={String(floodDetails?.posted_by)}
-                inputType="text"
-                id="Admin_HazardPostedBy"
-                readonly
-              />
               <TextField
                 label="Description"
                 value={String(floodDetails?.description)}
@@ -316,15 +311,45 @@ function HazardDetails() {
                   id="Admin_HazardExpiry"
                   readonly
                 />
-                <div className="flex gap-4">
-                  <p className="text-xs italic" id="Admin_HazardIsExpired">
-                    Has expired: {String(floodDetails?.is_expired)}
-                  </p>
+                <p className="text-xs italic" id="Admin_HazardIsExpired">
+                  Has expired: {String(floodDetails?.is_expired)}
+                </p>
+              </div>
+              {floodDetails?.is_deactivated && (
+                <div className="flex flex-col gap-1">
+                  <TextField
+                    label="Expiry Date"
+                    value={String(floodDetails?.expiry)}
+                    inputType="text"
+                    id="Admin_HazardExpiry"
+                    readonly
+                  />
                   <p className="text-xs italic" id="Admin_HazardIsDeac">
                     Has deactivated: {String(floodDetails?.is_deactivated)}
                   </p>
                 </div>
-              </div>
+              )}
+              <TextField
+                label="Posted By"
+                value={String(floodDetails?.posted_by)}
+                inputType="text"
+                id="Admin_HazardPostedBy"
+                readonly
+              />
+              <TextField
+                label="Posted On"
+                value={String(floodDetails?.posted_at)}
+                inputType="text"
+                id="Admin_HazardPostedOn"
+                readonly
+              />
+              <TextField
+                label="Last Updated"
+                value={String(floodDetails?.last_confirmed)}
+                inputType="text"
+                id="Admin_HazardLastUpdated"
+                readonly
+              />
             </form>
           </>
         )}

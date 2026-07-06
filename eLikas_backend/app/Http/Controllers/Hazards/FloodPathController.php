@@ -518,13 +518,18 @@ class FloodPathController extends Controller
             'expiry' => $floodPath->expiry
                 ? $floodPath->expiry->timezone('Asia/Manila')->toDateTimeString()
                 : null,
-            // 'posted_at' => $floodPath->socialElement->posted_at
-            //     ? $floodPath->socialElement->posted_at->timezone('Asia/Manila')->toDateTimeString()
-            //     : null,
+            'posted_at' => $floodPath->socialElement->posted_at
+                ? $floodPath->socialElement->posted_at->timezone('Asia/Manila')->toDateTimeString()
+                : null,
             'is_expired' => $floodPath->expiry < now(),
             'is_deactivated' => !is_null(
                 $floodPath->socialElement->deactivated_at
             ),
+            'deactivated_at' => $floodPath->socialElement->deactivated_at
+            ? $floodPath->socialElement->deactivated_at
+                ->timezone('Asia/Manila')
+                ->toDateTimeString()
+            : null,
             'media' => $floodPath->socialElement?->media
                 ->map(fn ($m) => config('app.media_base_url') . '/' . $m->file_path)
                 ->values()

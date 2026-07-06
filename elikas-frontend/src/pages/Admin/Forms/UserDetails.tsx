@@ -72,7 +72,6 @@ function UserDetails() {
 
   const getIndivDetails = async (signal?: AbortSignal) => {
     try {
-      setLoading(true);
       const response = await api.get(`/admin/users/${id}`, { signal });
 
       const userDetails = response.data;
@@ -164,27 +163,30 @@ function UserDetails() {
       .finally(() => setDisabled(false));
   };
 
-  useEffect(() => {
+  const getAll = async () => {
     const controller = new AbortController();
 
-    const getAll = async () => {
-      try {
-        setLoading(true);
-        await getIndivDetails(controller.signal);
-      } catch (err: any) {
-        if (err.name === "CanceledError") {
-          setLoading(false);
-          return;
-        }
-        console.log(err);
-      } finally {
+    try {
+      setLoading(true);
+      setDisabled(true);
+      await getIndivDetails(controller.signal);
+    } catch (err: any) {
+      if (err.name === "CanceledError") {
         setLoading(false);
+        setDisabled(false);
+        return;
       }
-    };
-
-    getAll();
+      console.log(err);
+    } finally {
+      setLoading(false);
+      setDisabled(false);
+    }
 
     return () => controller.abort();
+  };
+
+  useEffect(() => {
+    getAll();
   }, []);
 
   useEffect(() => {
@@ -277,6 +279,7 @@ function UserDetails() {
         }}
         formId="Admin_IndivUpdateForm"
         isDisabled={disabled}
+        isDeactivated={userData?.deactivated_at ? true : false}
       >
         {loading ? (
           <div className="flex justify-center">
@@ -310,6 +313,7 @@ function UserDetails() {
                 value={username}
                 readonly={!isEditable}
                 onSubmit={(e) => setUsername(e.target.value)}
+                maxLength={20}
               />
               <TextField
                 label="First Name"
@@ -318,6 +322,7 @@ function UserDetails() {
                 value={firstname}
                 readonly={!isEditable}
                 onSubmit={(e) => setFirstname(e.target.value)}
+                maxLength={50}
               />
               <TextField
                 label="Last Name"
@@ -326,6 +331,7 @@ function UserDetails() {
                 value={lastname}
                 readonly={!isEditable}
                 onSubmit={(e) => setLastname(e.target.value)}
+                maxLength={50}
               />
               <TextField
                 label="Email"
@@ -334,6 +340,7 @@ function UserDetails() {
                 value={email}
                 readonly={!isEditable}
                 onSubmit={(e) => setEmail(e.target.value)}
+                maxLength={50}
               />
               {!isEditable ? (
                 <TextField
@@ -385,6 +392,7 @@ function UserDetails() {
                 value={phone ?? ""}
                 readonly={!isEditable}
                 onSubmit={(e) => setPhone(e.target.value)}
+                maxLength={12}
               />
               <TextField
                 label="Created At"

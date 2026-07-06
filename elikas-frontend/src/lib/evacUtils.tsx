@@ -64,13 +64,16 @@ export const handleSubmit = async ({
     loading: "Adding your pin to the map...",
     success: "Pin successfully added!",
     error: (err: any) => {
-      if (
-        err.response.data.details ===
-        "The expiry field must be a date after now."
-      ) {
-        return "The expiry date must be a date after now.";
+      if (err.response.data.details) {
+        return err.response.data.details;
       }
-      return "Creating Pin failed. Please make sure that all required fields are filled";
+      if (err.response.data.message) {
+        return err.response.data.message;
+      }
+      if (err.response.data.error) {
+        return err.response.data.error;
+      }
+      return "An unexpected error has occurred";
     },
     position: "top-center",
   });
@@ -122,18 +125,10 @@ export const handleUpdate = async ({
   setHasUpdated,
   role,
   setDisabled,
+  location_id,
 }: handleActionProps) => {
   e?.preventDefault();
   setDisabled?.(true);
-
-  console.log(
-    "Sending",
-    toilet_count,
-    kitchen_count,
-    child_prayer_count,
-    child_prayer_count,
-    other_facilities,
-  );
 
   const responsePromise = api.put(`/pins/${id}`, {
     ...(name && { name: name }),
@@ -149,14 +144,16 @@ export const handleUpdate = async ({
     has_health: has_health,
     pwd_friendly: pwd_friendly,
     has_catchment: has_catchment,
-    toilet_count: toilet_count == 0 ? null : toilet_count,
-    kitchen_count: kitchen_count == 0 ? null : kitchen_count,
-    child_prayer_count: child_prayer_count == 0 ? null : child_prayer_count,
-    breastfeed_count: breastfeed_count == 0 ? null : child_prayer_count,
+    toilet_count: toilet_count,
+    kitchen_count: kitchen_count,
+    child_prayer_count: child_prayer_count,
+    breastfeed_count: breastfeed_count,
     other_facilities: other_facilities,
+    location_id: location_id,
     ...(contact_person && { contact_person: contact_person }),
     ...(contact_number && { contact_number: contact_number }),
     ...(role === "brgy_op" && { expiry: expiry }),
+    expiry: expiry,
   });
 
   toast.promise(responsePromise, {
@@ -164,6 +161,21 @@ export const handleUpdate = async ({
     success: "Pin successfully updated!",
     error: (err: any) => {
       console.log(err.response?.data);
+      if (
+        err.response.data.error ===
+        "The expiry date cannot be modified for non-persistent (ad-hoc) evacuation pins. Set is_persistent to true before adjusting the expiry, or omit the expiry field."
+      ) {
+        return "Non-persistent evacuation pins does not allow change in expiry.";
+      }
+      if (
+        err.response.data.error ===
+        "Forbidden. You may only update your own evacuation area pins"
+      ) {
+        return "You may only update your own evacuation area pins.";
+      }
+      if (err.response.data.error === "Evacuation area not found") {
+        return "This evacuation pin does not exist.";
+      }
       return err.response?.data?.message || "Please try again.";
     },
   });
@@ -205,7 +217,10 @@ export const handleDelete = async ({
         return "Pin Deactivated!";
       },
       error: (err: any) => {
-        return err.response?.data?.message || "Please try again.";
+        if (err.response.data.error) {
+          return err.response.data.error;
+        }
+        return "An unexpected error occurred. Please try again.";
       },
       position: "top-center",
     });
@@ -273,7 +288,10 @@ export const handleReactivate = ({
     loading: "Re-activating this pin...",
     success: "Pin Re-activated!",
     error: (err: any) => {
-      return err.response.data;
+      if (err.response.data.error) {
+        return err.response.data.error;
+      }
+      return "An unexpected error occurred. Please try again.";
     },
     position: "top-center",
   });

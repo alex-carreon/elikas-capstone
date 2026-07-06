@@ -59,6 +59,8 @@ function Profile() {
   const [brgyId, setBrgyId] = useState(0);
   const [contact, setContact] = useState("");
   const [newContact, setNewContact] = useState<string | null>("");
+  const [pointPerson, setPointPerson] = useState("");
+  const [pointPosition, setPointPosition] = useState("");
   const [contactTouched, setContactTouched] = useState(false);
   const [isVerified, setIsVerified] = useState(false);
   const [loading, setLoading] = useState(false);
@@ -93,6 +95,8 @@ function Profile() {
       setContact(userData.phone || "No Registered Number");
       setSeed(userData?.avatar_seed);
       setIsVerified(userData?.is_verified);
+      setPointPerson(userData?.point_person);
+      setPointPosition(userData?.point_person_position);
 
       return userData;
     } catch (err: string | any) {
@@ -118,17 +122,19 @@ function Profile() {
 
     const response = api.put("/profile", {
       username: newUsername,
-      first_name: firstName,
-      last_name: lastName,
-      email: email,
+      ...(role === "indiv" && { first_name: firstName }),
+      ...(role === "indiv" && { last_name: lastName }),
       ...(brgyId && { location_id: brgyId }),
       ...(contactTouched && { phone: newContact }),
       avatar_seed: seed,
+      ...(role === "brgy_op" && { point_person: pointPerson }),
+      ...(role === "brgy_op" && { point_person_position: pointPosition }),
     });
 
-    console.log(response);
-
     if (!response) {
+      toast.error(
+        "Updating your profile was unsuccessful. Please try again later.",
+      );
       return;
     }
 
@@ -136,12 +142,24 @@ function Profile() {
       loading: "Updating your profile...",
       success: "Profile updated!",
       error: (err: any) => {
-        if (
-          err.response.data.details === "The username has already been taken."
-        ) {
-          return "Username has already been taken.";
+        if (err.response.data.details) {
+          return err.response.data.details;
         }
-        return "Update failed";
+        if (err.response.data.errors.phone?.[0]) {
+          return "This phone number has already been taken";
+        }
+        if (
+          err.response.data.errors.point_person?.[0] ||
+          err.response.data.errors.point_position?.[0] ||
+          err.response.data.errors.first_name?.[0] ||
+          err.response.data.errors.last_name?.[0]
+        ) {
+          return "You cannot update this field";
+        }
+        if (err.response.data.errors.username?.[0]) {
+          return err.response.data.errors.username?.[0];
+        }
+        return "An unexpected error occurred. Please try again.";
       },
     });
 
@@ -154,7 +172,7 @@ function Profile() {
         getProfile();
       })
       .catch((err: string | any) => {
-        console.log(err.response.data);
+        console.log(err.response.data.errors.phone[0]);
         setDisabled(false);
       })
       .finally(() => setDisabled(false));
@@ -370,12 +388,12 @@ function Profile() {
       )}
       {showDeac && (
         <AlertDialogue
-          contentId="EvacPin_DeacContent"
-          closeId="EvacPin_DeacClose"
-          actionId="EvacPin_DeacBtn"
+          contentId="Profile_DeacModallContent"
+          closeId="Profile_DeacModalClose"
+          actionId="Profile_DeacModalBtn"
           open={showDeac}
           title="You are about to deactivate your account"
-          description="Deactivating your account will remove your access to online features."
+          description="Deactivating your account will remove your access to online features. This will also remove all your posts on the map."
           buttonText="Deactivate Account"
           onClose={() => {
             setShowDeac(false);
@@ -433,6 +451,7 @@ function Profile() {
                       inputType="text"
                       id="Profile_Username"
                       onSubmit={(e) => setNewUsername(e.target.value)}
+                      maxLength={50}
                     />
                   ) : (
                     <TextField
@@ -443,34 +462,37 @@ function Profile() {
                       readonly
                     />
                   )}
-
-                  <TextField
-                    label="First Name"
-                    placeholder={firstName}
-                    inputType="text"
-                    id="Profile_Firstname"
-                    value={firstName}
-                    readonly={!isEditable}
-                    onSubmit={(e) => setFirstName(e.target.value)}
-                  />
-                  <TextField
-                    label="Last Name"
-                    placeholder={lastName}
-                    inputType="text"
-                    id="Profile_Lastname"
-                    readonly={!isEditable}
-                    value={lastName}
-                    onSubmit={(e) => setLastName(e.target.value)}
-                  />
+                  {role !== "brgy_op" && (
+                    <>
+                      <TextField
+                        label="First Name"
+                        placeholder={firstName}
+                        inputType="text"
+                        id="Profile_Firstname"
+                        value={firstName}
+                        readonly={!isEditable}
+                        onSubmit={(e) => setFirstName(e.target.value)}
+                        maxLength={50}
+                      />
+                      <TextField
+                        label="Last Name"
+                        placeholder={lastName}
+                        inputType="text"
+                        id="Profile_Lastname"
+                        readonly={!isEditable}
+                        value={lastName}
+                        onSubmit={(e) => setLastName(e.target.value)}
+                        maxLength={50}
+                      />
+                    </>
+                  )}
                   <div className="w-full flex flex-col gap-1">
                     <TextField
                       label="Email Address"
-                      placeholder={email}
-                      inputType="text"
+                      inputType="email"
                       id="Profile_Email"
                       readonly
                       value={email}
-                      onSubmit={(e) => setEmail(e.target.value)}
                     />
                     <ButtonComp
                       text="Change Email"
@@ -484,7 +506,7 @@ function Profile() {
                     ></ButtonComp>
                   </div>
 
-                  {isEditable ? (
+                  {isEditable && role === "indiv" ? (
                     <>
                       <SelectDropdown
                         value={String(cityId)}
@@ -526,33 +548,63 @@ function Profile() {
                     </>
                   )}
                   <div className="flex flex-col gap-2">
-                    {isEditable ? (
-                      <TextField
-                        label="Contact Number"
-                        description="Please use (639#########) format"
-                        placeholder={
-                          newContact === null ? "No Registered Number" : contact
-                        }
-                        inputType="text"
-                        id="Profile_ContactNo"
-                        value={newContact ?? ""}
-                        onSubmit={(e) => {
-                          setNewContact(e.target.value);
-                          setContactTouched(true);
-                        }}
-                        error={error}
-                      />
-                    ) : (
-                      <TextField
-                        label="Contact Number"
-                        placeholder={
-                          newContact === null ? "No Registered Number" : contact
-                        }
-                        inputType="text"
-                        id="Profile_ContactNo"
-                        readonly={!isEditable}
-                        value={contact}
-                      />
+                    {role !== "brgy_op" &&
+                      (isEditable ? (
+                        <TextField
+                          label="Contact Number"
+                          description="Please use (639#########) format"
+                          placeholder={
+                            newContact === null
+                              ? "No Registered Number"
+                              : contact
+                          }
+                          inputType="text"
+                          id="Profile_ContactNo"
+                          value={newContact ?? ""}
+                          onSubmit={(e) => {
+                            setNewContact(e.target.value);
+                            setContactTouched(true);
+                          }}
+                          error={error}
+                          maxLength={12}
+                        />
+                      ) : (
+                        <TextField
+                          label="Contact Number"
+                          placeholder={
+                            newContact === null
+                              ? "No Registered Number"
+                              : contact
+                          }
+                          inputType="text"
+                          id="Profile_ContactNo"
+                          readonly
+                          value={contact}
+                        />
+                      ))}
+                    {role === "brgy_op" && (
+                      <div className="flex flex-col gap-4">
+                        <TextField
+                          label="Point Person"
+                          placeholder={pointPerson}
+                          inputType="text"
+                          id="Profile_PointPerson"
+                          value={pointPerson}
+                          readonly={!isEditable}
+                          onSubmit={(e) => setPointPerson(e.target.value)}
+                          maxLength={100}
+                        />
+                        <TextField
+                          label="Point Person's Position"
+                          placeholder={pointPosition}
+                          inputType="text"
+                          id="Profile_PointPosition"
+                          readonly={!isEditable}
+                          value={pointPosition}
+                          onSubmit={(e) => setPointPosition(e.target.value)}
+                          maxLength={50}
+                        />
+                      </div>
                     )}
 
                     {contact === "No Registered Number" ||

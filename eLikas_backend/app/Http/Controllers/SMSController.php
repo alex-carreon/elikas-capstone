@@ -32,7 +32,7 @@ class SMSController extends Controller
         try {
             $validated = $request->validate([
                 'search' => 'nullable|string|max:255',
-                'status' => 'nullable|integer|in:1,2,4,5',
+                'status' => 'nullable|integer|in:1,2,3,4',
                 'limit'  => 'nullable|integer|min:1|max:100',
                 'state'  => 'nullable|string|in:active,inactive',
             ]);
@@ -92,14 +92,24 @@ class SMSController extends Controller
             $result = $this->smsService->cancelBroadcast($broadcastId, $govOp->id);
 
             return match ($result) {
-                'not_found' => response()->json(
-                    ['message' => 'Broadcast not found or you do not have permission to cancel it.'],
-                    404
-                ),
-                'not_pending' => response()->json(
-                    ['message' => 'Only pending or scheduled broadcasts can be cancelled.'],
-                    409
-                ),
+                'not_found' => response()->json([
+                    'message' => 'Validation failed.',
+                    'errors'  => [
+                        'broadcast' => [
+                            'Broadcast not found or you do not have permission to cancel it.',
+                        ],
+                    ],
+                ], 422),
+
+                'not_pending' => response()->json([
+                    'message' => 'Validation failed.',
+                    'errors'  => [
+                        'status' => [
+                            'Only pending or scheduled broadcasts can be cancelled.',
+                        ],
+                    ],
+                ], 422),
+
                 'window_passed' => response()->json([
                     'message' => 'Validation failed.',
                     'errors'  => [
@@ -108,10 +118,11 @@ class SMSController extends Controller
                         ],
                     ],
                 ], 422),
+
                 default => response()->json([
                     'message'      => 'Broadcast cancelled successfully.',
                     'broadcast_id' => $broadcastId,
-                    'status'       => ['id' => 4, 'name' => 'Cancelled'],
+                    'status'       => ['id' => 3, 'name' => 'Cancelled'],
                 ]),
             };
         } catch (\Exception $e) {
@@ -173,7 +184,6 @@ class SMSController extends Controller
         }
     }
 
-    // ── Existing methods (copy these in exactly as-is) ───────────────────────
 
     public function recipients(Request $request): JsonResponse
     {
@@ -236,14 +246,24 @@ class SMSController extends Controller
 
     public function sendImmediate(Request $request): JsonResponse
     {
+        if (!config('services.iprogsms.mock') && !$request->hasHeader('X-iPROG-API-TOKEN')) {
+            return response()->json([
+                'message' => 'Validation failed.',
+                'errors'  => [
+                    'X-iPROG-API-TOKEN' => ['The X-iPROG-API-TOKEN header is required for immediate broadcasts.'],
+                ],
+                'iprogsms_response' => [
+                    'message' => 'Missing token string.'
+                ]
+            ], 422);
+        }
+
         try {
             $validated = $request->validate([
                 'message_content' => 'required|string|max:600',
             ]);
 
-            if ($token = $request->header('X-iPROG-API-Token')) {
-                config(['services.iprogsms.api_token' => $token]);
-            }
+            $apiToken = $request->header('X-iPROG-API-TOKEN');
 
             $govOp = $this->resolveGovOp($request);
             if ($govOp instanceof JsonResponse) {
@@ -254,59 +274,107 @@ class SMSController extends Controller
                 $govOp->id,
                 $govOp->location_id,
                 $validated['message_content'],
+                $apiToken,
             );
 
-            // Always re-fetch from DB before formatting so the status field
-            // reflects what was actually persisted (e.g. status=2 sent, not status=1 pending).
+            // ── SAFETY CHECK: If there is no broadcast model, it IS a failure path ──
+            $isFailed = (isset($result['failed']) && $result['failed']) || !isset($result['broadcast']);
+
+            if ($isFailed) {
+                $httpStatus = match ($result['error_code'] ?? '') {
+                    'INVALID_TOKEN'             => 401,
+                    'MISSING_TOKEN'             => 422,
+                    'INSUFFICIENT_BALANCE'      => 402,
+                    'INVALID_RECIPIENTS'        => 422,
+                    'NO_MESSAGE_IDS'            => 502,
+                    'GATEWAY_CONNECTION_FAILED' => 503,
+                    'GATEWAY_ERROR'             => 503,
+                    default                     => 422,
+                };
+
+                $rawGatewayResponse = $result['gateway_response'] ?? null;
+                $iprogsmsResponsePayload = [];
+
+                if (is_array($rawGatewayResponse)) {
+                    $iprogsmsResponsePayload = $rawGatewayResponse;
+                } elseif (is_string($rawGatewayResponse)) {
+                    $iprogsmsResponsePayload = ['message' => $rawGatewayResponse];
+                }
+
+                // Crucial fallback: Make sure 'message' exists
+                if (!isset($iprogsmsResponsePayload['message'])) {
+                    $iprogsmsResponsePayload['message'] = $result['gateway_message']
+                        ?? $result['message']
+                        ?? 'Invalid api token or no load balance';
+                }
+
+                return response()->json([
+                    'message'           => $iprogsmsResponsePayload['message'],
+                    'error_code'        => $result['error_code'] ?? 'BROADCAST_FAILED',
+                    'iprogsms_status'   => $result['gateway_status'] ?? null,
+                    'iprogsms_response' => $iprogsmsResponsePayload,
+                    'broadcast'         => null
+                ], $httpStatus);
+            }
+
+            // 2. Success path: guaranteed to exist now
             $freshBroadcast = $result['broadcast']->fresh(['gov_op.user', 'location', 'broadcast_status']);
             $formatted = $this->smsService->formatBroadcast($freshBroadcast);
 
-            if ($result['mock']) {
+            if (isset($result['mock']) && $result['mock']) {
                 return response()->json(['message' => 'SMS dispatched in mock mode.', 'broadcast' => $formatted], 202);
-            }
-
-            if ($result['failed']) {
-                $httpStatus = match ($result['error_code'] ?? '') {
-                    'INVALID_TOKEN'        => 401,
-                    'INSUFFICIENT_BALANCE' => 402,
-                    'INVALID_RECIPIENTS'   => 422,
-                    'GATEWAY_ERROR'        => 503,
-                    default                => 502,
-                };
-
-                return response()->json([
-                    'message'           => $result['gateway_message'] ?? 'SMS dispatch failed.',
-                    'error_code'        => $result['error_code'] ?? 'BROADCAST_FAILED',
-                    'broadcast'         => $formatted,
-                    'iprogsms_status'   => $result['gateway_status'] ?? null,
-                    'iprogsms_response' => $result['gateway_response'] ?? null,
-                ], $httpStatus);
             }
 
             return response()->json([
                 'message'           => 'SMS dispatched successfully.',
                 'broadcast'         => $formatted,
-                'iprogsms_response' => $result['gateway_response'],
+                'iprogsms_response' => is_array($result['gateway_response']) ? $result['gateway_response'] : ['message' => 'Success'],
             ]);
+
         } catch (\Illuminate\Validation\ValidationException $e) {
-            return response()->json(['message' => 'Validation failed.', 'errors' => $e->errors()], 422);
+            return response()->json([
+                'message' => 'Validation failed.',
+                'errors' => $e->errors(),
+                'iprogsms_response' => ['message' => 'Validation input failed.']
+            ], 422);
         } catch (\Exception $e) {
-            Log::error('SMSController@sendImmediate', ['error' => $e->getMessage()]);
-            return response()->json(['error' => 'Failed to dispatch SMS.', 'details' => $e->getMessage()], 500);
+            Log::error('SMSController@sendImmediate Critical Exception Handler', ['error' => $e->getMessage()]);
+
+            // The ultimate guard rail: even if the catch-all fires, match the frontend's expected format
+            return response()->json([
+                'message' => 'SMS gateway dispatch configuration error.',
+                'errors' => [
+                    'gateway' => [$e->getMessage()]
+                ],
+                'iprogsms_response' => [
+                    'message' => 'Invalid api token or no load balance'
+                ]
+            ], 422);
         }
     }
 
     public function schedule(Request $request): JsonResponse
     {
+        if (!config('services.iprogsms.mock') && !$request->hasHeader('X-iPROG-API-TOKEN')) {
+            return response()->json([
+                'message' => 'Validation failed.',
+                'errors'  => [
+                    'X-iPROG-API-TOKEN' => ['The X-iPROG-API-TOKEN header is required for scheduling broadcasts.'],
+                ],
+                'iprogsms_response' => [
+                    'message' => 'Missing token string.'
+                ]
+            ], 422);
+        }
+
         try {
             $validated = $request->validate([
                 'message_content' => 'required|string|max:600',
                 'scheduled_for'   => 'required|date|after:now',
             ]);
 
-            if ($token = $request->header('X-iPROG-API-Token')) {
-                config(['services.iprogsms.api_token' => $token]);
-            }
+            // Read the header from the frontend request
+            $apiToken = $request->header('X-iPROG-API-TOKEN');
 
             $govOp = $this->resolveGovOp($request);
             if ($govOp instanceof JsonResponse) {
@@ -318,6 +386,7 @@ class SMSController extends Controller
                 $govOp->location_id,
                 $validated['message_content'],
                 $validated['scheduled_for'],
+                $apiToken,
             );
 
             return response()->json([
@@ -374,8 +443,8 @@ class SMSController extends Controller
     {
         try {
             $validated = $request->validate([
-                'template_name'   => 'required|string|max:255',
-                'message_content' => 'required|string|max:600',
+                'template_name'   => 'required|string|max:50|unique:SMSTemplates,template_name',
+                'message_content' => 'required|string',
             ]);
 
             $govOp = $this->resolveGovOp($request);

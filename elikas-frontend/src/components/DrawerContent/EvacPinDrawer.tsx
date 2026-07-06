@@ -189,7 +189,7 @@ function EvacPinDrawer({
   isExpanded,
   setIsExpanded,
 }: {
-  selectedPin: EvacPin | null;
+  selectedPin: { id: number } | null;
   onFindRoute?: (findRoute: boolean) => void;
   isExpanded?: boolean;
   setIsExpanded?: (val: boolean) => void;
@@ -312,9 +312,14 @@ function EvacPinDrawer({
     );
 
     toast.promise(response, {
-      loading: "Adding your comment...",
-      success: "Comment successfully added!",
-      error: (err) => err?.message || "Please try again.",
+      loading: "Posting your comment...",
+      success: "Comment successfully posted!",
+      error: (err) => {
+        if (err.response.data.message) {
+          return err.response.data.message;
+        }
+        return "An unexpected error occurred. Please try again.";
+      },
       position: "top-center",
     });
 
@@ -347,8 +352,6 @@ function EvacPinDrawer({
       try {
         setLoading(true);
         const response = await api.get(`/pins/${selectedPin.id}`);
-
-        console.log(response);
 
         const evacPinDetails = await response.data;
         setEvacPinDetails(evacPinDetails);
@@ -396,11 +399,21 @@ function EvacPinDrawer({
 
       if (!response) {
         toast.error("Failed to verify pin. Please try again.");
-        console.log(response);
+        return;
       }
 
+      toast.promise(response, {
+        loading: "Processing verification...",
+        success: !verified ? "Pin verified!" : "Pin unverified!",
+        error: (err: any) => {
+          if (err.response.data.error) {
+            return err.response.data.error;
+          }
+          return "An unexpected error occurred. Please try again later.";
+        },
+      });
+
       setVerified(!verified);
-      toast.success("Pin Verified!");
 
       setDisabled(false);
     } catch (err: any) {
@@ -453,7 +466,9 @@ function EvacPinDrawer({
                 variant="outline"
                 id="Drawer_UnverifyBtn"
                 heightSize="34px"
-                onClick={(e) => verifyPin(e)}
+                onClick={(e) => {
+                  verifyPin(e);
+                }}
                 isDisabled={disabled}
               />
             ) : (
@@ -462,7 +477,9 @@ function EvacPinDrawer({
                 variant="primary"
                 id="Drawer_VerifyBtn"
                 heightSize="34px"
-                onClick={(e) => verifyPin(e)}
+                onClick={(e) => {
+                  verifyPin(e);
+                }}
                 isDisabled={disabled}
               />
             )
@@ -483,7 +500,7 @@ function EvacPinDrawer({
                 <img src={DrawerIcon} className="w-10" />
                 <div>
                   <div className="flex flex-row">
-                    <p className="text-lg font-semibold">
+                    <p className="text-lg font-semibold text-left">
                       {evacPinDetails?.name}
                     </p>
                     {evacPinDetails?.verified_by.gov_op_id !== null ? (
@@ -502,7 +519,10 @@ function EvacPinDrawer({
               </div>
               {evacPinDetails?.is_own_pin && (
                 <div>
-                  <Link to={`/EvacForm/${evacPinDetails?.id}`}>
+                  <Link
+                    to={`/EvacForm/${evacPinDetails?.id}`}
+                    state={{ from: "/map" }}
+                  >
                     <ButtonComp
                       text="Edit Pin"
                       variant="outline"
@@ -521,7 +541,7 @@ function EvacPinDrawer({
                 </p>
               )}
               <p className="text-left text-xs italic">
-                Expires in: {daysLeft} days
+                Expires in: {daysLeft === 0 ? "Today" : `${daysLeft} days`}
               </p>
               <p className="text-left text-xs italic">
                 Posted By: {evacPinDetails?.posted_by.username}
@@ -763,6 +783,7 @@ function EvacPinDrawer({
                           id="Drawer_CommentField"
                           onChange={(e) => setNewComment(e.target.value)}
                           value={!newComment ? "" : newComment}
+                          maxLength={1000}
                         ></InputGroupInput>
                         <InputGroupAddon
                           align="inline-end"
@@ -788,7 +809,6 @@ function EvacPinDrawer({
                           accept="image/png, image/jpeg, image/heic"
                           id="Drawer_FileInput"
                         />
-                        {/* To test when PWA is done  */}
                         <input
                           style={{ display: "none" }}
                           type="file"

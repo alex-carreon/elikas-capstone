@@ -3,7 +3,7 @@ import Logo from "@/components/Logo";
 import TextField from "@/components/TextField";
 import colors from "@/constants/colors";
 import { ArrowLeftIcon } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router";
 
 function ContactNo() {
@@ -15,7 +15,6 @@ function ContactNo() {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    console.log(contact);
 
     if (!contactValidate.test(contact)) {
       setErrors({
@@ -29,6 +28,18 @@ function ContactNo() {
       navigate("/Registration/CustomProfile");
     }
   };
+
+  const handleSkip = () => {
+    setContact("");
+    localStorage.removeItem("contact");
+  };
+
+  useEffect(() => {
+    if (localStorage.getItem("contact")) {
+      const contact = localStorage.getItem("contact");
+      setContact(contact ? contact : "");
+    }
+  }, []);
 
   return (
     <div className="min-h-screen flex justify-center p-6">
@@ -67,12 +78,14 @@ function ContactNo() {
               <div className="flex justify-center">
                 <TextField
                   label="Contact Number"
+                  value={contact}
                   placeholder="639XXXXXXXXX"
                   inputType="tel"
                   id="ContactNumber_Field"
                   onSubmit={(e) => setContact(e.target.value)}
                   isRequired
                   error={errors.contact}
+                  maxLength={12}
                 />
               </div>
             </div>
@@ -97,6 +110,7 @@ function ContactNo() {
                   id="ContactNumber_Skip"
                   heightSize="38px"
                   widthSize="100%"
+                  onClick={() => handleSkip()}
                 ></ButtonComp>
               </Link>
             </div>

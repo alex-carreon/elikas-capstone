@@ -14,13 +14,13 @@ class FeedbackController extends Controller
     // ---------------------------------------------------------------
     public function store(Request $request)
     {
-        try {
-            $user = $request->attributes->get('firebase_user');
-
-            $validated = $request->validate([
-                'rating'  => 'required|numeric|min:1|max:5',
+        $validated = $request->validate([
+                'rating'  => 'required|numeric|min:0.5|max:5',
                 'message' => 'nullable|string',
             ]);
+
+        try {
+            $user = $request->attributes->get('firebase_user');
 
             // Round submitted rating to nearest 0.5 before storing
             $cleanRating = $this->roundToHalf((float) $validated['rating']);
@@ -61,6 +61,20 @@ class FeedbackController extends Controller
                 $query->where('id', (int) $request->query('id'));
             }
 
+            // --- Rating filter: match records within ±0.25 of the chosen 0.5 step ---
+            if ($request->has('rating') && is_numeric($request->query('rating'))) {
+                $r = (float) $request->query('rating');
+                if ($r >= 0.5 && $r <= 5) {
+                    // Snap the requested value to a clean 0.5 step first
+                    $snapped = $this->roundToHalf($r);
+                    // Then match any stored rating whose 0.5-rounded value equals that step
+                    $query->whereBetween('rating', [
+                        max(0.5, $snapped - 0.25),
+                        min(5.0, $snapped + 0.249),
+                    ]);
+                }
+            }
+
             // --- Message keyword filter ---
             if ($request->has('message')) {
                 $rawMsg = $request->query('message');
@@ -73,30 +87,23 @@ class FeedbackController extends Controller
                 }
             }
 
-            // --- Rating filter: match records within ±0.25 of the chosen 0.5 step ---
-            if ($request->has('rating') && is_numeric($request->query('rating'))) {
-                $r = (float) $request->query('rating');
-                if ($r >= 1 && $r <= 5) {
-                    // Snap the requested value to a clean 0.5 step first
-                    $snapped = $this->roundToHalf($r);
-                    // Then match any stored rating whose 0.5-rounded value equals that step
-                    $query->whereBetween('rating', [
-                        max(1.0, $snapped - 0.25),
-                        min(5.0, $snapped + 0.249),
-                    ]);
-                }
-            }
-
             if ($request->filled('range')) {
                 switch ($request->query('range')) {
+                    case 'today':
+                        // Looks back exactly from the start of the current calendar day (12:00 AM) and the week starts on Monday
+                        $query->where('sent_at', '>=', Carbon::now()->startOfDay());
+                        break;
+                    case 'this_week':
+                        $query->where('sent_at', '>=', Carbon::now()->startOfWeek());
+                        break;
                     case 'past_week':
-                        $query->where('sent_at', '>=', Carbon::now()->subDays(7)->startOfDay());
+                        $query->where('sent_at', '>=', Carbon::now()->subDays(7));
                         break;
                     case 'monthly':
-                        $query->where('sent_at', '>=', Carbon::now()->subDays(30)->startOfDay());
+                        $query->where('sent_at', '>=', Carbon::now()->subDays(30));
                         break;
                     case 'quarterly':
-                        $query->where('sent_at', '>=', Carbon::now()->subDays(90)->startOfDay());
+                        $query->where('sent_at', '>=', Carbon::now()->subDays(180));
                         break;
                 }
             } else {
@@ -150,11 +157,10 @@ class FeedbackController extends Controller
                 });
             }
 
-            $feedbackList = $query->get();
+            $ratingOptions = $this->buildRatingOptions($query);
 
-            // Build clean rating options from the FULL unfiltered dataset
-            // (so the dropdown always shows all available steps, not just current results)
-            $ratingOptions = $this->buildRatingOptions();
+            // Execute the query to get the final matching feedback dataset
+            $feedbackList = $query->get();
 
             return response()->json([
                 'count'          => $feedbackList->count(),
@@ -241,9 +247,11 @@ class FeedbackController extends Controller
         return round($value * 2) / 2;
     }
 
-    private function buildRatingOptions(): array
+    // ─── ✅ FIXED HERE: Accepts the cloned query builder state
+    private function buildRatingOptions($query): array
     {
-        $rawRatings = Feedback::pluck('rating');
+        // Clone the builder state so we don't accidentally compromise the final ->get() data
+        $rawRatings = (clone $query)->pluck('rating');
 
         $steps = $rawRatings
             ->map(fn($r) => $this->roundToHalf((float) $r))

@@ -27,6 +27,7 @@ import {
 import FormSkeleton from "../../Skeletons/FormSkeleton";
 import { Separator } from "@/components/ui/separator";
 import DatePickerInput from "@/components/DateField";
+import { toast } from "sonner";
 
 const brouterBaseUrl = import.meta.env.VITE_BROUTER_BASE_URL;
 
@@ -114,7 +115,6 @@ function HazardForm() {
     setFileName(undefined);
 
     if (inputRef.current) {
-      console.log(inputRef.current);
       inputRef.current.value = "";
     }
   };
@@ -141,8 +141,8 @@ function HazardForm() {
       setHasUpdated(false);
       setLoading(true);
       const response = await api.get(`/flood-paths/${id}`);
+      console.log(response);
       const floodDetails = await response.data.flood_path;
-      console.log("Details", floodDetails);
       setFloodDetails(floodDetails);
       setExpiry(floodDetails.expiry);
 
@@ -160,12 +160,17 @@ function HazardForm() {
     }
   };
 
-  useEffect(() => {
+  const getDataFromMap = async () => {
     if (location.state?.from === "/map") {
+      await getFloodDetails();
       setIsEditable(true);
     } else {
       setIsEditable(false);
     }
+  };
+
+  useEffect(() => {
+    getDataFromMap();
   }, []);
 
   useEffect(() => {
@@ -230,8 +235,6 @@ function HazardForm() {
       setRoutePoints(floodDetails.path);
       setFloodLevel(String(floodDetails.flood_levels.id));
       setDesc(floodDetails.description);
-
-      console.log(floodDetails.path);
     }
   }, [isEditable, floodDetails]);
 
@@ -274,7 +277,6 @@ function HazardForm() {
 
     const getRoute = async () => {
       const allPoints = [routePoints.at(-1)!, ...newRoutePoints];
-      console.log("All points update: ", allPoints);
       const lonlats = allPoints.map(([lat, lng]) => `${lng},${lat}`).join("|");
 
       try {
@@ -282,8 +284,6 @@ function HazardForm() {
           `${brouterBaseUrl}/brouter?lonlats=${lonlats}&profile=all&format=geojson`,
           { method: "GET" },
         );
-
-        console.log("Update routes: ", response);
 
         const data = await response.json();
         setNewSnapped(
@@ -301,8 +301,6 @@ function HazardForm() {
 
   const submit = (e: React.FormEvent) => {
     e.preventDefault();
-
-    console.log("Sending Submit: ", snapped);
 
     handleSubmit({
       e: e,
@@ -384,13 +382,20 @@ function HazardForm() {
                 : "Report Evacuation Road Status"}
           </p>
           {id ? null : (
-            <p
-              className="text-align italic text-sm"
-              style={{ color: colors.label }}
-            >
-              Help others avoid blocked or unsafe routes. All marked with an *
-              are required fields.
-            </p>
+            <>
+              <p
+                className="text-align italic text-sm max-w-sm"
+                style={{ color: colors.label }}
+              >
+                Help others avoid blocked or unsafe routes.
+              </p>
+              <b
+                className="text-align italic text-sm max-w-sm"
+                style={{ color: colors.label }}
+              >
+                All marked with an * are required fields.
+              </b>
+            </>
           )}
         </div>
         <form
@@ -468,8 +473,8 @@ function HazardForm() {
                 id="HazardPin_MapContainer"
               >
                 <TileLayer
-                  attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-                  url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+                  attribution='&copy; <a href="https://www.maptiler.com/copyright/">MapTiler</a> &copy; <a href="https://openstreetmap.org">OpenStreetMap</a> contributors'
+                  url={`https://api.maptiler.com/maps/base-v4/{z}/{x}/{y}.png?key=6RBKItdaX8o4QX31GhTm`}
                 />
                 <RoadMapping onPinClick={() => {}} />
                 {id ? (
@@ -517,7 +522,9 @@ function HazardForm() {
                         </>
                       )
                     ) : (
-                      console.log("Can't find path")
+                      toast.error(
+                        "Flood details not found. Please try again later.",
+                      )
                     )}
                   </>
                 ) : (
@@ -589,6 +596,7 @@ function HazardForm() {
                 value={desc}
                 readOnly={!id || isEditable ? false : true}
                 required
+                maxLength={1000}
               />
               <p className="text-xs text-red-500">{error}</p>
             </Field>

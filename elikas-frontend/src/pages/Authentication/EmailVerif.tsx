@@ -24,8 +24,8 @@ function EmailVerif() {
         throw new Error("Please register again first.");
       }
 
-      const response = await sendEmailVerification(user);
-      console.log(response);
+      await sendEmailVerification(user);
+
       toast.info("Verification email sent again. Check your inbox/spam.");
     } catch (err: string | any) {
       if (err.code === "auth/too-many-requests") {

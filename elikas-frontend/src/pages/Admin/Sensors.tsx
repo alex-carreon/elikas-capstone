@@ -19,8 +19,8 @@ import {
 import SelectDropdown from "@/components/SelectDropdown";
 import { toZonedTime } from "date-fns-tz";
 import { format } from "date-fns";
-import { toast } from "sonner";
 import { Toggle } from "@/components/ui/toggle";
+import { toast } from "sonner";
 
 type Barangays = {
   id: number;
@@ -58,10 +58,12 @@ function Sensors() {
   const [activeSensors, setActiveSensors] = useState<SensorsDetails[]>([]);
   const [activeSensorsCount, setActiveSensorsCount] = useState(0);
   const [inactiveSensorsCount, setInactiveSensorsCount] = useState(0);
+  const [countLoad, setCountLoad] = useState(false);
   const [searchFor, setSearchFor] = useState("");
   const [red, setRed] = useState(false);
   const [yellow, setYellow] = useState(false);
   const [orange, setOrange] = useState(false);
+  const [normal, setNormal] = useState(false);
 
   const [inactiveSensors, setInactiveSensors] = useState<SensorsDetails[]>([]);
 
@@ -89,6 +91,7 @@ function Sensors() {
 
   const getSensors = async (signal?: AbortSignal) => {
     try {
+      setCountLoad(true);
       const [activeSensorsRes, inactiveSensorsRes] = await Promise.all([
         api.get(`/sensors?is_active=1`, { signal }),
         api.get(`/sensors?is_active=0`, { signal }),
@@ -105,9 +108,13 @@ function Sensors() {
       setInactiveSensorsCount(inactiveCount);
     } catch (err: any) {
       if (err.name === "CanceledError") {
+        setCountLoad(false);
         return;
       }
-      console.log(err.response?.data);
+      toast.error(err.response.data.error);
+      console.log(err.response?.data.details);
+    } finally {
+      setCountLoad(false);
     }
   };
 
@@ -116,6 +123,8 @@ function Sensors() {
     search = searchFor,
   ) => {
     try {
+      setLoading(true);
+
       if (activeBrgyFilter || activeBrgyFilter != 0) {
         params.set("location_id", String(activeBrgyFilter));
       }
@@ -126,6 +135,10 @@ function Sensors() {
 
       if (yellow) {
         params.append("current_status[]", "yellow");
+      }
+
+      if (normal) {
+        params.append("current_status[]", "normal");
       }
 
       if (orange) {
@@ -143,19 +156,17 @@ function Sensors() {
         { signal },
       );
 
-      const endpoint = `/sensors?is_active=1${parameters ? `&${parameters}` : ""}`;
-      console.log(endpoint);
       const activeSensors = activeSensorsRes.data.data;
 
-      console.log(activeSensors);
-
       setActiveSensors(activeSensors);
-      toast.success("Sensors filtered!");
     } catch (err: any) {
       if (err.name === "CanceledError") {
+        setLoading(false);
         return;
       }
-      console.log(err.response?.data);
+      toast.error(err.response.data.error);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -164,8 +175,13 @@ function Sensors() {
     search = searchFor,
   ) => {
     try {
+      setLoading(true);
       if (yellow) {
         params.append("current_status[]", "yellow");
+      }
+
+      if (normal) {
+        params.append("current_status[]", "normal");
       }
 
       if (orange) {
@@ -184,8 +200,7 @@ function Sensors() {
         params.set("search", search);
       }
 
-      const parameters = params;
-
+      const parameters = params.toString();
       const inactiveSensorsRes = await api.get(
         `/sensors?is_active=0${parameters ? `&${parameters}` : ""}`,
         { signal },
@@ -194,13 +209,15 @@ function Sensors() {
       const inactiveSensors = inactiveSensorsRes.data.data;
 
       setInactiveSensors(inactiveSensors);
-
-      toast.success("Sensors filtered!");
     } catch (err: any) {
       if (err.name === "CanceledError") {
+        setLoading(false);
         return;
       }
+      toast.error(err.response.data.error);
       console.log(err.response?.data);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -228,26 +245,36 @@ function Sensors() {
     return () => controller.abort();
   };
 
+  const getFilteredData = async () => {
+    const controller = new AbortController();
+
+    try {
+      setLoading(true);
+
+      if (isActiveSensor) {
+        await getFilteredActive(controller.signal);
+      } else {
+        await getFilteredInactive(controller.signal);
+      }
+    } catch (err: any) {
+      if (err.name === "CanceledError") {
+        setLoading(false);
+        return;
+      }
+      console.log(err);
+    } finally {
+      setLoading(false);
+    }
+    return () => controller.abort();
+  };
+
   useEffect(() => {
     getAll();
   }, []);
 
   useEffect(() => {
-    const controller = new AbortController();
-
-    if (activeBrgyFilter || yellow || red || orange) {
-      getFilteredActive(controller.signal);
-    }
-
-    return () => controller.abort();
-  }, [activeBrgyFilter, yellow, red, orange]);
-
-  useEffect(() => {
-    const controller = new AbortController();
-    getFilteredInactive(controller.signal);
-    toast.success("Sensors filtered!");
-    return () => controller.abort();
-  }, [inactiveBrgyFilter, yellow, red, orange]);
+    getFilteredData();
+  }, [activeBrgyFilter, inactiveBrgyFilter, yellow, red, orange, normal]);
 
   return (
     <div className="w-full flex flex-col items-center">
@@ -257,13 +284,13 @@ function Sensors() {
             title="Active Sensors"
             lastUpdated="Not Deactivated or Expired"
             count={activeSensorsCount}
-            loading={loading}
+            loading={countLoad}
           />
           <CountRow
             title="Inactive Sensors"
             lastUpdated="Both Deactivated or Expired"
             count={inactiveSensorsCount}
-            loading={loading}
+            loading={countLoad}
           />
         </DashboardHeader>
         <div className="bg-white -mt-8 rounded-4xl p-4 flex flex-col gap-2">
@@ -311,7 +338,7 @@ function Sensors() {
               </TabsList>
             )}
           </Tabs>
-          <Collapsible className="w-full flex-col items-center gap-2">
+          <Collapsible className="w-full items-center gap-2">
             <div className="w-full flex justify-between">
               <InputGroup className="w-2/3">
                 <InputGroupInput
@@ -346,75 +373,91 @@ function Sensors() {
             </div>
             <CollapsibleContent
               id="Admin_SensorFilterContent"
-              className="bg-gray-300/50 p-2 rounded-lg flex flex-row items-center justify-end gap-2 px-2.5 mt-2 text-sm"
+              className="bg-gray-300/50 p-2 rounded-lg flex flex-col items-center justify-end gap-1 px-2.5 mt-2 text-sm"
             >
-              <Toggle
-                size="sm"
-                variant="outline"
-                className="aria-pressed:bg-yellow-500/50 aria-pressed:text-white border-gray-400"
-                onPressedChange={setYellow}
-                pressed={yellow}
-                id="History_YellowFilter"
-              >
-                <p className="m-2 group-aria-pressed/toggle:text-black">
-                  Yellow
-                </p>
-              </Toggle>
-              <Toggle
-                size="sm"
-                variant="outline"
-                className="aria-pressed:bg-orange-500/50 aria-pressed:text-white border-gray-400"
-                onPressedChange={setOrange}
-                pressed={orange}
-                id="History_OrangeFilter"
-              >
-                <p className="m-2 group-aria-pressed/toggle:text-black">
-                  Orange
-                </p>
-              </Toggle>
-              <Toggle
-                size="sm"
-                variant="outline"
-                className="aria-pressed:bg-red-500/50 aria-pressed:text-white border-gray-400"
-                onPressedChange={setRed}
-                pressed={red}
-                id="History_RedFilter"
-              >
-                Red
-              </Toggle>
-              <SelectDropdown
-                value={
-                  isActiveSensor
-                    ? String(activeBrgyFilter)
-                    : String(inactiveBrgyFilter)
-                }
-                onValueChange={(val) => {
-                  isActiveSensor
-                    ? setActiveBrgyFilter(Number(val))
-                    : setInactiveBrgyFilter(Number(val));
-                }}
-                placeholder="Barangay"
-                id="Admin_SensorsBrgyFilter"
-                options={[
-                  { label: "All", value: "0" },
-                  ...barangays?.map((barangay) => ({
-                    label: barangay.name,
-                    value: String(barangay.id),
-                  })),
-                ]}
-              />
-              {activeBrgyFilter || inactiveBrgyFilter ? (
-                <button
-                  onClick={() =>
-                    activeSensors
-                      ? setActiveBrgyFilter(0)
-                      : setInactiveBrgyFilter(0)
-                  }
-                  id="Admin_ClearSensorsBrgyFilter"
+              <div className="flex flex-row gap-2">
+                <Toggle
+                  size="sm"
+                  variant="outline"
+                  className="aria-pressed:bg-green-500/50 aria-pressed:text-white border-gray-400"
+                  onPressedChange={setNormal}
+                  pressed={normal}
+                  id="History_NormalFilter"
                 >
-                  <X size={14} />
-                </button>
-              ) : null}
+                  <p className="m-2 group-aria-pressed/toggle:text-black">
+                    Normal
+                  </p>
+                </Toggle>
+                <Toggle
+                  size="sm"
+                  variant="outline"
+                  className="aria-pressed:bg-yellow-500/50 aria-pressed:text-white border-gray-400"
+                  onPressedChange={setYellow}
+                  pressed={yellow}
+                  id="History_YellowFilter"
+                >
+                  <p className="m-2 group-aria-pressed/toggle:text-black">
+                    Yellow
+                  </p>
+                </Toggle>
+                <Toggle
+                  size="sm"
+                  variant="outline"
+                  className="aria-pressed:bg-orange-500/50 aria-pressed:text-white border-gray-400"
+                  onPressedChange={setOrange}
+                  pressed={orange}
+                  id="History_OrangeFilter"
+                >
+                  <p className="m-2 group-aria-pressed/toggle:text-black">
+                    Orange
+                  </p>
+                </Toggle>
+                <Toggle
+                  size="sm"
+                  variant="outline"
+                  className="aria-pressed:bg-red-500/50 aria-pressed:text-white border-gray-400"
+                  onPressedChange={setRed}
+                  pressed={red}
+                  id="History_RedFilter"
+                >
+                  Red
+                </Toggle>
+              </div>
+              <div className="flex gap-2 w-full items-center justify-between">
+                <SelectDropdown
+                  value={
+                    isActiveSensor
+                      ? String(activeBrgyFilter)
+                      : String(inactiveBrgyFilter)
+                  }
+                  onValueChange={(val) => {
+                    isActiveSensor
+                      ? setActiveBrgyFilter(Number(val))
+                      : setInactiveBrgyFilter(Number(val));
+                  }}
+                  placeholder="Barangay"
+                  id="Admin_SensorsBrgyFilter"
+                  options={[
+                    { label: "All", value: "0" },
+                    ...barangays?.map((barangay) => ({
+                      label: barangay.name,
+                      value: String(barangay.id),
+                    })),
+                  ]}
+                />
+                {activeBrgyFilter || inactiveBrgyFilter ? (
+                  <button
+                    onClick={() =>
+                      activeSensors
+                        ? setActiveBrgyFilter(0)
+                        : setInactiveBrgyFilter(0)
+                    }
+                    id="Admin_ClearSensorsBrgyFilter"
+                  >
+                    <X size={14} />
+                  </button>
+                ) : null}
+              </div>
             </CollapsibleContent>
           </Collapsible>
 
@@ -435,115 +478,52 @@ function Sensors() {
                   </div>
                 </div>
               </>
-            ) : isSensors ? (
-              isActiveSensor ? (
-                activeSensors.map((sensors) => (
-                  <Fragment key={sensors.id}>
-                    <Row
-                      postId={String(sensors.sensorCode)}
-                      title={sensors.name}
-                      desc={`Status: ${sensors.currentStatus}`}
-                      address={`${sensors.address}`}
-                      datePosted={
-                        sensors.lastOnline
-                          ? `Last Online: ${convertDateTime(sensors.lastOnline)}`
-                          : "Not yet installed"
-                      }
-                      link={`/admin-sensorDetails/${sensors.id}`}
-                      buttonId="Admin_SensorDetailsBtn"
-                      showBtn
-                    >
-                      <div className="flex flex-row gap-2">
-                        {!sensors.deactivatedAt && (
-                          <div
-                            className={`mt-2 px-2 py-1 rounded-3xl ${sensors.currentStatus == "normal" ? "bg-green-700/60" : sensors.currentStatus == "yellow" ? "bg-yellow-700/60" : sensors.currentStatus == "orange" ? "bg-amber-700/60" : sensors.currentStatus == "red" ? "bg-red-700/60" : "bg-gray-500/30"} w-fit text-sm`}
-                          >
-                            {sensors.currentStatus
-                              ? sensors.currentStatus
-                              : "No Level Detected"}
-                          </div>
-                        )}
-                      </div>
-                    </Row>
-                  </Fragment>
-                ))
-              ) : (
-                inactiveSensors.map((sensors) => (
-                  <Fragment key={sensors.id}>
-                    <Row
-                      postId={String(sensors.sensorCode)}
-                      title={sensors.name}
-                      desc={`Status: ${sensors.currentStatus}`}
-                      address={`${sensors.address}`}
-                      datePosted={`Deactivated at: ${convertDateTime(sensors.deactivatedAt)}`}
-                      link={`/admin-sensorDetails/${sensors.id}`}
-                      buttonId="Admin_SensorDetailsBtn"
-                      showBtn
-                    ></Row>
-                  </Fragment>
-                ))
-              )
-            ) : (
-              // sensors.map((pins) => {
-              //   return (
-              //     <Row
-              //       postId={String(pins.sensorCode)}
-              //       title={pins.name}
-              //       desc={`Status: ${pins.currentStatus}`}
-              //       address={`${pins.address}`}
-              //       datePosted={pins.lastOnline}
-              //       link={`/SensorForm/${pins.id}`}
-              //       // isExpired={pins.deactivatedAt}
-              //       buttonId="History_ExpiredEvacDetailsBtn"
-              //       showBtn
-              //     >
-              //       <div className="flex flex-row gap-2">
-              //         <div
-              //           className={`mt-2 px-2 py-1 rounded-3xl ${pins.deactivatedAt ? "bg-gray-500/30" : "bg-green-700/60"} w-fit text-sm`}
-              //         >
-              //           {pins.deactivatedAt ? "Inactive" : "Active"}
-              //         </div>
-              //         {!pins.deactivatedAt && (
-              //           <div
-              //             className={`mt-2 px-2 py-1 rounded-3xl ${pins.currentStatus == "normal" ? "bg-green-700/60" : pins.currentStatus == "yellow" ? "bg-yellow-700/60" : pins.currentStatus == "orange" ? "bg-amber-700/60" : pins.currentStatus == "red" ? "bg-red-700/60" : "bg-gray-500/30"} w-fit text-sm`}
-              //           >
-              //             {pins.currentStatus
-              //               ? pins.currentStatus
-              //               : "No Level Detected"}
-              //           </div>
-              //         )}
-              //       </div>
-              //     </Row>
-              //   );
-              // })
-              <Row
-                postId="Placeholder"
-                title="Placeholder"
-                desc="Placeholder"
-                address="Placeholder"
-                datePosted="Placeholder"
-                link="Placeholder"
-                // isExpired={pins.deactivatedAt}
-                buttonId="Placeholder"
-                showBtn
-              >
-                {/* <div className="flex flex-row gap-2">
-                    <div
-                      className={`mt-2 px-2 py-1 rounded-3xl ${pins.deactivatedAt ? "bg-gray-500/30" : "bg-green-700/60"} w-fit text-sm`}
-                    >
-                      {pins.deactivatedAt ? "Inactive" : "Active"}
+            ) : isActiveSensor ? (
+              activeSensors.map((sensors) => (
+                <Fragment key={sensors.id}>
+                  <Row
+                    postId={String(sensors.sensorCode)}
+                    title={sensors.name}
+                    desc={`Status: ${sensors.currentStatus}`}
+                    address={`${sensors.address}`}
+                    datePosted={
+                      sensors.lastOnline
+                        ? `Last Online: ${convertDateTime(sensors.lastOnline)}`
+                        : "Not yet installed"
+                    }
+                    link={`/admin-sensorDetails/${sensors.id}`}
+                    buttonId="Admin_SensorDetailsBtn"
+                    showBtn
+                  >
+                    <div className="flex flex-row gap-2">
+                      {!sensors.deactivatedAt && (
+                        <div
+                          className={`mt-2 px-2 py-1 rounded-3xl ${sensors.currentStatus == "normal" ? "bg-green-700/60" : sensors.currentStatus == "yellow" ? "bg-yellow-700/60" : sensors.currentStatus == "orange" ? "bg-amber-700/60" : sensors.currentStatus == "red" ? "bg-red-700/60" : "bg-gray-500/30"} w-fit text-sm`}
+                        >
+                          {sensors.currentStatus
+                            ? sensors.currentStatus
+                            : "No Level Detected"}
+                        </div>
+                      )}
                     </div>
-                    {!pins.deactivatedAt && (
-                      <div
-                        className={`mt-2 px-2 py-1 rounded-3xl ${pins.currentStatus == "normal" ? "bg-green-700/60" : pins.currentStatus == "yellow" ? "bg-yellow-700/60" : pins.currentStatus == "orange" ? "bg-amber-700/60" : pins.currentStatus == "red" ? "bg-red-700/60" : "bg-gray-500/30"} w-fit text-sm`}
-                      >
-                        {pins.currentStatus
-                          ? pins.currentStatus
-                          : "No Level Detected"}
-                      </div>
-                    )}
-                  </div> */}
-              </Row>
+                  </Row>
+                </Fragment>
+              ))
+            ) : (
+              inactiveSensors.map((sensors) => (
+                <Fragment key={sensors.id}>
+                  <Row
+                    postId={String(sensors.sensorCode)}
+                    title={sensors.name}
+                    desc={`Status: ${sensors.currentStatus}`}
+                    address={`${sensors.address}`}
+                    datePosted={`Deactivated at: ${convertDateTime(sensors.deactivatedAt)}`}
+                    link={`/admin-sensorDetails/${sensors.id}`}
+                    buttonId="Admin_SensorDetailsBtn"
+                    showBtn
+                  ></Row>
+                </Fragment>
+              ))
             )}
           </div>
         </div>

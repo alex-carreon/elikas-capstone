@@ -28,6 +28,7 @@ function SMS() {
   const [willDelete, setWillDelete] = useState(false);
   const [templateLoad, setTemplateLoad] = useState(false);
   const [templates, setTemplates] = useState<templateType[]>([]);
+  const [recipients, setRecipients] = useState(0);
   const [showDialog, setShowDialog] = useState(true);
   const [smsToken, setSMSToken] = useState<string | null>(null);
   const [disabled, setDisabled] = useState(false);
@@ -76,16 +77,13 @@ function SMS() {
         loading: "Adding to your templates...",
         success: "Template added!",
         error: (err: any) => {
-          if (err.response?.data.error == "Unauthorized") {
+          if (err.response.data.error == "Unauthorized") {
             return "Your session has expired. Please log in again.";
           }
-          if (
-            err.response?.data.details ==
-            "SQLSTATE[23000]: Integrity constraint violation: 1062 Duplicate entry 'new' for key 'template_name' (Connection: mysql, Host: 100.124.244.40, Port: 3306, Database: elikas_db, SQL: insert into `SMSTemplates` (`optr_id`, `template_name`, `message_content`) values (6, new, bnew))"
-          ) {
-            return "This title already exists.";
+          if (err.response.data.errors.template_name[0]) {
+            return err.response.data.errors.template_name[0];
           }
-          return "An error occurred. Please try again.";
+          return "An unexpected error occurred. Please try again.";
         },
         position: "top-center",
       });
@@ -113,8 +111,10 @@ function SMS() {
           if (err.response?.data.error == "Unauthorized") {
             return "Your session has expired. Please log in again.";
           }
-
-          return "An error occurred. Please try again.";
+          if (err.response.data.message) {
+            return err.response.data.message;
+          }
+          return "An unexpected error occurred. Please try again.";
         },
         position: "top-center",
       });
@@ -132,15 +132,27 @@ function SMS() {
     (message) => String(message.id) === String(templateId),
   );
 
+  const getRecipientCount = async () => {
+    try {
+      const response = await api.get("/sms/broadcast-info");
+      console.log(response);
+      setRecipients(response.data.recipient_count);
+    } catch (err: any) {
+      toast.error("An unexpected error occurred.");
+    }
+  };
+
   const handleSendNow = (e: React.FormEvent) => {
     e.preventDefault();
 
     if (!message) {
       setError({ title: "", message: "This field is required" });
+      return;
     }
 
     try {
       setDisabled(true);
+
       const response = api.post(
         "/sms/broadcasts/send-now",
         { message_content: message },
@@ -157,7 +169,16 @@ function SMS() {
         loading: "Sending your message now...",
         success: "Message sent!",
         error: (err: any) => {
-          return err.response.data;
+          if (
+            err.response.data.iprogsms_response.message ===
+            "Invalid api token or no load balance"
+          ) {
+            return "You don't have enough credits! Please check your IPROGSMS account.";
+          }
+          if (err.response.data.iprogsms_response.message === "Invalid Token") {
+            return "Your token is invalid. Please check your IPROGSMS account and try again.";
+          }
+          return "An unexpected error occurred";
         },
         position: "top-center",
       });
@@ -178,7 +199,6 @@ function SMS() {
 
   const handleSchedSend = (e: React.FormEvent) => {
     e.preventDefault();
-
     if (schedSend) {
       const dateTime = format(
         toZonedTime(schedSend, "Asia/Manila"),
@@ -208,17 +228,31 @@ function SMS() {
         toast.promise(response, {
           loading: "Scheduling your message now...",
           success: `Message scheduled! Your message will be sent on ${dateTime}`,
-          error: (err: any) => err.response.data.details,
+          error: (err: any) => {
+            const scheduledForError =
+              err.response?.data?.errors?.scheduled_for?.[0];
+
+            if (scheduledForError) {
+              return "Scheduled date must be past from now.";
+            }
+            return "An unexpected error occurred.";
+          },
         });
       } catch (err: any) {
         if (
-          err.response.data.message === "Invalid api token or no load balance"
+          err.response.data.iprogsms_response.message ===
+          "Invalid api token or no load balance"
         ) {
           toast.error(
             "You don't have enough credits! Please check your IPROGSMS account.",
           );
           return;
         }
+        if (err.response.data.iprogsms_response.message === "Invalid Token") {
+          toast.error("Your token is invalid. Please input it again.");
+          return;
+        }
+
         toast.error("An unexpected error occurred.");
       } finally {
         setDisabled(false);
@@ -246,19 +280,17 @@ function SMS() {
     console.log(response);
 
     toast.promise(response, {
-      loading: "Verifying your token...",
-      success: "Token verified!",
       error: (err: any) => {
+        setShowDialog(true);
         if (err.response?.data.error == "Unauthorized") {
           return "Your session has expired. Please log in again.";
         }
         if (err.response?.data.message == "Validation failed.") {
           return "Verification failed. Please be sure that the token is from your IPROGSMS account.";
         }
-        if (err.response.data.message === "Invalid Token") {
+        if (err.response.data.iprogsms_message.message === "Invalid Token") {
           return "The token is invalid. Please check your IPROGSMS account and try again.";
         }
-        return "An error occurred. Please try again.";
       },
     });
 
@@ -267,6 +299,7 @@ function SMS() {
         setShowDialog(false);
       })
       .catch((err: any) => {
+        setShowDialog(true);
         console.log(err.response.data);
         toast.error("An error ocurred. Please try again.");
       })
@@ -281,6 +314,7 @@ function SMS() {
 
   useEffect(() => {
     getTemplates();
+    getRecipientCount();
     setShowDialog(true);
   }, []);
 
@@ -349,29 +383,33 @@ function SMS() {
           onClick={(e: any) => handleTemplateAdd(e)}
           disabled={disabled}
         >
-          <TextField
-            label="Template Title*"
-            placeholder="Enter a title for your message"
-            inputType="text"
-            id="SMS_TemplateTitleField"
-            onSubmit={(e) => setTemplateTitle(e.target.value)}
-          />
-          <p className="text-xs text-red-500">{error.title}</p>
-          <Field>
-            <FieldLabel style={{ color: colors.label }}>Message</FieldLabel>
-            <Textarea
-              className="mt-2 h-80 text-xs"
-              value={message}
-              placeholder={
-                message
-                  ? undefined
-                  : "Enter your message first before adding a template"
-              }
-              id="SMS_TemplateMessageField"
-              readOnly
+          <div className="flex flex-col gap-2 overflow-auto h-fit max-h-[30vh]">
+            <TextField
+              label="Template Title*"
+              placeholder="Enter a title for your message"
+              inputType="text"
+              id="SMS_TemplateTitleField"
+              onSubmit={(e) => setTemplateTitle(e.target.value)}
+              maxLength={50}
+              readonly={message ? false : true}
             />
+            <p className="text-xs text-red-500">{error.title}</p>
+            <Field>
+              <FieldLabel style={{ color: colors.label }}>Message</FieldLabel>
+              <Textarea
+                className="mt-2 h-80 text-xs"
+                value={message}
+                placeholder={
+                  message
+                    ? undefined
+                    : "Enter your message first before adding a template"
+                }
+                id="SMS_TemplateMessageField"
+                readOnly
+              />
+            </Field>
             <p className="text-xs text-red-500">{error.message}</p>
-          </Field>
+          </div>
         </AlertDialogue>
       )}
       <div className="w-full h-full flex flex-col items-center ">
@@ -421,10 +459,23 @@ function SMS() {
             </div>
 
             <div>
-              <p className="font-semibold text-xs">
-                Message (Max Characters: 160)
-              </p>
-              <div>
+              <div className="flex flex-col gap-1">
+                <p className="font-semibold text-xs">
+                  Total Recipients: {recipients}
+                </p>
+              </div>
+              <div className="">
+                <p
+                  className="italic text-xs justify-self-start"
+                  style={{ color: colors.label }}
+                >
+                  Estimated Price:{" "}
+                  {message
+                    ? message?.length <= 160
+                      ? `P${1 * recipients}`
+                      : `P${Math.ceil(message?.length / 153) * recipients}`
+                    : "P0"}
+                </p>
                 <p
                   className="italic text-xs justify-self-end"
                   style={{ color: colors.label }}
@@ -438,7 +489,7 @@ function SMS() {
                 onChange={(e) => setMessage(e.target.value)}
                 value={message}
                 id="SMS_MessageField"
-                maxLength={160}
+                maxLength={600}
               />
               <p className="text-xs text-red-500">{error.message}</p>
             </div>

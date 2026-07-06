@@ -45,59 +45,107 @@ function BrgyAdd() {
   const [confirmPw, setConfirmPw] = useState("");
   const [errors, setErrors] = useState({ email: "", pw: "", confirmPw: "" });
 
+  const isValidPassword = (password: string) => {
+    return /^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^A-Za-z0-9]).{8,}$/.test(
+      password,
+    );
+  };
+
+  const pwHasWhiteSpace = (password: string) => {
+    return /\s/.test(password);
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
     if (pw != confirmPw) {
       setErrors({
         email: "",
-        pw: "Passwords do not match",
-        confirmPw: "Passwords do not match",
+        pw: "Passwords do not match.",
+        confirmPw: "Passwords do not match.",
       });
       return;
+    } else {
+      setErrors({
+        email: "",
+        pw: "",
+        confirmPw: "",
+      });
     }
-    try {
-      const createPromise = api.post("/admin/create-govop", {
-        username: username,
-        email: email,
-        password: pw,
-        level_id: levelId,
-        location_id: brgyId ? brgyId : cityId,
-        point_person: pointPerson,
-        point_position: pointPosition,
-      });
 
-      createPromise.catch((err) => console.log(err.response?.data));
-
-      toast.promise(createPromise, {
-        loading: "Creating Govop User...",
-        success: () => {
-          navigate(-1);
-          return "Govop user has been created!";
-        },
-        error: "Govop creation failed",
-        position: "top-center",
+    if (!isValidPassword(pw)) {
+      setErrors({
+        email: "",
+        pw: "Password must be 8 characters minimum, and have at least one uppercase, one lowercase, one number, and one special character.",
+        confirmPw: "",
       });
-
-      createPromise.then(() => {
-        navigate("/admin-brgy");
+      return;
+    } else {
+      setErrors({
+        email: "",
+        pw: "",
+        confirmPw: "",
       });
-    } catch (err: any) {
-      console.log(err.response?.data);
-      if (err.code === "auth/email-already-in-use") {
-        setErrors({
-          email: "This email is already registered.",
-          pw: "",
-          confirmPw: "",
-        });
-      } else if (err.code === "auth/weak-password") {
-        setErrors({
-          pw: "Password must be at least 6 characters.",
-          confirmPw: "",
-          email: "",
-        });
-      }
     }
+
+    if (pwHasWhiteSpace(pw)) {
+      setErrors({
+        email: "",
+        pw: "",
+        confirmPw: "Password must not have spaces.",
+      });
+      return;
+    } else {
+      setErrors({
+        email: "",
+        pw: "",
+        confirmPw: "",
+      });
+    }
+
+    const createPromise = api.post("/admin/create-govop", {
+      username: username,
+      email: email,
+      password: pw,
+      level_id: levelId,
+      location_id: brgyId ? brgyId : cityId,
+      point_person: pointPerson,
+      point_position: pointPosition,
+    });
+
+    toast.promise(createPromise, {
+      loading: "Creating Govop User...",
+      success: "Govop user has been created!",
+      error: (err: any) => {
+        if (err.response.data.errors.username?.[0]) {
+          return err.response.data.errors.username?.[0];
+        }
+        if (err.response.data.errors.email?.[0]) {
+          setErrors({
+            email: err.response.data.errors.email?.[0],
+            pw: "",
+            confirmPw: "",
+          });
+          return err.response.data.errors.email?.[0];
+        }
+        return "An unexpected error occurred. Please try again.";
+      },
+      position: "top-center",
+    });
+
+    createPromise
+      .then(() => {
+        navigate(-1);
+      })
+      .catch((error: any) => {
+        if (error.response) {
+          console.error(error.response);
+        } else if (error.request) {
+          console.error(error.request);
+        } else {
+          console.error(error.message);
+        }
+      });
   };
 
   useEffect(() => {
@@ -166,6 +214,7 @@ function BrgyAdd() {
               id="Admin_NewBrgyUsernameField"
               onSubmit={(e) => setUsername(e.target.value)}
               isRequired
+              maxLength={20}
             />
             <TextField
               label="Email"
@@ -174,6 +223,7 @@ function BrgyAdd() {
               onSubmit={(e) => setEmail(e.target.value)}
               isRequired
               error={errors.email}
+              maxLength={50}
             />
             <SelectDropdown
               value={String(levelId)}
@@ -221,12 +271,14 @@ function BrgyAdd() {
               inputType="text"
               id="Admin_NewBrgyPointPersonField"
               onSubmit={(e) => setPointPerson(e.target.value)}
+              maxLength={100}
             />
             <TextField
               label="Point person's position"
               inputType="text"
               id="Admin_NewBrgyPointPositionField"
               onSubmit={(e) => setPointPosition(e.target.value)}
+              maxLength={50}
             />
             <TextField
               label="Password"

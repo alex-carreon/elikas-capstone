@@ -24,8 +24,8 @@ class AuthController extends Controller
             'email'        => 'required|email|max:50|unique:Users,email',
             'first_name'   => 'required|string|max:50',
             'last_name'    => 'required|string|max:50',
-            'phone'        => 'nullable|string|max:20',
-            'firebase_uid' => 'required|string',
+            'phone'        => 'nullable|string|max:12|unique:PhoneNumbers,phone_no',
+            'firebase_uid' => 'required|string|unique:UserAuth,identity_uid',
             'location_id'  => 'required|integer',
             'avatar_seed'  => 'required|string|size:8',
         ]);

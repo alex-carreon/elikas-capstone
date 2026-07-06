@@ -103,15 +103,19 @@ function FlaggedDetails() {
 
     try {
       setLoading(true);
+      setDisabled(true);
+
       await getFloodDetails(controller.signal);
     } catch (err: any) {
       if (err.name === "CanceledError") {
         setLoading(false);
+        setDisabled(false);
         return;
       }
       console.log(err);
     } finally {
       setLoading(false);
+      setDisabled(false);
     }
   };
 
@@ -183,6 +187,7 @@ function FlaggedDetails() {
         updateClick={(e) => ignoreFlag(e)}
         deleteClick={(e) => rejectFlag(e)}
         isDisabled={disabled}
+        isDeactivated={pathDetails?.is_deactivated}
       >
         {loading ? (
           <div className="flex justify-center">
@@ -254,8 +259,8 @@ function FlaggedDetails() {
                 id="Admin_FlaggedPathMapContainer"
               >
                 <TileLayer
-                  attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-                  url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+                  attribution='&copy; <a href="https://www.maptiler.com/copyright/">MapTiler</a> &copy; <a href="https://openstreetmap.org">OpenStreetMap</a> contributors'
+                  url={`https://api.maptiler.com/maps/base-v4/{z}/{x}/{y}.png?key=6RBKItdaX8o4QX31GhTm`}
                 />
                 <Marker
                   position={midpoint as LatLngExpression}

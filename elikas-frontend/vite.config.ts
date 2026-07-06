@@ -4,6 +4,7 @@ import svgr from "vite-plugin-svgr";
 import tailwindcss from "@tailwindcss/vite";
 import path from "path";
 import { VitePWA } from "vite-plugin-pwa";
+import { visualizer } from "rollup-plugin-visualizer";
 
 // https://vite.dev/config/
 export default defineConfig({
@@ -61,8 +62,7 @@ export default defineConfig({
           },
           {
             // Cache map tiles (Leaflet/OpenStreetMap)
-            urlPattern: ({ url }) =>
-              url.hostname.includes("tile.openstreetmap.org"),
+            urlPattern: ({ url }) => url.hostname.includes("api.maptiler.com"),
             handler: "CacheFirst",
             options: {
               cacheName: "map-tiles",
@@ -100,6 +100,12 @@ export default defineConfig({
           },
         ],
       },
+    }),
+    visualizer({
+      open: true, // auto-opens the report in your browser after build
+      gzipSize: true, // shows gzipped size, which is what actually matters over network
+      brotliSize: true,
+      filename: "dist/stats.html",
     }),
   ],
   resolve: {

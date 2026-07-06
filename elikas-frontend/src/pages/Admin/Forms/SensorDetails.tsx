@@ -6,6 +6,7 @@ import { useEffect, useState } from "react";
 import FormSkeleton from "@/pages/Skeletons/FormSkeleton";
 import { toZonedTime } from "date-fns-tz";
 import { format } from "date-fns";
+import { toast } from "sonner";
 
 function SensorDetails() {
   const [loading, setLoading] = useState(false);
@@ -21,6 +22,7 @@ function SensorDetails() {
   const [mountLocation, setMountLocation] = useState("");
   const [registeredBy, setRegisteredBy] = useState("");
   const [deactivatedAt, setDeactivatedAt] = useState("");
+  const [disabled, setDisabled] = useState(false);
 
   const navigate = useNavigate();
 
@@ -50,31 +52,34 @@ function SensorDetails() {
       setDeactivatedAt(details.deactivatedAt);
     } catch (err: any) {
       if (err.name === "CanceledError") return;
+      toast.error(err.response.data.error);
       console.log(err);
     }
   };
 
-  useEffect(() => {
+  const getAll = async () => {
     const controller = new AbortController();
 
-    const getAll = async () => {
-      try {
-        setLoading(true);
-        await getSensorDetails(controller.signal);
-      } catch (err: any) {
-        if (err.name === "CanceledError") {
-          setLoading(false);
-          return;
-        }
-        console.log(err);
-      } finally {
+    try {
+      setLoading(true);
+      setDisabled(true);
+      await getSensorDetails(controller.signal);
+    } catch (err: any) {
+      if (err.name === "CanceledError") {
         setLoading(false);
+        setDisabled(false);
+        return;
       }
-    };
-
-    getAll();
-
+      console.log(err);
+    } finally {
+      setLoading(false);
+      setDisabled(false);
+    }
     return () => controller.abort();
+  };
+
+  useEffect(() => {
+    getAll();
   }, []);
 
   return (
@@ -86,6 +91,8 @@ function SensorDetails() {
         singleUpd={() => {
           navigate(`/admin-sensorlogs/${sensorCode}`);
         }}
+        isDeactivated={deactivatedAt ? true : false}
+        isDisabled={disabled}
       >
         {loading ? (
           <div className="flex justify-center">

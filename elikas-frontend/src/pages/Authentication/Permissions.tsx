@@ -10,6 +10,12 @@ import { createUserWithEmailAndPassword } from "firebase/auth";
 import api from "@/api";
 import { ArrowLeftIcon } from "lucide-react";
 import Logo from "@/components/Logo";
+import { getApp } from "firebase/app";
+import {
+  initializeAppCheck,
+  ReCaptchaV3Provider,
+  getToken,
+} from "firebase/app-check";
 
 function Permissions() {
   const [checked, setChecked] = useState(false);
@@ -18,6 +24,15 @@ function Permissions() {
   const [disabled, setDisabled] = useState(false);
 
   const navigate = useNavigate();
+
+  const app = getApp();
+
+  const appCheck = initializeAppCheck(app, {
+    provider: new ReCaptchaV3Provider(
+      "6Lc7EEUtAAAAACb8xacqDgunvlT9PuSzGgOrh156",
+    ),
+    isTokenAutoRefreshEnabled: true,
+  });
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
@@ -35,10 +50,17 @@ function Permissions() {
       avatarSeed: localStorage.getItem("avatarSeed"),
     };
 
-    console.log("FORM DATA:", formData);
-
     try {
       setDisabled(true);
+
+      const { token } = await getToken(appCheck, false);
+
+      if (!token) {
+        toast.error("Something went wrong. Please try again.");
+        setDisabled(false);
+        return;
+      }
+
       const userCredential = await createUserWithEmailAndPassword(
         auth,
         formData.email,
@@ -49,16 +71,20 @@ function Permissions() {
 
       localStorage.setItem("firebaseUser", firebaseUser.uid);
 
-      await api.post("/auth/register", {
-        username: formData.username,
-        email: formData.email,
-        first_name: formData.fn,
-        last_name: formData.ln,
-        phone: formData.phone,
-        location_id: Number(formData.loc),
-        firebase_uid: localStorage.getItem("firebaseUser"),
-        avatar_seed: formData.avatarSeed,
-      });
+      await api.post(
+        "/auth/register",
+        {
+          username: formData.username,
+          email: formData.email,
+          first_name: formData.fn,
+          last_name: formData.ln,
+          phone: formData.phone,
+          location_id: Number(formData.loc),
+          firebase_uid: localStorage.getItem("firebaseUser"),
+          avatar_seed: formData.avatarSeed,
+        },
+        { headers: { "X-Firebase-AppCheck": token } },
+      );
 
       toast.success("One last step!");
       navigate("/Registration/Verify");
@@ -84,6 +110,12 @@ function Permissions() {
       } else if (err.code === "auth/email-already-in-use") {
         toast.error("This email is already in use.");
         setDisabled(false);
+        return;
+      } else if (
+        err.response.data.errors.phone[0] ===
+        "The phone has already been taken."
+      ) {
+        toast.error("This phone has already been taken.");
         return;
       } else {
         toast.error("Registration failed. Please try again.");

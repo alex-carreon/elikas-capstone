@@ -16,12 +16,55 @@ use Illuminate\Support\Facades\Storage;
 
 class StoreEvacuationAreaController extends Controller
 {
+    /** Maximum number of concurrently active pins allowed per user. */
+    private const MAX_ACTIVE_PINS = 10;
+
     public function __construct(
         protected MediaUploadService $mediaUploadService
     ) {}
 
+    /**
+     * Count how many active pins (visible, not expired, not deactivated)
+     * currently belong to the given user.
+     */
+    private function activePinCount(int $userId): int
+    {
+        return EvacArea::query()
+            ->ownedBy($userId)
+            ->active()
+            ->count();
+    }
+
     public function storeEvacuationArea(Request $request)
     {
+        $request->validate([
+            'name' => 'required|string|max:50',
+            'address' => 'required|string',
+            'lat' => 'required|numeric|between:-90,90',
+            'lng' => 'required|numeric|between:-180,180',
+            'location_id' => 'required|integer|exists:Locations,id',
+            'area_type' => 'required|integer|exists:EvacTypes,id',
+            'capacity_level' => 'required|integer|exists:CapacityLevels,id',
+            'description' => 'nullable|string',
+            'is_persistent' => 'boolean',
+            'for_reg_flood' => 'boolean',
+            'for_heavy_flood' => 'boolean',
+            'has_accom' => 'boolean',
+            'has_DRRMO' => 'boolean',
+            'has_health' => 'boolean',
+            'pwd_friendly' => 'boolean',
+            'has_catchment' => 'boolean',
+            'toilet_count' => 'nullable|integer|min:0',
+            'kitchen_count' => 'nullable|integer|min:0',
+            'child_prayer_count' => 'nullable|integer|min:0',
+            'breastfeed_count' => 'nullable|integer|min:0',
+            'other_facilities' => 'nullable|string',
+            'contact_person' => 'nullable|string|max:100',
+            'contact_number' => 'nullable|string|max:15',
+           'expiry' => 'nullable|date|after:now',
+            'file' => ['nullable', 'file', 'image', 'mimes:jpg,jpeg,png', 'max:8192'],
+        ]);
+
         $uploadedPath = null;
 
         try {
@@ -33,33 +76,15 @@ class StoreEvacuationAreaController extends Controller
                 ], 401);
             }
 
-            $request->validate([
-                'name' => 'required|string|max:50',
-                'address' => 'required|string',
-                'lat' => 'required|numeric|between:-90,90',
-                'lng' => 'required|numeric|between:-180,180',
-                'location_id' => 'required|integer|exists:Locations,id',
-                'area_type' => 'required|integer|exists:EvacTypes,id',
-                'capacity_level' => 'required|integer|exists:CapacityLevels,id',
-                'description' => 'nullable|string',
-                'is_persistent' => 'boolean',
-                'for_reg_flood' => 'boolean',
-                'for_heavy_flood' => 'boolean',
-                'has_accom' => 'boolean',
-                'has_DRRMO' => 'boolean',
-                'has_health' => 'boolean',
-                'pwd_friendly' => 'boolean',
-                'has_catchment' => 'boolean',
-                'toilet_count' => 'nullable|integer|min:0',
-                'kitchen_count' => 'nullable|integer|min:0',
-                'child_prayer_count' => 'nullable|integer|min:0',
-                'breastfeed_count' => 'nullable|integer|min:0',
-                'other_facilities' => 'nullable|string',
-                'contact_person' => 'nullable|string|max:100',
-                'contact_number' => 'nullable|string|max:15',
-                'expiry' => 'nullable|date|after:now',
-                'file' => ['nullable', 'file', 'image', 'mimes:jpg,jpeg,png', 'max:8192'],
-            ]);
+            // Enforce the max-10-active-pins rule for individual users only (role_id 3).
+            // Admins (1) and govop/barangay operators (2) are exempt.
+            if ($user->role_id === 3 && $this->activePinCount((int) $user->id) >= self::MAX_ACTIVE_PINS) {
+                return response()->json([
+                    'error' => 'Maximum active pin limit reached. You may only have '
+                        . self::MAX_ACTIVE_PINS . ' active evacuation pins at a time. '
+                        . 'Please wait for an existing pin to expire or deactivate one before adding a new one.'
+                ], 422);
+            }
 
             $expiry = $request->expiry
                 ? Carbon::parse($request->expiry, 'Asia/Manila')->utc()

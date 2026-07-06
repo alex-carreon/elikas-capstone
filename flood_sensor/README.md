@@ -95,7 +95,7 @@ However, since the measured time includes both the forward and return trip, the 
 float distance = (duration * 0.034) / 2.0;
 ```
 
-To ensure reliable readings, the code filters out invalid values:
+To ensure reliable readings, the code filters out invalid values beyond the sensor unit's minimum blind zone of 20cm and the commonly reported practical range of 450cm ([Alam, 2023](https://how2electronics.com/jsn-sr04t-waterproof-ultrasonic-sensor-with-arduino-guide/)) :
 ```
 if (duration == 0) return -1;
 if (distance < 20 || distance > 450) return -1;
@@ -103,13 +103,14 @@ if (distance < 20 || distance > 450) return -1;
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
 
-### Connectivity
+### Connectivity & Set Up
 The module can be deployed without hardcoding Wi-Fi credentials using Wi-Fi Provisioning from WiFiManager.
 
   1. In initial setup, connect to the Wi-Fi network: `FloodSensor-Setup`
   2. Use the unique default password (Format: `eLikas-XXXX`) generated based on the device's MAC address
   3. A web portal will allow the user to select a local SSID and enter the password
       >**Security**: The setup access point (AP) password can be changed from the default password under the Advanced Settings toggle within the web portal. This password is saved to the ESP32's NVS memory and persists through reboots.
+  4. Fill in the sensor code for the unit, which is generated after registering it on the eLikas platform with its details. This is essential so that readings are reflected correctly on the app. 
 
 If the device needs to be moved to a new location or the Setup Password is forgotten, send the character 'R' via Serial Monitor (115200 baud). This wipes all saved Wi-Fi credentials and resets the setup AP password to the default (eLikas-XXXX).
 
@@ -146,8 +147,19 @@ Raw ultrasonic readings are inherently noisy because of the way that the sensor 
 
 To address this, the device takes a short burst of readings every minute and computes for the **median**, specifically chosen because it is more resistant to extreme outlier values common in ultrasonic water surface measurements. A **median filter discards straggler values** entirely rather than allowing them to drag the result in either direction, unlike a mean-based moving average ([Harres, 2012](https://www.edn.com/median-filters-an-efficient-way-to-remove-impulse-noise/)).
 
+```cpp
+for (int i = 0; i < BURST_SIZE; i++) {
+  float raw = readDistance();
+  if (raw > 0) readings[validCount++] = raw;
+  delay(40); // prevent echo overlap between pulses
+}
+// readings[] is sorted here, then the middle value is returned
+return readings[validCount / 2];
+```
+
+
 #### Two-Tiered Relay Strategy
-Under normal conditions, the system operates in a **quiescent state**, reporting a final water level **every 10 minutes**. This reflects established practice in IoT river level monitoring, where 10 minutes is a commonly recognized transmission interval for non-critical conditions ([Manx Tech Group, 2026](https://manxtechgroup.com/iot-ultrasonic-sensors-revolutionising-river-level-monitoring/)).
+Under normal conditions, the system operates in a **normal/quiescent state**, reporting a final water level **every 10 minutes**. This reflects established practice in IoT river level monitoring, where 10 minutes is a commonly recognized transmission interval for non-critical conditions ([Manx Tech Group, 2026](https://manxtechgroup.com/iot-ultrasonic-sensors-revolutionising-river-level-monitoring/)).
 
 However, 10-minute resolution is insufficient during a rapidly developing flood. Research on flash flood hydrographs shows that the rising limb, or the period when water climbs fastest, can involve stage increases exceeding 1 meter per hour, and that coarser reporting intervals cause this critical surge window to be missed entirely ([Huang et al., 2020](https://doi.org/10.3390/w12010255]). 
 
@@ -155,11 +167,30 @@ For instance, the NOAA FLASH project runs at a fine, 5-minute interval to captur
 
 As such, the system transitions to an **active state** if consecutive per-minute medians reflect a consistent and significant upward trend in water level, escalating the relay interval to **once per minute**. This adaptive escalation is grounded in embedded systems debouncing practice, where a state change is only accepted after N consecutive stable readings confirm the trend, preventing a single anomalous rise from triggering premature escalation ([Gala, 2025](https://kalapiinfotech.in/the-debouncing-pattern-in-embedded-systems/)).
 
+```cpp
+// A rise only counts as sustained if the cumulative change across the window exceeds the threshold. A single noisy minute can't trigger escalation on its own.
+
+float netRise = recentMedians[0] - recentMedians[REQUIRED_CONSECUTIVE_RISES];
+float totalRequiredRise = ELEVATION_THRESHOLD * REQUIRED_CONSECUTIVE_RISES;
+bool isSustainedRise = (netRise >= totalRequiredRise);
+```
+
+Once activated, a cooldown-gated exit is triggered even if the surge tapers off immediately to avoid rapid switching between modes. 
+
+```cpp
+if (isSustainedRise) {
+  activeModeCooldownTimer = MINIMUM_ACTIVE_MINUTES;
+  isActiveMode = true;
+} else if (isActiveMode && activeModeCooldownTimer == 0) {
+  isActiveMode = false; // only revert once cooldown fully expires
+}
+```
+
 The result is a three-layer design:
 
 1. **Noise filtering within each burst** — the median removes transient spikes before any value is retained.
 2. **Trend detection across per-minute medians** — sustained rises trigger the transition to active reporting.
-3. **Adaptive transmission** — 15-minute intervals during dry periods, 1-minute intervals during the critical surge window.
+3. **Adaptive transmission** — 10-minute intervals during dry periods, 1-minute intervals during the critical surge window.
 
 This ensures that the sensor is less likely to miss the onset of a sudden flood while avoiding overwhelming the database with redundant readings during normal conditions.
 
@@ -188,15 +219,15 @@ All GitHub API requests are authenticated using a Personal Access Token (PAT) st
 
 
 ### Data Transmission (JSON API)
-Data is transmitted via HTTP POST requests to the server endpoint using `HTTPClient.h`(currently to a webhook for testing but intended for the eLikas backend). Each payload is formatted as a JSON object using `ArduinoJson.h`.
+Data is transmitted via HTTP POST requests to the eLikas server endpoint for sensor logs using `HTTPClient.h`. Each payload is formatted as a JSON object using `ArduinoJson.h`.
 
 **JSON Structure**
 ```
 {
-  "api_key": "A_SECURE_KEY",
-  "sensor_id": "SN-001",
-  "distance_cm": 145.2,
-  "timestamp": "2026-04-11 14:27:21"
+  "apiKey": "A_SECURE_KEY",
+  "sensorCode": "SR-XXXXXX",
+  "waterLevel": 1.45,
+  "sensorTimestamp": "2026-04-11 14:27:21"
 }
 ```
 
@@ -216,17 +247,16 @@ Data is transmitted via HTTP POST requests to the server endpoint using `HTTPCli
           
 - [ ] **Phase 3: Logic & Reliability**
     - [x] **Over-the-Air (OTA) Updates:** Enable remote firmware updates 
-    - [ ] **Signal Filtering:** Implement a moving average algorithm to stabilize water surface readings.
-    - [ ] **Power Management:** Configure ESP32 Deep Sleep cycles to maximize battery life between transmissions.
+    - [X] **Signal Filtering:** Implement a median-based algorithm to stabilize water surface readings.
 
 - [ ] **Phase 4: Final Hardware & Power**
-    - [ ] **Power Circuitry:** Solder 2x rechargeable Li-ion batteries with an optional TP4056/Solar charging module.
+    - [ ] **Power Circuitry:** Solder 2x rechargeable Li-ion batteries.
     - [ ] **Physical Interface:** Add a physical power toggle switch.
-    - [ ] **Local Display:** Integrate an OLED/LCD display for real-time status (Wi-Fi signal, Battery %, Distance).
+    - [ ] **Local Display:** Integrate an LCD display.
 
 - [ ] **Phase 5: Deployment**
     - [ ] **Enclosure:** Design/assemble a weather-resistant housing for the ESP32 and power components.
-    - [ ] **Field Testing:** Real-world stress test in outdoor settings.
-    - [ ] **PWA Integration:** Map-side visualization of crowdsourced flood data.
+    - [ ] **Field Testing:** Real-world test as a standalone unit beyond bench testing.
+    - [X] **PWA Integration:** Map-side visualization of crowdsourced flood data.
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>

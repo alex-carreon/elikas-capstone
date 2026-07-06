@@ -20,7 +20,7 @@ import { useUserContext } from "@/context/AuthContext";
 import api from "@/api";
 import FormSkeleton from "../../Skeletons/FormSkeleton";
 import DatePickerInput from "@/components/DateField";
-import { toZonedTime, format } from "date-fns-tz";
+import { toZonedTime, formatInTimeZone } from "date-fns-tz";
 import { addDays } from "date-fns";
 import AlertDialogue from "@/components/AlertDialogue";
 import { toast } from "sonner";
@@ -92,6 +92,13 @@ type EvacPin = {
   last_confirmed: string | null;
 };
 
+type Barangays = {
+  id: number;
+  name: string;
+  role: string;
+  location: string;
+};
+
 function EvacPin() {
   const [existingPin, setExistingPin] = useState(false);
   const [fileName, setFileName] = useState<File | undefined>();
@@ -143,6 +150,9 @@ function EvacPin() {
   const [disabled, setDisabled] = useState(false);
   const [typeLoad, setTypeLoad] = useState(false);
   const [capLoad, setCapLoad] = useState(false);
+  const [brgyLoad, setBrgyLoad] = useState(false);
+  const [barangays, setBarangays] = useState<Barangays[]>([]);
+  const [brgyId, setBrgyId] = useState(0);
 
   const location = useLocation();
   const navigate = useNavigate();
@@ -167,11 +177,19 @@ function EvacPin() {
 
   const defaultExpiry = addDays(new Date(), 7);
 
-  useEffect(() => {
-    if (location.state?.from === "/History") {
-      setExistingPin(true);
+  const getBrgy = async () => {
+    try {
+      setBrgyLoad(true);
+      const brgyRes = await api.get(`/locations/barangays?city_id=2`);
+
+      const barangays = brgyRes.data.Barangays;
+      setBarangays(barangays);
+    } catch (err: any) {
+      console.log(err.message);
+    } finally {
+      setBrgyLoad(false);
     }
-  }, [[location.state?.from]]);
+  };
 
   const fileOnChange = (e: any) => {
     const file = e.target.files?.[0];
@@ -212,6 +230,7 @@ function EvacPin() {
       setLoading(true);
       setHasUpdated(false);
       const response = await api.get(`/pins/${id}`);
+
       const evacDetails = await response.data;
 
       setRegFlood(evacDetails.for_reg_flood);
@@ -220,6 +239,7 @@ function EvacPin() {
       setPinName(evacDetails.name);
       setDesc(evacDetails.description);
       setAddress(evacDetails.address);
+      setBrgyId(evacDetails.location_id);
       setLatLng(evacDetails.coordinates);
       setCapacity(String(evacDetails.capacity_level));
       setIsFull(evacDetails.capacity_name === "Full");
@@ -278,9 +298,17 @@ function EvacPin() {
       setEvacPins(evacDetails);
     } catch (err: string | any) {
       console.log(err.response.data);
+      toast.error(err.response.data.error);
     } finally {
       setLoading(false);
     }
+  };
+
+  const getBrgyName = (brgyId: string) => {
+    const brgyName =
+      barangays.find((brgy) => String(brgy.id) === brgyId)?.name ??
+      "No Barangay";
+    return brgyName;
   };
 
   const getCapacityLevels = async () => {
@@ -299,6 +327,7 @@ function EvacPin() {
     if (id) {
       getEvacDetails();
       getCapacityLevels();
+      getBrgy();
     } else if (!id) {
       const getAreaTypes = async () => {
         try {
@@ -318,6 +347,7 @@ function EvacPin() {
         }
       };
 
+      getBrgy();
       getAreaTypes();
       getCapacityLevels();
     }
@@ -411,8 +441,6 @@ function EvacPin() {
       now.getSeconds(),
     );
 
-    console.log("Evac Expiry", expDateWithTime);
-
     if (fileName) {
       formData.append("file", fileName);
     }
@@ -425,7 +453,7 @@ function EvacPin() {
       !contactPerson ||
       !contactNumber
     ) {
-      toast.error("Please fill in the required fields marked with an *.");
+      toast.error("Please fill in the required fields marked with *.");
       return;
     }
 
@@ -478,7 +506,7 @@ function EvacPin() {
     formData.append("description", desc);
     formData.append("lat", String(center[0]));
     formData.append("lng", String(center[1]));
-    formData.append("location_id", "16");
+    formData.append("location_id", String(brgyId));
     formData.append("area_type", String(areaType));
     formData.append("capacity_level", String(capacityCount));
     formData.append(
@@ -492,14 +520,29 @@ function EvacPin() {
     formData.append("has_health", hasHealth ? "1" : "0");
     formData.append("pwd_friendly", pwdFriendly ? "1" : "0");
     formData.append("has_catchment", hasCatchment ? "1" : "0");
-    formData.append("toilet_count", String(toiletCount));
-    formData.append("kitchen_count", String(kitchenCount));
-    formData.append("child_prayer_count", String(childPrayerCount));
-    formData.append("breastfeed_count", String(breastfeedCount));
+    if (toiletCount !== 0 || toiletCount !== null) {
+      formData.append("toilet_count", String(toiletCount));
+    }
+    if (kitchenCount !== 0 || kitchenCount !== null) {
+      formData.append("kitchen_count", String(kitchenCount));
+    }
+    if (childPrayerCount !== 0 || childPrayerCount !== null) {
+      formData.append("child_prayer_count", String(childPrayerCount));
+    }
+    if (breastfeedCount !== 0 || breastfeedCount !== null) {
+      formData.append("breastfeed_count", String(breastfeedCount));
+    }
     formData.append("other_facilities", other);
     formData.append("contact_person", contactPerson);
     formData.append("contact_number", contactNumber);
-    formData.append("expiry", format(expDateWithTime, "yyyy-MM-dd"));
+    formData.append(
+      "expiry",
+      formatInTimeZone(
+        expDateWithTime,
+        "Asia/Manila",
+        "yyyy-MM-dd HH:mm:ssXXX",
+      ),
+    );
 
     handleSubmit({
       e: e,
@@ -580,8 +623,6 @@ function EvacPin() {
       now.getSeconds(),
     );
 
-    console.log("Evac Expiry", expDateWithTime);
-
     handleUpdate({
       e: e,
       id: id,
@@ -606,9 +647,16 @@ function EvacPin() {
       ...(contactPerson && { contact_person: contactPerson }),
       ...(contactNumber && { contact_number: contactNumber }),
       role: role ? role : "",
-      expiry: format(expDateWithTime, "yyyy-MM-dd"),
+      ...(isPersistent && {
+        expiry: formatInTimeZone(
+          expDateWithTime,
+          "Asia/Manila",
+          "yyyy-MM-dd HH:mm:ssXXX",
+        ),
+      }),
       setIsEditable: setIsEditable,
       setHasUpdated: setHasUpdated,
+      location_id: brgyId,
       setDisabled,
     });
   };
@@ -623,16 +671,14 @@ function EvacPin() {
   };
 
   const reOpen = (e: React.FormEvent) => {
-    const expDate = expiry ?? addDays(new Date(), 7);
+    const expDate = addDays(new Date(), 7);
 
     handleReOpen({
       e: e,
-      expiry: format(
-        toZonedTime(expDate!, "Asia/Manila"),
-        "yyyy-MM-dd HH:mm:ss",
-        {
-          timeZone: "Asia/Manila",
-        },
+      expiry: formatInTimeZone(
+        toZonedTime(expDate, "Asia/Manila"),
+        "Asia/Manila",
+        "yyyy-MM-dd HH:mm:ssXXX",
       ),
       id: id,
       navigate: navigate,
@@ -665,8 +711,6 @@ function EvacPin() {
       capacity_level: newCapacityLevel,
     });
 
-    console.log(response);
-
     toast.promise(response, {
       loading: isFull ? "Marking as open..." : "Marking as full...",
       success: isFull ? "Pin marked as open!" : "Pin marked as full!",
@@ -685,6 +729,20 @@ function EvacPin() {
       .finally(() => setDisabled(false));
   };
 
+  useEffect(() => {
+    if (location.state?.from === "/History") {
+      setExistingPin(true);
+    }
+  }, [[location.state?.from]]);
+
+  useEffect(() => {
+    if (location.state?.from === "/map") {
+      setIsEditable(true);
+    } else {
+      setIsEditable(false);
+    }
+  }, []);
+
   return loading ? (
     <div className="w-full h-full flex flex-col items-center p-12 mt-8 mb-2 gap-4">
       <FormSkeleton />
@@ -698,25 +756,14 @@ function EvacPin() {
           actionId="EvacPin_ReopenBtn"
           open={willReopen}
           title="You are about to re-open this pin"
-          description="Re-opening this pin add it to the map. The expiration date will default to 7 days unless specified."
+          description="Re-opening this pin add it to the map. The expiration date will default to 7 days."
           buttonText="Re-open"
           onClose={() => {
             setWillReopen(false);
           }}
           onClick={(e) => reOpen(e)}
           disabled={disabled}
-        >
-          <DatePickerInput
-            label="Expiry Date"
-            desc="The default date is 7 days from now"
-            idField="EvacPin_ReopenExpiryField"
-            idBtn="EvacPin_ReopenCalendarBtn"
-            value={expiry}
-            onChange={setExpiry}
-            edit
-            showTime
-          />
-        </AlertDialogue>
+        ></AlertDialogue>
       )}
       {willDelete && (
         <AlertDialogue
@@ -798,13 +845,28 @@ function EvacPin() {
               : "Register an Evacuation Location"}
           </p>
           {existingPin ? null : (
-            <p
-              className="text-align italic text-sm"
-              style={{ color: colors.label }}
-            >
-              Help others find safe temporary shelter. All marked with an * are
-              required fields.
-            </p>
+            <div className="flex flex-col gap-1">
+              <p
+                className="italic text-sm max-w-sm text-center"
+                style={{ color: colors.label }}
+              >
+                Help others find safe temporary shelter.
+              </p>
+              <b
+                className="italic text-sm max-w-sm text-center"
+                style={{ color: colors.label }}
+              >
+                All marked with an * are required fields.
+              </b>
+              {role === "indiv" && (
+                <b
+                  className="italic text-sm max-w-sm text-center"
+                  style={{ color: colors.label }}
+                >
+                  You may only create 10 active evacuation pins.
+                </b>
+              )}
+            </div>
           )}
         </div>
         <div
@@ -909,6 +971,7 @@ function EvacPin() {
               onSubmit={(e) => setPinName(e.target.value)}
               isRequired
               readonly={!id || isEditable ? false : true}
+              maxLength={50}
             />
             <Field>
               <FieldLabel
@@ -952,8 +1015,8 @@ function EvacPin() {
                 id="EvacPin_MapContainer"
               >
                 <TileLayer
-                  attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-                  url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+                  attribution='&copy; <a href="https://www.maptiler.com/copyright/">MapTiler</a> &copy; <a href="https://openstreetmap.org">OpenStreetMap</a> contributors'
+                  url={`https://api.maptiler.com/maps/base-v4/{z}/{x}/{y}.png?key=6RBKItdaX8o4QX31GhTm`}
                 />
                 <MapClickHandler
                   onPinClick={() => {}}
@@ -994,8 +1057,29 @@ function EvacPin() {
                     placeholder={description}
                     id="EvacPin_StreetField"
                   ></Textarea>
+                  <SelectDropdown
+                    value={String(brgyId)}
+                    onValueChange={(val) => setBrgyId(Number(val))}
+                    label="Barangay*"
+                    id="EvacPin_BarangayDropdown"
+                    onSubmit={(e) => setBrgyId(Number(e.target.value))}
+                    options={barangays?.map((brgy) => ({
+                      label: brgy.name,
+                      value: String(brgy.id),
+                    }))}
+                    isRequired
+                    loading={brgyLoad}
+                  />
                 </>
-              ) : null}
+              ) : (
+                <TextField
+                  label="Barangay"
+                  value={getBrgyName(String(brgyId))}
+                  inputType="text"
+                  id="EvacPin_BarangayField"
+                  readonly
+                />
+              )}
             </Field>
             {isEditable || !id ? (
               <SelectDropdown
@@ -1189,6 +1273,7 @@ function EvacPin() {
               value={contactPerson}
               readonly={!id || isEditable ? false : true}
               isRequired
+              maxLength={100}
             ></TextField>
             <TextField
               label="Contact Number*"
@@ -1199,6 +1284,7 @@ function EvacPin() {
               value={contactNumber}
               readonly={!id || isEditable ? false : true}
               isRequired
+              maxLength={15}
             ></TextField>
             {role === "brgy_op" && (
               <DatePickerInput
@@ -1207,8 +1293,8 @@ function EvacPin() {
                 idBtn="EvacPin_CalendarBtn"
                 value={expiry}
                 onChange={setExpiry}
-                readonly={!id || isEditable ? false : true}
-                edit={isEditable || !id}
+                readonly={!id || (isPersistent && isEditable) ? false : true}
+                edit={(isPersistent && isEditable) || !id}
                 desc="The default expiration date is 7 days from now"
                 clearDate={!id}
               />
@@ -1229,28 +1315,6 @@ function EvacPin() {
             {id ? (
               !isEditable ? (
                 <>
-                  <div className="mx-2 flex justify-evenly shrink gap-4">
-                    <ButtonComp
-                      text="Edit"
-                      id="EvacPin_UpdatePinBtn"
-                      variant="primary"
-                      heightSize="38px"
-                      widthSize="20"
-                      onClick={() => setIsEditable(true)}
-                      type="button"
-                      isDisabled={disabled}
-                    ></ButtonComp>
-                    <ButtonComp
-                      text="Delete"
-                      id="EvacPin_ClosePinBtn"
-                      variant="important"
-                      heightSize="38px"
-                      widthSize="20"
-                      type="button"
-                      onClick={() => setWillDelete(true)}
-                      isDisabled={disabled}
-                    ></ButtonComp>
-                  </div>
                   <div className="w-full max-w-md flex justify-center">
                     {!isExpired &&
                       (isFull ? (
@@ -1277,6 +1341,43 @@ function EvacPin() {
                         ></ButtonComp>
                       ))}
                   </div>
+                  {isExpired && isPersistent && (
+                    <div className="w-full max-w-md flex justify-center">
+                      <ButtonComp
+                        text="Re-Open Pin"
+                        variant="outline"
+                        id="EvacPin_ReOpenPin"
+                        heightSize="38px"
+                        widthSize="100%"
+                        onClick={() => setWillReopen(true)}
+                        isDisabled={disabled}
+                      />
+                    </div>
+                  )}
+                  {!isExpired && (
+                    <div className="mx-2 flex justify-evenly shrink gap-4">
+                      <ButtonComp
+                        text="Edit"
+                        id="EvacPin_UpdatePinBtn"
+                        variant="primary"
+                        heightSize="38px"
+                        widthSize="20"
+                        onClick={() => setIsEditable(true)}
+                        type="button"
+                        isDisabled={disabled}
+                      ></ButtonComp>
+                      <ButtonComp
+                        text="Delete"
+                        id="EvacPin_ClosePinBtn"
+                        variant="important"
+                        heightSize="38px"
+                        widthSize="20"
+                        type="button"
+                        onClick={() => setWillDelete(true)}
+                        isDisabled={disabled}
+                      ></ButtonComp>
+                    </div>
+                  )}
                 </>
               ) : (
                 <>
@@ -1287,10 +1388,9 @@ function EvacPin() {
                       // type="button"
                       variant="primary"
                       heightSize="38px"
-                      widthSize="20"
+                      // widthSize="20"
                       onClick={(e) => {
                         update(e);
-                        console.log(toiletCount);
                       }}
                       isDisabled={disabled}
                     ></ButtonComp>
@@ -1299,7 +1399,7 @@ function EvacPin() {
                       id="EvacPin_CancelUpdBtn"
                       variant="outline"
                       heightSize="38px"
-                      widthSize="20"
+                      // widthSize="20"
                       onClick={() => {
                         setIsEditable(false);
                       }}
@@ -1345,19 +1445,6 @@ or account restriction."
                   />
                 </div>
               </>
-            )}
-            {isExpired && isPersistent && (
-              <div className="w-full max-w-md flex justify-center">
-                <ButtonComp
-                  text="Re-Open Pin"
-                  variant="primary"
-                  id="EvacPin_ReOpenPin"
-                  heightSize="38px"
-                  widthSize="100%"
-                  onClick={() => setWillReopen(true)}
-                  isDisabled={disabled}
-                />
-              </div>
             )}
           </div>
         </div>

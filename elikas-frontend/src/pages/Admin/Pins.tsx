@@ -43,6 +43,7 @@ type Hazards = {
   posted_at: string;
   is_expired: boolean;
   is_deactivated: boolean;
+  is_user_deactivated: boolean;
 };
 
 type FloodLevels = {
@@ -59,6 +60,7 @@ type EvacPins = {
   expiry: string;
   is_expired: boolean;
   is_deactivated: boolean;
+  is_user_deactivated: boolean;
   deactivated_at: string | null;
   posted_at: string;
   my_pin: boolean;
@@ -92,7 +94,8 @@ function Pins() {
   const [inactiveHazCount, setInactiveHazCount] = useState(0);
   const [floodLevels, setFloodLevels] = useState<FloodLevels[]>([]);
   const [levelFilter, setLevelFilter] = useState(0);
-  const [pins, setPins] = useState<EvacPins[]>([]);
+  const [activePins, setActivePins] = useState<EvacPins[]>([]);
+  const [inactivePins, setInactivePins] = useState<EvacPins[]>([]);
   const [activePinCount, setActivePinCount] = useState(0);
   const [inactivePinCount, setInactivePinCount] = useState(0);
   const [pinCountLoad, setPinCountLoad] = useState(false);
@@ -119,11 +122,13 @@ function Pins() {
       ]);
 
       const inactiveCount = hazRes.data.flood_paths.filter(
-        (path: Hazards) => path.is_deactivated || path.is_expired,
+        (path: Hazards) =>
+          path.is_deactivated || path.is_expired || path.is_user_deactivated,
       ).length;
 
       const activeCount = hazRes.data.flood_paths.filter(
-        (path: Hazards) => !path.is_deactivated && !path.is_expired,
+        (path: Hazards) =>
+          !path.is_deactivated && !path.is_expired && !path.is_user_deactivated,
       ).length;
 
       setFlaggedPathsCount(flaggedHazRes.data.count);
@@ -182,25 +187,25 @@ function Pins() {
   const getPinCounts = async (signal?: AbortSignal) => {
     try {
       setPinCountLoad(true);
-      const [pinResponse, flaggedComms] = await Promise.all([
-        api.get(`/admin/pins`, {
-          signal,
-        }),
-        api.get(`/admin/comments/flags`, {
-          signal,
-        }),
-      ]);
-      const inactiveCount = pinResponse.data.pins.filter(
-        (pin: EvacPins) => pin.is_deactivated || pin.is_expired,
-      ).length;
+      const [pinActiveResponse, pinInactiveResponse, flaggedComms] =
+        await Promise.all([
+          api.get(`/admin/pins?status=active`, {
+            signal,
+          }),
+          api.get(`/admin/pins?status=inactive`, {
+            signal,
+          }),
+          api.get(`/admin/comments/flags`, {
+            signal,
+          }),
+        ]);
 
-      const activeCount = pinResponse.data.pins.filter(
-        (pin: EvacPins) => !pin.is_deactivated && !pin.is_expired,
-      ).length;
+      const inactiveCount = pinInactiveResponse.data.count;
+
+      const activeCount = pinActiveResponse.data.count;
+      console.log(activeCount);
 
       const flaggedCount = flaggedComms.data.count;
-      console.log(flaggedComms.data.count);
-      console.log(flaggedComms.data);
 
       setActivePinCount(activeCount);
       setInactivePinCount(inactiveCount);
@@ -216,7 +221,28 @@ function Pins() {
     }
   };
 
-  const getPins = async (signal?: AbortSignal, search = searchFor) => {
+  const getActivePins = async (signal?: AbortSignal, search = searchFor) => {
+    try {
+      if (search) {
+        params.set("search", search);
+      }
+
+      const parameters = params.toString();
+
+      const response = await api.get(
+        `/admin/pins?status=active${parameters ? `&${parameters}` : ""}`,
+        { signal },
+      );
+      setActivePins(response.data.pins);
+    } catch (err: any) {
+      if (err.name === "CanceledError") {
+        return;
+      }
+      console.log(err.response?.data);
+    }
+  };
+
+  const getInactivePins = async (signal?: AbortSignal, search = searchFor) => {
     try {
       if (status == "Expiry") {
         params.set("is_expired", "true");
@@ -233,10 +259,10 @@ function Pins() {
       const parameters = params.toString();
 
       const response = await api.get(
-        `/admin/pins${parameters ? `?${parameters}` : ""}`,
+        `/admin/pins?status=inactive${parameters ? `&${parameters}` : ""}`,
         { signal },
       );
-      setPins(response.data.pins);
+      setInactivePins(response.data.pins);
     } catch (err: any) {
       if (err.name === "CanceledError") {
         return;
@@ -292,7 +318,8 @@ function Pins() {
         getHazardFlagged(controller.signal),
         getHazards(controller.signal),
         getHazardCounts(controller.signal),
-        getPins(controller.signal),
+        getActivePins(controller.signal),
+        getInactivePins(controller.signal),
         getPinCounts(controller.signal),
         getFlaggedComments(controller.signal),
       ]);
@@ -312,18 +339,17 @@ function Pins() {
     const controller = new AbortController();
 
     try {
-      if (!isEvac) {
-        setLoading(true);
-        await getHazards(controller.signal);
-      }
+      setLoading(true);
 
-      if (isEvac) {
-        setLoading(true);
-        await getPins(controller.signal);
+      if (!isEvac) {
+        await getHazards(controller.signal);
+      } else if (activeEvac) {
+        await getActivePins(controller.signal);
+      } else if (isEvac && !activeEvac) {
+        await getInactivePins(controller.signal);
       }
 
       if (flaggedCom) {
-        setLoading(true);
         await getFlaggedComments(controller.signal);
       }
     } catch (err: any) {
@@ -599,7 +625,9 @@ function Pins() {
                       ></InputGroupInput>
                       <InputGroupAddon align="inline-end">
                         <Search
-                          onClick={() => getPins()}
+                          onClick={() => {
+                            getFiltered();
+                          }}
                           id="Admin_PinsEvacSearchBtn"
                         />
                       </InputGroupAddon>
@@ -706,22 +734,20 @@ function Pins() {
                 </>
               ) : isEvac ? (
                 activeEvac ? (
-                  pins.map((pin) => {
-                    if (!pin.is_deactivated && !pin.is_expired) {
-                      return (
-                        <Fragment key={pin.id}>
-                          <Row
-                            postId={String(pin.id)}
-                            title={pin.name}
-                            address={pin.address}
-                            datePosted={pin.posted_at}
-                            link={`/admin-evacDetails/${pin.id}`}
-                            buttonId="Admin_PinsActiveEvacDetailsBtn"
-                            showBtn
-                          ></Row>
-                        </Fragment>
-                      );
-                    }
+                  activePins.map((pin) => {
+                    return (
+                      <Fragment key={pin.id}>
+                        <Row
+                          postId={String(pin.id)}
+                          title={pin.name}
+                          address={pin.address}
+                          datePosted={pin.posted_at}
+                          link={`/admin-evacDetails/${pin.id}`}
+                          buttonId="Admin_PinsActiveEvacDetailsBtn"
+                          showBtn
+                        ></Row>
+                      </Fragment>
+                    );
                   })
                 ) : flaggedCom ? (
                   flaggedComms.map((comment, index) => (
@@ -749,29 +775,32 @@ function Pins() {
                     </Fragment>
                   ))
                 ) : (
-                  pins.map((pin) => {
-                    if (pin.is_deactivated || pin.is_expired) {
-                      return (
-                        <Fragment key={pin.id}>
-                          <Row
-                            postId={String(pin.id)}
-                            title={pin.name}
-                            address={pin.address}
-                            datePosted={pin.posted_at}
-                            link={`/admin-evacDetails/${pin.id}`}
-                            isExpired={pin.is_expired}
-                            isDeactivated={pin.is_deactivated}
-                            buttonId="Admin_PinsInactiveEvacDetailsBtn"
-                            showBtn
-                          ></Row>
-                        </Fragment>
-                      );
-                    }
+                  inactivePins.map((pin) => {
+                    return (
+                      <Fragment key={pin.id}>
+                        <Row
+                          postId={String(pin.id)}
+                          title={pin.name}
+                          address={pin.address}
+                          datePosted={pin.posted_at}
+                          link={`/admin-evacDetails/${pin.id}`}
+                          isExpired={pin.is_expired}
+                          isDeactivated={pin.is_deactivated}
+                          isUserDeac={pin.is_user_deactivated}
+                          buttonId="Admin_PinsInactiveEvacDetailsBtn"
+                          showBtn
+                        ></Row>
+                      </Fragment>
+                    );
                   })
                 )
               ) : !isEvac && activeHaz ? (
                 activeHazards.map((path) => {
-                  if (!path.is_expired && !path.is_deactivated) {
+                  if (
+                    !path.is_expired &&
+                    !path.is_deactivated &&
+                    !path.is_user_deactivated
+                  ) {
                     return (
                       <Fragment key={path.id}>
                         <Row
@@ -790,16 +819,28 @@ function Pins() {
                             id="Admin_PinsActiveHazLevel"
                             style={{
                               backgroundColor:
-                                path.level === "Gutter" ||
-                                path.level === "Half Knee"
+                                path.level === "Gutter-Deep" ||
+                                path.level === "Half Knee-Deep"
                                   ? colorHazard.lightBlue
-                                  : path.level === "Half Tire" ||
-                                      path.level === "Knee"
+                                  : path.level === "Half Tire-Deep" ||
+                                      path.level === "Knee-Deep"
                                     ? colorHazard.darkBlue
-                                    : path.level === "Tire" ||
-                                        path.level === "Waist" ||
-                                        path.level === "chest"
+                                    : path.level === "Tire-Deep" ||
+                                        path.level === "Waist-Deep" ||
+                                        path.level === "Chest-Deep"
                                       ? colorHazard.red
+                                      : colorHazard.fallback,
+                              color:
+                                path.level === "Gutter-Deep" ||
+                                path.level === "Half Knee-Deep"
+                                  ? "Black"
+                                  : path.level === "Half Tire-Deep" ||
+                                      path.level === "Knee-Deep"
+                                    ? "White"
+                                    : path.level === "Tire-Deep" ||
+                                        path.level === "Waist-Deep" ||
+                                        path.level === "Chest-Deep"
+                                      ? "White"
                                       : colorHazard.fallback,
                             }}
                           >
@@ -825,7 +866,11 @@ function Pins() {
                 ))
               ) : (
                 activeHazards.map((path) => {
-                  if (path.is_expired || path.is_deactivated) {
+                  if (
+                    path.is_expired ||
+                    path.is_deactivated ||
+                    path.is_user_deactivated
+                  ) {
                     return (
                       <Fragment key={path.id}>
                         <Row
@@ -835,6 +880,8 @@ function Pins() {
                           datePosted={path.posted_at}
                           link={`/admin-hazardDetails/${path.id}`}
                           isExpired={path.is_expired}
+                          isDeactivated={path.is_deactivated}
+                          isUserDeac={path.is_user_deactivated}
                           buttonId="Admin_PinsInactiveHazDetailsBtn"
                           showBtn
                         >
@@ -843,16 +890,28 @@ function Pins() {
                             id="Admin_PinsInactiveHazLevel"
                             style={{
                               backgroundColor:
-                                path.level === "Gutter" ||
-                                path.level === "Half Knee"
+                                path.level === "Gutter-Deep" ||
+                                path.level === "Half Knee-Deep"
                                   ? colorHazard.lightBlue
-                                  : path.level === "Half Tire" ||
-                                      path.level === "Knee"
+                                  : path.level === "Half Tire-Deep" ||
+                                      path.level === "Knee-Deep"
                                     ? colorHazard.darkBlue
-                                    : path.level === "Tire" ||
-                                        path.level === "Waist" ||
-                                        path.level === "chest"
+                                    : path.level === "Tire-Deep" ||
+                                        path.level === "Waist-Deep" ||
+                                        path.level === "Chest-Deep"
                                       ? colorHazard.red
+                                      : colorHazard.fallback,
+                              color:
+                                path.level === "Gutter-Deep" ||
+                                path.level === "Half Knee-Deep"
+                                  ? "Black"
+                                  : path.level === "Half Tire-Deep" ||
+                                      path.level === "Knee-Deep"
+                                    ? "White"
+                                    : path.level === "Tire-Deep" ||
+                                        path.level === "Waist-Deep" ||
+                                        path.level === "Chest-Deep"
+                                      ? "White"
                                       : colorHazard.fallback,
                             }}
                           >

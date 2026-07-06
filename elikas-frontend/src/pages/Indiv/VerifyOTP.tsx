@@ -37,7 +37,7 @@ function VerifyOTP() {
     toast.promise(response, {
       loading: "Processing your verification...",
       success: "Contact Number verified!",
-      error: "Contact Number verification failed. Please try agian.",
+      error: "Contact Number verification failed. Please try again.",
       position: "top-center",
     });
 
@@ -102,9 +102,9 @@ function VerifyOTP() {
   }, [running]);
 
   return (
-    <div className="min-h-screen flex justify-center p-6 pt-12">
+    <div className="min-h-screen flex justify-center p-6 pt-28">
       <div className="w-full max-w-sm flex flex-col gap-4">
-        <div className="h-1/2 flex justify-center flex-col gap-4">
+        <div className="flex justify-center flex-col gap-4">
           <div className="mb-8">
             <h1
               className="BeVietnamPro text-2xl text-center font-bold"
