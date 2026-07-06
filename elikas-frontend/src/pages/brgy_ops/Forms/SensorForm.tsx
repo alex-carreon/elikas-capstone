@@ -397,11 +397,20 @@ function SensorForm() {
         <div className="w-full max-w-sm">
           {id ? (
             !isEditable ? (
-              <>
+              <div className="w-full flex flex-col items-center gap-4">
+                <ButtonComp
+                  text="Sensor Logs"
+                  id="Sensor_LogsBtn"
+                  variant="outline"
+                  heightSize="38px"
+                  widthSize="100%"
+                  onClick={() => navigate(`/Sensor/${sensorCode}/Logs`)}
+                  type="button"
+                ></ButtonComp>
                 <div className="w-full mx-2 flex justify-evenly shrink gap-4">
                   <ButtonComp
-                    text="Update"
-                    id="EvacPin_UpdatePinBtn"
+                    text="Edit"
+                    id="Sensor_EditBtn"
                     variant="primary"
                     heightSize="38px"
                     widthSize="20"
@@ -410,7 +419,7 @@ function SensorForm() {
                   ></ButtonComp>
                   <ButtonComp
                     text="Delete"
-                    id="EvacPin_ClosePinBtn"
+                    id="Sensor_DelBtn"
                     variant="important"
                     heightSize="38px"
                     widthSize="20"
@@ -418,7 +427,7 @@ function SensorForm() {
                     onClick={() => setWillDeac(true)}
                   ></ButtonComp>
                 </div>
-              </>
+              </div>
             ) : (
               <>
                 <div className="w-full mx-2 flex justify-evenly shrink gap-4">

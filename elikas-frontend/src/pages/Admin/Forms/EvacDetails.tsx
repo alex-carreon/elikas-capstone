@@ -18,6 +18,8 @@ import AlertDialogue from "@/components/AlertDialogue";
 import { toZonedTime, format } from "date-fns-tz";
 import { handleUpdate, handleReOpen, handleDelete } from "@/lib/evacUtils";
 import { addDays } from "date-fns";
+import Radio from "@/components/Radio";
+import Skeleton from "@mui/material/Skeleton";
 
 type EvacType = {
   id: number;
@@ -122,6 +124,7 @@ function EvacDetails() {
   const [capacityLevels, setCapacityLevels] = useState<CapacityLevel[]>([]);
   const [willOpen, setWillOpen] = useState(false);
   const [willReopen, setWillReopen] = useState(false);
+  const [capLoad, setCapLoad] = useState(false);
 
   const toiletCount = Number(toilet);
   const kitchenCount = Number(kitchen);
@@ -211,6 +214,7 @@ function EvacDetails() {
     try {
       setLoading(true);
       setDisabled(true);
+      setCapLoad(true);
 
       await Promise.all([
         getEvacDetails(controller.signal),
@@ -222,6 +226,7 @@ function EvacDetails() {
     } finally {
       setLoading(false);
       setDisabled(false);
+      setCapLoad(false);
     }
 
     return () => controller.abort();
@@ -311,15 +316,17 @@ function EvacDetails() {
     response
       .then(async () => {
         setIsFull(!isFull);
+        setDisabled(false);
         await getEvacDetails();
       })
       .catch((err: any) => {
+        setDisabled(false);
         console.log(err.response.data);
       });
   };
 
   const reOpen = (e: React.FormEvent) => {
-    const expDate = expiry ?? addDays(new Date(), 7);
+    const expDate = addDays(new Date(), 7);
 
     handleReOpen({
       e: e,
@@ -390,17 +397,7 @@ function EvacDetails() {
           }}
           onClick={(e) => reOpen(e)}
           disabled={disabled}
-        >
-          <DatePickerInput
-            label="Expiry Date"
-            idField="Admin_EvacDetailsDialogReopenExp"
-            idBtn="Admin_EvacDetailsDialogReopenCalendar"
-            value={expiry}
-            onChange={setExpiry}
-            edit
-            showTime
-          />
-        </AlertDialogue>
+        />
       )}
       {willOpen && (
         <AlertDialogue
@@ -419,20 +416,39 @@ function EvacDetails() {
             setWillOpen(!willOpen);
           }}
         >
-          <SelectDropdown
-            value={capacity}
-            onValueChange={setCapacity}
-            label="Capacity Level*"
-            id="Admin_EvacDetailsDialogOpenCapacity"
-            onSubmit={(e) => setCapacity(e.target.value)}
-            options={capacityLevels
-              ?.filter((level) => level.capacity_level !== "Full")
-              .map((level) => ({
-                label: level.capacity_level,
-                value: String(level.id),
+          {capLoad ? (
+            <div className="flex flex-col gap-4">
+              <div className="flex gap-2">
+                <Skeleton className="w-4 h-4 rounded-lg bg-[#59260B]/30" />
+                <Skeleton className="w-1/2 h-4 rounded-lg bg-[#59260B]/30" />
+              </div>
+              <div className="flex gap-2">
+                <Skeleton className="w-4 h-4 rounded-lg bg-[#59260B]/30" />
+                <Skeleton className="w-1/2 h-4 rounded-lg bg-[#59260B]/30" />
+              </div>
+              <div className="flex gap-2">
+                <Skeleton className="w-4 h-4 rounded-lg bg-[#59260B]/30" />
+                <Skeleton className="w-1/2 h-4 rounded-lg bg-[#59260B]/30" />
+              </div>
+              <div className="flex gap-2">
+                <Skeleton className="w-4 h-4 rounded-lg bg-[#59260B]/30" />
+                <Skeleton className="w-1/2 h-4 rounded-lg bg-[#59260B]/30" />
+              </div>
+            </div>
+          ) : (
+            <Radio
+              key={1}
+              isRequired
+              onValueChange={setCapacity}
+              onSubmit={(e) => setCapacity(e.target.value)}
+              options={capacityLevels.map((capacity) => ({
+                key: capacity.id,
+                id: String(capacity.id),
+                value: String(capacity.id),
+                label: capacity.capacity_level,
               }))}
-            isRequired
-          />
+            />
+          )}
         </AlertDialogue>
       )}
       <FormLayout
@@ -840,7 +856,7 @@ function EvacDetails() {
                   <div className="w-full max-w-md flex justify-center">
                     <ButtonComp
                       text="Re-Open Pin"
-                      variant="primary"
+                      variant="outline"
                       id="Admin_EvacDetailsReopenBtn"
                       heightSize="38px"
                       widthSize="100%"
