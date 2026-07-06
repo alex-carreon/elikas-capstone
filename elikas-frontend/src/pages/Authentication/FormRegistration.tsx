@@ -121,6 +121,8 @@ function FormRegistration() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
+      setErrors({ pw: "", confirmPw: "", email: "" });
+
       if (pw != confirmPw) {
         throw new Error("Passwords do not match");
       }

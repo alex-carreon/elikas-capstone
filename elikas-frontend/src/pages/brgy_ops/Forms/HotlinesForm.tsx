@@ -59,9 +59,12 @@ function HotlinesForm() {
   const [isEditable, setIsEditable] = useState(false);
   const [disabled, setDisabled] = useState(false);
   const [showDelete, setShowDelete] = useState(false);
+  const [error, setError] = useState({ primary: "", secondary: "" });
 
   const navigate = useNavigate();
   const { id } = useParams();
+
+  const contactValidate = /^\(0\d{2}\)\d{7}$|^\(02\)\d{8}$|^09\d{9}$/;
 
   useEffect(() => {
     if (id) {
@@ -132,6 +135,22 @@ function HotlinesForm() {
   const create = (e: React.FormEvent) => {
     e.preventDefault();
 
+    if (!contactValidate.test(primaryNo)) {
+      setError({ primary: "Enter a valid contact number", secondary: "" });
+      return;
+    } else {
+      setError({ primary: "", secondary: "" });
+    }
+
+    if (secondaryNo) {
+      if (!contactValidate.test(secondaryNo)) {
+        setError({ primary: "", secondary: "Enter a valid contact number" });
+        return;
+      } else {
+        setError({ primary: "", secondary: "" });
+      }
+    }
+
     handleSubmit({
       e: e,
       title: title,
@@ -145,6 +164,22 @@ function HotlinesForm() {
   };
 
   const update = (e: React.FormEvent) => {
+    if (!contactValidate.test(primaryNo)) {
+      setError({ primary: "Enter a valid contact number", secondary: "" });
+      return;
+    } else {
+      setError({ primary: "", secondary: "" });
+    }
+
+    if (secondaryNo) {
+      if (!contactValidate.test(secondaryNo)) {
+        setError({ primary: "", secondary: "Enter a valid contact number" });
+        return;
+      } else {
+        setError({ primary: "", secondary: "" });
+      }
+    }
+
     handleUpdate({
       e: e,
       title: title,
@@ -289,21 +324,25 @@ function HotlinesForm() {
               <TextField
                 label="Primary Contact Number*"
                 description="This will be the number the citizens will copy."
+                placeholder="(XXX or XX)XXXXXXX or 09XXXXXXXXX"
                 id="Hotline_OfficialNumberField"
                 inputType="text"
                 onSubmit={(e) => setPrimaryNo(e.target.value)}
                 value={id && primaryNo}
                 isRequired={!id}
                 readonly={id && !isEditable ? true : false}
+                error={error.primary}
               ></TextField>
               <TextField
                 label="Secondary Contact Number (optional)"
                 description="This will be the number citizens will use in case the official number is unreachable."
+                placeholder="(XXX or XX)XXXXXXX or 09XXXXXXXXX"
                 id="Hotline_SecondNumberField"
                 inputType="text"
                 onSubmit={(e) => setSecondaryNo(e.target.value)}
                 value={id && secondaryNo}
                 readonly={id && !isEditable ? true : false}
+                error={error.secondary}
               ></TextField>
 
               {id ? (
