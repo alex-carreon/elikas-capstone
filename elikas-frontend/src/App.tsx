@@ -63,6 +63,7 @@ const ChangeEmail = lazy(() => import("@/pages/Shared/ChangeEmail"));
 const Layout = lazy(() => import("@/pages/Admin/layout"));
 const EvacForm = lazy(() => import("@/pages/Shared/Forms/EvacForms"));
 const HazardForm = lazy(() => import("@/pages/Shared/Forms/HazardForm"));
+const SensorLogsBrgy = lazy(() => import("@/pages/brgy_ops/SensorLogs.tsx"));
 
 function RootRedirect() {
   const { role, loading } = useUserContext();
@@ -125,6 +126,10 @@ function App() {
                 <Route path="/HotlinesForm/:id" element={<HotlinesForm />} />
                 <Route path="/SensorForm" element={<SensorForm />} />
                 <Route path="/SensorForm/:id" element={<SensorForm />} />
+                <Route
+                  path="/Sensor/:sensorcode/Logs"
+                  element={<SensorLogsBrgy />}
+                />
               </Route>
             </Route>
 
