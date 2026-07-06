@@ -1,4 +1,4 @@
-.env
+.env.testing
 
 # Playwright
 node_modules/
