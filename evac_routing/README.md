@@ -35,6 +35,8 @@ The profile file `elikas_flood.brf` lives on the BRouter server inside its `prof
 
 BRouter does not connect to any database and does not store any flood data on its own. **The Laravel backend is responsible for fetching active flood paths and injecting them during request time.** This is by design since flood conditions change in real time.
 
+>For this project, the profile is customized for San Juan City's terrain and modes of transportation specifically. The profile is functional but may not be best optimized for other cities. 
+
 
 ## Cost Penalites & Tolerance 
 
@@ -47,25 +49,26 @@ In the API layer's `Routing Service`, the cost penalties for the flood levels ar
 ```php
 class RoutingService
 {
-    private const BBOX_BUFFER = 0.03;  // 3 km of padding to accomodate detours
+    private const BBOX_BUFFER = 0.02;  // 2 km of padding to accomodate detours
 
+    // Cost penalties for different flood levels
     private const FLOOD_WEIGHTS = [
-        1 => 50,      // Gutter-Deep
-        2 => 200,     // Half Knee-Deep
-        3 => 600,     // Half Tire-Deep
-        4 => 1500,    // Knee-Deep
-        5 => 3000,    // Tire-Deep
-        6 => 6000,    // Waist-Deep
-        7 => 10000,   // Chest-Deep
+        'Gutter-Deep' => 5,
+        'Half Knee-Deep' => 20,
+        'Half Tire-Deep' => 60,
+        'Knee-Deep' => 150,
+        'Tire-Deep' => 300,
+        'Waist-Deep' => 600,
+        'Chest-Deep' => -1,  // Impassable
     ];
 
     // ...
 }
 ```
 
-The base cost of any normal road in the profile is between 1.0 and 3.5, so a weight of 600 already makes a flooded road roughly 600× more expensive than a dry one. The weight threshold for "impassable" in BRouter is anything **≥ 10000**. 
+The base cost of any normal road in the profile is between 1.0 and 3.5, so a weight of 600 already makes a flooded road roughly 600× more expensive than a dry one. To mark a flooded route as completely impassable via the API, the weight must be explicitly set to -1.
 
-In effect, floods that are **chest-deep will be competely avoided** and the app will try to find a safer path within a set bounding box. The app's routing logic will allow **detours within 3 km** of the most direct pedestrian route from the start coordinates to the end coordinates.
+In effect, floods that are **chest-deep will be competely avoided** and the app will try to find a safer path within a set bounding box. The app's routing logic will allow **detours within 2 km** of the most direct pedestrian route from the start coordinates to the end coordinates.
 
 If no routes are found in the case that routes have dangerous flooding, do not have any pedestrian-friendly pathways, or detours are too far, the app will throw a `422 NoRouteFoundException`. 
 
@@ -118,23 +121,23 @@ GET http://brouter:17777/brouter
     &profile=elikas_flood
     &alternativeidx=0
     &format=geojson
-    &polylines=121.0250,14.6050,121.0255,14.6048,50|121.0290,14.6070,121.0295,14.6065,10000
+    &polylines=121.0250,14.6050,121.0255,14.6048,5|121.0290,14.6070,121.0295,14.6065,-1
 ```
 
 Breaking down the `polylines` value:
 
 ```
-121.0250,14.6050,121.0255,14.6048,50
-│                                  │
-│   Flood 1 coordinates            │
-│                                  └── weight 50 = Gutter-Deep
+121.0250,14.6050,121.0255,14.6048,5
+│                                 │
+│   Flood 1 coordinates           │
+│                                 └── weight 5 = Gutter-Deep
 │
 └── coordinate pairs of the linestring
 
-121.0290,14.6070,121.0295,14.6065,10000
-│                                   │
-│   Flood 2 coordinates             │
-│                                   └── weight 10000 = Chest-Deep (impassable)
+121.0290,14.6070,121.0295,14.6065,-1
+│                                  │
+│   Flood 2 coordinates            │
+│                                  └── weight -1 = Chest-Deep (impassable)
 └── coordinate pairs of the linestring
 ```
 
@@ -185,7 +188,7 @@ AND fp.expiry > NOW()
 AND ST_Intersects(fp.path, ST_GeomFromText(?))
 ```
 
-`fp.path` is a MariaDB `LINESTRING`. Using `ST_AsText(fp.path)` in the SELECT formats into a readable well-known text (WKT) string like `LINESTRING(14.6050 121.0250, 14.6048 121.0255)`.
+`fp.path` is a MariaDB `LINESTRING`. Using `ST_AsText(fp.path)` in the SELECT formats into a readable well-known text (WKT) string like `LINESTRING(121.0250 14.6050 , 121.0255 14.6048)`.
 
 >WKT is an industry-wide OpenGIS (Geographic Information System) standard designed specifically for formatting GIS data into a meaningful format. In the database, MariaDB stores this information in a binary data format that is not human-readable. 
 
