@@ -18,8 +18,22 @@
 #include <Update.h>
 #include <ArduinoOTA.h>
 
-const char* currentFirmwareVersion = "1.0.1";
-const char* sensorId = SECRET_SENSOR;
+float readDistance();
+void saveConfigCallback ();
+String getPortalPassword ();
+String getUniqueDefaultPass();
+void manageConnection(bool isInitialSetup);
+void printStatus();
+void checkForFirmwareUpdate();
+void downloadAndApplyFirmware(String url);
+void sendFloodData(float distance);
+void timeAvailable(struct timeval *t);
+String getFormattedTime();
+void trackTrendAndEvaluateState(float newMedian);
+float getMedianReading();
+
+const char* currentFirmwareVersion = "1.3.1";
+String sensorCode = "";
 
 // Github Repo Details
 const char* github_owner = GITHUB_OWNER;
@@ -43,22 +57,51 @@ bool timeSynchronized = false;
 Preferences preferences;
 AsyncWebServer server(80);
 
-unsigned long lastSendTime = 0;
-const unsigned long sendInterval = 10000;
+// Filtering and Sampling Specs 
+const int BURST_SIZE = 5;               // Number of readings per 1-minute burst
+const unsigned long BURST_INTERVAL = 60000; // 1 minute between sampling bursts
+
+// Relay Specs 
+const unsigned long QUIESCENT_INTERVAL = 600000; // 10 minutes 
+const unsigned long ACTIVE_INTERVAL = 60000;     // 1 minute 
+
+// Trend Detection Specs
+const float ELEVATION_THRESHOLD = 0.02; // 3 cm (0.03m) threshold to count as a "rise"
+const int REQUIRED_CONSECUTIVE_RISES = 3; // N stable readings to confirm trend (Debouncing)
+
+// State Tracking Variables
+unsigned long lastBurstTime = 0;
+unsigned long lastTransmissionTime = 0;
+bool isActiveMode = false;
+
+// Historical Tracking for Trend Analysis
+float recentMedians[REQUIRED_CONSECUTIVE_RISES + 1] = {0}; 
+int storedMediansCount = 0;
+
+int activeModeCooldownTimer = 0; // Tracks remaining minutes to hold ACTIVE mode
+const int MINIMUM_ACTIVE_MINUTES = 10; // Hold high-frequency reporting for at least 10 minutes
+
 
 void setup() {
   Serial.begin(115200);
   pinMode(TRIG_PIN, OUTPUT);
   pinMode(ECHO_PIN, INPUT);
 
+  // load stored sensor code from nvs
+  preferences.begin("sensor", true); // true = read-only mode
+  sensorCode = preferences.getString("sensor_code"); 
+  preferences.end();
+
   manageConnection(true);
 
+  WebSerial.begin(&server);
+  server.begin();   // start AsyncWebServer
+
+  // initialize ntp and OTA after a live wifi connection
   sntp_set_time_sync_notification_cb(timeAvailable);   // trip time sync flag
   configTime(gmtOffset_sec, daylightOffset_sec, ntpServer1, ntpServer2);
 
   ArduinoOTA.begin();
-
-  WebSerial.begin(&server);
 
   WebSerial.onMessage([](uint8_t *data, size_t len) {
     Serial.printf("Received %lu bytes from WebSerial: ", len);
@@ -95,11 +138,8 @@ void setup() {
       checkForFirmwareUpdate();
     } 
   });
- 
-  // Start AsyncWebServer
-  server.begin();
 
-  checkForFirmwareUpdate();
+  //checkForFirmwareUpdate();
 }
 
 
@@ -109,21 +149,42 @@ void loop() {
   WebSerial.loop();
 
   unsigned long now = millis();
-  if (now - lastSendTime >= sendInterval) {
-    lastSendTime = now;
+
+  // Per Minute Sampling Burst & Trend Evaluation
+  if (now - lastBurstTime >= BURST_INTERVAL) {
+    lastBurstTime = now;
+
     if (timeSynchronized) {
-      float distance = readDistance();
-      if (distance < 0) {
-        WebSerial.println("No reading / out of range");
+      float currentMedian = getMedianReading();
+      
+      if (currentMedian < 0) {
+        WebSerial.println("[Burst Error] Out of range or invalid reading.");
       } else {
-        sendFloodData(distance);
+        WebSerial.printf("[Burst Success] Minute Median Distance: %.2fm\n", currentMedian);
+        trackTrendAndEvaluateState(currentMedian);
       }
     } else {
       WebSerial.println("Waiting for NTP sync...");
     }
   }
-}
 
+  // Adaptive Transmission Strategy
+  unsigned long currentTransmissionInterval = isActiveMode ? ACTIVE_INTERVAL : QUIESCENT_INTERVAL;
+
+  if (now - lastTransmissionTime >= currentTransmissionInterval) {
+    lastTransmissionTime = now;
+
+    if (timeSynchronized) {
+      // Fetch a fresh filtered median directly for the transmission payload
+      float transmissionDistance = getMedianReading(); 
+      
+      if (transmissionDistance >= 0) {
+        WebSerial.printf("Transmitting data. Mode: %s\n", isActiveMode ? "ACTIVE" : "QUIESCENT");
+        sendFloodData(transmissionDistance);
+      }
+    }
+  }
+}
 
 float readDistance() {
   digitalWrite(TRIG_PIN, LOW); 
@@ -142,6 +203,9 @@ float readDistance() {
 
   // if reading is outside reliable sensor range (20 cm – 450 cm)
   if (distance < 20 || distance > 450) return -1; 
+
+  // convert into meters
+  distance /= 100;
 
   return distance;
 }
@@ -175,26 +239,48 @@ void manageConnection(bool isInitialSetup) {
   if (WiFi.status() == WL_CONNECTED && !isInitialSetup) return;
 
   if (!isInitialSetup) {
-    WebSerial.println("WiFi Connection Lost! Re-launching Config Portal...");
+    Serial.println("WiFi Connection Lost! Re-launching Config Portal...");
   }
 
   WiFiManager wm;
   String savedPass = getPortalPassword();
-  WebSerial.println("Current Setup Password: " + savedPass);
+
+  // fetch current sensor code to pre-fill the form
+  preferences.begin("sensor", true);
+  String currentSensorCode = preferences.getString("sensor_code", "SR-");
+  preferences.end();
+
+  Serial.println("Assigned Sensor Code: " + currentSensorCode);
+  Serial.println("Current Setup Password: " + savedPass);
+
+  String sensor_code_html = "<br>Sensor Code (Required)";
+  WiFiManagerParameter sensor_code(
+    "sensor_code",  // key for nvs
+    sensor_code_html.c_str(),  // html string preceding input
+    currentSensorCode.c_str(),  // pre-fill input with sensor code if saved
+    20,  // max length
+    "maxlength='20' required " 
+  );
+  WiFiManagerParameter sc_html_closer("<br>");
+
+  WiFiManagerParameter sc_note("<p><em>Fill in the sensor code after registration of the unit on the eLikas platform. Make sure the code is correct to see readings on the app.</em></p><br>");
 
   // hides custom password field under advanced settings
-  String html = "<details><summary><b>Advanced Settings</b></summary><br>Set New Setup Password";
+  String ap_html = "<details><summary><b>Advanced Settings</b></summary><br>Set New Setup Password";
   WiFiManagerParameter custom_ap_pass(
     "ap_pass",  // key for nvs
-    html.c_str(),  // html string preceding input
+    ap_html.c_str(),  // html string preceding input
     savedPass.c_str(),  // pre-fill input with current password
     32,  // max length
     "minlength='8' required title='Password must be at least 8 characters'" // textbox enforcement of 8-char minimum
   );
-  WiFiManagerParameter html_closer("</details><br>");
-
+  WiFiManagerParameter pw_html_closer("</details><br>");
+  
+  wm.addParameter(&sensor_code);
+  wm.addParameter(&sc_note);
+  wm.addParameter(&sc_html_closer);
   wm.addParameter(&custom_ap_pass);
-  wm.addParameter(&html_closer);
+  wm.addParameter(&pw_html_closer);
 
   // configure basic timeouts
   wm.setConfigPortalTimeout(300); 
@@ -208,7 +294,7 @@ void manageConnection(bool isInitialSetup) {
     ESP.restart();
   }
 
-  // if sensor is wifi configured, save the ap password
+  // once connected OR when user hits "Save"
   if (shouldSaveConfig) {
     String newPass = String(custom_ap_pass.getValue());  // retrieve value of portal textbox
     if (newPass.length() >= 8) {
@@ -217,11 +303,22 @@ void manageConnection(bool isInitialSetup) {
       preferences.end();
       WebSerial.println("New password saved to memory: " + newPass);
     } else {
-      WebSerial.println("Error: Password too short! Ignored.");
-    }
+      Serial.println("Error: Password too short! Ignored.");
+    } 
+
+    sensorCode = String(sensor_code.getValue());
+    preferences.begin("sensor", false);
+    preferences.putString("ap_pass", newPass);  // write new password into nvs if valid
+    preferences.end();
+    Serial.println("Assigned Sensor Code: " + sensorCode);
+
     shouldSaveConfig = false; // reset the flag so it doesn't loop save
+
+    ESP.restart();
   }
 }
+
+
 
 void printStatus() {
   WebSerial.println("Connected! IP: " + WiFi.localIP().toString());
@@ -392,10 +489,10 @@ void sendFloodData(float distance) {
   String currentTimestamp = getFormattedTime();
 
   JsonDocument doc;
-  doc["api_key"] = api_key;
-  doc["sensor_id"] = sensorId;
-  doc["distance_cm"] = distance;
-  doc["log_time"] = currentTimestamp;
+  doc["apiKey"] = api_key;
+  doc["sensorCode"] = sensorCode;
+  doc["waterLevel"] = distance;
+  doc["sensorTimestamp"] = currentTimestamp;
 
   String payload;
   serializeJson(doc, payload);
@@ -427,4 +524,89 @@ String getFormattedTime() {
   strftime(buffer, sizeof(buffer), "%Y-%m-%d %H:%M:%S", &timeinfo);   // formats time into "YYYY-MM-DD HH:MM:SS" if successful
 
   return String(buffer);
+}
+
+float getMedianReading() {
+  float readings[BURST_SIZE];
+  int validCount = 0;
+
+  // Collect a rapid burst of ultrasonic measurements
+  for (int i = 0; i < BURST_SIZE; i++) {
+    float raw = readDistance();
+    if (raw > 0) {   // filter out immediate out-of-range (-1) errors
+      readings[validCount] = raw;
+      validCount++;
+    }
+    delay(40);   // small delay between pulses to prevent echo overlap
+  }
+
+  // if no valid readings were collected at all, return error
+  if (validCount == 0) return -1.0;
+
+  // Sort the valid readings (Simple Bubble Sort)
+  for (int i = 0; i < validCount - 1; i++) {
+    for (int j = 0; j < validCount - i - 1; j++) {
+      if (readings[j] > readings[j + 1]) {
+        float temp = readings[j];
+        readings[j] = readings[j + 1];
+        readings[j + 1] = temp;
+      }
+    }
+  }
+
+  // Return the median 
+  return readings[validCount / 2];
+}
+
+void trackTrendAndEvaluateState(float newMedian) {
+  if (newMedian < 0) return; // Ignore invalid burst measurements
+
+  // Shift history array to make room for the latest median
+  // [Index 0: Oldest Reading] <--- [Index 1] <--- [Index 2] <--- [Index 3: Newest Reading]
+  for (int i = 0; i < REQUIRED_CONSECUTIVE_RISES; i++) {
+    recentMedians[i] = recentMedians[i + 1];
+  }
+
+  // Store the newly calculated burst median at the end of the history array
+  recentMedians[REQUIRED_CONSECUTIVE_RISES] = newMedian;
+
+  // Wait for more readings if less than required for debouncing 
+  if (storedMediansCount <= REQUIRED_CONSECUTIVE_RISES) {
+    storedMediansCount++;
+    return; 
+  }
+
+  // Compare oldest reading in the window to newest reading
+  float oldestDistance = recentMedians[0];
+  float newestDistance = recentMedians[REQUIRED_CONSECUTIVE_RISES];
+  
+  // Total rise over the last 3 minutes
+  float netRise = oldestDistance - newestDistance; 
+
+  // Over 3 minutes, the total cumulative rise must exceed 3 times the single-minute threshold (e.g., 3cm * 3 = 9cm)
+  float totalRequiredRise = ELEVATION_THRESHOLD * REQUIRED_CONSECUTIVE_RISES;
+
+  bool isSustainedRise = (netRise >= totalRequiredRise);
+
+  // State change logic
+  if (isSustainedRise) {
+    // trigger/renew the cooldown lock
+    activeModeCooldownTimer = MINIMUM_ACTIVE_MINUTES; 
+    
+    if (!isActiveMode) {
+      isActiveMode = true;
+      WebSerial.printf("!!! CRITICAL SURGE DETECTED !!! Net rise of %.2fm in 3 mins. Escalating to ACTIVE Mode!\n", netRise);
+    }
+  } 
+  else if (isActiveMode) {
+    // If the 3-minute net rise target isn't met, tick down our safe lockout timer
+    if (activeModeCooldownTimer > 0) {
+      activeModeCooldownTimer--;
+      WebSerial.printf("[Safety Lock] Surge tapering. Holding ACTIVE mode for %d more minutes...\n", activeModeCooldownTimer);
+    } else {
+      // Cooldown has completely expired, safe to revert
+      isActiveMode = false;
+      WebSerial.println("Sustained surge ended and cooldown expired. Reverting to Normal Mode (10-min intervals).");
+    }
+  }
 }

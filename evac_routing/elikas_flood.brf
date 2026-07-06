@@ -1,0 +1,226 @@
+# eLikas Flood Evacuation Routing Profile
+# ----------------------------------------
+# Purpose: Route evacuees to safety in San Juan City during flood events.
+#
+# Flood awareness is handled at the API call layer, NOT inside this profile.
+# The Laravel backend converts active FloodPaths linestrings into BRouter's
+# `polylines` (weighted nogo) parameter before each routing request. This
+# profile only defines how the router treats the road network itself.
+# BRouter does not connect to any database. It knows nothing about eLikas's flood data on its own. **The Laravel backend is responsible for fetching active flood paths and injecting them into every routing request.**BRouter does not connect to any database. It knows nothing about eLikas's flood data on its own. **The Laravel backend is responsible for fetching active flood paths and injecting them into every routing request.**
+#
+#   Gutter-Deep     -> weight=   50  
+#   Half Knee-Deep  -> weight=  200  
+#   Half Tire-Deep  -> weight=  600  
+#   Knee-Deep       -> weight= 1500  (router prefers restricted/private paths over this)
+#   Tire-Deep       -> weight= 3000  
+#   Waist-Deep      -> weight= 6000  
+#   Chest-Deep      -> weight=   -1  (absolute nogo)
+#
+# The profile's own job is to be a safe, pedestrian-friendly routing profile
+# that uses roads rather than off-road paths, prefers wider streets for safety
+# (easier rescue access), and has no cycling/car bias.
+
+
+---context:global
+
+# Tells profile this is for walking only
+assign validForFoot      = true
+assign validForBikes     = false
+assign validForCars      = false
+
+assign turnInstructionMode         = 1     # 1=auto-choose, can be surfaced in frontend as step by step directions
+assign turnInstructionCatchingRange = 40   # default
+
+# Disable elevation penalites that could possibly compete with flood penalty math
+# Consideration for San Juan's hilly terrain
+assign downhillcost = 0
+assign downhillcutoff = 1.5
+assign uphillcost = 0
+assign uphillcutoff = 1.5
+
+
+---context:way
+
+# ----------------------------------------------------------
+# ACCESS LOGIC
+# Derive whether a pedestrian can legally/physically walk here
+# Based on standard OSM access tag hierarchy
+# Preferred: foot tag, falls back to vehicle tag, falls back to access tag 
+# ----------------------------------------------------------
+
+assign defaultaccess =
+  switch access=
+    1
+  switch or access=private access=no
+    0
+    1
+
+assign footaccess =
+  # Emergency Override: Allow pedestrians on residential/service streets
+  # regardless of 'access=private' tags.
+  if highway=residential|living_street|service then 1
+  else 
+    switch foot=
+      switch vehicle=
+        defaultaccess
+        switch or vehicle=private vehicle=no
+          0
+          1
+    switch or foot=private foot=no
+      0
+      1
+
+# Penalty if there is no obvious foot access
+# Break rules before braving knee-deep water (1500)
+assign accesspenalty =
+  switch footaccess
+    0
+    50
+
+# ----------------------------------------------------------
+# ONEWAY: pedestrians have zero penalty (walkers can go either way)
+# ----------------------------------------------------------
+assign onewaypenalty = 0
+
+# ----------------------------------------------------------
+# TURN COST
+# Roundabouts and are free
+# Turns carry a small cost to discourage zigzag paths
+# ----------------------------------------------------------
+assign turncost =
+  if junction=roundabout then 0
+  else 15
+
+# ----------------------------------------------------------
+# COSTFACTOR
+#
+# Lower = router prefers this road.
+# Minimum value is 1.0 (required by BRouter's cost-cutoff logic).
+#
+# Design preferences:
+# - Wide, open, urban roads (primary/secondary/residential) are cheapest.
+#   More likely to still be accessible and have emergency services present.
+# - Footways, paths, tracks are penalised more. In a flood disaster, these
+#   are more likely to be flooded first and narrow.
+# - Steps are mildly avoided in consideration of people with disabilities, 
+#   the elderly, and possibly exhaustion from navigating floods.
+# - Private and motor-only roads are forbidden.
+# ----------------------------------------------------------
+
+assign costfactor =
+
+  # Hard exclusions 
+  switch and highway= not route=ferry           10000  # not a road at all
+  switch or highway=proposed highway=abandoned  10000  # not yet built or no longer maintained
+  switch highway=construction                   10000  # highly dangerous when flooded
+  switch highway=motorway|motorway_link         10000  # expressways 
+  switch route=ferry                            10000  # no ferries within San Juan
+
+  # Apply access penalty on top of everything else 
+  min 9998             # Cap at 9998 for very expensive, last resort routes that could still be used
+  add accesspenalty   
+  add onewaypenalty
+
+  # Road type cost ladder
+  # Will prefer to keep users on longer paths if it is a safer road class
+  # Primary / trunk / secondary: wide, lit, most likely to have emergency services
+  switch highway=trunk|trunk_link               1.0  # major roads but not expressways (e.g. Aurora Blvd)
+  switch highway=primary|primary_link           1.0
+  switch highway=secondary|secondary_link       1.1
+  switch highway=tertiary|tertiary_link         1.2
+  switch highway=unclassified                   1.3
+
+  # Residential/living streets: good for walking but slower
+  switch highway=residential|living_street      1.3
+  switch highway=service                        1.5
+
+  # Pedestrian infrastructure
+  switch highway=pedestrian                     1.2   # plazas/squares: good
+  switch highway=footway                        1.5   # footways: ok
+  switch highway=cycleway                       1.6   # cycleways: allowed, slightly worse
+  switch highway=path                           2.5   # paths: harder to assess safety
+  switch highway=track                          3.5   # tracks: likely flooded, unmaintained
+  switch highway=bridleway                      4.0   # avoid
+
+  # will probably be preferred over half-tire deep floods or higher
+  switch highway=steps                          15
+
+  # Catch-all for any other highway type
+  # Passable but less ideal than verified roads
+  2.0
+
+# ----------------------------------------------------------
+# PRIORITY CLASSIFIER
+# Once route is chosen, use this prioritization in turn by turn narration
+# e.g. "Turn onto J. Ruiz"
+# Does not affect routing cost.
+# ----------------------------------------------------------
+
+assign priorityclassifier =
+  if highway=motorway           then 30
+  else if highway=motorway_link then 29
+  else if highway=trunk         then 28
+  else if highway=trunk_link    then 27
+  else if highway=primary       then 26
+  else if highway=primary_link  then 25
+  else if highway=secondary     then 24
+  else if highway=secondary_link then 23
+  else if highway=tertiary      then 22
+  else if highway=tertiary_link then 21
+  else if highway=unclassified  then 20
+  else if highway=residential|living_street then 6
+  else if highway=service       then 5
+  else if highway=pedestrian    then 5
+  else if highway=footway|cycleway then 4
+  else if highway=path          then 3
+  else if highway=steps         then 1
+  else 0
+
+assign isbadoneway    = false   # turn off car-specific hints
+assign isgoodoneway   = false
+assign isroundabout   = junction=roundabout    # makes roundabout instructions more specific (e.g. take the 2nd exit)
+assign islinktype     = highway=primary_link|secondary_link|tertiary_link|trunk_link
+assign isgoodforcars  = false
+
+assign classifiermask =
+  add isbadoneway
+  add multiply isgoodoneway 2
+  add multiply isroundabout 4
+  add multiply islinktype 8
+  multiply isgoodforcars 16
+
+
+---context:node
+
+# ----------------------------------------------------------
+# NODE ACCESS
+# Barriers at nodes. In an emergency, barriers are still passable
+# e.g. gates may be opened by emergency services or climbed over
+# Only private/no access tags should block
+# ----------------------------------------------------------
+
+assign defaultaccess =
+  switch access=
+    1
+  switch or access=private access=no
+    0
+    1
+
+assign footaccess =
+  or nodeaccessgranted=yes
+  switch foot=
+    switch vehicle=
+      defaultaccess
+      switch or vehicle=private vehicle=no
+        0
+        1
+  switch or foot=private foot=no
+    0
+    1
+
+# Blocked nodes should be expensive but not always infinite
+# Jumping fences/gates during dangerous situations
+assign initialcost =
+  switch footaccess
+    0
+    400
