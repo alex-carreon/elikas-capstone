@@ -13,6 +13,19 @@ class VerifyFirebaseAppCheck
 
     public function handle(Request $request, Closure $next)
     {
+        // 1. Check if a local debug token is configured in the environment
+        $debugToken = env('FIREBASE_APP_CHECK_DEBUG_TOKEN');
+
+        if ($debugToken) {
+            // 2. Extract the incoming token from the App Check header
+            $incomingToken = $request->header('X-Firebase-AppCheck');
+
+            // 3. If it matches your secret E2E token, let the request pass seamlessly
+            if ($incomingToken === $debugToken) {
+                return $next($request);
+            }
+        }
+
         $token = $request->header('X-Firebase-AppCheck');
 
         if (!$token) {
