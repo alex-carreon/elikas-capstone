@@ -9,16 +9,16 @@ use Illuminate\Http\Client\RequestException;
 
 class RoutingService
 {
-    private const BBOX_BUFFER = 0.03;  // 3 km of padding to accomodate detours
+    private const BBOX_BUFFER = 0.02;  // 2 km of padding to accomodate detours
 
     // Cost penalties for different flood levels
     private const FLOOD_WEIGHTS = [
-        'Gutter-Deep' => 50,
-        'Half Knee-Deep' => 200,
-        'Half Tire-Deep' => 600,
-        'Knee-Deep' => 1500,
-        'Tire-Deep' => 3000,
-        'Waist-Deep' => 6000,
+        'Gutter-Deep' => 5,
+        'Half Knee-Deep' => 20,
+        'Half Tire-Deep' => 60,
+        'Knee-Deep' => 150,
+        'Tire-Deep' => 300,
+        'Waist-Deep' => 600,
         'Chest-Deep' => -1,  // Impassable
     ];
 
@@ -112,8 +112,8 @@ class RoutingService
     // Converts a flood path database row into a polyline string with weight for BRouter
     private function rowToPolyline(object $row): string
     {
-        // Resolve the weight for the flood level, defaulting to a high penalty if unknown
-        $weight = self::FLOOD_WEIGHTS[$row->level_name] ?? 10000;
+        // Default to impassable if unknown
+        $weight = self::FLOOD_WEIGHTS[$row->level_name] ?? -1;
 
         // Build an array of comma-separated coordinates
         $points = $this->parseWkt($row->path_wkt);
