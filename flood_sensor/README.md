@@ -95,7 +95,7 @@ However, since the measured time includes both the forward and return trip, the 
 float distance = (duration * 0.034) / 2.0;
 ```
 
-To ensure reliable readings, the code filters out invalid values:
+To ensure reliable readings, the code filters out invalid values beyond the sensor unit's minimum blind zone of 20cm and the commonly reported practical range of 450cm ([Alam, 2023](https://how2electronics.com/jsn-sr04t-waterproof-ultrasonic-sensor-with-arduino-guide/)) :
 ```
 if (duration == 0) return -1;
 if (distance < 20 || distance > 450) return -1;
@@ -103,13 +103,14 @@ if (distance < 20 || distance > 450) return -1;
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
 
-### Connectivity
+### Connectivity & Set Up
 The module can be deployed without hardcoding Wi-Fi credentials using Wi-Fi Provisioning from WiFiManager.
 
   1. In initial setup, connect to the Wi-Fi network: `FloodSensor-Setup`
   2. Use the unique default password (Format: `eLikas-XXXX`) generated based on the device's MAC address
   3. A web portal will allow the user to select a local SSID and enter the password
       >**Security**: The setup access point (AP) password can be changed from the default password under the Advanced Settings toggle within the web portal. This password is saved to the ESP32's NVS memory and persists through reboots.
+  4. Fill in the sensor code for the unit, which is generated after registering it on the eLikas platform with its details. This is essential so that readings are reflected correctly on the app. 
 
 If the device needs to be moved to a new location or the Setup Password is forgotten, send the character 'R' via Serial Monitor (115200 baud). This wipes all saved Wi-Fi credentials and resets the setup AP password to the default (eLikas-XXXX).
 
