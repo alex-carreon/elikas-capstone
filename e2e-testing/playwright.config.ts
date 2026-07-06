@@ -6,7 +6,7 @@ import { defineConfig, devices } from '@playwright/test';
  */
 import dotenv from 'dotenv';
 import path from 'path';
-dotenv.config({ path: path.resolve(__dirname, '.env') });
+dotenv.config({ path: path.resolve(__dirname, '.env.testing') });
 
 // Determine base URL dynamically 
 const BASE_URL = process.env.PLAYWRIGHT_BASE_URL || 'http://127.0.0.1:5173'; // find playwright base url, use local if not defined (local test)
@@ -34,6 +34,13 @@ export default defineConfig({
 
     /* Collect trace when retrying the failed test. See https://playwright.dev/docs/trace-viewer */
     trace: 'on-first-retry',
+
+    launchOptions: {
+      env: {
+        ...process.env,
+        FIREBASE_APP_CHECK_DEBUG_TOKEN: process.env.FIREBASE_APP_CHECK_DEBUG,
+      },
+    },
   },
 
   /* Configure projects for major browsers */
