@@ -184,6 +184,11 @@ class FeedbackController extends Controller
         try {
             $query = Feedback::with(['user.role'])->where('id', $id);
 
+            if ($request->filled('message')) {
+                $term = '%' . $this->escapeLike((string) $request->query('message')) . '%';
+                $query->where('message', 'LIKE', $term);
+            }
+
             $feedback = $query->first();
 
             if (!$feedback) {
