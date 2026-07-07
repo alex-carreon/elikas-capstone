@@ -1,5 +1,5 @@
 import { Page, expect } from '@playwright/test';
-import { loginAsSeeder, loginAsBarangay } from './authHelper';
+import { loginAsSeeder, loginAsBarangay, loginAsIndiv } from './authHelper';
 import { Chance } from 'chance';
 
 const chance = new Chance();
@@ -61,5 +61,45 @@ export async function createHotline(page: Page): Promise<void> {
     await page.locator('#Navbar_Back').click();
     await page.getByRole('link', { name: 'Settings' }).click({timeout: 30_000});
     await page.getByRole('button', { name: 'Logout' }).click({timeout: 30_000});
+    await expect(page.getByText('You\'re logged out!')).toBeVisible({timeout: 60_000});
+}
+
+
+export async function createIndivFeedback(page: Page): Promise<void> {
+    await loginAsIndiv(page);
+
+    const uniqueFeedback = `Indiv Feedback Test ${chance.integer({ min: 100, max: 999 })}`;
+
+    page.on('pageerror', exception => console.log(`BROWSER UNCAUGHT EXCEPTION: ${exception.message}`));
+
+    await page.getByRole('link', { name: 'Settings' }).click();
+    await page.getByRole('link', { name: 'Give Feedback' }).click({timeout: 30_000});
+    await page.locator('label').filter({ hasText: /^5 Stars$/ }).click();
+    await page.getByRole('textbox', { name: 'Feel free to say what you' }).fill(uniqueFeedback);
+    await page.getByRole('button', { name: 'Submit' }).click();
+    await expect(page.getByText('Feedback sent. Thank you for')).toBeVisible({timeout: 30_000});
+
+    await page.locator('#Navbar_Back').click();
+    await page.getByRole('button', { name: 'Logout' }).click();
+    await expect(page.getByText('You\'re logged out!')).toBeVisible({timeout: 60_000});
+}
+
+
+export async function createBrgyFeedback(page: Page): Promise<void> {
+    await loginAsBarangay(page);
+
+    const uniqueFeedback = `Brgy Feedback Test ${chance.integer({ min: 100, max: 999 })}`;
+
+    page.on('pageerror', exception => console.log(`BROWSER UNCAUGHT EXCEPTION: ${exception.message}`));
+
+    await page.getByRole('link', { name: 'Settings' }).click();
+    await page.getByRole('link', { name: 'Give Feedback' }).click({timeout: 30_000});
+    await page.locator('label').filter({ hasText: /^5 Stars$/ }).click();
+    await page.getByRole('textbox', { name: 'Feel free to say what you' }).fill(uniqueFeedback);
+    await page.getByRole('button', { name: 'Submit' }).click();
+    await expect(page.getByText('Feedback sent. Thank you for')).toBeVisible({timeout: 30_000});
+
+    await page.locator('#Navbar_Back').click();
+    await page.getByRole('button', { name: 'Logout' }).click();
     await expect(page.getByText('You\'re logged out!')).toBeVisible({timeout: 60_000});
 }
