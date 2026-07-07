@@ -147,3 +147,51 @@ test('Admin Pin Dashboard and Management', async ({ page }) => {
   })
 })
 
+test('Admin Sensor Dashboard and Management', async ({ page }) => {
+  test.setTimeout(360_000); 
+
+  await loginAsAdmin(page);
+
+  page.on('pageerror', exception => console.log(`BROWSER UNCAUGHT EXCEPTION: ${exception.message}`));
+
+  await test.step('View Sensor Dashboard', async () => {
+    await page.getByRole('link', { name: 'Sensors' }).click();
+    const sensorCard = page.locator('div.border').filter({ hasText: 'Seeded Sensor for Logs' });
+    await expect(sensorCard).toBeVisible({timeout: 60_000})
+  })
+
+  await test.step('View and Verify Sensor Details', async () => {
+    const sensorCard = page.locator('div.border').filter({ hasText: 'Seeded Sensor for Logs' });
+    await sensorCard.getByRole('button', { name: 'Details' }).click();
+
+    await expect(page.locator('#Admin_SensorDetailsName')).toHaveValue('Seeded Sensor for Logs', {timeout: 60_000});
+    await expect(page.locator('#Admin_SensorDetailsMountHeight')).toHaveValue('3');
+    await expect(page.locator('#Admin_SensorDetailsLat')).toHaveValue('14.597447314583');
+    await expect(page.locator('#Admin_SensorDetailsLong')).toHaveValue('121.03924222948');
+    await expect(page.locator('#Admin_SensorDetailsMountLoc')).toHaveValue('Barangay Greenhills', {timeout: 30_000});
+    await expect(page.locator('#Admin_SensorDetailsYellow')).toHaveValue('1');
+    await expect(page.locator('#Admin_SensorDetailsOrange')).toHaveValue('2');
+    await expect(page.locator('#Admin_SensorDetailsRed')).toHaveValue('2.5');
+    await expect(page.locator('#Admin_SensorDetailsRegisteredBy')).toHaveValue('Barangay Greenhills');
+  })
+
+  await test.step('View Sensor Logs', async () => {
+    await page.getByRole('button', { name: 'See Logs' }).click();
+    const logCard = page.locator('div.border').filter({ hasText: 'Water Level' }).first();
+    await expect(logCard).toBeVisible({timeout: 30_000});
+  })
+})
+
+test('Admin Hotlines Dashboard and Management', async ({ page }) => {
+  test.setTimeout(360_000); 
+
+  await loginAsAdmin(page);
+
+  page.on('pageerror', exception => console.log(`BROWSER UNCAUGHT EXCEPTION: ${exception.message}`));
+
+  await test.step('View Hotlines Dashboard', async () => {
+    await page.getByRole('link', { name: 'Emergency Contacts' }).click();
+    const hotlineCard = page.locator('div.border').filter({ hasText: 'Seeded Hotline for Testing' });
+    await expect(hotlineCard).toBeVisible({timeout: 60_000})
+  })
+})
