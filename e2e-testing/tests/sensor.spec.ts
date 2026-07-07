@@ -28,6 +28,7 @@ test('Brgy Sensor Management', async ({ page }) => {
     await page.locator('#Sensor_OrangeField').fill('2');
     await page.locator('#Sensor_RedField').fill('2.5');
     await page.getByRole('button', { name: 'Add Sensor' }).click();
+    await expect(page.getByText('Sensor added successfully!')).toBeVisible({timeout: 60_000});
   })
 
  await test.step('Verify Sensor Details', async () => {
