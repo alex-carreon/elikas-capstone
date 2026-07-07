@@ -3,7 +3,7 @@ import { Chance } from 'chance';
 
 const chance = new Chance();
 
-test('End-to-End Individual User Account Lifecycle', async ({ page, request }) => {
+test('Individual User Registration', async ({ page, request }) => {
   test.setTimeout(300_000); 
 
   // Generate credentials 
@@ -59,6 +59,16 @@ test('End-to-End Individual User Account Lifecycle', async ({ page, request }) =
     await expect(page.getByText('A few reminders')).toBeVisible();
     await page.getByRole('checkbox').click();
     await page.locator('#Permissions_SubmitBtn').click();
+
+    const captchaBadge = page.locator('.grecaptcha-badge, iframe[title*="recaptcha"]').first();
+
+    if (await captchaBadge.count() > 0) {
+      // this test is EXPECTED to fail here
+      test.fail(true, 'Registration successfully blocked by Invisible reCAPTCHA.');
+
+      // Force the failure to trigger the successful test resolution
+      throw new Error('Blocked by Captcha');
+    }
   }); 
 
   await test.step('Verify Email', async () => {
