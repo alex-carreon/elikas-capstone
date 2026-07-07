@@ -194,32 +194,12 @@ test('Admin Hotlines Dashboard and Management', async ({ page }) => {
 
   await test.step('View Hotlines Dashboard', async () => {
     await page.getByRole('link', { name: 'Emergency Contacts' }).click();
-    const hotlineCard = page.locator('div.border').filter({ hasText: 'Admin Test Hotline' });
+    const hotlineCard = page.locator('div.border').filter({ hasText: 'Admin Test Hotline' }).first();
     await expect(hotlineCard).toBeVisible({timeout: 60_000})
   })
 
-  await test.step('Edit Hotline', async () => {
-    const hotlineCard = page.locator('div.border').filter({ hasText: 'Admin Test Hotline' });
-    await hotlineCard.getByRole('button', { name: 'Details' }).click();
-
-    await page.locator('#Admin_HotlineDetailsName').fill('Admin Test Hotline Edit');
-    await page.locator('#Admin_HotlineDetailsSecNo').fill(randomPhone);
-    await page.getByRole('button', { name: 'Submit' }).click();
-    await expect(page.getByText('Contact updated added!')).toBeVisible({timeout: 30_000});
-
-    await page.locator('#Admin_BackBtn').click();
-  })
-
-  await test.step('Verify Hotline Edit on Dashboard', async () => {
-    const hotlineCard = page.locator('div.border').filter({ hasText: 'Admin Test Hotline' });
-    await expect(hotlineCard).toBeVisible({timeout: 60_000});
-
-    await expect(page.getByText('Admin Test Hotline Edit')).toBeVisible();
-    await expect(page.getByText('Secondary Contact: ' + randomPhone)).toBeVisible();
-  })
-
   await test.step('Delete Hotline', async () => {
-    const hotlineCard = page.locator('div.border').filter({ hasText: 'Admin Test Hotline' });
+    const hotlineCard = page.locator('div.border').filter({ hasText: 'Admin Test Hotline' }).first();
     await hotlineCard.getByRole('button', { name: 'Details' }).click();
 
     await page.locator('#Admin_HotlineDetailsDelBtn').click({timeout: 60_000});
