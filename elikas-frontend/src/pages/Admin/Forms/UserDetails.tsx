@@ -82,6 +82,7 @@ function UserDetails() {
       setLastname(userDetails.last_name);
       setEmail(userDetails.email);
       setLocation(userDetails.indiv_location);
+      setCityId(2);
       setLocationId(String(userDetails.indiv_location_id));
       setPhone(userDetails.phone);
       setCreatedAt(userDetails.created_at);
