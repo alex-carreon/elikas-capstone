@@ -415,7 +415,7 @@ function Pins() {
                 />
                 <CountRow
                   title="Flagged Hazard Paths"
-                  lastUpdated="Both manual and AI"
+                  lastUpdated="Manual Flags only"
                   count={flaggedPathsCount}
                   loading={hazardCountLoad}
                 />
