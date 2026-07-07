@@ -1,5 +1,5 @@
 import { test, expect } from '@playwright/test';
-import { loginAsBarangay } from './authHelper'; 
+import { loginAsBarangay, loginAsIndiv } from './authHelper'; 
 import { Chance } from 'chance';
 
 const chance = new Chance();
@@ -35,7 +35,8 @@ test('Brgy Hotline Management', async ({ page }) => {
   })
 
   await test.step('Edit Hotline Details', async () => { 
-    await page.locator('a[href*="/HotlinesForm/"]').first().click();
+    const hotlineCard = page.locator('div.border-solid').filter({ hasText: uniqueName });
+    await hotlineCard.locator('a[href*="/HotlinesForm/"]').click({timeout: 60_000});
     await page.locator('#Hotline_UpdateBtn').click({timeout: 30_000});
     await page.locator('#Hotline_SecondNumberField').fill(randomPhone);
     await page.locator('#Hotline_SubmitUpdBtn').click();
@@ -56,9 +57,21 @@ test('Brgy Hotline Management', async ({ page }) => {
   })
 
   await test.step('Delete Hotline', async () => { 
-    await page.locator('a[href*="/HotlinesForm/"]').first().click();
+    const hotlineCard = page.locator('div.border-solid').filter({ hasText: uniqueName });
+    await hotlineCard.locator('a[href*="/HotlinesForm/"]').click({timeout: 60_000});
     await page.locator('#Hotline_DeleteBtn').click({timeout: 30_000});
     await page.locator('#EvacPin_DeacBtn').click();
     await expect(page.getByText('Hotline deleted!')).toBeVisible({timeout: 30_000});
   })
 });
+
+test('Indiv Hotline View', async ({ page }) => {
+  test.setTimeout(180_000); 
+
+  await loginAsIndiv(page);
+    
+  page.on('pageerror', exception => console.log(`BROWSER UNCAUGHT EXCEPTION: ${exception.message}`));
+
+  await page.getByRole('link', { name: 'Hotlines' }).click({timeout: 60_000});
+  await expect(page.getByText('Seeded Hotline')).toBeVisible({timeout: 60_000});
+})
