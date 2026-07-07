@@ -1,5 +1,7 @@
 <?php
 
+use App\Models\User;
+use App\Models\UserAuth;
 use Illuminate\Foundation\Testing\DatabaseTransactions;
 use Tests\TestCase;
 
@@ -13,10 +15,10 @@ use Tests\TestCase;
 | need to change it using the "pest()" function to bind different classes or traits.
 |
 */
-
+    
 pest()->extend(TestCase::class)
     ->use(DatabaseTransactions::class)
-    ->in('Feature');
+    ->in('Feature', 'Unit');
 
 /*
 |--------------------------------------------------------------------------
@@ -97,4 +99,29 @@ function govopsToken(): string
 function unverifiedTestIdToken(): string
 {
     return freshFirebaseIdToken(env('FIREBASE_TEST_UNVERIFIED_REFRESH_TOKEN'));
+}
+
+/** Role 2 govops user model (paired with govopsToken()). */
+function govopsUser(): User
+{
+    $uid = env('FIREBASE_TEST_GOVOPS_UID');
+    $auth = UserAuth::with('user.govOp')->where('identity_uid', $uid)->first();
+
+    if (! $auth || ! $auth->user) {
+        test()->fail("No UserAuth row for FIREBASE_TEST_GOVOPS_UID [{$uid}].");
+    }
+
+    return $auth->user;
+}
+
+function individualUser(): User
+{
+    $uid = env('FIREBASE_TEST_VERIFIED_UID');
+    $auth = UserAuth::with('user')->where('identity_uid', $uid)->first();
+
+    if (! $auth || ! $auth->user) {
+        test()->fail("No UserAuth row for FIREBASE_TEST_VERIFIED_UID [{$uid}].");
+    }
+
+    return $auth->user;
 }
