@@ -56,6 +56,6 @@ export async function loginAsAdmin(page: Page): Promise<void> {
   
   // Ensure app loads when logged in
   await expect(page.getByText('You\'re Logged In!')).toBeVisible({timeout: 60_000});
-  await expect(page).toHaveURL(/\/map$/);
+  await expect(page).toHaveURL(/\/admin-map$/);
   await expect(page.getByText('Pins Generated!')).toBeVisible({timeout: 60_000});
 }
