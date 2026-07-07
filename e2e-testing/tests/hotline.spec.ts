@@ -4,7 +4,7 @@ import { Chance } from 'chance';
 
 const chance = new Chance();
 
-test('Hotline ', async ({ page }) => {
+test('Brgy Hotline Management', async ({ page }) => {
   test.setTimeout(180_000); 
 
   await loginAsBarangay(page);
