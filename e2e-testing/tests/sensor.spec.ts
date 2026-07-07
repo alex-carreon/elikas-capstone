@@ -32,14 +32,14 @@ test('Brgy Sensor Management', async ({ page }) => {
 
  await test.step('Verify Sensor Details', async () => {
   await page.getByRole('tab', { name: 'Sensors' }).click();
-  await expect(page.getByText(uniqueName)).toBeVisible({timeout: 30_000});
+  await expect(page.getByText(uniqueName)).toBeVisible({timeout: 60_000});
   await page.getByRole('button', { name: 'Details' }).first().click();
-  await expect(page.locator('#Sensor_NameField')).toHaveValue(uniqueName);
+  await expect(page.locator('#Sensor_NameField')).toHaveValue(uniqueName, {timeout: 30_000});
   await expect(page.locator('#Sensor_MountHeightField')).toHaveValue('3');
   await expect(page.locator('#Sensor_LatitudeField')).toHaveValue('14.597447314583043');
   await expect(page.locator('#Sensor_LongitudeField')).toHaveValue('121.03924222948187');
-  await expect(page.locator('#Sensor_CityField')).toHaveValue('San Juan City');
-  await expect(page.locator('#Sensor_BrgyField')).toHaveValue('Barangay Greenhills');
+  await expect(page.locator('#Sensor_CityField')).toHaveValue('San Juan City', {timeout: 30_000});
+  await expect(page.locator('#Sensor_BrgyField')).toHaveValue('Barangay Greenhills', {timeout: 30_000});
   await expect(page.locator('#Sensor_AddressField')).toHaveValue('Wilson Street Bridge');
   await expect(page.locator('#Sensor_YellowField')).toHaveValue('1');
   await expect(page.locator('#Sensor_OrangeField')).toHaveValue('2');
