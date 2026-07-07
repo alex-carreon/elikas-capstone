@@ -255,10 +255,6 @@ Route::middleware(['firebase.auth', 'role:1,2,3'])->group(function () {
     Route::post('/evac-areas/{evacAreaId}/comments', [EvacComments::class, 'store']);
     Route::get('/comments/{id}',[EvacComments::class, 'show']);
 
-
-    //SENSORS
-    Route::get('/sensors/{sensor}', [SensorController::class, 'show']);
-
     //pins
     Route::get('/pins/my-coords', [GetEvacAreasController::class, 'getMyCoords']);
     Route::get('/evacpins/users', [GetEvacAreasController::class, 'getMyEvacHistory']);
