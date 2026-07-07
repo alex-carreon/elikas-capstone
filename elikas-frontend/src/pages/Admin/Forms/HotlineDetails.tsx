@@ -26,9 +26,12 @@ function HotlineDetails() {
   const [primaryNo, setPrimaryNo] = useState("");
   const [secondaryNo, setSecondaryNo] = useState("");
   const [brgyId, setBrgyId] = useState(0);
+  const [error, setError] = useState({ primary: "", secondary: "" });
 
   const { id } = useParams();
   const navigate = useNavigate();
+
+  const contactValidate = /^\(0\d{2}\)\d{7}$|^\(02\)\d{8}$|^09\d{9}$/;
 
   const getDetails = async (signal?: AbortSignal) => {
     try {
@@ -67,6 +70,22 @@ function HotlineDetails() {
   };
 
   const update = (e: React.FormEvent) => {
+    if (!contactValidate.test(primaryNo)) {
+      setError({ primary: "Enter a valid contact number", secondary: "" });
+      return;
+    } else {
+      setError({ primary: "", secondary: "" });
+    }
+
+    if (secondaryNo) {
+      if (!contactValidate.test(secondaryNo)) {
+        setError({ primary: "", secondary: "Enter a valid contact number" });
+        return;
+      } else {
+        setError({ primary: "", secondary: "" });
+      }
+    }
+
     handleUpdate({
       e: e,
       title: title,
@@ -151,18 +170,22 @@ function HotlineDetails() {
           <TextField
             label="Primary Contact Number"
             inputType="text"
+            placeholder="(XXX or XX)XXXXXXX or 09XXXXXXXXX"
             id="Admin_HotlineDetailsOfNo"
             value={primaryNo}
             onSubmit={(e) => setPrimaryNo(e.target.value)}
             readonly={!isEditable}
+            error={error.primary}
           />
           <TextField
             label="Secondary Contact Number"
             inputType="text"
+            placeholder="(XXX or XX)XXXXXXX or 09XXXXXXXXX"
             id="Admin_HotlineDetailsSecNo"
             value={secondaryNo}
             onSubmit={(e) => setSecondaryNo(e.target.value)}
             readonly={!isEditable}
+            error={error.secondary}
           />
           <TextField
             label="Posted by"

@@ -164,8 +164,7 @@ function TermsConditions() {
                 or consequential — arising from: <br />• Reliance on information
                 posted through the platform. <br />• Failure to receive alerts
                 or notifications due to technical issues. <br />• Decisions made
-                by individuals or officials based on platform data. <br />• Any
-                unauthorized access to or alteration of user data. <br />
+                by individuals or officials based on platform data. <br />
                 <br />
                 In all cases, users are advised to also consult official
                 government channels, such as NDRRMC, local DRRMO offices, and
@@ -219,7 +218,10 @@ function TermsConditions() {
                 <b>Account Information:</b> <br />• Full name — collected during
                 account registration to identify you on the platform. <br />•
                 Email address — used for account authentication, notifications,
-                and communications. <br />• Contact number (optional) — may be
+                and communications. <br />
+                • Residency - collected during account registration to identify
+                your geographical location and receive SMS broadcasts from your
+                registered barangay. <br />• Contact number (optional) — may be
                 used for SMS-based emergency notifications if you opt in.
                 <br />
                 <br />
@@ -253,14 +255,12 @@ function TermsConditions() {
                 The data we collect is used strictly for the following purposes:
                 <br />• To authenticate and manage your user account. <br />• To
                 display relevant evacuation information and crowdsourced reports
-                based on your location. <br />• To send you alerts,
-                notifications, and updates related to disaster events in your
-                area. <br />• To support barangay officials and LGUs in their
-                evacuation planning and management. <br />• To moderate
-                user-submitted content and prevent the spread of false or
-                harmful information. <br />• To improve the platform's features,
-                stability, and overall performance. <br />• To comply with
-                applicable legal obligations. <br />
+                based on your location. <br />• To support barangay officials
+                and LGUs in their evacuation planning and management. <br />• To
+                moderate user-submitted content and prevent the spread of false
+                or harmful information. <br />• To improve the platform's
+                features, stability, and overall performance. <br />• To comply
+                with applicable legal obligations. <br />
                 <br />
                 We do not use your data for commercial advertising, profiling
                 for marketing purposes, or any purpose unrelated to public

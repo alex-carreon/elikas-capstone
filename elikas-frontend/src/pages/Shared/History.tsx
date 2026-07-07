@@ -370,7 +370,7 @@ function History() {
   }, []);
 
   return (
-    <div className=" overflow-hidden h-screen flex justify-center pt-20 p-5">
+    <div className="overflow-hidden h-screen flex justify-center pt-20 p-5">
       <div className="w-full max-w-sm flex flex-col gap-4">
         <p className="font-bold text-2xl" style={{ color: colors.heading }}>
           Pin History
