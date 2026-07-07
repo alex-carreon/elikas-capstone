@@ -56,22 +56,26 @@ assign defaultaccess =
     1
 
 assign footaccess =
-  switch foot=
-    switch vehicle=
-      defaultaccess
-      switch or vehicle=private vehicle=no
-        0
-        1
-  switch or foot=private foot=no
-    0
-    1
+  # Emergency Override: Allow pedestrians on residential/service streets
+  # regardless of 'access=private' tags.
+  if highway=residential|living_street|service then 1
+  else 
+    switch foot=
+      switch vehicle=
+        defaultaccess
+        switch or vehicle=private vehicle=no
+          0
+          1
+    switch or foot=private foot=no
+      0
+      1
 
 # Penalty if there is no obvious foot access
 # Break rules before braving knee-deep water (1500)
 assign accesspenalty =
   switch footaccess
     0
-    1000
+    50
 
 # ----------------------------------------------------------
 # ONEWAY: pedestrians have zero penalty (walkers can go either way)
@@ -215,8 +219,8 @@ assign footaccess =
     1
 
 # Blocked nodes should be expensive but not always infinite
-# Will require evacuees to jump fences/gates only to avoid knee-deep water (1500)
+# Jumping fences/gates during dangerous situations
 assign initialcost =
   switch footaccess
     0
-    1000
+    400
