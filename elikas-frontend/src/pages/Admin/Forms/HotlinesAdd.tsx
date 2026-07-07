@@ -37,8 +37,11 @@ function HotlinesAdd() {
   const [cities, setCities] = useState<Cities[]>([]);
   const [cityId, setCityId] = useState(0);
   const [cityLoad, setCityLoad] = useState(false);
+  const [error, setError] = useState({ primary: "", secondary: "" });
 
   const navigate = useNavigate();
+
+  const contactValidate = /^\(0\d{2}\)\d{7}$|^\(02\)\d{8}$|^09\d{9}$/;
 
   const getCity = async () => {
     try {
@@ -82,6 +85,22 @@ function HotlinesAdd() {
 
   const create = (e: React.FormEvent) => {
     e.preventDefault();
+
+    if (!contactValidate.test(primaryNo)) {
+      setError({ primary: "Enter a valid contact number", secondary: "" });
+      return;
+    } else {
+      setError({ primary: "", secondary: "" });
+    }
+
+    if (secondaryNo) {
+      if (!contactValidate.test(secondaryNo)) {
+        setError({ primary: "", secondary: "Enter a valid contact number" });
+        return;
+      } else {
+        setError({ primary: "", secondary: "" });
+      }
+    }
 
     handleSubmit({
       e: e,
@@ -152,16 +171,20 @@ function HotlinesAdd() {
             <TextField
               label="Primary Contact Number*"
               description="This will be the number the citizens will copy."
+              placeholder="(XXX or XX)XXXXXXX or 09XXXXXXXXX"
               inputType="text"
               id="Admin_NewHotlinePrimaryNoField"
               onSubmit={(e) => setPrimaryNo(e.target.value)}
               isRequired
+              error={error.primary}
             />
             <TextField
               label="Secondary Contact Number (optional)"
               inputType="text"
+              placeholder="(XXX or XX)XXXXXXX or 09XXXXXXXXX"
               id="Admin_NewHotlineSecondaryNoField"
               onSubmit={(e) => setSecondaryNo(e.target.value)}
+              error={error.secondary}
             />
           </form>
         </>
