@@ -116,7 +116,7 @@ export default defineConfig({
   webServer: shouldRunLocalServers ? [
     {
       name: 'backend',
-      command: 'cd ../eLikas_backend && php artisan migrate:fresh --seed --env=testing && php artisan serve --env=testing', 
+      command: 'cd ../eLikas_backend && php artisan serve', 
       url: 'http://127.0.0.1:8000/api/test',
       reuseExistingServer: !process.env.CI,
       timeout: 60 * 1000, 
