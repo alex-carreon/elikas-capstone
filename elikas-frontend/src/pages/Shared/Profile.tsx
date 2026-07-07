@@ -619,18 +619,6 @@ function Profile() {
                         isDisabled={disabled}
                       />
                     )}
-                    {isEditable && contact !== "No Registered Number" ? (
-                      <ButtonComp
-                        text="Remove Number"
-                        variant="outline"
-                        id="Profile_VerifyBtnNumberBtn"
-                        onClick={() => {
-                          setNewContact(null);
-                          setContactTouched(true);
-                        }}
-                        widthSize="1/2"
-                      />
-                    ) : null}
                   </div>
                 </div>
               </div>
