@@ -13,7 +13,7 @@ return new class extends Migration
     {
         Schema::table('Sensors', function (Blueprint $table) {
             $table->foreign(['element_id'], 'Sensors_ibfk_1')->references(['id'])->on('SocialElements')->onUpdate('restrict')->onDelete('restrict');
-            $table->foreign(['id'], 'Sensors_Locations_FK')->references(['id'])->on('Locations')->onUpdate('restrict')->onDelete('restrict');
+            $table->foreign(['location_id'], 'Sensors_Locations_FK')->references(['id'])->on('Locations')->onUpdate('restrict')->onDelete('restrict');
         });
     }
 
