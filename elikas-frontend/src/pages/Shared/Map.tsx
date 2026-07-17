@@ -27,7 +27,6 @@ type pathReminder = {
 
 function Map() {
   const [closeAlert, setCloseAlert] = useState(false);
-
   const [locationFound, setLocationFound] = useState(false);
   const [showLocation, setShowLocation] = useState(false);
   const [showNearestRouteTrigger, setShowNearestRouteTrigger] = useState(0);
@@ -42,6 +41,8 @@ function Map() {
   const [showRoute, setShowRoute] = useState(false);
   const [showNearest, setShowNearest] = useState(false);
   const [clearRoute, setClearRoute] = useState(false);
+  const [isOffline, setIsOffline] = useState(false);
+  const [showOffline, setShowOffline] = useState(false);
 
   const openDialog = useRef(false);
 
@@ -179,6 +180,29 @@ function Map() {
     }
   }, [decidedCount]);
 
+  useEffect(() => {
+    const handleOnline = () => setIsOffline(false);
+    const handleOffline = () => setIsOffline(true);
+
+    setIsOffline(!navigator.onLine);
+
+    window.addEventListener("online", handleOnline);
+    window.addEventListener("offline", handleOffline);
+
+    return () => {
+      window.removeEventListener("online", handleOnline);
+      window.removeEventListener("offline", handleOffline);
+    };
+  }, []);
+
+  useEffect(() => {
+    if (isOffline) {
+      setShowOffline(true);
+    } else {
+      setShowOffline(false);
+    }
+  }, [isOffline]);
+
   return (
     <>
       {!role &&
@@ -209,7 +233,7 @@ function Map() {
             </Alert>
           </div>
         ))}
-      {showDownload && (
+      {showDownload && !isOffline && (
         <AlertDialogue
           title="Welcome to eLikas!"
           description='Download the app to have the full experience by clicking on "Add to Home Screen" on your browser!'
@@ -291,7 +315,19 @@ function Map() {
           </div>
         </AlertDialogue>
       )}
-
+      {showOffline && (
+        <AlertDialogue
+          title="You are offline!"
+          description="No internet connection. You can still browse, but editing is disabled until you're back online."
+          buttonText="Got it!"
+          open={isOffline}
+          contentId="Map_OfflineContentDialog"
+          actionId="Map_CloseOfflineDialog"
+          onClick={() => {
+            setShowOffline(false);
+          }}
+        />
+      )}
       <div
         className={cn(
           role === "admin"

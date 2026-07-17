@@ -14,9 +14,9 @@ function randomSeed(): string {
 }
 
 function CustomizeProfile() {
-  const [username, setUsername] = useState("");
+  const [displayName, setDisplayName] = useState("");
   const [seed, setSeed] = useState("");
-  const [error, setError] = useState({ avatar: "", username: "" });
+  const [error, setError] = useState({ avatar: "", displayName: "" });
 
   const navigate = useNavigate();
 
@@ -33,18 +33,21 @@ function CustomizeProfile() {
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (!seed) {
-      setError({ avatar: "An avatar is required", username: "" });
+      setError({ avatar: "An avatar is required", displayName: "" });
       return;
     }
-    if (username.length == 20) {
-      setError({ avatar: "", username: "Username must be 20 characters only" });
+    if (displayName.length == 20) {
+      setError({
+        avatar: "",
+        displayName: "Display name must be 20 characters only",
+      });
       return;
     }
 
-    localStorage.setItem("username", username);
+    localStorage.setItem("displayName", displayName);
     localStorage.setItem("avatarSeed", seed);
 
-    setError({ avatar: "", username: "" });
+    setError({ avatar: "", displayName: "" });
 
     navigate("/Registration/Permissions");
   };
@@ -52,9 +55,9 @@ function CustomizeProfile() {
   const dataUri = avatar.toDataUri();
 
   useEffect(() => {
-    if (localStorage.getItem("username")) {
-      const un = localStorage.getItem("username");
-      setUsername(un ? un : "");
+    if (localStorage.getItem("displayName")) {
+      const un = localStorage.getItem("displayName");
+      setDisplayName(un ? un : "");
     }
 
     if (localStorage.getItem("avatarSeed")) {
@@ -110,15 +113,15 @@ function CustomizeProfile() {
             </div>
             <div className="flex justify-start flex-col content-center">
               <TextField
-                label="Username"
+                label="Display name"
                 placeholder="Enter your preferred user name"
                 inputType="text"
-                id="Profile_UsernameField"
+                id="Profile_displayNameField"
                 isRequired
-                value={username}
-                onSubmit={(e) => setUsername(e.target.value)}
+                value={displayName}
+                onSubmit={(e) => setDisplayName(e.target.value)}
                 maxLength={20}
-                error={error.username}
+                error={error.displayName}
               ></TextField>
             </div>
           </div>
