@@ -74,6 +74,13 @@ function ContactNo() {
                   from your barangays themselves.{" "}
                   <b>You may enter your contact number later.</b>
                 </p>
+                <p
+                  className="text-sm text-center p-2"
+                  style={{ color: colors.heading }}
+                >
+                  <b>Heads up</b>: Barangay SMS alerts currently only reach
+                  Globe numbers.
+                </p>
               </div>
               <div className="flex justify-center">
                 <TextField

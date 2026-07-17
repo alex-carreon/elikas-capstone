@@ -15,7 +15,7 @@ import { divIcon, type LatLngExpression } from "leaflet";
 import { InputGroupTextarea } from "@/components/ui/input-group";
 import api from "@/api";
 import { useUserContext } from "@/context/AuthContext";
-import { differenceInDays } from "date-fns";
+import { addDays, differenceInDays } from "date-fns";
 import FloodIcon from "@/assets/Map/FloodIcon.svg?react";
 import AlertDialogue from "@/components/AlertDialogue";
 import {
@@ -56,7 +56,7 @@ type FloodDetails = {
 function HazardForm() {
   const inputRef = useRef<HTMLInputElement | null>(null);
   const navigate = useNavigate();
-  const { token } = useUserContext();
+  const { token, role } = useUserContext();
 
   const [fileName, setFileName] = useState<File | undefined>();
   const [imagePreview, setImagePreview] = useState<undefined | string>();
@@ -79,10 +79,13 @@ function HazardForm() {
   const [willDeactivate, setWillDeactivate] = useState(false);
   const [error, setError] = useState("");
   const [disabled, setDisabled] = useState(false);
+  const [showCreate, setShowCreate] = useState(false);
 
   const location = useLocation();
 
   const { id } = useParams();
+
+  const defaultExpiry = addDays(new Date(), 3);
 
   const rawLoc = localStorage.getItem("clickedPin");
   const clickedLoc: [number, number] | null = rawLoc
@@ -171,6 +174,12 @@ function HazardForm() {
 
   useEffect(() => {
     getDataFromMap();
+  }, []);
+
+  useEffect(() => {
+    if (!id) {
+      setExpiry(defaultExpiry);
+    }
   }, []);
 
   useEffect(() => {
@@ -369,6 +378,22 @@ function HazardForm() {
           disabled={disabled}
         />
       )}
+      {showCreate && (
+        <AlertDialogue
+          contentId="HazardForm_CreateContent"
+          closeId="HazardForm_CreateClose"
+          actionId="HazardForm_CreateBtn"
+          open={showCreate}
+          title="Mark this pin on the map?"
+          description="By marking this pin, you accept responsibility for its accuracy."
+          buttonText="Mark on the map"
+          onClose={() => {
+            setShowCreate(false);
+          }}
+          onClick={(e: React.FormEvent) => submit(e)}
+          disabled={disabled}
+        />
+      )}
       <div className="w-full h-full flex flex-col items-center p-12 mt-8 mb-2 gap-4">
         <div>
           <p
@@ -400,7 +425,10 @@ function HazardForm() {
         </div>
         <form
           id="HazardPin_Form"
-          onSubmit={submit}
+          onSubmit={(e) => {
+            e.preventDefault();
+            setShowCreate(true);
+          }}
           className="w-full flex flex-col justify-center items-center m-0"
         >
           <div className="w-full max-w-md flex flex-col gap-5">
@@ -625,17 +653,30 @@ function HazardForm() {
                 readonly
               />
             )}
-            <DatePickerInput
-              label="Expiry Date (optional)"
-              desc="The expiry for hazard pins are set to 3 days from now by default"
-              idField="HazardPin_ExpiryField"
-              idBtn="HazardPin_ExpiryCalendarField"
-              onChange={(val) => setExpiry(val)}
-              value={expiry}
-              readonly={!id || isEditable ? false : true}
-              edit={!id || isEditable}
-              clearDate={!id}
-            />
+            {role === "brgy_op" && (
+              <DatePickerInput
+                label="Expiry Date (optional)"
+                desc="The expiry for hazard pins are set to 3 days from now by default"
+                idField="HazardPin_ExpiryField"
+                idBtn="HazardPin_ExpiryCalendarField"
+                onChange={(val) => setExpiry(val)}
+                value={expiry}
+                readonly={!id || isEditable ? false : true}
+                edit={!id || isEditable}
+                clearDate={!id}
+              />
+            )}
+            {role === "indiv" && (
+              <DatePickerInput
+                label="Expiry Date"
+                desc="The expiry for hazard pins are set to 3 days from now by default"
+                idField="HazardPin_ExpiryField"
+                idBtn="HazardPin_ExpiryCalendarField"
+                value={expiry}
+                readonly={true}
+              />
+            )}
+
             {id ? (
               <>
                 <p className="italic" style={{ color: colors.label }}>

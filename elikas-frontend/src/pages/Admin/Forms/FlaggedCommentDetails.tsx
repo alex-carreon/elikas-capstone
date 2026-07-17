@@ -158,6 +158,7 @@ function FlaggedCommentDetails() {
         updateId="Admin_EvacFlaggedCommentsIgnore"
         deleteId="Admin_EvacFlaggedCommentsReject"
         updBtnLabel="Ignore"
+        deleteBtnLabel="Remove"
         updateClick={(e) => ignoreFlag(e)}
         deleteClick={(e) => rejectFlag(e)}
         isDisabled={disabled}

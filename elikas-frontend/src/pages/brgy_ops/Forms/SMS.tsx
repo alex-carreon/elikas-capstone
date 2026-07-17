@@ -32,8 +32,16 @@ function SMS() {
   const [showDialog, setShowDialog] = useState(true);
   const [smsToken, setSMSToken] = useState<string | null>(null);
   const [disabled, setDisabled] = useState(false);
+  const [showSendDialog, setShowSendDialog] = useState(false);
+  const [showLeavePage, setShowLeavePage] = useState(false);
+  const [newPath, setNewPath] = useState<string | null>(null);
 
   const navigate = useNavigate();
+
+  const safeNavigate = (path: string) => {
+    setNewPath(path);
+    setShowLeavePage(true);
+  };
 
   const getTemplates = async () => {
     try {
@@ -412,6 +420,49 @@ function SMS() {
           </div>
         </AlertDialogue>
       )}
+      {showSendDialog && (
+        <AlertDialogue
+          contentId="SMS_SendContent"
+          closeId="SMS_SendClose"
+          actionId="SMS_SendBtn"
+          open={showSendDialog}
+          title="You are about to send/schedule an SMS Broadcast"
+          description="By sending an SMS Broadcast, you accept full responsibility for its content."
+          buttonText="Send"
+          onClose={() => {
+            setShowSendDialog(false);
+          }}
+          onClick={(e) =>
+            schedSend === undefined ? handleSendNow(e) : handleSchedSend(e)
+          }
+          disabled={disabled}
+        />
+      )}
+      {showLeavePage && (
+        <AlertDialogue
+          contentId="SMS_LeaveContent"
+          closeId="SMS_LeaveClose"
+          actionId="SMS_LeaveBtn"
+          actionId2="SMS_StayBtn"
+          open={showLeavePage}
+          title="You are about to leave the SMS Form"
+          description="By leaving this page, you will need to re-enter your token."
+          buttonText="Stay"
+          buttonText2="Leave"
+          onClose={() => {
+            setShowLeavePage(false);
+            setNewPath(null);
+          }}
+          onClick={() => {
+            setShowLeavePage(false);
+          }}
+          onClick2={() => {
+            setShowLeavePage(false);
+            if (newPath) navigate(newPath);
+          }}
+          disabled={disabled}
+        />
+      )}
       <div className="w-full h-full flex flex-col items-center ">
         <div className="w-full max-w-md pt-12 p-6 mt-8 mb-2 flex flex-col gap-4 items-center">
           <div>
@@ -426,6 +477,10 @@ function SMS() {
               style={{ color: colors.label }}
             >
               Send verified announcements to registered contacts instantly.
+            </p>
+            <p className="text-sm text-center p-2">
+              <b>Heads up</b>: Barangay SMS alerts currently only reach Globe
+              numbers.
             </p>
           </div>
           <div className="w-full max-w-sm flex flex-col gap-4">
@@ -453,7 +508,7 @@ function SMS() {
                   text="SMS History"
                   variant="primary"
                   id="SMS_SMSHistoryBtn"
-                  onClick={() => navigate("/SMSHistory")}
+                  onClick={() => safeNavigate("/SMSHistory")}
                 />
               </div>
             </div>
@@ -539,7 +594,7 @@ function SMS() {
                 variant="primary"
                 heightSize="38px"
                 widthSize="100%"
-                onClick={(e) => handleSendNow(e)}
+                onClick={() => setShowSendDialog(true)}
                 isDisabled={disabled}
               />
             ) : (
@@ -549,7 +604,7 @@ function SMS() {
                 variant="primary"
                 heightSize="38px"
                 widthSize="100%"
-                onClick={(e) => handleSchedSend(e)}
+                onClick={() => setShowSendDialog(true)}
                 isDisabled={disabled}
               />
             )}

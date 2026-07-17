@@ -18,6 +18,7 @@ interface FormLayoutProps {
   isEditable?: boolean;
   formId?: string;
   updBtnLabel?: string;
+  deleteBtnLabel?: string;
   btnType?: "button" | "submit" | "reset" | undefined;
   formTitle?: string;
   singleUpd?: () => void;
@@ -38,6 +39,7 @@ function FormLayout({
   closeUpdClick,
   formId,
   updBtnLabel,
+  deleteBtnLabel,
   btnType,
   formTitle,
   singleUpd,
@@ -125,7 +127,7 @@ function FormLayout({
                       isDisabled={isDisabled}
                     />
                     <ButtonComp
-                      text="Delete"
+                      text={deleteBtnLabel ? deleteBtnLabel : "Delete"}
                       variant="important"
                       id={deleteId}
                       heightSize="38px"
@@ -150,7 +152,7 @@ function FormLayout({
                     )}
                     {deleteId && (
                       <ButtonComp
-                        text="Delete"
+                        text={deleteBtnLabel ? deleteBtnLabel : "Delete"}
                         variant="important"
                         id={deleteId}
                         heightSize="38px"
