@@ -53,6 +53,7 @@ import { Spinner } from "../ui/spinner";
 import brgyProfile from "@/assets/brgyProfile.svg";
 import adminProfile from "@/assets/adminProfile.svg";
 import { Link } from "react-router";
+import AlertDialogue from "../AlertDialogue";
 
 type CommentType = {
   id: number;
@@ -211,6 +212,7 @@ function EvacPinDrawer({
   const [seed, setSeed] = useState("");
   const [seedLoad, setSeedLoad] = useState(false);
   const [disabled, setDisabled] = useState(false);
+  const [showPost, setShowPost] = useState(false);
 
   const cameraInputRef = useRef<HTMLInputElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -448,6 +450,28 @@ function EvacPinDrawer({
     </>
   ) : (
     <>
+      {showPost && (
+        <AlertDialogue
+          contentId="Drawer_PostCommentContent"
+          closeId="Drawer_PostCommentClose"
+          actionId="Drawer_PostCommentBtn"
+          actionId2="Drawer_PostCommentCancel"
+          open={showPost}
+          title="You are about to post a comment"
+          description="Comments are reviewed by an automated moderation system before they're published."
+          buttonText="Post"
+          buttonText2="Cancel"
+          onClose={() => {
+            setShowPost(false);
+          }}
+          onClick={(e) => {
+            submitComment(e);
+            setShowPost(false);
+          }}
+          onClick2={() => setShowPost(false)}
+          disabled={disabled}
+        />
+      )}
       <div className="flex justify-between p-2">
         <div>
           <ButtonComp
@@ -839,7 +863,7 @@ function EvacPinDrawer({
                           variant="primary"
                           id="Drawer_PostCommentBtn"
                           widthSize="100%"
-                          onClick={(e) => submitComment(e)}
+                          onClick={() => setShowPost(true)}
                           isDisabled={disabled}
                         />
                       </div>

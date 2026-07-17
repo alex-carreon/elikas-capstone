@@ -183,6 +183,7 @@ function FlaggedDetails() {
         formTitle="Flagged Hazard Details"
         updateId="Admin_FlaggedPathIgnore"
         updBtnLabel="Ignore"
+        deleteBtnLabel="Remove"
         deleteId="Admin_FlaggedPathDelete"
         updateClick={(e) => ignoreFlag(e)}
         deleteClick={(e) => rejectFlag(e)}
