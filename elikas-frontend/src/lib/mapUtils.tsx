@@ -17,6 +17,7 @@ import { useMapFilterContext } from "@/context/MapFilterContext";
 import { type Dispatch, type SetStateAction } from "react";
 import { useUserContext } from "@/context/AuthContext";
 import type { Polyline as LeafletPolyline } from "leaflet";
+import AlertDialogue from "@/components/AlertDialogue";
 
 const brouterBaseUrl = import.meta.env.VITE_BROUTER_BASE_URL;
 const apiBaseUrl = import.meta.env.VITE_API_BASE_URL;
@@ -154,7 +155,7 @@ const getSensors = async ({
   }
 };
 
-function getNearestWaypoint(
+export function getNearestWaypoint(
   userLatLng: LatLng,
   waypoints: EvacPin[],
 ): EvacPin | null {
@@ -188,11 +189,27 @@ export function NearestRouting({
   const [points, setPoints] = useState<[number, number][]>([]);
   const [evacPins, setEvacPins] = useState<EvacPin[]>([]);
   const [time, setTime] = useState("");
-  const [distance, setDistance] = useState("");
+  const [distance, setDistance] = useState(0);
+  const [showPrompt, setShowPrompt] = useState(false);
+  const [showNearest, setShowNearest] = useState(false);
 
   const map = useMap();
 
   const polylineRef = useRef<LeafletPolyline>(null);
+
+  const nearest = userPosition
+    ? getNearestWaypoint(userPosition, evacPins)
+    : null;
+
+  const dist =
+    userPosition && nearest
+      ? userPosition.distanceTo(leaflet.latLng(nearest.lat, nearest.lng))
+      : 0;
+
+  const formattedDist = (meters: number) => {
+    if (meters < 1000) return `${Math.round(meters)}m`;
+    return `${(meters / 1000).toFixed(1)}km`;
+  };
 
   useEffect(() => {
     const controller = new AbortController();
@@ -210,64 +227,66 @@ export function NearestRouting({
   //   For Routing
   useEffect(() => {
     if (nearestRouteTrigger === 0) return;
-    if (!userPosition || !evacPins) return;
-    if (!userPosition || !evacPins) return;
+    if (!userPosition || !nearest) return;
 
-    const nearest = getNearestWaypoint(userPosition, evacPins);
-    if (!nearest) return;
-    onPinSelected(nearest);
+    if (dist > 100) {
+      setShowPrompt(true);
+    } else {
+      setShowNearest(true);
+    }
 
-    const getRoutes = async () => {
-      try {
-        const queryParams = new URLSearchParams({
-          start_lon: userPosition.lng.toString(),
-          start_lat: userPosition.lat.toString(),
-          end_lon: nearest.lng.toString(),
-          end_lat: nearest.lat.toString(),
-        });
+    if (showNearest) {
+      onPinSelected(nearest);
 
-        const response = await fetch(
-          `${apiBaseUrl}/route?${queryParams.toString()}`,
-          {
-            method: "GET",
-            headers: {
-              Accept: "application/json",
+      const getRoutes = async () => {
+        try {
+          const queryParams = new URLSearchParams({
+            start_lon: userPosition.lng.toString(),
+            start_lat: userPosition.lat.toString(),
+            end_lon: nearest.lng.toString(),
+            end_lat: nearest.lat.toString(),
+          });
+
+          const response = await fetch(
+            `${apiBaseUrl}/route?${queryParams.toString()}`,
+            {
+              method: "GET",
+              headers: {
+                Accept: "application/json",
+              },
             },
-          },
-        );
-
-        console.log(response);
-
-        if (!response.ok) {
-          toast.error(
-            "Failed to find route. All paths may be blocked by unpassable flooding.",
           );
-          setClear(true);
-          return;
-        }
 
-        const data = await response.json();
-        const points: [number, number][] =
-          data.features[0].geometry.coordinates.map(
-            ([lon, lat]: [number, number]) => [lat, lon],
-          );
-        const seconds = data.features[0].properties["total-time"];
-        setTime(String(Math.round(Number(seconds) / 60)));
-        setDistance(
-          String(
+          console.log(response);
+
+          if (!response.ok) {
+            toast.error(
+              "Failed to find route. All paths may be blocked by unpassable flooding.",
+            );
+            setClear(true);
+            return;
+          }
+
+          const data = await response.json();
+          const points: [number, number][] =
+            data.features[0].geometry.coordinates.map(
+              ([lon, lat]: [number, number]) => [lat, lon],
+            );
+          const seconds = data.features[0].properties["total-time"];
+          setTime(String(Math.round(Number(seconds) / 60)));
+          setDistance(
             Math.round(
               Number(data.features[0].properties["track-length"] / 1000) * 100,
             ) / 100,
-          ),
-        );
-        setPoints(points);
-      } catch (err: any) {
-        console.log(err.response);
-      }
-    };
-
-    getRoutes();
-  }, [nearestRouteTrigger, evacPins]);
+          );
+          setPoints(points);
+        } catch (err: any) {
+          console.log(err.response);
+        }
+      };
+      getRoutes();
+    }
+  }, [nearestRouteTrigger, evacPins, showNearest]);
 
   useEffect(() => {
     if (points.length < 2) return;
@@ -280,14 +299,33 @@ export function NearestRouting({
   }, [points, time]);
 
   return (
-    <Polyline ref={polylineRef} positions={points} weight={6} color="#FF8500">
-      <Popup position={points[Math.floor(points.length / 2)]}>
-        <div>
-          <p> {String(time)} minutes away</p>
-          <p> {String(distance)} km</p>
-        </div>
-      </Popup>
-    </Polyline>
+    <>
+      <AlertDialogue
+        title="Nearest Evacuation Center"
+        description={`The nearest evacuation center is ${formattedDist(dist)} away. Would you like to continue?`}
+        buttonText="Continue"
+        buttonText2="Nevermind"
+        open={showPrompt}
+        contentId="Map_RouteNearestDialog"
+        actionId="Map_RouteNearestBtn"
+        actionId2="Map_RouteNearestCancel"
+        onClick={() => {
+          setShowNearest(true);
+          setShowPrompt(false);
+        }}
+        onClick2={() => {
+          setShowPrompt(false);
+        }}
+      ></AlertDialogue>{" "}
+      <Polyline ref={polylineRef} positions={points} weight={6} color="#FF8500">
+        <Popup position={points[Math.floor(points.length / 2)]}>
+          <div>
+            <p> {String(time)} minutes away</p>
+            <p> {String(distance)} km</p>
+          </div>
+        </Popup>
+      </Polyline>
+    </>
   );
 }
 
