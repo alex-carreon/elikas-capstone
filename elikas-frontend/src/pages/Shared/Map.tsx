@@ -43,6 +43,7 @@ function Map() {
   const [clearRoute, setClearRoute] = useState(false);
   const [isOffline, setIsOffline] = useState(false);
   const [showOffline, setShowOffline] = useState(false);
+  const [showOnline, setShowOnline] = useState(false);
 
   const openDialog = useRef(false);
 
@@ -181,7 +182,10 @@ function Map() {
   }, [decidedCount]);
 
   useEffect(() => {
-    const handleOnline = () => setIsOffline(false);
+    const handleOnline = () => {
+      setIsOffline(false);
+      setShowOnline(true);
+    };
     const handleOffline = () => setIsOffline(true);
 
     setIsOffline(!navigator.onLine);
@@ -202,6 +206,12 @@ function Map() {
       setShowOffline(false);
     }
   }, [isOffline]);
+
+  useEffect(() => {
+    if (!showOnline) return;
+    const timer = setTimeout(() => setShowOnline(false), 5000);
+    return () => clearTimeout(timer);
+  }, [showOnline]);
 
   return (
     <>
@@ -316,18 +326,40 @@ function Map() {
         </AlertDialogue>
       )}
       {showOffline && (
-        <AlertDialogue
-          title="You are offline!"
-          description="No internet connection. You can still browse, but editing is disabled until you're back online."
-          buttonText="Got it!"
-          open={isOffline}
-          contentId="Map_OfflineContentDialog"
-          actionId="Map_CloseOfflineDialog"
-          onClick={() => {
-            setShowOffline(false);
-          }}
-        />
+        <>
+          <AlertDialogue
+            title="You are offline!"
+            description="No internet connection. You can still browse, but editing is disabled until you're back online."
+            buttonText="Got it!"
+            open={isOffline}
+            contentId="Map_OfflineContentDialog"
+            actionId="Map_CloseOfflineDialog"
+            onClick={() => {
+              setShowOffline(false);
+            }}
+          />
+        </>
       )}
+      {isOffline ? (
+        <div className="fixed bottom-0 z-20 w-full">
+          <div className="flex w-md justify-self-center">
+            <div className="bg-[#D82D24] w-full h-fit text-center p-1">
+              <p className="text-sm text-white">You are currently offline</p>
+            </div>
+          </div>
+        </div>
+      ) : (
+        showOnline && (
+          <div className="fixed bottom-0 z-20 w-full">
+            <div className="flex w-md justify-self-center">
+              <div className="bg-green-600 w-full h-fit text-center p-1">
+                <p className="text-sm text-white">You are back online!</p>
+              </div>
+            </div>
+          </div>
+        )
+      )}
+
       <div
         className={cn(
           role === "admin"
@@ -361,7 +393,7 @@ function Map() {
               className="absolute top-0 left-0 w-full pointer-events-none z-[1000]"
               style={{ height: "100%" }}
             >
-              <div className="flex justify-end px-4 pt-4">
+              <div className="flex flex-col justify-end px-4 pt-4">
                 <div className="pointer-events-auto">
                   <span>
                     <Filter />
@@ -371,18 +403,20 @@ function Map() {
             </div>
           ) : (
             closeAlert && (
-              <div
-                className="absolute top-0 left-0 w-full pointer-events-none z-[1000]"
-                style={{ height: "100%" }}
-              >
-                <div className="flex justify-end px-4 pt-4">
-                  <div className="pointer-events-auto">
-                    <span>
-                      <Filter />
-                    </span>
+              <>
+                <div
+                  className="absolute top-0 left-0 w-full pointer-events-none z-[1000]"
+                  style={{ height: "100%" }}
+                >
+                  <div className="flex flex-col justify-end px-4 pt-4">
+                    <div className="pointer-events-auto">
+                      <span>
+                        <Filter />
+                      </span>
+                    </div>
                   </div>
                 </div>
-              </div>
+              </>
             )
           )}
           <div className="absolute bottom-0 left-0 w-full flex justify-center items-center pointer-events-none">
