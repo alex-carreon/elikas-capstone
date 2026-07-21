@@ -11,10 +11,10 @@ use Illuminate\Database\Eloquent\Model;
 
 /**
  * Class CapacityLevel
- * 
+ *
  * @property int $id
  * @property string $capacity_level
- * 
+ *
  * @property Collection|EvacArea[] $evac_areas
  *
  * @package App\Models
@@ -27,6 +27,17 @@ class CapacityLevel extends Model
 	protected $fillable = [
 		'capacity_level'
 	];
+
+	private const DESCRIPTIONS = [
+		'Small'  => 'Small (1-49 people)',
+		'Medium' => 'Medium (50-99 people)',
+		'Large'  => 'Large (100+ people)',
+	];
+
+	public static function describe(?string $rawLabel): ?string
+	{
+		return self::DESCRIPTIONS[$rawLabel] ?? $rawLabel;
+	}
 
 	public function evac_areas()
 	{
