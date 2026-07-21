@@ -15,7 +15,15 @@ class OtpController extends Controller
     {
         try {
             $validated = $request->validate([
-                'phone_number'       => 'required|string',
+                'phone_number'       => [
+                    'required',
+                    'string',
+                    function (string $attribute, mixed $value, \Closure $fail) {
+                        if ($this->otpService->isSmartNumber((string) $value)) {
+                            $fail('Smart / TNT numbers are not supported for SMS. Please use a Globe, TM, or DITO number instead.');
+                        }
+                    },
+                ],
                 'message'            => 'nullable|string|max:600',
                 'expires_in_minutes' => 'nullable|integer|min:1|max:60',
             ]);
