@@ -8,6 +8,48 @@ use Illuminate\Support\Facades\Log;
 
 class OtpService
 {
+
+private const SMART_PREFIXES = [
+        '811', '813',
+        '907', '908', '909', '910',
+        '912', '913', '914',
+        '918', '919', '920', '921',
+        '928', '929', '930',
+        '938', '939', '940',
+        '946', '947', '948', '949', '950', '951',
+        '961', '963',
+        '968', '969', '970',
+        '981', '989',
+        '992',
+        '998', '999',
+    ];
+
+    public function isSmartNumber(string $value): bool
+    {
+        $normalized = self::normalizePhone($value);
+
+        if ($normalized === null) {
+            return false;
+        }
+
+        $prefix = substr($normalized, 1, 3);
+
+        return in_array($prefix, self::SMART_PREFIXES, true);
+    }
+
+    private static function normalizePhone(string $value): ?string
+    {
+        $digits = preg_replace('/\D+/', '', $value) ?? '';
+
+        if (str_starts_with($digits, '63') && strlen($digits) === 12) {
+            $digits = '0' . substr($digits, 2);
+        } elseif (strlen($digits) === 10 && str_starts_with($digits, '9')) {
+            $digits = '0' . $digits;
+        }
+
+        return preg_match('/^09\d{9}$/', $digits) === 1 ? $digits : null;
+    }
+
     /**
      * Send an OTP to a phone number.
      *
