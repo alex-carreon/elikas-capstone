@@ -6,6 +6,7 @@ use App\Jobs\SendScheduledSMSBroadcast;
 use App\Models\PhoneNumber;
 use App\Models\SMSBroadcast;
 use App\Models\SMSTemplate;
+use App\Models\GovOp;
 use Carbon\Carbon;
 use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Collection;
@@ -13,6 +14,7 @@ use Illuminate\Http\Client\ConnectionException;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
 use RuntimeException;
+
 
 class SMSBroadcastService
 {
@@ -74,8 +76,13 @@ class SMSBroadcastService
      * A single SMS fits 160 characters. Every additional 160-char block
      * is billed as another SMS per recipient.
      *
-     * @param int    $recipientCount  Number of verified recipients.
-     * @param string $message         The message content to be sent.
+     * Includes the sender/timestamp header that dispatchBroadcastToGateway
+     * actually sends, so the segment count here matches what iPROG bills.
+     *
+     * @param int        $recipientCount  Number of verified recipients.
+     * @param string     $message         The message content to be sent.
+     * @param GovOp|null $govOp           Sender, used to size the header. Pass
+     *                                    null to estimate on raw message length only.
      * @return array{
      *   recipient_count: int,
      *   message_length: int,
@@ -85,9 +92,10 @@ class SMSBroadcastService
      *   currency: string
      * }
      */
-    public function getEstimatedPrice(int $recipientCount, string $message): array
+    public function getEstimatedPrice(int $recipientCount, string $message, ?GovOp $govOp = null): array
     {
-        $messageLength  = mb_strlen($message);
+        $headerLength   = mb_strlen($this->buildSenderHeader($govOp));
+        $messageLength  = $headerLength + mb_strlen($message);
         $smsParts       = max(1, (int) ceil($messageLength / 160));
         $pricePerSms    = 1.00; // ₱1.00 per SMS per recipient (iPROG rate)
         $estimatedTotal = $recipientCount * $smsParts * $pricePerSms;
@@ -100,6 +108,19 @@ class SMSBroadcastService
             'estimated_total_price' => (float) $estimatedTotal,
             'currency'              => 'PHP',
         ];
+    }
+
+    /**
+     * Build the "[sender | timestamp]\n" header prepended to every outgoing
+     * SMS. Shared by the actual gateway dispatch and the price estimator so
+     * the two never disagree on message length.
+     */
+    private function buildSenderHeader(?GovOp $govOp): string
+    {
+        $senderName = $govOp?->point_person ?: $govOp?->user?->username ?: 'GovOp';
+        $timestamp  = now('Asia/Manila')->format('M j, Y g:i A');
+
+        return "[{$senderName} | {$timestamp}]\n";
     }
 
     public function getAllUsersForLocation(int $locationId): Collection
@@ -157,11 +178,10 @@ class SMSBroadcastService
             $query->where('message_content', 'LIKE', '%' . $filters['search'] . '%');
         }
 
-        // 🔥 FIX: If an explicit status is given, use it and IGNORE the broad state filter
         if (isset($filters['status']) && $filters['status'] !== '') {
             $query->where('status', (int) $filters['status']);
         }
-        // Otherwise, if no specific status is requested, fall back to the tab state grouping
+
         elseif (!empty($filters['state'])) {
             if ($filters['state'] === 'active') {
                 $query->where('status', 1); // Only Scheduled
@@ -267,8 +287,6 @@ class SMSBroadcastService
             $this->getRecipientsForLocation($broadcast->location_id)->pluck('phone_no')
         );
 
-        // Format numbers cleanly into standard '09...' local format
-        // (Many local PH student-tier gateways look for standard domestic 11-digit string patterns)
         $formattedPhoneNumbers = $phoneNumbers
             ->map(function ($phone) {
                 $num = trim((string) $phone);
@@ -307,15 +325,17 @@ class SMSBroadcastService
             ];
         }
 
+        $outgoingMessage = $this->buildOutgoingMessage($broadcast);
+
         $payload = [
             'phone_number' => $formattedPhoneNumbers->implode(','),
-            'message'      => $broadcast->message_content,
+            'message'      => $outgoingMessage,
         ];
 
         Log::info('IPROGSMS bulk payload debug', [
             'broadcast_id'   => $broadcast->id,
             'phone_number'   => $payload['phone_number'],
-            'message_length' => mb_strlen($broadcast->message_content),
+            'message_length' => mb_strlen($outgoingMessage),
         ]);
 
         try {
@@ -331,7 +351,7 @@ class SMSBroadcastService
                     'api_token'     => $resolvedToken,
                     'phone_numbers' => $payload['phone_number'],
                     'phone_number'  => $payload['phone_number'],
-                    'message'       => $broadcast->message_content,
+                    'message'       => $outgoingMessage,
                 ]);
         } catch (ConnectionException $e) {
             $broadcast->update(['status' => 4]);
@@ -544,19 +564,15 @@ class SMSBroadcastService
         return $query->orderByDesc('scheduled_for')->paginate($limit);
     }
 
-    /**
-     * Classify an iPROG gateway response into a specific error type.
-     *
-     * iPROG's API is inconsistent — it sometimes returns HTTP 200 with an error
-     * body, sometimes 4xx. This method normalizes both into a single structure
-     * so the controller always gets a clear, actionable error code.
-     *
-     * Known iPROG response shapes:
-     *   Invalid token  → { "status": "error", "message": "Unauthenticated." }  HTTP 401 or 200
-     *   No balance     → { "status": "error", "message": "Insufficient balance." } HTTP 200
-     *   No recipients  → { "status": "error", "message": "..." } HTTP 200
-     *   Success        → { "status": "success", "message": "...", "data": {...} } HTTP 200
-     */
+    private function buildOutgoingMessage(SMSBroadcast $broadcast): string
+    {
+        if (!$broadcast->relationLoaded('gov_op')) {
+            $broadcast->load('gov_op.user');
+        }
+
+        return $this->buildSenderHeader($broadcast->gov_op) . $broadcast->message_content;
+    }
+
     private function classifyGatewayResponse(int $httpStatus, array $body): array
     {
         $bodyStatus  = $body['status']  ?? null;
@@ -653,5 +669,6 @@ class SMSBroadcastService
             'message'    => 'Received an unexpected response from the iPROG gateway. Please try again.',
         ];
     }
+
 
 }
