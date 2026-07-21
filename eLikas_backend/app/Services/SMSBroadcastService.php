@@ -16,6 +16,25 @@ use RuntimeException;
 
 class SMSBroadcastService
 {
+    public function __construct(private readonly OtpService $otpService) {}
+
+    private function filterSupportedPhoneNumbers(Collection $phoneNumbers): Collection
+    {
+        return $phoneNumbers
+            ->map(function ($phone) {
+                $num = trim((string) $phone);
+
+                if ($this->otpService->isSmartNumber($num)) {
+                    return null;
+                }
+
+                return $num;
+            })
+            ->filter()
+            ->unique()
+            ->values();
+    }
+
     public function getRecipientsForLocation(int $locationId): Collection
     {
         return PhoneNumber::with([
@@ -101,7 +120,10 @@ class SMSBroadcastService
 
     public function createDraft(int $govOpId, int $locationId, string $messageContent, ?string $scheduledFor): SMSBroadcast
     {
-        $totalRecipients = $this->getRecipientsForLocation($locationId)->count();
+        $supportedPhoneNumbers = $this->filterSupportedPhoneNumbers(
+            $this->getRecipientsForLocation($locationId)->pluck('phone_no')
+        );
+        $totalRecipients = $supportedPhoneNumbers->count();
 
         if ($totalRecipients === 0) {
             abort(422, 'No registered recipients found for your location.');
@@ -153,11 +175,9 @@ class SMSBroadcastService
 
     public function sendImmediate(int $govOpId, int $locationId, string $messageContent, ?string $apiToken = null): array
     {
-        $phoneNumbers = $this->getRecipientsForLocation($locationId)
-            ->pluck('phone_no')
-            ->filter()
-            ->unique()
-            ->values();
+        $phoneNumbers = $this->filterSupportedPhoneNumbers(
+            $this->getRecipientsForLocation($locationId)->pluck('phone_no')
+        );
 
         if ($phoneNumbers->isEmpty()) {
             abort(422, 'No user phone numbers found for this GovOp location.');
@@ -243,11 +263,9 @@ class SMSBroadcastService
 
     private function dispatchBroadcastToGateway(SMSBroadcast $broadcast, ?string $apiToken = null): array
     {
-        $phoneNumbers = $this->getRecipientsForLocation($broadcast->location_id)
-            ->pluck('phone_no')
-            ->filter()
-            ->unique()
-            ->values();
+        $phoneNumbers = $this->filterSupportedPhoneNumbers(
+            $this->getRecipientsForLocation($broadcast->location_id)->pluck('phone_no')
+        );
 
         // Format numbers cleanly into standard '09...' local format
         // (Many local PH student-tier gateways look for standard domestic 11-digit string patterns)
