@@ -2,8 +2,6 @@ import DashboardHeader from "@/components/Admin/DashboardHeader";
 import { useState, useEffect } from "react";
 import { Skeleton } from "@/components/ui/skeleton";
 import api from "@/api";
-import Row from "@/components/Row";
-import { toZonedTime, format } from "date-fns-tz";
 import {
   InputGroup,
   InputGroupInput,
@@ -25,16 +23,8 @@ import SelectDropdown from "@/components/SelectDropdown";
 import { Toggle } from "@/components/ui/toggle";
 import { toast } from "sonner";
 import PaginationComp from "@/components/Pagination";
-
-type log = {
-  id: number;
-  logId: string;
-  userType: string;
-  userName: string;
-  activity: string;
-  table: string;
-  actionDate: string;
-};
+import { DataTable } from "@/components/Admin/DataTable/DataTable";
+import { type log, LogColumns } from "@/components/Admin/DataTable/LogColumns";
 
 type Table = {
   id: number;
@@ -56,11 +46,6 @@ function AuditLogs() {
   const [isUpdated, setIsUpdated] = useState(false);
   const [isDeleted, setIsDeleted] = useState(false);
   const [next, setNext] = useState(1);
-
-  const convertDateTime = (utcString: string) => {
-    const zoned = toZonedTime(new Date(utcString), "Asia/Manila");
-    return format(zoned, "MMM d, yyyy h:mm a");
-  };
 
   const params = new URLSearchParams();
 
@@ -215,7 +200,7 @@ function AuditLogs() {
   return (
     <>
       <div className="w-full flex flex-col items-center">
-        <div className="w-full max-w-md">
+        <div className="w-full">
           <DashboardHeader title="Audit Logs" />
           <div className="bg-white -mt-8 rounded-4xl p-4 flex flex-col gap-2">
             <div className="flex flex-col gap-2">
@@ -395,7 +380,7 @@ function AuditLogs() {
               {loading ? (
                 <>
                   <div className="w-full flex flex-col items-center">
-                    <div className="flex w-full max-w-sm flex-col gap-7 pt-4">
+                    <div className="flex w-full flex-col gap-7 pt-4">
                       <div className="flex flex-col gap-3">
                         <Skeleton className="h-24 w-full bg-[#59260B]/30" />
                       </div>
@@ -409,19 +394,9 @@ function AuditLogs() {
                   </div>
                 </>
               ) : (
-                logs.map((log, index) => (
-                  <Row
-                    key={index}
-                    postId={String(log.logId)}
-                    title={`${log.activity} at ${log.table} table`}
-                    desc={log.userType}
-                    address={log.userName}
-                    datePosted={convertDateTime(log.actionDate)}
-                    showBtn
-                    buttonId="Admin_LogsShowDetails"
-                    link={`/admin-logs/${log.id}`}
-                  />
-                ))
+                <>
+                  <DataTable columns={LogColumns} data={logs} />
+                </>
               )}
             </div>
           </div>

@@ -15,13 +15,12 @@ import {
 } from "@/components/ui/collapsible";
 import { ChevronDownIcon, ChevronUpIcon } from "lucide-react";
 import SelectDropdown from "@/components/SelectDropdown";
-
-type BrgyUser = {
-  id: number;
-  location: string;
-  name: string;
-  role: string;
-};
+import {
+  type BrgyUser,
+  BrgyColumns,
+} from "@/components/Admin/DataTable/BrgyColumns";
+import { type SMS, SMSColumns } from "@/components/Admin/DataTable/SMSColumns";
+import { DataTable } from "@/components/Admin/DataTable/DataTable";
 
 type Barangays = {
   id: number;
@@ -41,35 +40,6 @@ type Province = {
   name: string;
 };
 
-type Status = {
-  id: number;
-  name: string;
-};
-
-type Sender = {
-  govop_id: number;
-  user_id: number;
-  username: string;
-  point_person: string;
-  point_position: string;
-};
-
-type Location = {
-  id: number;
-  name: string;
-};
-
-type SMS = {
-  id: number;
-  message_content: string;
-  status: Status;
-  scheduled_for: string;
-  sent_at: string | null;
-  total_recipients: number;
-  sender: Sender;
-  location: Location;
-};
-
 type SmsStatus = {
   id: number;
   name: string;
@@ -80,6 +50,7 @@ function BrgyUsers() {
   const [countLoad, setCountLoad] = useState(false);
   const [activeCount, setActiveCount] = useState(0);
   const [deacCount, setDeacCount] = useState(0);
+  const [smsCount, setSmsCount] = useState(0);
   const [activeUsers, setActiveUsers] = useState<BrgyUser[]>([]);
   const [deacUsers, setDeacUsers] = useState<BrgyUser[]>([]);
   const [isActiveUsers, setIsActiveUsers] = useState(true);
@@ -125,6 +96,23 @@ function BrgyUsers() {
 
       setActiveCount(activeResponse.data.count);
       setDeacCount(deacResponse.data.count);
+      setCountLoad(false);
+    } catch (err: string | any) {
+      if (err.name === "CanceledError") {
+        setCountLoad(false);
+        return;
+      }
+      console.log(err.response?.data);
+      setCountLoad(false);
+    }
+  };
+
+  const getSMSCount = async (signal?: AbortSignal) => {
+    try {
+      setCountLoad(true);
+      const response = await api.get(`/admin/sms/broadcasts`, { signal });
+
+      setSmsCount(response.data.broadcasts.length);
       setCountLoad(false);
     } catch (err: string | any) {
       if (err.name === "CanceledError") {
@@ -201,6 +189,7 @@ function BrgyUsers() {
         getCity(controller.signal),
         getBrgyData(controller.signal),
         getBrgyCount(controller.signal),
+        getSMSCount(controller.signal),
         getSMS(controller.signal),
         getBrgy(controller.signal),
         getSmsStatus(controller.signal),
@@ -281,7 +270,7 @@ function BrgyUsers() {
   return (
     <>
       <div className="w-full flex flex-col items-center">
-        <div className="w-full max-w-md">
+        <div className="w-full">
           <DashboardHeader title="Barangay Users">
             <CountRow
               title="Active Barangay Users"
@@ -295,48 +284,57 @@ function BrgyUsers() {
               count={deacCount}
               loading={countLoad}
             />
+            <CountRow
+              title="All SMS Transactions"
+              lastUpdated="Includes all statuses"
+              count={smsCount}
+              loading={countLoad}
+            />
           </DashboardHeader>
           <div className="bg-white -mt-8 rounded-4xl p-4 flex flex-col gap-2">
-            <Tabs
-              defaultValue="overview"
-              className="w-full max-w-md flex items-center"
-            >
-              <TabsList
-                className="w-full flex justify-between"
-                id="Admin_BrgyTabs"
+            <div className="w-full flex justify-center">
+              <Tabs
+                defaultValue="overview"
+                className="w-full max-w-lg flex items-center"
               >
-                <TabsTrigger
-                  value="Active"
-                  onClick={() => {
-                    setIsActiveUsers(true);
-                    setIsSMS(false);
-                  }}
-                  id="Admin_BrgyIsActiveTrigger"
+                <TabsList
+                  className="w-full flex justify-between"
+                  id="Admin_BrgyTabs"
                 >
-                  Active
-                </TabsTrigger>
-                <TabsTrigger
-                  value="Deactivated"
-                  onClick={() => {
-                    setIsActiveUsers(false);
-                    setIsSMS(false);
-                  }}
-                  id="Admin_BrgyInactiveTrigger"
-                >
-                  Deactivated
-                </TabsTrigger>
-                <TabsTrigger
-                  value="SMS"
-                  onClick={() => {
-                    setIsActiveUsers(false);
-                    setIsSMS(true);
-                  }}
-                  id="Admin_BrgySMSTrigger"
-                >
-                  SMS
-                </TabsTrigger>
-              </TabsList>
-            </Tabs>
+                  <TabsTrigger
+                    value="Active"
+                    onClick={() => {
+                      setIsActiveUsers(true);
+                      setIsSMS(false);
+                    }}
+                    id="Admin_BrgyIsActiveTrigger"
+                  >
+                    Active
+                  </TabsTrigger>
+                  <TabsTrigger
+                    value="Deactivated"
+                    onClick={() => {
+                      setIsActiveUsers(false);
+                      setIsSMS(false);
+                    }}
+                    id="Admin_BrgyInactiveTrigger"
+                  >
+                    Deactivated
+                  </TabsTrigger>
+                  <TabsTrigger
+                    value="SMS"
+                    onClick={() => {
+                      setIsActiveUsers(false);
+                      setIsSMS(true);
+                    }}
+                    id="Admin_BrgySMSTrigger"
+                  >
+                    SMS
+                  </TabsTrigger>
+                </TabsList>
+              </Tabs>
+            </div>
+
             <Collapsible className="w-full flex-col items-center">
               <div className="w-full flex justify-between gap-2">
                 {!isSMS && (
@@ -453,7 +451,7 @@ function BrgyUsers() {
               {loading ? (
                 <>
                   <div className="w-full flex flex-col items-center">
-                    <div className="flex w-full max-w-sm flex-col gap-7 pt-4">
+                    <div className="flex w-full flex-col gap-7 pt-4">
                       <div className="flex flex-col gap-3">
                         <Skeleton className="h-24 w-full bg-[#59260B]/30" />
                       </div>
@@ -467,52 +465,73 @@ function BrgyUsers() {
                   </div>
                 </>
               ) : isActiveUsers ? (
-                activeUsers.map((user, index) => {
-                  return (
-                    <Row
-                      key={index}
-                      postId={String(user.id)}
-                      title={user.location}
-                      address="San Juan city, Manila"
-                      link={`/admin-brgyDetails/${user.id}`}
-                      buttonId="Admin_ActiveBrgyDetailsBtn"
-                      showBtn
-                    />
-                  );
-                })
+                <>
+                  <div className="hidden md:block">
+                    <DataTable columns={BrgyColumns} data={activeUsers} />
+                  </div>
+                  <div className="md:hidden">
+                    {activeUsers.map((user, index) => {
+                      return (
+                        <Row
+                          key={index}
+                          postId={String(user.id)}
+                          title={user.location}
+                          address={user.parent_location}
+                          link={`/admin-brgyDetails/${user.id}`}
+                          buttonId="Admin_ActiveBrgyDetailsBtn"
+                          showBtn
+                        />
+                      );
+                    })}
+                  </div>
+                </>
               ) : isSMS ? (
-                sms?.map((sms, index) => {
-                  return (
-                    <Row
-                      key={index}
-                      postId={String(sms.id)}
-                      title={`Sent to: ${sms.total_recipients} recipient/s`}
-                      address={`Sender: ${sms.sender.point_person} - ${sms.sender.username}`}
-                      desc={sms.status.name}
-                      datePosted={
-                        sms.status.name === "Scheduled"
-                          ? `Sending on: ${sms.scheduled_for}`
-                          : `Sent on: ${sms.sent_at ? sms.sent_at : "Not sent"}`
-                      }
-                      showCollapsible
-                      collapseContent={sms.message_content}
-                    />
-                  );
-                })
+                <>
+                  <div className="hidden md:block">
+                    <DataTable columns={SMSColumns} data={sms} />
+                  </div>
+                  <div className="md:hidden">
+                    {sms?.map((sms, index) => {
+                      return (
+                        <Row
+                          key={index}
+                          postId={String(sms.id)}
+                          title={`Sent to: ${sms.total_recipients} recipient/s`}
+                          address={`Sender: ${sms.sender.point_person} - ${sms.sender.username}`}
+                          desc={sms.status.name}
+                          datePosted={
+                            sms.status.name === "Scheduled"
+                              ? `Sending on: ${sms.scheduled_for}`
+                              : `Sent on: ${sms.sent_at ? sms.sent_at : "Not sent"}`
+                          }
+                          showCollapsible
+                          collapseContent={sms.message_content}
+                        />
+                      );
+                    })}
+                  </div>
+                </>
               ) : (
-                deacUsers.map((user, index) => {
-                  return (
-                    <Row
-                      key={index}
-                      postId={String(user.id)}
-                      title={user.location}
-                      address="San Juan city, Manila"
-                      link={`/admin-brgyDetails/${user.id}`}
-                      buttonId="Admin_InactiveBrgyDetailsBtn"
-                      showBtn
-                    />
-                  );
-                })
+                <>
+                  <div className="hidden md:block">
+                    <DataTable columns={BrgyColumns} data={deacUsers} />
+                  </div>
+                  <div className="md:hidden">
+                    {deacUsers.map((user, index) => {
+                      return (
+                        <Row
+                          key={index}
+                          postId={String(user.id)}
+                          title={user.location}
+                          address="San Juan city, Manila"
+                          link={`/admin-brgyDetails/${user.id}`}
+                          buttonId="Admin_InactiveBrgyDetailsBtn"
+                          showBtn
+                        />
+                      );
+                    })}
+                  </div>
+                </>
               )}
             </div>
           </div>

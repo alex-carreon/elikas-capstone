@@ -26,6 +26,7 @@ import AlertDialogue from "@/components/AlertDialogue";
 import { toast } from "sonner";
 import { Skeleton } from "@/components/ui/skeleton";
 import Radio from "@/components/Radio";
+import { X } from "lucide-react";
 
 type EvacType = {
   id: number;
@@ -115,6 +116,7 @@ function EvacPin() {
   const [latLng, setLatLng] = useState<[number, number]>();
   const [isPersistent, setIsPersistent] = useState(false);
   const [other, setOther] = useState("");
+  const [otherFields, setOtherFields] = useState([""]);
   const [contactPerson, setContactPerson] = useState("");
   const [contactNumber, setContactNumber] = useState("");
   const [safetyCheck, setSafetyCheck] = useState(false);
@@ -322,6 +324,20 @@ function EvacPin() {
       console.error(error.response.data);
       setCapLoad(false);
     }
+  };
+
+  const addOtherField = () => {
+    setOtherFields([...otherFields, ""]);
+  };
+
+  const updateOtherField = (index: number, value: string) => {
+    const updated = [...otherFields];
+    updated[index] = value;
+    setOtherFields(updated);
+  };
+
+  const removeOtherField = (index: number) => {
+    setOtherFields(otherFields.filter((_, i) => i !== index));
   };
 
   useEffect(() => {
@@ -549,6 +565,8 @@ function EvacPin() {
         "yyyy-MM-dd HH:mm:ssXXX",
       ),
     );
+
+    console.log(otherFields);
 
     handleSubmit({
       e: e,
@@ -1287,14 +1305,37 @@ function EvacPin() {
                 </div>
               </div>
             </Field>
-            <TextField
-              label="Other Facilities (optional)"
-              id="EvacPin_OtherFacilitiesField"
-              inputType="text"
-              onSubmit={(e) => setOther(e.target.value)}
-              value={other || ""}
-              readonly={!id || isEditable ? false : true}
-            ></TextField>
+            <Field>
+              <FieldLabel
+                className={"text-sm w-s"}
+                style={{ color: colors.label }}
+              >
+                Other Facilities (optional)
+              </FieldLabel>
+              {otherFields.map((value, index) => (
+                <div className="flex items-center gap-2">
+                  <TextField
+                    label=""
+                    key={index}
+                    id="EvacPin_OtherFacilitiesField"
+                    inputType="text"
+                    onSubmit={(e) => updateOtherField(index, e.target.value)}
+                    value={value}
+                    readonly={!id || isEditable ? false : true}
+                  ></TextField>
+                  <X onClick={() => removeOtherField(index)} />
+                </div>
+              ))}
+              <div className="w-full flex justify-end">
+                <ButtonComp
+                  text="Add More"
+                  variant="outline"
+                  id="EvacPin_AddFacilityBtn"
+                  onClick={addOtherField}
+                  widthSize="10px"
+                />
+              </div>
+            </Field>
             <TextField
               label="Contact Person*"
               id="EvacPin_ContactPersonField"
