@@ -26,55 +26,28 @@ import {
   InputGroupAddon,
 } from "@/components/ui/input-group";
 import colors from "@/constants/colors";
-
-type FlaggedPaths = {
-  flag_id: number;
-  flood_path_id: number;
-  element_id: number;
-  reason: string;
-  flag_count: number;
-  flagged_at: string;
-};
-
-type Hazards = {
-  id: number;
-  description: string;
-  level: string;
-  posted_at: string;
-  is_expired: boolean;
-  is_deactivated: boolean;
-  is_user_deactivated: boolean;
-};
+import { DataTable } from "@/components/Admin/DataTable/DataTable";
+import {
+  type EvacPins,
+  EvacColumns,
+} from "@/components/Admin/DataTable/EvacColumns";
+import {
+  type FlaggedComms,
+  FlaggedCommsColumns,
+} from "@/components/Admin/DataTable/FlaggedCommsColumns";
+import {
+  HazColumns,
+  type Hazards,
+} from "@/components/Admin/DataTable/HazardColumns";
+import {
+  type FlaggedPaths,
+  HazFlaggedColumns,
+} from "@/components/Admin/DataTable/FlaggedHazColumns";
 
 type FloodLevels = {
   id: number;
   level_name: string;
   description: string;
-};
-
-type EvacPins = {
-  id: number;
-  name: string;
-  address: string;
-  is_persistent: boolean;
-  expiry: string;
-  is_expired: boolean;
-  is_deactivated: boolean;
-  is_user_deactivated: boolean;
-  deactivated_at: string | null;
-  posted_at: string;
-  my_pin: boolean;
-};
-
-type FlaggedComms = {
-  moderation_id: number;
-  comment_id: number;
-  element_id: number;
-  content: string;
-  manual_count: number;
-  moderation_count: number;
-  total_flag_count: number;
-  evac_deactivated: boolean;
 };
 
 function Pins() {
@@ -376,7 +349,7 @@ function Pins() {
   return (
     <>
       <div className="w-full flex flex-col items-center">
-        <div className="w-full max-w-md">
+        <div className="w-full">
           <DashboardHeader title="Map Pins">
             {isEvac ? (
               <>
@@ -423,120 +396,123 @@ function Pins() {
             )}
           </DashboardHeader>
           <div className="bg-white -mt-8 px-4 rounded-4xl p-4 flex flex-col gap-2">
-            <Tabs
-              defaultValue="overview"
-              className="w-full max-w-md flex items-center"
-            >
-              <TabsList
-                className="w-full flex justify-between"
-                id="Admin_PinTabs"
+            <div className="w-full flex flex-col items-center">
+              <Tabs
+                defaultValue="overview"
+                className="w-full max-w-md flex items-center"
               >
-                <TabsTrigger
-                  value="Evacuation"
-                  onClick={() => {
-                    setIsEvac(true);
-                  }}
-                  id="Admin_PinEvacTrigger"
-                >
-                  Evacuation Pins
-                </TabsTrigger>
-                <TabsTrigger
-                  value="Hazard"
-                  onClick={() => {
-                    setIsEvac(false);
-                  }}
-                  id="Admin_PinHazardTrigger"
-                >
-                  Hazard Pins
-                </TabsTrigger>
-              </TabsList>
-            </Tabs>
-            <Tabs
-              defaultValue="overview"
-              className="w-full max-w-md flex items-center"
-            >
-              {isEvac ? (
                 <TabsList
-                  variant="line"
                   className="w-full flex justify-between"
-                  id="Admin_PinEvacTabs"
+                  id="Admin_PinTabs"
                 >
                   <TabsTrigger
-                    value="ActiveEvac"
-                    id="Admin_PinsEvacActiveTigger"
-                    className="min-w-0 flex-1 truncate"
+                    value="Evacuation"
                     onClick={() => {
-                      setActiveEvac(true);
-                      setFlaggedCom(false);
+                      setIsEvac(true);
                     }}
+                    id="Admin_PinEvacTrigger"
                   >
-                    Active Pins
+                    Evacuation Pins
                   </TabsTrigger>
                   <TabsTrigger
-                    value="InactiveEvac"
-                    id="Admin_PinsEvacInactiveTigger"
-                    className="min-w-0 flex-1 truncate"
+                    value="Hazard"
                     onClick={() => {
-                      setActiveEvac(false);
-                      setFlaggedCom(false);
+                      setIsEvac(false);
                     }}
+                    id="Admin_PinHazardTrigger"
                   >
-                    Inactive Pins
-                  </TabsTrigger>
-                  <TabsTrigger
-                    value="FlaggedComms"
-                    id="Admin_PinsEvacFlaggedComTrigger"
-                    className="min-w-0 flex-1 truncate"
-                    onClick={() => {
-                      setActiveEvac(false);
-                      setFlaggedCom(true);
-                    }}
-                  >
-                    Flagged
+                    Hazard Pins
                   </TabsTrigger>
                 </TabsList>
-              ) : (
-                <TabsList
-                  variant="line"
-                  className="w-full flex justify-between"
-                  id="Admin_PinsHazardsTabs"
-                >
-                  <TabsTrigger
-                    value="ActiveHaz"
-                    id="Admin_PinsHazardsActiveTrigger"
-                    className="min-w-0 flex-1 truncate"
-                    onClick={() => {
-                      setActiveHaz(true);
-                      setFlaggedHaz(false);
-                    }}
+              </Tabs>
+              <Tabs
+                defaultValue="overview"
+                className="w-full max-w-md flex items-center"
+              >
+                {isEvac ? (
+                  <TabsList
+                    variant="line"
+                    className="w-full flex justify-between"
+                    id="Admin_PinEvacTabs"
                   >
-                    Active Pins
-                  </TabsTrigger>
-                  <TabsTrigger
-                    value="InactiveHaz"
-                    id="Admin_PinsHazardsInactiveTrigger"
-                    className="min-w-0 flex-1 truncate"
-                    onClick={() => {
-                      setActiveHaz(false);
-                      setFlaggedHaz(false);
-                    }}
+                    <TabsTrigger
+                      value="ActiveEvac"
+                      id="Admin_PinsEvacActiveTigger"
+                      className="min-w-0 flex-1 truncate"
+                      onClick={() => {
+                        setActiveEvac(true);
+                        setFlaggedCom(false);
+                      }}
+                    >
+                      Active Pins
+                    </TabsTrigger>
+                    <TabsTrigger
+                      value="InactiveEvac"
+                      id="Admin_PinsEvacInactiveTigger"
+                      className="min-w-0 flex-1 truncate"
+                      onClick={() => {
+                        setActiveEvac(false);
+                        setFlaggedCom(false);
+                      }}
+                    >
+                      Inactive Pins
+                    </TabsTrigger>
+                    <TabsTrigger
+                      value="FlaggedComms"
+                      id="Admin_PinsEvacFlaggedComTrigger"
+                      className="min-w-0 flex-1 truncate"
+                      onClick={() => {
+                        setActiveEvac(false);
+                        setFlaggedCom(true);
+                      }}
+                    >
+                      Flagged
+                    </TabsTrigger>
+                  </TabsList>
+                ) : (
+                  <TabsList
+                    variant="line"
+                    className="w-full flex justify-between"
+                    id="Admin_PinsHazardsTabs"
                   >
-                    Inactive Pins
-                  </TabsTrigger>
-                  <TabsTrigger
-                    value="FlaggedHaz"
-                    id="Admin_PinsHazardsFlaggedTrigger"
-                    className="min-w-0 flex-1 truncate"
-                    onClick={() => {
-                      setActiveHaz(false);
-                      setFlaggedHaz(true);
-                    }}
-                  >
-                    Flagged
-                  </TabsTrigger>
-                </TabsList>
-              )}
-            </Tabs>
+                    <TabsTrigger
+                      value="ActiveHaz"
+                      id="Admin_PinsHazardsActiveTrigger"
+                      className="min-w-0 flex-1 truncate"
+                      onClick={() => {
+                        setActiveHaz(true);
+                        setFlaggedHaz(false);
+                      }}
+                    >
+                      Active Pins
+                    </TabsTrigger>
+                    <TabsTrigger
+                      value="InactiveHaz"
+                      id="Admin_PinsHazardsInactiveTrigger"
+                      className="min-w-0 flex-1 truncate"
+                      onClick={() => {
+                        setActiveHaz(false);
+                        setFlaggedHaz(false);
+                      }}
+                    >
+                      Inactive Pins
+                    </TabsTrigger>
+                    <TabsTrigger
+                      value="FlaggedHaz"
+                      id="Admin_PinsHazardsFlaggedTrigger"
+                      className="min-w-0 flex-1 truncate"
+                      onClick={() => {
+                        setActiveHaz(false);
+                        setFlaggedHaz(true);
+                      }}
+                    >
+                      Flagged
+                    </TabsTrigger>
+                  </TabsList>
+                )}
+              </Tabs>
+            </div>
+
             {!isEvac && !flaggedHaz && (
               <Collapsible className="w-full flex-col items-center gap-2 mt-2">
                 <div className="w-full flex justify-between">
@@ -719,7 +695,7 @@ function Pins() {
               {loading ? (
                 <>
                   <div className="w-full flex flex-col items-center">
-                    <div className="flex w-full max-w-sm flex-col gap-7 pt-4">
+                    <div className="flex w-full flex-col gap-7 pt-4">
                       <div className="flex flex-col gap-3">
                         <Skeleton className="h-24 w-full bg-[#59260B]/30" />
                       </div>
@@ -734,194 +710,258 @@ function Pins() {
                 </>
               ) : isEvac ? (
                 activeEvac ? (
-                  activePins.map((pin) => {
-                    return (
-                      <Fragment key={pin.id}>
-                        <Row
-                          postId={String(pin.id)}
-                          title={pin.name}
-                          address={pin.address}
-                          datePosted={pin.posted_at}
-                          link={`/admin-evacDetails/${pin.id}`}
-                          buttonId="Admin_PinsActiveEvacDetailsBtn"
-                          showBtn
-                        ></Row>
-                      </Fragment>
-                    );
-                  })
+                  <>
+                    <div className="hidden md:block">
+                      <DataTable columns={EvacColumns} data={activePins} />
+                    </div>
+                    <div className="md:hidden">
+                      {activePins.map((pin) => {
+                        return (
+                          <Fragment key={pin.id}>
+                            <Row
+                              postId={String(pin.id)}
+                              title={pin.name}
+                              address={pin.address}
+                              datePosted={pin.posted_at}
+                              link={`/admin-evacDetails/${pin.id}`}
+                              buttonId="Admin_PinsActiveEvacDetailsBtn"
+                              showBtn
+                            ></Row>
+                          </Fragment>
+                        );
+                      })}
+                    </div>
+                  </>
                 ) : flaggedCom ? (
-                  flaggedComms.map((comment, index) => (
-                    <Fragment key={index}>
-                      <Row
-                        postId={String(comment.comment_id)}
-                        title={`Content: ${comment.content}`}
-                        desc={`Total Number of Reports: ${comment.total_flag_count}`}
-                        link={`/admin-flaggedComment/${comment.comment_id}`}
-                        isDeactivated={comment.evac_deactivated}
-                        buttonId="Admin_PinsFlagComEvacDetailsBtn"
-                        showBtn
-                      >
-                        <p
-                          className="text-sm"
-                          style={{ color: colors.heading }}
-                          id="Admin_PinsFlagComEvacManualCount"
-                        >{`Manual Reports: ${comment.manual_count}`}</p>
-                        <p
-                          className="text-sm"
-                          style={{ color: colors.heading }}
-                          id="Admin_PinsFlagComEvacAICount"
-                        >{`Moderation Reports: ${comment.moderation_count}`}</p>
-                      </Row>
-                    </Fragment>
-                  ))
+                  <>
+                    <div className="hidden md:block">
+                      <DataTable
+                        columns={FlaggedCommsColumns}
+                        data={flaggedComms}
+                      />
+                    </div>
+                    <div className="md:hidden">
+                      {flaggedComms.map((comment, index) => (
+                        <Fragment key={index}>
+                          <Row
+                            postId={String(comment.comment_id)}
+                            title={`Content: ${comment.content}`}
+                            desc={`Total Number of Reports: ${comment.total_flag_count}`}
+                            link={`/admin-flaggedComment/${comment.comment_id}`}
+                            isDeactivated={comment.evac_deactivated}
+                            buttonId="Admin_PinsFlagComEvacDetailsBtn"
+                            showBtn
+                          >
+                            <p
+                              className="text-sm"
+                              style={{ color: colors.heading }}
+                              id="Admin_PinsFlagComEvacManualCount"
+                            >{`Manual Reports: ${comment.manual_count}`}</p>
+                            <p
+                              className="text-sm"
+                              style={{ color: colors.heading }}
+                              id="Admin_PinsFlagComEvacAICount"
+                            >{`Moderation Reports: ${comment.moderation_count}`}</p>
+                          </Row>
+                        </Fragment>
+                      ))}
+                    </div>
+                  </>
                 ) : (
-                  inactivePins.map((pin) => {
-                    return (
-                      <Fragment key={pin.id}>
-                        <Row
-                          postId={String(pin.id)}
-                          title={pin.name}
-                          address={pin.address}
-                          datePosted={pin.posted_at}
-                          link={`/admin-evacDetails/${pin.id}`}
-                          isExpired={pin.is_expired}
-                          isDeactivated={pin.is_deactivated}
-                          isUserDeac={pin.is_user_deactivated}
-                          buttonId="Admin_PinsInactiveEvacDetailsBtn"
-                          showBtn
-                        ></Row>
-                      </Fragment>
-                    );
-                  })
+                  <>
+                    <div className="hidden md:block">
+                      <DataTable columns={EvacColumns} data={inactivePins} />
+                    </div>
+                    <div className="md:hidden">
+                      {inactivePins.map((pin) => {
+                        return (
+                          <Fragment key={pin.id}>
+                            <Row
+                              postId={String(pin.id)}
+                              title={pin.name}
+                              address={pin.address}
+                              datePosted={pin.posted_at}
+                              link={`/admin-evacDetails/${pin.id}`}
+                              isExpired={pin.is_expired}
+                              isDeactivated={pin.is_deactivated}
+                              isUserDeac={pin.is_user_deactivated}
+                              buttonId="Admin_PinsInactiveEvacDetailsBtn"
+                              showBtn
+                            ></Row>
+                          </Fragment>
+                        );
+                      })}
+                    </div>
+                  </>
                 )
               ) : !isEvac && activeHaz ? (
-                activeHazards.map((path) => {
-                  if (
-                    !path.is_expired &&
-                    !path.is_deactivated &&
-                    !path.is_user_deactivated
-                  ) {
-                    return (
-                      <Fragment key={path.id}>
-                        <Row
-                          postId={String(path.id)}
-                          title="Flood"
-                          desc={path.level}
-                          address={path.description}
-                          datePosted={path.posted_at}
-                          link={`/admin-hazardDetails/${path.id}`}
-                          isExpired={path.is_expired}
-                          buttonId="Admin_PinsActiveHazDetailsBtn"
-                          showBtn
-                        >
-                          <div
-                            className={`mt-2 px-2 py-1 rounded-3xl w-fit text-sm`}
-                            id="Admin_PinsActiveHazLevel"
-                            style={{
-                              backgroundColor:
-                                path.level === "Gutter-Deep" ||
-                                path.level === "Half Knee-Deep"
-                                  ? colorHazard.lightBlue
-                                  : path.level === "Half Tire-Deep" ||
-                                      path.level === "Knee-Deep"
-                                    ? colorHazard.darkBlue
-                                    : path.level === "Tire-Deep" ||
-                                        path.level === "Waist-Deep" ||
-                                        path.level === "Chest-Deep"
-                                      ? colorHazard.red
-                                      : colorHazard.fallback,
-                              color:
-                                path.level === "Gutter-Deep" ||
-                                path.level === "Half Knee-Deep"
-                                  ? "Black"
-                                  : path.level === "Half Tire-Deep" ||
-                                      path.level === "Knee-Deep"
-                                    ? "White"
-                                    : path.level === "Tire-Deep" ||
-                                        path.level === "Waist-Deep" ||
-                                        path.level === "Chest-Deep"
-                                      ? "White"
-                                      : colorHazard.fallback,
-                            }}
-                          >
-                            {path.level}
-                          </div>
-                        </Row>
-                      </Fragment>
-                    );
-                  }
-                })
-              ) : flaggedHaz ? (
-                flaggedPaths.map((paths) => (
-                  <Fragment key={paths.flag_id}>
-                    <Row
-                      postId={String(paths.flag_id)}
-                      title={paths.reason}
-                      desc={`On Flood Path ID: ${paths.flood_path_id}`}
-                      link={`/admin-flagged/${paths.flood_path_id}`}
-                      buttonId="Admin_PinsFlagHazDetailsBtn"
-                      showBtn
+                <>
+                  <div className="hidden md:block">
+                    <DataTable
+                      columns={HazColumns}
+                      data={activeHazards.filter(
+                        (path) =>
+                          !path.is_expired &&
+                          !path.is_deactivated &&
+                          !path.is_user_deactivated,
+                      )}
                     />
-                  </Fragment>
-                ))
-              ) : (
-                activeHazards.map((path) => {
-                  if (
-                    path.is_expired ||
-                    path.is_deactivated ||
-                    path.is_user_deactivated
-                  ) {
-                    return (
-                      <Fragment key={path.id}>
+                  </div>
+                  <div className="md:hidden">
+                    {activeHazards.map((path) => {
+                      if (
+                        !path.is_expired &&
+                        !path.is_deactivated &&
+                        !path.is_user_deactivated
+                      ) {
+                        return (
+                          <Fragment key={path.id}>
+                            <Row
+                              postId={String(path.id)}
+                              title="Flood"
+                              desc={path.level}
+                              address={path.description}
+                              datePosted={path.posted_at}
+                              link={`/admin-hazardDetails/${path.id}`}
+                              isExpired={path.is_expired}
+                              buttonId="Admin_PinsActiveHazDetailsBtn"
+                              showBtn
+                            >
+                              <div
+                                className={`mt-2 px-2 py-1 rounded-3xl w-fit text-sm`}
+                                id="Admin_PinsActiveHazLevel"
+                                style={{
+                                  backgroundColor:
+                                    path.level === "Gutter-Deep" ||
+                                    path.level === "Half Knee-Deep"
+                                      ? colorHazard.lightBlue
+                                      : path.level === "Half Tire-Deep" ||
+                                          path.level === "Knee-Deep"
+                                        ? colorHazard.darkBlue
+                                        : path.level === "Tire-Deep" ||
+                                            path.level === "Waist-Deep" ||
+                                            path.level === "Chest-Deep"
+                                          ? colorHazard.red
+                                          : colorHazard.fallback,
+                                  color:
+                                    path.level === "Gutter-Deep" ||
+                                    path.level === "Half Knee-Deep"
+                                      ? "Black"
+                                      : path.level === "Half Tire-Deep" ||
+                                          path.level === "Knee-Deep"
+                                        ? "White"
+                                        : path.level === "Tire-Deep" ||
+                                            path.level === "Waist-Deep" ||
+                                            path.level === "Chest-Deep"
+                                          ? "White"
+                                          : colorHazard.fallback,
+                                }}
+                              >
+                                {path.level}
+                              </div>
+                            </Row>
+                          </Fragment>
+                        );
+                      }
+                    })}
+                  </div>
+                </>
+              ) : flaggedHaz ? (
+                <>
+                  <div className="hidden md:block">
+                    <DataTable
+                      columns={HazFlaggedColumns}
+                      data={flaggedPaths}
+                    />
+                  </div>
+                  <div className="md:hidden">
+                    {flaggedPaths.map((paths) => (
+                      <Fragment key={paths.flag_id}>
                         <Row
-                          postId={String(path.id)}
-                          title="Flood"
-                          address={path.description}
-                          datePosted={path.posted_at}
-                          link={`/admin-hazardDetails/${path.id}`}
-                          isExpired={path.is_expired}
-                          isDeactivated={path.is_deactivated}
-                          isUserDeac={path.is_user_deactivated}
-                          buttonId="Admin_PinsInactiveHazDetailsBtn"
+                          postId={String(paths.flag_id)}
+                          title={paths.reason}
+                          desc={`On Flood Path ID: ${paths.flood_path_id}`}
+                          link={`/admin-flagged/${paths.flood_path_id}`}
+                          buttonId="Admin_PinsFlagHazDetailsBtn"
                           showBtn
-                        >
-                          <div
-                            className={`mt-2 px-2 py-1 rounded-3xl w-fit text-sm`}
-                            id="Admin_PinsInactiveHazLevel"
-                            style={{
-                              backgroundColor:
-                                path.level === "Gutter-Deep" ||
-                                path.level === "Half Knee-Deep"
-                                  ? colorHazard.lightBlue
-                                  : path.level === "Half Tire-Deep" ||
-                                      path.level === "Knee-Deep"
-                                    ? colorHazard.darkBlue
-                                    : path.level === "Tire-Deep" ||
-                                        path.level === "Waist-Deep" ||
-                                        path.level === "Chest-Deep"
-                                      ? colorHazard.red
-                                      : colorHazard.fallback,
-                              color:
-                                path.level === "Gutter-Deep" ||
-                                path.level === "Half Knee-Deep"
-                                  ? "Black"
-                                  : path.level === "Half Tire-Deep" ||
-                                      path.level === "Knee-Deep"
-                                    ? "White"
-                                    : path.level === "Tire-Deep" ||
-                                        path.level === "Waist-Deep" ||
-                                        path.level === "Chest-Deep"
-                                      ? "White"
-                                      : colorHazard.fallback,
-                            }}
-                          >
-                            {path.level}
-                          </div>
-                        </Row>
+                        />
                       </Fragment>
-                    );
-                  }
-                })
+                    ))}
+                  </div>
+                </>
+              ) : (
+                <>
+                  <div className="hidden md:block">
+                    <DataTable
+                      columns={HazColumns}
+                      data={activeHazards.filter(
+                        (path) =>
+                          path.is_expired ||
+                          path.is_deactivated ||
+                          path.is_user_deactivated,
+                      )}
+                    />
+                  </div>
+                  <div className="md:hidden">
+                    {activeHazards.map((path) => {
+                      if (
+                        path.is_expired ||
+                        path.is_deactivated ||
+                        path.is_user_deactivated
+                      ) {
+                        return (
+                          <Fragment key={path.id}>
+                            <Row
+                              postId={String(path.id)}
+                              title="Flood"
+                              address={path.description}
+                              datePosted={path.posted_at}
+                              link={`/admin-hazardDetails/${path.id}`}
+                              isExpired={path.is_expired}
+                              isDeactivated={path.is_deactivated}
+                              isUserDeac={path.is_user_deactivated}
+                              buttonId="Admin_PinsInactiveHazDetailsBtn"
+                              showBtn
+                            >
+                              <div
+                                className={`mt-2 px-2 py-1 rounded-3xl w-fit text-sm`}
+                                id="Admin_PinsInactiveHazLevel"
+                                style={{
+                                  backgroundColor:
+                                    path.level === "Gutter-Deep" ||
+                                    path.level === "Half Knee-Deep"
+                                      ? colorHazard.lightBlue
+                                      : path.level === "Half Tire-Deep" ||
+                                          path.level === "Knee-Deep"
+                                        ? colorHazard.darkBlue
+                                        : path.level === "Tire-Deep" ||
+                                            path.level === "Waist-Deep" ||
+                                            path.level === "Chest-Deep"
+                                          ? colorHazard.red
+                                          : colorHazard.fallback,
+                                  color:
+                                    path.level === "Gutter-Deep" ||
+                                    path.level === "Half Knee-Deep"
+                                      ? "Black"
+                                      : path.level === "Half Tire-Deep" ||
+                                          path.level === "Knee-Deep"
+                                        ? "White"
+                                        : path.level === "Tire-Deep" ||
+                                            path.level === "Waist-Deep" ||
+                                            path.level === "Chest-Deep"
+                                          ? "White"
+                                          : colorHazard.fallback,
+                                }}
+                              >
+                                {path.level}
+                              </div>
+                            </Row>
+                          </Fragment>
+                        );
+                      }
+                    })}
+                  </div>
+                </>
               )}
             </div>
           </div>

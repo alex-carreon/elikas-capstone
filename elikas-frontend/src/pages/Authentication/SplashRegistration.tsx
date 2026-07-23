@@ -2,6 +2,7 @@ import { Card } from "@/components/ui/card";
 import carousel1 from "@/assets/Registration/Carousel1.svg";
 import carousel2 from "@/assets/Registration/Carousel2.svg";
 import carousel3 from "@/assets/Registration/Carousel3.svg";
+import carousel4 from "@/assets/Registration/Carousel4.svg";
 import {
   Carousel,
   CarouselContent,
@@ -76,6 +77,14 @@ function SplashRegistration() {
                   text="Mark flooded roads or provide the safety of your home to help your neighbors in need. Keep informed, give support, and let our Bayanihan flow with eLikas!"
                 ></CarouselCard>
               </CarouselItem>
+              <CarouselItem key={4} id="Splash_CarouselItem3">
+                <CarouselCard
+                  img={carousel4}
+                  alt="Carousel Image 4"
+                  header="Stay Alert, Stay Safe"
+                  text="Flood situations and evacuation centers can change minute to minute. We update as fast as we can, but always verify with local authorities when it really matters."
+                ></CarouselCard>
+              </CarouselItem>
             </CarouselContent>
           </Carousel>
           <div
@@ -103,11 +112,18 @@ function SplashRegistration() {
                 (current === 2 ? "fill-gray-500" : "fill-gray-300")
               }
             />
+            <Circle
+              id="Splash_CarouselIndicator4"
+              className={
+                "h-3 w-3 stroke-none " +
+                (current === 3 ? "fill-gray-500" : "fill-gray-300")
+              }
+            />
           </div>
         </div>
         <br />
         <div className="w-full flex flex-col justify-center items-center m-0 gap-2">
-          {current === 2 ? (
+          {current === 3 ? (
             <Link to="/Registration/Form" className="w-full max-w-xs">
               <ButtonComp
                 text="Get Started"
@@ -123,7 +139,7 @@ function SplashRegistration() {
               id="Splash_NextBtn"
               variant="primary"
               onClick={
-                current === 2
+                current === 3
                   ? () => api?.scrollNext()
                   : () => api?.scrollNext()
               }

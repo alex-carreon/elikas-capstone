@@ -10,7 +10,7 @@ interface CountRowProps {
 
 function CountRow({ title, lastUpdated, count, loading }: CountRowProps) {
   return (
-    <div className="bg-white w-full rounded-lg h-content py-2 px-4 flex flex-row justify-between items-center shadow-md">
+    <div className="bg-white w-full md:w-sm rounded-lg h-content py-2 px-4 flex flex-row md:flex-col justify-between items-center md:items-start shadow-md">
       <div className="flex flex-col">
         <p className="text-xs font-bold" style={{ color: colors.heading }}>
           {title}
