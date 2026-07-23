@@ -119,7 +119,7 @@ function Hotlines() {
         </div>
 
         {/* Hotline rows */}
-        <div className="w-full max-w-md flex flex-col justify-start gap-4">
+        <div className="w-full max-w-md grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 2xl: grid-cols-4">
           {hotlines.map((hotline) => {
             return (
               <HotlineRow

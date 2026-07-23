@@ -56,7 +56,7 @@ function HotlineRow({
     <Fragment key={id}>
       <div className="w-full max-w-sm">
         <p className="italic text-xs">Last Update: {lastUpdate}</p>
-        <div className="bg-[#FFE6A9] p-4 rounded-xl shadow-xl border-solid border-1 border-amber-300 flex flex-col gap-2">
+        <div className="h-full bg-[#FFE6A9] p-4 rounded-xl shadow-xl border-solid border-1 border-amber-300 flex flex-col gap-2">
           <div className="flex flex-row justify-between gap-2">
             <p>
               <b>{name}</b>
@@ -84,7 +84,7 @@ function HotlineRow({
               </button>
             )}
           </div>
-          <div className="flex flex-col gap-2">
+          <div className="flex flex-1 flex-col gap-2">
             <div className="flex flex-row text-sm items-center gap-1">
               <div className="w-fit h-fit flex flex-row gap-1 items-center px-3 py-1 rounded-lg border border-black">
                 <MapPin strokeWidth={2} size={12} />

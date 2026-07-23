@@ -18,27 +18,15 @@ import {
 } from "@/components/ui/collapsible";
 import SelectDropdown from "@/components/SelectDropdown";
 import { Toggle } from "@/components/ui/toggle";
-
-type Users = {
-  id: number;
-  location: string;
-  name: string;
-  role: string;
-};
-
-type submittedBy = {
-  id: number;
-  username: string;
-  role: string;
-};
-
-type Feedback = {
-  id: number;
-  rating: number;
-  message: string;
-  sent_at: string;
-  submitted_by: submittedBy;
-};
+import {
+  IndivColumns,
+  type IndivUsers,
+} from "@/components/Admin/DataTable/IndivColumns";
+import { DataTable } from "@/components/Admin/DataTable/DataTable";
+import {
+  FeedbackColumns,
+  type Feedback,
+} from "@/components/Admin/DataTable/FeedbackColumns";
 
 type Barangays = {
   id: number;
@@ -53,8 +41,8 @@ function IndivUsers() {
   const [feedbackAve, setFeedbackAve] = useState(0);
   const [isActiveUsers, setIsActiveUsers] = useState(true);
   const [isFeedback, setIsFeedback] = useState(false);
-  const [activeUsers, setActiveUsers] = useState<Users[]>([]);
-  const [deacUsers, setDeacUsers] = useState<Users[]>([]);
+  const [activeUsers, setActiveUsers] = useState<IndivUsers[]>([]);
+  const [deacUsers, setDeacUsers] = useState<IndivUsers[]>([]);
   const [feedback, setFeedback] = useState<Feedback[]>([]);
   const [loading, setLoading] = useState(true);
   const [countLoad, setCountLoad] = useState(true);
@@ -265,7 +253,7 @@ function IndivUsers() {
   return (
     <>
       <div className="w-full flex flex-col items-center">
-        <div className="w-full max-w-md">
+        <div className="w-full">
           <DashboardHeader title="Indiv Users">
             <CountRow
               title="Active Users"
@@ -284,43 +272,46 @@ function IndivUsers() {
             />
           </DashboardHeader>
           <div className="bg-white -mt-8 rounded-4xl p-4 flex flex-col gap-2">
-            <Tabs
-              defaultValue="overview"
-              className="w-full max-w-md flex items-center"
-            >
-              <TabsList className="w-full flex justify-between">
-                <TabsTrigger
-                  value="Active"
-                  onClick={() => {
-                    setIsActiveUsers(true);
-                    setIsFeedback(false);
-                  }}
-                  id="Admin_IndivIsActiveTrigger"
-                >
-                  Active
-                </TabsTrigger>
-                <TabsTrigger
-                  value="Deactivated"
-                  onClick={() => {
-                    setIsActiveUsers(false);
-                    setIsFeedback(false);
-                  }}
-                  id="Admin_IndivNotActiveTrigger"
-                >
-                  Deactivated
-                </TabsTrigger>
-                <TabsTrigger
-                  value="Feedback"
-                  onClick={() => {
-                    setIsActiveUsers(false);
-                    setIsFeedback(true);
-                  }}
-                  id="Admin_IndivFeedbackTrigger"
-                >
-                  Feedback
-                </TabsTrigger>
-              </TabsList>
-            </Tabs>
+            <div className="w-full flex justify-center">
+              <Tabs
+                defaultValue="overview"
+                className="w-full max-w-lg flex items-center"
+              >
+                <TabsList className="w-full flex justify-between">
+                  <TabsTrigger
+                    value="Active"
+                    onClick={() => {
+                      setIsActiveUsers(true);
+                      setIsFeedback(false);
+                    }}
+                    id="Admin_IndivIsActiveTrigger"
+                  >
+                    Active
+                  </TabsTrigger>
+                  <TabsTrigger
+                    value="Deactivated"
+                    onClick={() => {
+                      setIsActiveUsers(false);
+                      setIsFeedback(false);
+                    }}
+                    id="Admin_IndivNotActiveTrigger"
+                  >
+                    Deactivated
+                  </TabsTrigger>
+                  <TabsTrigger
+                    value="Feedback"
+                    onClick={() => {
+                      setIsActiveUsers(false);
+                      setIsFeedback(true);
+                    }}
+                    id="Admin_IndivFeedbackTrigger"
+                  >
+                    Feedback
+                  </TabsTrigger>
+                </TabsList>
+              </Tabs>
+            </div>
+
             <Collapsible className="w-full flex-col items-center gap-2">
               <div className="w-full flex justify-between">
                 <InputGroup className="w-2/3">
@@ -447,7 +438,7 @@ function IndivUsers() {
               {loading ? (
                 <>
                   <div className="w-full flex flex-col items-center">
-                    <div className="flex w-full max-w-sm flex-col gap-7 pt-4">
+                    <div className="flex w-full flex-col gap-7 pt-4">
                       <div className="flex flex-col gap-3">
                         <Skeleton className="h-24 w-full bg-[#59260B]/30" />
                       </div>
@@ -461,50 +452,70 @@ function IndivUsers() {
                   </div>
                 </>
               ) : isActiveUsers ? (
-                activeUsers.map((user, index) => {
-                  return (
-                    <Row
-                      key={index}
-                      postId={String(user.id)}
-                      title={user.name}
-                      address={user.location}
-                      link={`/admin-userDetails/${user.id}`}
-                      buttonId="Admin_ActiveIndivDetailsBtn"
-                      showBtn
-                    />
-                  );
-                })
+                <>
+                  <div className="hidden md:block">
+                    <DataTable columns={IndivColumns} data={activeUsers} />
+                  </div>
+                  <div className="md:hidden">
+                    {activeUsers.map((user, index) => {
+                      return (
+                        <Row
+                          key={index}
+                          postId={String(user.id)}
+                          title={user.name}
+                          address={user.location}
+                          link={`/admin-userDetails/${user.id}`}
+                          buttonId="Admin_ActiveIndivDetailsBtn"
+                          showBtn
+                        />
+                      );
+                    })}
+                  </div>
+                </>
               ) : isFeedback ? (
-                feedback.map((feedback, index) => {
-                  return (
-                    <Row
-                      key={index}
-                      postId={String(feedback.id)}
-                      title={`Rating: ${String(feedback.rating)}`}
-                      desc={feedback.message}
-                      address={`User: ${feedback.submitted_by.username} - ${feedback.submitted_by.role}`}
-                      datePosted={feedback.sent_at}
-                      link=""
-                      buttonId="Admin_DeacIndivDetailsBtn"
-                    />
-                  );
-                })
+                <>
+                  <div className="hidden md:block">
+                    <DataTable columns={FeedbackColumns} data={feedback} />
+                  </div>
+                  <div className="md:hidden">
+                    {feedback.map((feedback, index) => {
+                      return (
+                        <Row
+                          key={index}
+                          postId={String(feedback.id)}
+                          title={`Rating: ${String(feedback.rating)}`}
+                          desc={feedback.message}
+                          address={`User: ${feedback.submitted_by.username} - ${feedback.submitted_by.role}`}
+                          datePosted={feedback.sent_at}
+                          link=""
+                          buttonId="Admin_DeacIndivDetailsBtn"
+                        />
+                      );
+                    })}
+                  </div>
+                </>
               ) : (
-                deacUsers.map((user, index) => {
-                  return (
-                    <Row
-                      key={index}
-                      postId={String(user.id)}
-                      title={user.name}
-                      address={user.location}
-                      link={`/admin-userDetails/${user.id}`}
-                      buttonId="Admin_DeacIndivDetailsBtn"
-                      showBtn
-                    />
-                  );
-                })
+                <>
+                  <div className="hidden md:block">
+                    <DataTable columns={IndivColumns} data={deacUsers} />
+                  </div>
+                  <div className="md:hidden">
+                    {deacUsers.map((user, index) => {
+                      return (
+                        <Row
+                          key={index}
+                          postId={String(user.id)}
+                          title={user.name}
+                          address={user.location}
+                          link={`/admin-userDetails/${user.id}`}
+                          buttonId="Admin_DeacIndivDetailsBtn"
+                          showBtn
+                        />
+                      );
+                    })}
+                  </div>
+                </>
               )}
-              {}
             </div>
           </div>
         </div>

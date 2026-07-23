@@ -17,6 +17,7 @@ import { useInstall } from "@/context/InstallContext";
 import { Button } from "@/components/ui/button";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import colors from "@/constants/colors";
+import { Info } from "lucide-react";
 
 type pathReminder = {
   floodpath_id: number;
@@ -359,18 +360,31 @@ function Map() {
           </div>
         )
       )}
-
       <div
         className={cn(
           role === "admin"
             ? `flex justify-center w-full`
-            : `flex justify-center w-full pt-13`,
+            : role === "brgy_op"
+              ? `flex items-center w-full pt-15 flex-col`
+              : `flex justify-center w-full pt-13`,
         )}
       >
-        <div className="relative max-w-md w-full h-full">
+        {role === "brgy_op" && (
+          <div className="w-full max-w-md bg-[#5f80aa] h-12 flex flex-row items-center justify-left p-4 gap-2">
+            <Info color="white" size="30" strokeWidth={1.5} />
+            <p className="text-white text-sm">
+              You are accessing eLikas as a Barangay Operator
+            </p>
+          </div>
+        )}
+        <div className="relative w-full h-full">
           <MapContainer
             id="Map_Container"
-            style={{ height: "93dvh", width: "100%" }}
+            style={
+              role === "brgy_op"
+                ? { height: "87dvh", width: "100%" }
+                : { height: "93dvh", width: "100%" }
+            }
             maxBounds={luzonBounds}
             maxBoundsViscosity={1.0}
             // minZoom={12}
@@ -393,7 +407,13 @@ function Map() {
               className="absolute top-0 left-0 w-full pointer-events-none z-[1000]"
               style={{ height: "100%" }}
             >
-              <div className="flex flex-col justify-end px-4 pt-4">
+              <div
+                className={cn(
+                  role === "brgy_op"
+                    ? "flex flex-col justify-end px-4"
+                    : "flex flex-col justify-end px-4 pt-4",
+                )}
+              >
                 <div className="pointer-events-auto">
                   <span>
                     <Filter />

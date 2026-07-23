@@ -4,12 +4,15 @@ import { useState } from "react";
 import { Outlet, useLocation } from "react-router";
 import { useNavigate } from "react-router";
 import AlertDialogue from "../AlertDialogue";
+import { useUserContext } from "@/context/AuthContext";
 
 function ConstNavbar({ redirect }: { redirect?: string }) {
   const [showLeave, setShowLeave] = useState(false);
 
   const navigate = useNavigate();
   const location = useLocation();
+
+  const { role } = useUserContext();
 
   return (
     <>
@@ -37,7 +40,7 @@ function ConstNavbar({ redirect }: { redirect?: string }) {
         />
       )}
       <div className="fixed top-0 left-0 right-0 z-50 h-content flex justify-center">
-        <div className="w-full max-w-md flex flex-row justify-start items-center p-3 shadow-lg bg-white">
+        <div className="w-full flex flex-row justify-start items-center p-3 shadow-lg bg-white">
           <ArrowLeft
             id="Navbar_Back"
             onClick={() => {
@@ -48,8 +51,13 @@ function ConstNavbar({ redirect }: { redirect?: string }) {
               }
             }}
           />
-          <div className="flex flex-row justify-center items-center w-full">
+          <div className="flex flex-row gap-2 justify-center items-center w-full">
             <LogoComp />
+            {role === "brgy_op" && (
+              <div className="h-fit w-fit px-4 py-1 rounded-xl bg-[#5f80aa]">
+                <p className="text-xs text-white">Barangay Mode</p>
+              </div>
+            )}
           </div>
         </div>
       </div>
