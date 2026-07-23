@@ -18,7 +18,7 @@ import History from "@/pages/Shared/History";
 import Loading from "./pages/Shared/Loading";
 import Profile from "@/pages/Shared/Profile";
 import HotlinesForm from "./pages/brgy_ops/Forms/HotlinesForm";
-import IndivUsers from "@/pages/Admin/IndivUsers";
+import IndivUsersPage from "@/pages/Admin/IndivUsers";
 import UserDetails from "./pages/Admin/Forms/UserDetails";
 import BrgyUsers from "./pages/Admin/BrgyUsers";
 import GovopDetails from "./pages/Admin/Forms/GovOpDetails";
@@ -136,7 +136,7 @@ function App() {
             <Route element={<ProtectedRoute userRole={"admin"} />}>
               <Route element={<Layout />}>
                 <Route path="/admin-map" element={<Map />} />
-                <Route path="/admin-indiv" element={<IndivUsers />} />
+                <Route path="/admin-indiv" element={<IndivUsersPage />} />
                 <Route path="/admin-brgy" element={<BrgyUsers />} />
                 <Route path="/admin-pins" element={<Pins />} />
                 <Route path="/admin-sensors" element={<Sensors />} />
