@@ -35,7 +35,7 @@ type Barangays = {
   location: string;
 };
 
-function IndivUsers() {
+function IndivUsersPage() {
   const [activeCount, setActiveCount] = useState(0);
   const [deacCount, setDeacCount] = useState(0);
   const [feedbackAve, setFeedbackAve] = useState(0);
@@ -524,4 +524,4 @@ function IndivUsers() {
   );
 }
 
-export default IndivUsers;
+export default IndivUsersPage;
