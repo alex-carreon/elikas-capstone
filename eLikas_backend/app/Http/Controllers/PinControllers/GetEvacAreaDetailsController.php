@@ -57,7 +57,9 @@ class GetEvacAreaDetailsController extends Controller
                 'kitchen_count' => $pin->kitchen_count,
                 'child_prayer_count' => $pin->child_prayer_count,
                 'breastfeed_count' => $pin->breastfeed_count,
-                'other_facilities' => $pin->other_facilities,
+                'other_facilities' => $pin->other_facilities
+                    ? array_values(array_filter(array_map('trim', explode(',', $pin->other_facilities)), fn ($v) => $v !== ''))
+                    : [],
                 'contact_person' => $pin->contact_person,
                 'contact_number' => $pin->contact_number,
                 'is_deactivated' => $pin->social_element?->deactivated_at !== null,
