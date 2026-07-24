@@ -58,6 +58,8 @@ class StoreEvacuationAreaController extends Controller
             'kitchen_count' => 'nullable|integer|min:0',
             'child_prayer_count' => 'nullable|integer|min:0',
             'breastfeed_count' => 'nullable|integer|min:0',
+            // will only accept correctly formatted comma-separated strings
+            // example: alpha, bravo, charlie
             'other_facilities' => ['nullable', 'string', 'regex:/^[^,]+(,\s*[^,]+)*$/'],
             'contact_person' => 'nullable|string|max:100',
             'contact_number' => 'nullable|string|max:15',
