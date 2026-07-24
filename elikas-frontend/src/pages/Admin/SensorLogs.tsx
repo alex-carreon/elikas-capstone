@@ -9,6 +9,9 @@ import { toZonedTime } from "date-fns-tz";
 import { format } from "date-fns";
 import { toast } from "sonner";
 import PaginationComp from "@/components/Pagination";
+import { DataTable } from "@/components/Admin/DataTable/DataTable";
+import { SensorLogColumns } from "@/components/Admin/DataTable/SensorLogColumns";
+import colors from "@/constants/colors";
 
 type sensorLog = {
   waterLevel: number;
@@ -93,79 +96,173 @@ function SensorLogs() {
 
   return (
     <>
-      <FormLayout formTitle={`Sensor Logs: ${sensorcode}`}>
-        <PaginationComp
-          onClickPrev={() => {
-            const updated = next - 1;
-            setNext(updated);
-            getByPage(updated);
-          }}
-          onClick1={() => {
-            setNext(1);
-            getByPage(1);
-          }}
-          onClick2={() => {
-            setNext(2);
-            getByPage(2);
-          }}
-          onClick3={() => {
-            setNext(3);
-            getByPage(3);
-          }}
-          onClickNext={() => {
-            const updated = next + 1;
-            setNext(updated);
-            getByPage(updated);
-          }}
-          next={next}
-        />
-        {loading ? (
-          <>
-            <div className="w-full flex flex-col items-center">
-              <div className="flex w-full max-w-sm flex-col gap-7 pt-4">
-                <div className="flex flex-col gap-3">
-                  <Skeleton className="h-24 w-full bg-[#59260B]/30" />
-                </div>
-                <div className="flex flex-col gap-3">
-                  <Skeleton className="h-24 w-full bg-[#59260B]/30" />
-                </div>
-                <div className="flex flex-col gap-3">
-                  <Skeleton className="h-24 w-full bg-[#59260B]/30" />
+      <div className="md:hidden">
+        <FormLayout formTitle={`Sensor Logs: ${sensorcode}`}>
+          <PaginationComp
+            onClickPrev={() => {
+              const updated = next - 1;
+              setNext(updated);
+              getByPage(updated);
+            }}
+            onClick1={() => {
+              setNext(1);
+              getByPage(1);
+            }}
+            onClick2={() => {
+              setNext(2);
+              getByPage(2);
+            }}
+            onClick3={() => {
+              setNext(3);
+              getByPage(3);
+            }}
+            onClickNext={() => {
+              const updated = next + 1;
+              setNext(updated);
+              getByPage(updated);
+            }}
+            next={next}
+          />
+          {loading ? (
+            <>
+              <div className="w-full flex flex-col items-center">
+                <div className="flex w-full flex-col gap-7 pt-4">
+                  <div className="flex flex-col gap-3">
+                    <Skeleton className="h-24 w-full bg-[#59260B]/30" />
+                  </div>
+                  <div className="flex flex-col gap-3">
+                    <Skeleton className="h-24 w-full bg-[#59260B]/30" />
+                  </div>
+                  <div className="flex flex-col gap-3">
+                    <Skeleton className="h-24 w-full bg-[#59260B]/30" />
+                  </div>
                 </div>
               </div>
-            </div>
-          </>
-        ) : (
-          <>
-            <div className="flex flex-col gap-2">
-              {logs.length > 0 ? (
-                logs.map((log, index) => (
-                  <Fragment key={index}>
-                    <Row
-                      postId={sensorcode}
-                      title={`Water Level: ${log.waterLevel} meters`}
-                      desc={`Time stamp: ${convertDateTime(log.sensorTimestamp)}`}
-                      address={`Log Time: ${convertDateTime(log.logTime)}`}
-                    >
-                      <div className="flex flex-row gap-2">
-                        <div
-                          className={`mt-2 px-2 py-1 rounded-3xl ${log.statusLevel == "normal" ? "bg-green-700/60" : log.statusLevel == "yellow" ? "bg-yellow-700/60" : log.statusLevel == "orange" ? "bg-amber-700/60" : log.statusLevel == "red" ? "bg-red-700/60" : "bg-gray-500/30"} w-fit text-sm`}
+            </>
+          ) : (
+            <>
+              <div className="hidden md:block px-8 mt-4">
+                <DataTable columns={SensorLogColumns} data={logs} />
+              </div>
+              <div className="md:hidden">
+                <div className="flex flex-col gap-2">
+                  {logs.length > 0 ? (
+                    logs.map((log, index) => (
+                      <Fragment key={index}>
+                        <Row
+                          postId={sensorcode}
+                          title={`Water Level: ${log.waterLevel} meters`}
+                          desc={`Time stamp: ${convertDateTime(log.sensorTimestamp)}`}
+                          address={`Log Time: ${convertDateTime(log.logTime)}`}
                         >
-                          {log.statusLevel
-                            ? log.statusLevel
-                            : "No Level Detected"}
-                        </div>
+                          <div className="flex flex-row gap-2">
+                            <div
+                              className={`mt-2 px-2 py-1 rounded-3xl ${log.statusLevel == "normal" ? "bg-green-700/60" : log.statusLevel == "yellow" ? "bg-yellow-700/60" : log.statusLevel == "orange" ? "bg-amber-700/60" : log.statusLevel == "red" ? "bg-red-700/60" : "bg-gray-500/30"} w-fit text-sm`}
+                            >
+                              {log.statusLevel
+                                ? log.statusLevel
+                                : "No Level Detected"}
+                            </div>
+                          </div>
+                        </Row>
+                      </Fragment>
+                    ))
+                  ) : (
+                    <p className="text-center">No Logs yet!</p>
+                  )}
+                </div>
+              </div>
+            </>
+          )}
+        </FormLayout>
+      </div>
+      <div className="hidden md:block">
+        <FormLayout>
+          <div className="flex flex-col gap-8 mx-18">
+            <p className="text-2xl font-bold" style={{ color: colors.heading }}>
+              Sensor {sensorcode} logs
+            </p>
+            <div>
+              <PaginationComp
+                onClickPrev={() => {
+                  const updated = next - 1;
+                  setNext(updated);
+                  getByPage(updated);
+                }}
+                onClick1={() => {
+                  setNext(1);
+                  getByPage(1);
+                }}
+                onClick2={() => {
+                  setNext(2);
+                  getByPage(2);
+                }}
+                onClick3={() => {
+                  setNext(3);
+                  getByPage(3);
+                }}
+                onClickNext={() => {
+                  const updated = next + 1;
+                  setNext(updated);
+                  getByPage(updated);
+                }}
+                next={next}
+              />
+              {loading ? (
+                <>
+                  <div className="w-full flex flex-col items-center">
+                    <div className="flex w-full flex-col gap-7 pt-4">
+                      <div className="flex flex-col gap-3">
+                        <Skeleton className="h-24 w-full bg-[#59260B]/30" />
                       </div>
-                    </Row>
-                  </Fragment>
-                ))
+                      <div className="flex flex-col gap-3">
+                        <Skeleton className="h-24 w-full bg-[#59260B]/30" />
+                      </div>
+                      <div className="flex flex-col gap-3">
+                        <Skeleton className="h-24 w-full bg-[#59260B]/30" />
+                      </div>
+                    </div>
+                  </div>
+                </>
               ) : (
-                <p className="text-center">No Logs yet!</p>
+                <>
+                  <div className="hidden md:block px-8">
+                    <DataTable columns={SensorLogColumns} data={logs} />
+                  </div>
+                  <div className="md:hidden">
+                    <div className="flex flex-col gap-2">
+                      {logs.length > 0 ? (
+                        logs.map((log, index) => (
+                          <Fragment key={index}>
+                            <Row
+                              postId={sensorcode}
+                              title={`Water Level: ${log.waterLevel} meters`}
+                              desc={`Time stamp: ${convertDateTime(log.sensorTimestamp)}`}
+                              address={`Log Time: ${convertDateTime(log.logTime)}`}
+                            >
+                              <div className="flex flex-row gap-2">
+                                <div
+                                  className={`mt-2 px-2 py-1 rounded-3xl ${log.statusLevel == "normal" ? "bg-green-700/60" : log.statusLevel == "yellow" ? "bg-yellow-700/60" : log.statusLevel == "orange" ? "bg-amber-700/60" : log.statusLevel == "red" ? "bg-red-700/60" : "bg-gray-500/30"} w-fit text-sm`}
+                                >
+                                  {log.statusLevel
+                                    ? log.statusLevel
+                                    : "No Level Detected"}
+                                </div>
+                              </div>
+                            </Row>
+                          </Fragment>
+                        ))
+                      ) : (
+                        <p className="text-center">No Logs yet!</p>
+                      )}
+                    </div>
+                  </div>
+                </>
               )}
             </div>
-          </>
-        )}
-      </FormLayout>
+          </div>
+        </FormLayout>
+      </div>
     </>
   );
 }

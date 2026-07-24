@@ -335,7 +335,7 @@ function BrgyUsers() {
               </Tabs>
             </div>
 
-            <Collapsible className="w-full flex-col items-center">
+            <Collapsible className="w-full flex-col items-center md:px-8">
               <div className="w-full flex justify-between gap-2">
                 {!isSMS && (
                   <div className="w-30">
@@ -466,7 +466,7 @@ function BrgyUsers() {
                 </>
               ) : isActiveUsers ? (
                 <>
-                  <div className="hidden md:block">
+                  <div className="hidden md:block px-8">
                     <DataTable columns={BrgyColumns} data={activeUsers} />
                   </div>
                   <div className="md:hidden">
@@ -487,7 +487,7 @@ function BrgyUsers() {
                 </>
               ) : isSMS ? (
                 <>
-                  <div className="hidden md:block">
+                  <div className="hidden md:block px-8">
                     <DataTable columns={SMSColumns} data={sms} />
                   </div>
                   <div className="md:hidden">

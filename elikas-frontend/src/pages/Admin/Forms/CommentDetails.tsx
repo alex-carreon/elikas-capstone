@@ -6,6 +6,8 @@ import api from "@/api";
 import TextField from "@/components/TextField";
 import { Field, FieldLabel } from "@/components/ui/field";
 import { toast } from "sonner";
+import colors from "@/constants/colors";
+import FormDesktopSkeleton from "@/pages/Skeletons/FormDesktopSkeleton";
 
 type evacArea = {
   id: number;
@@ -93,94 +95,198 @@ function CommentDetails() {
 
   return (
     <>
-      <FormLayout
-        formTitle="Comment Details"
-        deleteId="Admin_EvacCommentDelete"
-        deleteClick={() => delComment()}
-        isDisabled={disabled}
-        isDeactivated={comment?.is_deactivated}
-      >
-        {loading ? (
-          <div className="flex justify-center">
-            <FormSkeleton />
-          </div>
-        ) : (
-          <>
-            <TextField
-              label="Comment ID"
-              value={String(comment?.id)}
-              inputType="text"
-              id="Admin_EvacCommentId"
-              readonly
-            />
-            <Field>
-              <FieldLabel>Evacuation Pin Commented</FieldLabel>
+      <div className="md:hidden">
+        <FormLayout
+          formTitle="Comment Details"
+          deleteId="Admin_EvacCommentDelete"
+          deleteClick={() => delComment()}
+          isDisabled={disabled}
+          isDeactivated={comment?.is_deactivated}
+        >
+          {loading ? (
+            <div className="flex justify-center">
+              <FormSkeleton />
+            </div>
+          ) : (
+            <>
+              <TextField
+                label="Comment ID"
+                value={String(comment?.id)}
+                inputType="text"
+                id="Admin_EvacCommentId"
+                readonly
+              />
+              <Field>
+                <FieldLabel>Evacuation Pin Commented</FieldLabel>
+                <div className="flex flex-row gap-2">
+                  <TextField
+                    label="Evacuation Pin ID"
+                    value={String(comment?.evac_area.id)}
+                    inputType="text"
+                    id="Admin_EvacCommentPinId"
+                    readonly
+                  />
+                  <TextField
+                    label="Evacuation Pin Name"
+                    value={String(comment?.evac_area.name)}
+                    inputType="text"
+                    id="Admin_EvacCommentPinName"
+                    readonly
+                  />
+                </div>
+              </Field>
+              <TextField
+                label="Content"
+                value={comment?.content}
+                inputType="text"
+                id="Admin_EvacCommentContent"
+                readonly
+              />
+              <Field>
+                <FieldLabel>Media Attached</FieldLabel>
+                {comment?.media && comment.media.length > 0 ? (
+                  comment?.media.map((media) => (
+                    <img src={media} id="Admin_EvacCommentMedia" />
+                  ))
+                ) : (
+                  <p>No Media Attached</p>
+                )}
+              </Field>
+
               <div className="flex flex-row gap-2">
                 <TextField
-                  label="Evacuation Pin ID"
-                  value={String(comment?.evac_area.id)}
+                  label="Upvotes"
+                  value={String(comment?.upvotes)}
                   inputType="text"
-                  id="Admin_EvacCommentPinId"
+                  id="Admin_EvacCommentUpvotes"
                   readonly
                 />
                 <TextField
-                  label="Evacuation Pin Name"
-                  value={String(comment?.evac_area.name)}
+                  label="Downvotes"
+                  value={String(comment?.downvotes)}
                   inputType="text"
-                  id="Admin_EvacCommentPinName"
+                  id="Admin_EvacCommentDownvotes"
                   readonly
                 />
               </div>
-            </Field>
-            <TextField
-              label="Content"
-              value={comment?.content}
-              inputType="text"
-              id="Admin_EvacCommentContent"
-              readonly
-            />
-            <Field>
-              <FieldLabel>Media Attached</FieldLabel>
-              {comment?.media && comment.media.length > 0 ? (
-                comment?.media.map((media) => (
-                  <img src={media} id="Admin_EvacCommentMedia" />
-                ))
+              <div>
+                <TextField
+                  label="Posted at"
+                  value={comment?.posted_at}
+                  inputType="text"
+                  id="Admin_EvacCommentPostedAt"
+                  readonly
+                />
+                <p className="text-xs italic" id="Admin_EvacCommentHasDeac">
+                  Has deactivated: {String(comment?.is_deactivated)}
+                </p>
+              </div>
+            </>
+          )}
+        </FormLayout>
+      </div>
+      <div className="hidden md:block">
+        <FormLayout
+          deleteId="Admin_EvacCommentDelete_Desktop"
+          deleteClick={() => delComment()}
+          isDisabled={disabled}
+          isDeactivated={comment?.is_deactivated}
+        >
+          <div className="flex flex-col gap-8 mx-18">
+            <p className="text-2xl font-bold" style={{ color: colors.heading }}>
+              Evacuation Comment Detail
+            </p>
+            <div className="flex flex-col gap-4 bg-gray-400/20 p-8 rounded-lg">
+              {loading ? (
+                <div className="flex justify-center">
+                  <FormDesktopSkeleton />
+                </div>
               ) : (
-                <p>No Media Attached</p>
-              )}
-            </Field>
+                <>
+                  <TextField
+                    label="Comment ID"
+                    value={String(comment?.id)}
+                    inputType="text"
+                    id="Admin_EvacCommentId"
+                    readonly
+                  />
+                  <Field>
+                    <FieldLabel>Evacuation Pin Commented</FieldLabel>
+                    <div className="flex flex-row gap-2">
+                      <TextField
+                        label="Evacuation Pin ID"
+                        value={String(comment?.evac_area.id)}
+                        inputType="text"
+                        id="Admin_EvacCommentPinId"
+                        readonly
+                      />
+                      <TextField
+                        label="Evacuation Pin Name"
+                        value={String(comment?.evac_area.name)}
+                        inputType="text"
+                        id="Admin_EvacCommentPinName"
+                        readonly
+                      />
+                    </div>
+                  </Field>
+                  <TextField
+                    label="Content"
+                    value={comment?.content}
+                    inputType="text"
+                    id="Admin_EvacCommentContent"
+                    readonly
+                  />
+                  <Field>
+                    <FieldLabel>Media Attached</FieldLabel>
+                    {comment?.media && comment.media.length > 0 ? (
+                      comment?.media.map((media) => (
+                        <div className="flex flex-row flex-wrap gap-2">
+                          <img
+                            src={media}
+                            className="h-20 w-20 shrink-0"
+                            id="Admin_EvacCommentMedia"
+                          />
+                        </div>
+                      ))
+                    ) : (
+                      <p>No Media Attached</p>
+                    )}
+                  </Field>
 
-            <div className="flex flex-row gap-2">
-              <TextField
-                label="Upvotes"
-                value={String(comment?.upvotes)}
-                inputType="text"
-                id="Admin_EvacCommentUpvotes"
-                readonly
-              />
-              <TextField
-                label="Downvotes"
-                value={String(comment?.downvotes)}
-                inputType="text"
-                id="Admin_EvacCommentDownvotes"
-                readonly
-              />
+                  <div className="flex flex-row gap-2">
+                    <TextField
+                      label="Upvotes"
+                      value={String(comment?.upvotes)}
+                      inputType="text"
+                      id="Admin_EvacCommentUpvotes"
+                      readonly
+                    />
+                    <TextField
+                      label="Downvotes"
+                      value={String(comment?.downvotes)}
+                      inputType="text"
+                      id="Admin_EvacCommentDownvotes"
+                      readonly
+                    />
+                  </div>
+                  <div>
+                    <TextField
+                      label="Posted at"
+                      value={comment?.posted_at}
+                      inputType="text"
+                      id="Admin_EvacCommentPostedAt"
+                      readonly
+                    />
+                    <p className="text-xs italic" id="Admin_EvacCommentHasDeac">
+                      Has deactivated: {String(comment?.is_deactivated)}
+                    </p>
+                  </div>
+                </>
+              )}
             </div>
-            <div>
-              <TextField
-                label="Posted at"
-                value={comment?.posted_at}
-                inputType="text"
-                id="Admin_EvacCommentPostedAt"
-                readonly
-              />
-              <p className="text-xs italic" id="Admin_EvacCommentHasDeac">
-                Has deactivated: {String(comment?.is_deactivated)}
-              </p>
-            </div>
-          </>
-        )}
-      </FormLayout>
+          </div>
+        </FormLayout>
+      </div>
     </>
   );
 }

@@ -5,6 +5,7 @@ import { useEffect, useState } from "react";
 import api from "@/api";
 import { useNavigate } from "react-router";
 import { handleSubmit } from "@/lib/hotlineUtils";
+import colors from "@/constants/colors";
 
 type Barangays = {
   id: number;
@@ -116,79 +117,166 @@ function HotlinesAdd() {
 
   return (
     <>
-      <FormLayout
-        updateId="Admin_NewHotlineBtn"
-        updBtnLabel="Create"
-        btnType="submit"
-        formId="Admin_NewHotlineForm"
-      >
-        <>
-          <form
-            onSubmit={(e) => create(e)}
-            className="flex flex-col gap-4"
-            id="Admin_NewHotlineForm"
-          >
-            <TextField
-              label="Hotline Name*"
-              inputType="text"
-              id="Admin_NewHotlineNameField"
-              onSubmit={(e) => setTitle(e.target.value)}
-              isRequired
-            />
-            <TextField
-              label="Hotline Address*"
-              inputType="text"
-              id="Admin_NewHotlineAddressField"
-              onSubmit={(e) => setAddress(e.target.value)}
-              isRequired
-            />
-            <SelectDropdown
-              value={String(cityId)}
-              onValueChange={(val) => setCityId(Number(val))}
-              label="City*"
-              id="Admin_NewHotlineCityField"
-              onSubmit={(e) => setCityId(Number(e.target.value))}
-              options={cities?.map((city) => ({
-                label: city.name,
-                value: String(city.id),
-              }))}
-              isRequired
-              loading={cityLoad}
-            />
-            <SelectDropdown
-              value={String(brgyId)}
-              onValueChange={(val) => setBrgyId(Number(val))}
-              label="Barangay*"
-              id="Admin_NewHotlineBrgyField"
-              onSubmit={(e) => setBrgyId(Number(e.target.value))}
-              options={barangays?.map((brgy) => ({
-                label: brgy.name,
-                value: String(brgy.id),
-              }))}
-              isRequired
-              loading={brgyLoad}
-            />
-            <TextField
-              label="Primary Contact Number*"
-              description="This will be the number the citizens will copy."
-              placeholder="(XXX or XX)XXXXXXX or 09XXXXXXXXX"
-              inputType="text"
-              id="Admin_NewHotlinePrimaryNoField"
-              onSubmit={(e) => setPrimaryNo(e.target.value)}
-              isRequired
-              error={error.primary}
-            />
-            <TextField
-              label="Secondary Contact Number (optional)"
-              inputType="text"
-              placeholder="(XXX or XX)XXXXXXX or 09XXXXXXXXX"
-              id="Admin_NewHotlineSecondaryNoField"
-              onSubmit={(e) => setSecondaryNo(e.target.value)}
-              error={error.secondary}
-            />
-          </form>
-        </>
-      </FormLayout>
+      <div className="md:hidden">
+        <FormLayout
+          updateId="Admin_NewHotlineBtn"
+          updBtnLabel="Create"
+          btnType="submit"
+          formId="Admin_NewHotlineForm"
+        >
+          <>
+            <form
+              onSubmit={(e) => create(e)}
+              className="flex flex-col gap-4"
+              id="Admin_NewHotlineForm"
+            >
+              <TextField
+                label="Hotline Name*"
+                inputType="text"
+                id="Admin_NewHotlineNameField"
+                onSubmit={(e) => setTitle(e.target.value)}
+                isRequired
+              />
+              <TextField
+                label="Hotline Address*"
+                inputType="text"
+                id="Admin_NewHotlineAddressField"
+                onSubmit={(e) => setAddress(e.target.value)}
+                isRequired
+              />
+              <SelectDropdown
+                value={String(cityId)}
+                onValueChange={(val) => setCityId(Number(val))}
+                label="City*"
+                id="Admin_NewHotlineCityField"
+                onSubmit={(e) => setCityId(Number(e.target.value))}
+                options={cities?.map((city) => ({
+                  label: city.name,
+                  value: String(city.id),
+                }))}
+                isRequired
+                loading={cityLoad}
+              />
+              <SelectDropdown
+                value={String(brgyId)}
+                onValueChange={(val) => setBrgyId(Number(val))}
+                label="Barangay*"
+                id="Admin_NewHotlineBrgyField"
+                onSubmit={(e) => setBrgyId(Number(e.target.value))}
+                options={barangays?.map((brgy) => ({
+                  label: brgy.name,
+                  value: String(brgy.id),
+                }))}
+                isRequired
+                loading={brgyLoad}
+              />
+              <TextField
+                label="Primary Contact Number*"
+                description="This will be the number the citizens will copy."
+                placeholder="(XXX or XX)XXXXXXX or 09XXXXXXXXX"
+                inputType="text"
+                id="Admin_NewHotlinePrimaryNoField"
+                onSubmit={(e) => setPrimaryNo(e.target.value)}
+                isRequired
+                error={error.primary}
+              />
+              <TextField
+                label="Secondary Contact Number (optional)"
+                inputType="text"
+                placeholder="(XXX or XX)XXXXXXX or 09XXXXXXXXX"
+                id="Admin_NewHotlineSecondaryNoField"
+                onSubmit={(e) => setSecondaryNo(e.target.value)}
+                error={error.secondary}
+              />
+            </form>
+          </>
+        </FormLayout>
+      </div>
+      <div className="hidden md:block">
+        <FormLayout
+          updateId="Admin_NewHotlineBtn"
+          updBtnLabel="Create"
+          btnType="submit"
+          formId="Admin_NewHotlineForm_Desktop"
+        >
+          <>
+            <div className="flex flex-col gap-8 mx-18">
+              <p
+                className="text-2xl font-bold"
+                style={{ color: colors.heading }}
+              >
+                Add a Hotline
+              </p>
+              <form
+                onSubmit={(e) => create(e)}
+                className="flex flex-col gap-4 bg-gray-400/20 p-8 rounded-lg"
+                id="Admin_NewHotlineForm_Desktop"
+              >
+                <div className="w-full grid grid-flow-col grid-rows-4 gap-6 px-8">
+                  <TextField
+                    label="Hotline Name*"
+                    inputType="text"
+                    id="Admin_NewHotlineNameField"
+                    onSubmit={(e) => setTitle(e.target.value)}
+                    isRequired
+                  />
+                  <TextField
+                    label="Hotline Address*"
+                    inputType="text"
+                    id="Admin_NewHotlineAddressField"
+                    onSubmit={(e) => setAddress(e.target.value)}
+                    isRequired
+                  />
+                  <SelectDropdown
+                    value={String(cityId)}
+                    onValueChange={(val) => setCityId(Number(val))}
+                    label="City*"
+                    id="Admin_NewHotlineCityField"
+                    onSubmit={(e) => setCityId(Number(e.target.value))}
+                    options={cities?.map((city) => ({
+                      label: city.name,
+                      value: String(city.id),
+                    }))}
+                    isRequired
+                    loading={cityLoad}
+                  />
+                  <SelectDropdown
+                    value={String(brgyId)}
+                    onValueChange={(val) => setBrgyId(Number(val))}
+                    label="Barangay*"
+                    id="Admin_NewHotlineBrgyField"
+                    onSubmit={(e) => setBrgyId(Number(e.target.value))}
+                    options={barangays?.map((brgy) => ({
+                      label: brgy.name,
+                      value: String(brgy.id),
+                    }))}
+                    isRequired
+                    loading={brgyLoad}
+                  />
+                  <TextField
+                    label="Primary Contact Number*"
+                    description="This will be the number the citizens will copy."
+                    placeholder="(XXX or XX)XXXXXXX or 09XXXXXXXXX"
+                    inputType="text"
+                    id="Admin_NewHotlinePrimaryNoField"
+                    onSubmit={(e) => setPrimaryNo(e.target.value)}
+                    isRequired
+                    error={error.primary}
+                  />
+                  <TextField
+                    label="Secondary Contact Number (optional)"
+                    inputType="text"
+                    placeholder="(XXX or XX)XXXXXXX or 09XXXXXXXXX"
+                    id="Admin_NewHotlineSecondaryNoField"
+                    onSubmit={(e) => setSecondaryNo(e.target.value)}
+                    error={error.secondary}
+                  />
+                </div>
+              </form>
+            </div>
+          </>
+        </FormLayout>
+      </div>
     </>
   );
 }

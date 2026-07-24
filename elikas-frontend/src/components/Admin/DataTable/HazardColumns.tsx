@@ -21,7 +21,7 @@ function ActionsCell({ row }: { row: Row<Hazards> }) {
         text="View Details"
         variant="important"
         id="Admin_ActiveIndivDetailsBtn"
-        onClick={() => navigate(`/admin-hazardDetails/${row.id}`)}
+        onClick={() => navigate(`/admin-hazardDetails/${row.original.id}`)}
       />
     </div>
   );

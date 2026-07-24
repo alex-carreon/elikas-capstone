@@ -6,6 +6,8 @@ import { useNavigate, useParams } from "react-router";
 import TextField from "@/components/TextField";
 import { Field, FieldLabel } from "@/components/ui/field";
 import { toast } from "sonner";
+import colors from "@/constants/colors";
+import FormDesktopSkeleton from "@/pages/Skeletons/FormDesktopSkeleton";
 
 type evacArea = {
   id: number;
@@ -153,130 +155,267 @@ function FlaggedCommentDetails() {
 
   return (
     <>
-      <FormLayout
-        formTitle="Flagged Comment Details"
-        updateId="Admin_EvacFlaggedCommentsIgnore"
-        deleteId="Admin_EvacFlaggedCommentsReject"
-        updBtnLabel="Ignore"
-        deleteBtnLabel="Remove"
-        updateClick={(e) => ignoreFlag(e)}
-        deleteClick={(e) => rejectFlag(e)}
-        isDisabled={disabled}
-      >
-        {loading ? (
-          <div className="flex justify-center">
-            <FormSkeleton />
-          </div>
-        ) : (
-          <>
-            <div className="flex flex-col gap-4">
-              <TextField
-                label="Flag Count"
-                value={String(flagDetails?.flag_info.flag_count)}
-                inputType="text"
-                id="Admin_EvacFlaggedFlagCount"
-                readonly
-              />
+      <div className="md:hidden">
+        <FormLayout
+          formTitle="Flagged Comment Details"
+          updateId="Admin_EvacFlaggedCommentsIgnore"
+          deleteId="Admin_EvacFlaggedCommentsReject"
+          updBtnLabel="Ignore"
+          deleteBtnLabel="Remove"
+          updateClick={(e) => ignoreFlag(e)}
+          deleteClick={(e) => rejectFlag(e)}
+          isDisabled={disabled}
+        >
+          {loading ? (
+            <div className="flex justify-center">
+              <FormSkeleton />
+            </div>
+          ) : (
+            <>
+              <div className="flex flex-col gap-4">
+                <TextField
+                  label="Flag Count"
+                  value={String(flagDetails?.flag_info.flag_count)}
+                  inputType="text"
+                  id="Admin_EvacFlaggedFlagCount"
+                  readonly
+                />
 
-              {flagDetails?.flag_info.manual.reasons.map((reason) => (
+                {flagDetails?.flag_info.manual.reasons.map((reason) => (
+                  <div className="flex gap-2">
+                    <TextField
+                      label="Flag Reason"
+                      value={reason.reason}
+                      inputType="text"
+                      id="Admin_EvacFlaggedReason"
+                      readonly
+                    />
+                    <TextField
+                      label="Count"
+                      value={String(reason.flag_count)}
+                      inputType="text"
+                      id="Admin_EvacFlaggedReasonCount"
+                      readonly
+                    />
+                  </div>
+                ))}
+                {flagDetails?.flag_info.ai_moderation &&
+                  flagDetails?.flag_info.ai_moderation.length > 0 && (
+                    <TextField
+                      label="FlagReason"
+                      value="AI Moderator"
+                      inputType="text"
+                      id="Admin_EvacFlaggedAIMod"
+                      readonly
+                    />
+                  )}
+                <TextField
+                  label="Comment Id"
+                  value={String(flagDetails?.id)}
+                  inputType="text"
+                  id="Admin_EvacFlaggedId"
+                  readonly
+                />
+                <TextField
+                  label="Element Id"
+                  value={String(flagDetails?.element_id)}
+                  inputType="text"
+                  id="Admin_EvacFlaggedElementId"
+                  readonly
+                />
+                <Field>
+                  <FieldLabel>Media</FieldLabel>
+                  {flagDetails?.media && flagDetails?.media.length > 0 ? (
+                    flagDetails?.media.map((media) => <img src={media} />)
+                  ) : (
+                    <p>No Media</p>
+                  )}
+                </Field>
+                <TextField
+                  label="Content"
+                  value={String(flagDetails?.content)}
+                  inputType="text"
+                  id="Admin_EvacFlaggedContent"
+                  readonly
+                />
+                <TextField
+                  label="Posted By"
+                  value={String(flagDetails?.posted_by.username)}
+                  inputType="text"
+                  id="Admin_EvacFlaggedPostedBy"
+                  readonly
+                />
                 <div className="flex gap-2">
                   <TextField
-                    label="Flag Reason"
-                    value={reason.reason}
+                    label="Upvotes"
+                    value={String(flagDetails?.upvotes)}
                     inputType="text"
-                    id="Admin_EvacFlaggedReason"
+                    id="Admin_EvacFlaggedUpvotes"
                     readonly
                   />
                   <TextField
-                    label="Count"
-                    value={String(reason.flag_count)}
+                    label="Downvotes"
+                    value={String(flagDetails?.downvotes)}
                     inputType="text"
-                    id="Admin_EvacFlaggedReasonCount"
+                    id="Admin_EvacFlaggedDownvotes"
                     readonly
                   />
                 </div>
-              ))}
-              {flagDetails?.flag_info.ai_moderation &&
-                flagDetails?.flag_info.ai_moderation.length > 0 && (
+                <div className="flex flex-col gap-1">
                   <TextField
-                    label="FlagReason"
-                    value="AI Moderator"
+                    label="Posted at"
+                    value={String(flagDetails?.posted_at)}
                     inputType="text"
-                    id="Admin_EvacFlaggedAIMod"
+                    id="Admin_EvacFlaggedPostedAt"
                     readonly
                   />
-                )}
-              <TextField
-                label="Comment Id"
-                value={String(flagDetails?.id)}
-                inputType="text"
-                id="Admin_EvacFlaggedId"
-                readonly
-              />
-              <TextField
-                label="Element Id"
-                value={String(flagDetails?.element_id)}
-                inputType="text"
-                id="Admin_EvacFlaggedElementId"
-                readonly
-              />
-              <Field>
-                <FieldLabel>Media</FieldLabel>
-                {flagDetails?.media && flagDetails?.media.length > 0 ? (
-                  flagDetails?.media.map((media) => <img src={media} />)
-                ) : (
-                  <p>No Media</p>
-                )}
-              </Field>
-              <TextField
-                label="Content"
-                value={String(flagDetails?.content)}
-                inputType="text"
-                id="Admin_EvacFlaggedContent"
-                readonly
-              />
-              <TextField
-                label="Posted By"
-                value={String(flagDetails?.posted_by.username)}
-                inputType="text"
-                id="Admin_EvacFlaggedPostedBy"
-                readonly
-              />
-              <div className="flex gap-2">
-                <TextField
-                  label="Upvotes"
-                  value={String(flagDetails?.upvotes)}
-                  inputType="text"
-                  id="Admin_EvacFlaggedUpvotes"
-                  readonly
-                />
-                <TextField
-                  label="Downvotes"
-                  value={String(flagDetails?.downvotes)}
-                  inputType="text"
-                  id="Admin_EvacFlaggedDownvotes"
-                  readonly
-                />
-              </div>
-              <div className="flex flex-col gap-1">
-                <TextField
-                  label="Posted at"
-                  value={String(flagDetails?.posted_at)}
-                  inputType="text"
-                  id="Admin_EvacFlaggedPostedAt"
-                  readonly
-                />
-                <div className="flex gap-4">
-                  <p className="text-xs italic" id="Admin_EvacFlaggedIsDeac">
-                    Has evacuation pin deactivated:
-                    {String(flagDetails?.evac_area.evac_deactivated)}
-                  </p>
+                  <div className="flex gap-4">
+                    <p className="text-xs italic" id="Admin_EvacFlaggedIsDeac">
+                      Has evacuation pin deactivated:
+                      {String(flagDetails?.evac_area.evac_deactivated)}
+                    </p>
+                  </div>
                 </div>
               </div>
+            </>
+          )}
+        </FormLayout>
+      </div>
+      <div className="hidden md:block">
+        <FormLayout
+          updateId="Admin_EvacFlaggedCommentsIgnore"
+          deleteId="Admin_EvacFlaggedCommentsReject"
+          updBtnLabel="Ignore"
+          deleteBtnLabel="Remove"
+          updateClick={(e) => ignoreFlag(e)}
+          deleteClick={(e) => rejectFlag(e)}
+          isDisabled={disabled}
+        >
+          <div className="flex flex-col gap-8 mx-18">
+            <p className="text-2xl font-bold" style={{ color: colors.heading }}>
+              Flagged Evacuation Comment Details
+            </p>
+            <div>
+              {loading ? (
+                <div className="flex justify-center">
+                  <FormDesktopSkeleton />
+                </div>
+              ) : (
+                <>
+                  <div className="flex flex-col gap-4 bg-gray-400/20 p-8 rounded-lg">
+                    <TextField
+                      label="Flag Count"
+                      value={String(flagDetails?.flag_info.flag_count)}
+                      inputType="text"
+                      id="Admin_EvacFlaggedFlagCount"
+                      readonly
+                    />
+
+                    {flagDetails?.flag_info.manual.reasons.map((reason) => (
+                      <div className="flex gap-2">
+                        <TextField
+                          label="Flag Reason"
+                          value={reason.reason}
+                          inputType="text"
+                          id="Admin_EvacFlaggedReason"
+                          readonly
+                        />
+                        <TextField
+                          label="Count"
+                          value={String(reason.flag_count)}
+                          inputType="text"
+                          id="Admin_EvacFlaggedReasonCount"
+                          readonly
+                        />
+                      </div>
+                    ))}
+                    {flagDetails?.flag_info.ai_moderation &&
+                      flagDetails?.flag_info.ai_moderation.length > 0 && (
+                        <TextField
+                          label="FlagReason"
+                          value="AI Moderator"
+                          inputType="text"
+                          id="Admin_EvacFlaggedAIMod"
+                          readonly
+                        />
+                      )}
+                    <TextField
+                      label="Comment Id"
+                      value={String(flagDetails?.id)}
+                      inputType="text"
+                      id="Admin_EvacFlaggedId"
+                      readonly
+                    />
+                    <TextField
+                      label="Element Id"
+                      value={String(flagDetails?.element_id)}
+                      inputType="text"
+                      id="Admin_EvacFlaggedElementId"
+                      readonly
+                    />
+                    <Field>
+                      <FieldLabel>Media</FieldLabel>
+                      {flagDetails?.media && flagDetails?.media.length > 0 ? (
+                        flagDetails?.media.map((media) => <img src={media} />)
+                      ) : (
+                        <p>No Media</p>
+                      )}
+                    </Field>
+                    <TextField
+                      label="Content"
+                      value={String(flagDetails?.content)}
+                      inputType="text"
+                      id="Admin_EvacFlaggedContent"
+                      readonly
+                    />
+                    <TextField
+                      label="Posted By"
+                      value={String(flagDetails?.posted_by.username)}
+                      inputType="text"
+                      id="Admin_EvacFlaggedPostedBy"
+                      readonly
+                    />
+                    <div className="flex gap-2">
+                      <TextField
+                        label="Upvotes"
+                        value={String(flagDetails?.upvotes)}
+                        inputType="text"
+                        id="Admin_EvacFlaggedUpvotes"
+                        readonly
+                      />
+                      <TextField
+                        label="Downvotes"
+                        value={String(flagDetails?.downvotes)}
+                        inputType="text"
+                        id="Admin_EvacFlaggedDownvotes"
+                        readonly
+                      />
+                    </div>
+                    <div className="flex flex-col gap-1">
+                      <TextField
+                        label="Posted at"
+                        value={String(flagDetails?.posted_at)}
+                        inputType="text"
+                        id="Admin_EvacFlaggedPostedAt"
+                        readonly
+                      />
+                      <div className="flex gap-4">
+                        <p
+                          className="text-xs italic"
+                          id="Admin_EvacFlaggedIsDeac"
+                        >
+                          Has evacuation pin deactivated:
+                          {String(flagDetails?.evac_area.evac_deactivated)}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                </>
+              )}
             </div>
-          </>
-        )}
-      </FormLayout>
+          </div>
+        </FormLayout>
+      </div>
     </>
   );
 }

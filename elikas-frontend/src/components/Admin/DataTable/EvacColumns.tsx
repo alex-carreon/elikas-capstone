@@ -20,12 +20,18 @@ export type EvacPins = {
 function ActionsCell({ row }: { row: Row<EvacPins> }) {
   const navigate = useNavigate();
   return (
-    <div className="pointer-events-auto">
+    <div className="pointer-events-auto flex flex-col gap-2">
       <ButtonComp
         text="View Details"
         variant="important"
         id="Admin_ActiveIndivDetailsBtn"
-        onClick={() => navigate(`/admin-evacDetails/${row.id}`)}
+        onClick={() => navigate(`/admin-evacDetails/${row.original.id}`)}
+      />
+      <ButtonComp
+        text="Comments"
+        variant="outline"
+        id="Admin_ActiveIndivDetailsBtn"
+        onClick={() => navigate(`/admin-pins/${row.original.id}/comments`)}
       />
     </div>
   );

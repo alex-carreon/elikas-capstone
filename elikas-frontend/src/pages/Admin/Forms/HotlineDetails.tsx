@@ -5,6 +5,8 @@ import FormLayout from "./FormLayout";
 import TextField from "@/components/TextField";
 import FormSkeleton from "@/pages/Skeletons/FormSkeleton";
 import { handleDeac, handleUpdate } from "@/lib/hotlineUtils";
+import FormDesktopSkeleton from "@/pages/Skeletons/FormDesktopSkeleton";
+import colors from "@/constants/colors";
 
 type HotlineDetails = {
   id: number;
@@ -114,98 +116,207 @@ function HotlineDetails() {
   }, []);
 
   return (
-    <FormLayout
-      formTitle="Emergency Contact Details"
-      formId="Admin_HotlineDetailsUpdateForm"
-      isEditable={isEditable}
-      updateId="Admin_HotlineDetailsUpdBtn"
-      deleteId="Admin_HotlineDetailsDelBtn"
-      submitUpdId="Admin_HotlineDetailsUpdSubBtn"
-      closeUpdId="Admin_HotlineDetailsCloseUpdBtn"
-      updateClick={() => setIsEditable(true)}
-      closeUpdClick={() => {
-        setIsEditable(false);
-        getAll();
-      }}
-      deleteClick={() => deac()}
-    >
-      {loading ? (
-        <div className="w-full h-full flex flex-col items-center p-12 mt-8 mb-2 gap-4">
-          <FormSkeleton />
-        </div>
-      ) : (
-        <form
-          className="flex flex-col gap-4"
-          id="Admin_HotlineDetailsUpdateForm"
-          onSubmit={(e) => update(e)}
+    <>
+      <div className="md:hidden">
+        <FormLayout
+          formTitle="Emergency Contact Details"
+          formId="Admin_HotlineDetailsUpdateForm"
+          isEditable={isEditable}
+          updateId="Admin_HotlineDetailsUpdBtn"
+          deleteId="Admin_HotlineDetailsDelBtn"
+          submitUpdId="Admin_HotlineDetailsUpdSubBtn"
+          closeUpdId="Admin_HotlineDetailsCloseUpdBtn"
+          updateClick={() => setIsEditable(true)}
+          closeUpdClick={() => {
+            setIsEditable(false);
+            getAll();
+          }}
+          deleteClick={() => deac()}
         >
-          <TextField
-            label="Hotline Id"
-            inputType="text"
-            id="Admin_HotlineDetailsId"
-            value={String(hotlines?.id)}
-            readonly
-          />
-          <TextField
-            label="Hotline Name"
-            inputType="text"
-            id="Admin_HotlineDetailsName"
-            value={title}
-            onSubmit={(e) => setTitle(e.target.value)}
-            readonly={!isEditable}
-          />
-          <TextField
-            label="Barangay"
-            inputType="text"
-            id="Admin_HotlineDetailsBarangay"
-            value={String(hotlines?.location_name)}
-            readonly
-          />
-          <TextField
-            label="Address"
-            inputType="text"
-            id="Admin_HotlineDetailsAddress"
-            value={address}
-            onSubmit={(e) => setAddress(e.target.value)}
-            readonly={!isEditable}
-          />
-          <TextField
-            label="Primary Contact Number"
-            inputType="text"
-            placeholder="(XXX or XX)XXXXXXX or 09XXXXXXXXX"
-            id="Admin_HotlineDetailsOfNo"
-            value={primaryNo}
-            onSubmit={(e) => setPrimaryNo(e.target.value)}
-            readonly={!isEditable}
-            error={error.primary}
-          />
-          <TextField
-            label="Secondary Contact Number"
-            inputType="text"
-            placeholder="(XXX or XX)XXXXXXX or 09XXXXXXXXX"
-            id="Admin_HotlineDetailsSecNo"
-            value={secondaryNo}
-            onSubmit={(e) => setSecondaryNo(e.target.value)}
-            readonly={!isEditable}
-            error={error.secondary}
-          />
-          <TextField
-            label="Posted by"
-            inputType="text"
-            id="Admin_HotlineDetailsPostedBy"
-            value={String(hotlines?.posted_by)}
-            readonly
-          />
-          <TextField
-            label="Last Updated"
-            inputType="text"
-            id="Admin_HotlineDetailsLastUpdated"
-            value={String(hotlines?.last_updated)}
-            readonly
-          />
-        </form>
-      )}
-    </FormLayout>
+          {loading ? (
+            <div className="w-full h-full flex flex-col items-center p-12 mt-8 mb-2 gap-4">
+              <FormSkeleton />
+            </div>
+          ) : (
+            <form
+              className="flex flex-col gap-4"
+              id="Admin_HotlineDetailsUpdateForm"
+              onSubmit={(e) => update(e)}
+            >
+              <TextField
+                label="Hotline Id"
+                inputType="text"
+                id="Admin_HotlineDetailsId"
+                value={String(hotlines?.id)}
+                readonly
+              />
+              <TextField
+                label="Hotline Name"
+                inputType="text"
+                id="Admin_HotlineDetailsName"
+                value={title}
+                onSubmit={(e) => setTitle(e.target.value)}
+                readonly={!isEditable}
+              />
+              <TextField
+                label="Barangay"
+                inputType="text"
+                id="Admin_HotlineDetailsBarangay"
+                value={String(hotlines?.location_name)}
+                readonly
+              />
+              <TextField
+                label="Address"
+                inputType="text"
+                id="Admin_HotlineDetailsAddress"
+                value={address}
+                onSubmit={(e) => setAddress(e.target.value)}
+                readonly={!isEditable}
+              />
+              <TextField
+                label="Primary Contact Number"
+                inputType="text"
+                placeholder="(XXX or XX)XXXXXXX or 09XXXXXXXXX"
+                id="Admin_HotlineDetailsOfNo"
+                value={primaryNo}
+                onSubmit={(e) => setPrimaryNo(e.target.value)}
+                readonly={!isEditable}
+                error={error.primary}
+              />
+              <TextField
+                label="Secondary Contact Number"
+                inputType="text"
+                placeholder="(XXX or XX)XXXXXXX or 09XXXXXXXXX"
+                id="Admin_HotlineDetailsSecNo"
+                value={secondaryNo}
+                onSubmit={(e) => setSecondaryNo(e.target.value)}
+                readonly={!isEditable}
+                error={error.secondary}
+              />
+              <TextField
+                label="Posted by"
+                inputType="text"
+                id="Admin_HotlineDetailsPostedBy"
+                value={String(hotlines?.posted_by)}
+                readonly
+              />
+              <TextField
+                label="Last Updated"
+                inputType="text"
+                id="Admin_HotlineDetailsLastUpdated"
+                value={String(hotlines?.last_updated)}
+                readonly
+              />
+            </form>
+          )}
+        </FormLayout>
+      </div>
+      <div className="hidden md:block">
+        <FormLayout
+          formId="Admin_HotlineDetailsUpdateForm_Desktop"
+          isEditable={isEditable}
+          updateId="Admin_HotlineDetailsUpdBtn"
+          deleteId="Admin_HotlineDetailsDelBtn"
+          submitUpdId="Admin_HotlineDetailsUpdSubBtn"
+          closeUpdId="Admin_HotlineDetailsCloseUpdBtn"
+          updateClick={() => setIsEditable(true)}
+          closeUpdClick={() => {
+            setIsEditable(false);
+            getAll();
+          }}
+          deleteClick={() => deac()}
+        >
+          <div className="flex flex-col gap-8 mx-18">
+            <p className="text-2xl font-bold" style={{ color: colors.heading }}>
+              Hotline Details
+            </p>
+            <div>
+              {loading ? (
+                <div className="w-full h-full flex flex-col items-center p-12 mt-8 mb-2 gap-4">
+                  <FormDesktopSkeleton />
+                </div>
+              ) : (
+                <form
+                  className="flex flex-col gap-4 bg-gray-400/20 p-8 rounded-lg"
+                  id="Admin_HotlineDetailsUpdateForm_Desktop"
+                  onSubmit={(e) => {
+                    update(e);
+                    setIsEditable(false);
+                  }}
+                >
+                  <div className="w-full grid grid-flow-col grid-rows-4 gap-4">
+                    <TextField
+                      label="Hotline Id"
+                      inputType="text"
+                      id="Admin_HotlineDetailsId"
+                      value={String(hotlines?.id)}
+                      readonly
+                    />
+                    <TextField
+                      label="Hotline Name"
+                      inputType="text"
+                      id="Admin_HotlineDetailsName"
+                      value={title}
+                      onSubmit={(e) => setTitle(e.target.value)}
+                      readonly={!isEditable}
+                    />
+                    <TextField
+                      label="Barangay"
+                      inputType="text"
+                      id="Admin_HotlineDetailsBarangay"
+                      value={String(hotlines?.location_name)}
+                      readonly
+                    />
+                    <TextField
+                      label="Address"
+                      inputType="text"
+                      id="Admin_HotlineDetailsAddress"
+                      value={address}
+                      onSubmit={(e) => setAddress(e.target.value)}
+                      readonly={!isEditable}
+                    />
+                    <TextField
+                      label="Primary Contact Number"
+                      inputType="text"
+                      placeholder="(XXX or XX)XXXXXXX or 09XXXXXXXXX"
+                      id="Admin_HotlineDetailsOfNo"
+                      value={primaryNo}
+                      onSubmit={(e) => setPrimaryNo(e.target.value)}
+                      readonly={!isEditable}
+                      error={error.primary}
+                    />
+                    <TextField
+                      label="Secondary Contact Number"
+                      inputType="text"
+                      placeholder="(XXX or XX)XXXXXXX or 09XXXXXXXXX"
+                      id="Admin_HotlineDetailsSecNo"
+                      value={secondaryNo}
+                      onSubmit={(e) => setSecondaryNo(e.target.value)}
+                      readonly={!isEditable}
+                      error={error.secondary}
+                    />
+                    <TextField
+                      label="Posted by"
+                      inputType="text"
+                      id="Admin_HotlineDetailsPostedBy"
+                      value={String(hotlines?.posted_by)}
+                      readonly
+                    />
+                    <TextField
+                      label="Last Updated"
+                      inputType="text"
+                      id="Admin_HotlineDetailsLastUpdated"
+                      value={String(hotlines?.last_updated)}
+                      readonly
+                    />
+                  </div>
+                </form>
+              )}
+            </div>
+          </div>
+        </FormLayout>
+      </div>
+    </>
   );
 }
 

@@ -176,7 +176,6 @@ function Pins() {
       const inactiveCount = pinInactiveResponse.data.count;
 
       const activeCount = pinActiveResponse.data.count;
-      console.log(activeCount);
 
       const flaggedCount = flaggedComms.data.count;
 
