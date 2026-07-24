@@ -58,7 +58,9 @@ class StoreEvacuationAreaController extends Controller
             'kitchen_count' => 'nullable|integer|min:0',
             'child_prayer_count' => 'nullable|integer|min:0',
             'breastfeed_count' => 'nullable|integer|min:0',
-            'other_facilities' => 'nullable|string',
+            // will only accept correctly formatted comma-separated strings
+            // example: alpha, bravo, charlie
+            'other_facilities' => ['nullable', 'string', 'regex:/^[^,]+(,\s*[^,]+)*$/'],
             'contact_person' => 'nullable|string|max:100',
             'contact_number' => 'nullable|string|max:15',
            'expiry' => 'nullable|date|after:now',
@@ -90,6 +92,15 @@ class StoreEvacuationAreaController extends Controller
                 ? Carbon::parse($request->expiry, 'Asia/Manila')->utc()
                 : null;
 
+            $otherFacilities = null;
+
+            if ($request->filled('other_facilities')) {
+                $otherFacilities = collect(explode(',', $request->other_facilities))
+                    ->map(fn ($f) => trim($f))
+                    ->filter()
+                    ->values()
+                    ->all();
+            }
 
             if ($request->hasFile('file')) {
                 $uploadedPath = $this->mediaUploadService->upload($request->file('file'), MediaCollection::EvacAreas);
@@ -136,7 +147,7 @@ class StoreEvacuationAreaController extends Controller
                 'kitchen_count' => $request->kitchen_count,
                 'child_prayer_count' => $request->child_prayer_count,
                 'breastfeed_count' => $request->breastfeed_count,
-                'other_facilities' => $request->other_facilities,
+                'other_facilities' => $otherFacilities,
                 'contact_person' => $request->contact_person,
                 'contact_number' => $request->contact_number,
                 'expiry' => $expiry,
