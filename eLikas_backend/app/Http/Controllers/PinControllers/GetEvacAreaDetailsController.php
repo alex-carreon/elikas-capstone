@@ -25,7 +25,6 @@ class GetEvacAreaDetailsController extends Controller
             return array_values(array_filter(array_map('strval', $decoded), fn ($v) => $v !== ''));
         }
 
-        // Legacy row: plain string or comma-joined string from before this fix.
         return array_values(array_filter(array_map('trim', explode(',', $raw)), fn ($v) => $v !== ''));
     }
 
