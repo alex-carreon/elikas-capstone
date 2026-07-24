@@ -17,7 +17,7 @@ function ActionsCell({ row }: { row: Row<IndivUsers> }) {
         text="View Details"
         variant="important"
         id="Admin_ActiveIndivDetailsBtn"
-        onClick={() => navigate(`/admin-userDetails/${row.id}`)}
+        onClick={() => navigate(`/admin-userDetails/${row.original.id}`)}
       />
     </div>
   );

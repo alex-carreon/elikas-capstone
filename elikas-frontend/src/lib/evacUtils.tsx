@@ -25,7 +25,7 @@ interface handleActionProps {
   kitchen_count?: number;
   child_prayer_count?: number;
   breastfeed_count?: number;
-  other_facilities?: string;
+  other_facilities?: string[];
   contact_person?: string;
   contact_number?: string;
   expiry?: string | null | undefined;
@@ -153,7 +153,7 @@ export const handleUpdate = async ({
     ...(contact_person && { contact_person: contact_person }),
     ...(contact_number && { contact_number: contact_number }),
     ...(role === "brgy_op" && { expiry: expiry }),
-    expiry: expiry,
+    ...(is_persistent && { expiry: expiry }),
   });
 
   toast.promise(responsePromise, {

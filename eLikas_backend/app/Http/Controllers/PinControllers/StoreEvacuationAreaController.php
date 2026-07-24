@@ -58,9 +58,15 @@ class StoreEvacuationAreaController extends Controller
             'kitchen_count' => 'nullable|integer|min:0',
             'child_prayer_count' => 'nullable|integer|min:0',
             'breastfeed_count' => 'nullable|integer|min:0',
-            // will only accept correctly formatted comma-separated strings
-            // example: alpha, bravo, charlie
-            'other_facilities' => ['nullable', 'string', 'regex:/^[^,]+(,\s*[^,]+)*$/'],
+            'other_facilities' => ['nullable', function ($attribute, $value, $fail) {
+                if (is_string($value)) {
+                    return;
+                }
+                if (is_array($value) && collect($value)->every(fn ($v) => is_string($v))) {
+                    return;
+                }
+                $fail('The other facilities field must be a string or an array of strings.');
+            }],
             'contact_person' => 'nullable|string|max:100',
             'contact_number' => 'nullable|string|max:15',
            'expiry' => 'nullable|date|after:now',
@@ -92,15 +98,20 @@ class StoreEvacuationAreaController extends Controller
                 ? Carbon::parse($request->expiry, 'Asia/Manila')->utc()
                 : null;
 
-            $otherFacilities = null;
-
-            if ($request->filled('other_facilities')) {
-                $otherFacilities = collect(explode(',', $request->other_facilities))
-                    ->map(fn ($f) => trim($f))
-                    ->filter()
-                    ->values()
-                    ->all();
+            $otherFacilities = $request->input('other_facilities');
+            if (is_array($otherFacilities)) {
+                $normalized = collect($otherFacilities)
+                    ->map(fn ($v) => trim((string) $v))
+                    ->filter(fn ($v) => $v !== '')
+                    ->values();
+            } elseif (is_string($otherFacilities) && trim($otherFacilities) !== '') {
+                $normalized = collect([trim($otherFacilities)]);
+            } else {
+                $normalized = collect();
             }
+
+            $otherFacilities = $normalized->isEmpty() ? null : $normalized->all();
+
 
             if ($request->hasFile('file')) {
                 $uploadedPath = $this->mediaUploadService->upload($request->file('file'), MediaCollection::EvacAreas);

@@ -63,13 +63,13 @@ function FormLayout({
   return (
     <>
       <div className="h-screen w-full flex flex-col items-center">
-        <div className="w-full max-w-md">
+        <div className="w-full">
           <div className="pt-6 bg-[#FFB13B] px-6 pb-14 flex flex-col gap-4">
             <div className="flex flex-row justify-between items-center">
               <p className="text-white BeVietnamPro text-2xl font-bold">
                 {formTitle}
               </p>
-              <div className="text-white BeVietnamPro text-end">
+              <div className="text-white BeVietnamPro text-end md:hidden">
                 <WhiteLogo />
               </div>
             </div>
@@ -94,7 +94,7 @@ function FormLayout({
               {!isDeactivated &&
                 (isEditable && submitUpdId && closeUpdId ? (
                   <>
-                    <div className="mx-4 flex justify-evenly shrink gap-4 mb-8">
+                    <div className="mx-4 flex justify-evenly md:justify-none shrink gap-4 mb-8">
                       <ButtonComp
                         text="Submit"
                         variant="primary"
@@ -116,7 +116,7 @@ function FormLayout({
                     </div>
                   </>
                 ) : updateId && deleteId ? (
-                  <div className="mx-4 flex justify-evenly shrink gap-4 mb-8">
+                  <div className="mx-4 flex justify-evenly md:justify-center shrink gap-4 mb-8">
                     <ButtonComp
                       text={updBtnLabel ? updBtnLabel : "Update"}
                       variant="primary"

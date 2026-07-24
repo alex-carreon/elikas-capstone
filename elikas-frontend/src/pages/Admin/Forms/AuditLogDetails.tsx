@@ -9,6 +9,7 @@ import { Textarea } from "@/components/ui/textarea";
 import colors from "@/constants/colors";
 import { toZonedTime, format } from "date-fns-tz";
 import { Separator } from "@/components/ui/separator";
+import FormDesktopSkeleton from "@/pages/Skeletons/FormDesktopSkeleton";
 
 type LogDetails = {
   id: number;
@@ -72,119 +73,268 @@ function AuditLogDetails() {
   }, []);
 
   return (
-    <FormLayout formTitle="Log Details">
-      {loading ? (
-        <div className="w-full h-full flex flex-col items-center p-12 mt-8 mb-2 gap-4">
-          <FormSkeleton />
-        </div>
-      ) : (
-        <div className="flex flex-col gap-4">
-          <TextField
-            label="ID"
-            id="Admin_AuditLogDetailsId"
-            inputType="text"
-            value={String(details?.id)}
-            readonly
-          />
-          <TextField
-            label="Log ID"
-            id="Admin_AuditLogDetailsLogId"
-            inputType="text"
-            value={String(details?.logId)}
-            readonly
-          />
-          <TextField
-            label="User"
-            id="Admin_AuditLogDetailsUser"
-            inputType="text"
-            value={String(details?.userName)}
-            readonly
-          />
-          <TextField
-            label="User type"
-            id="Admin_AuditLogDetailsUserType"
-            inputType="text"
-            value={String(details?.userType)}
-            readonly
-          />
-          <TextField
-            label="Activity"
-            id="Admin_AuditLogDetailsActivity"
-            inputType="text"
-            value={String(details?.activity)}
-            readonly
-          />
-          <TextField
-            label="Table"
-            id="Admin_AuditLogDetailsTable"
-            inputType="text"
-            value={String(details?.table)}
-            readonly
-          />
-          <Separator />
-          <Field>
-            <FieldLabel>Old Values</FieldLabel>
-            <div className="grid grid-cols-2">
-              {Object.entries(details?.oldValues ?? {}).map(([key, value]) => {
-                return (
-                  <>
-                    <TextField
-                      label={key}
-                      id={`Admin_AuditLogDetailsOld${key}`}
-                      inputType="text"
-                      value={String(value)}
-                      readonly
-                    />
-                  </>
-                );
-              })}
+    <>
+      <div className="md:hidden">
+        <FormLayout formTitle="Log Details">
+          {loading ? (
+            <div className="w-full h-full flex flex-col items-center p-12 mt-8 mb-2 gap-4">
+              <FormSkeleton />
             </div>
-          </Field>
-          <Separator />
-          <Field>
-            <FieldLabel>New Values</FieldLabel>
-            <div className="grid grid-cols-2 gap-2">
-              {Object.entries(details?.newValues ?? {}).map(([key, value]) => {
-                return (
-                  <>
-                    <TextField
-                      label={key}
-                      id={`Admin_AuditLogDetailsNew${key}`}
-                      inputType="text"
-                      value={String(value)}
-                      readonly
-                    />
-                  </>
-                );
-              })}
+          ) : (
+            <div className="flex flex-col gap-4">
+              <TextField
+                label="ID"
+                id="Admin_AuditLogDetailsId"
+                inputType="text"
+                value={String(details?.id)}
+                readonly
+              />
+              <TextField
+                label="Log ID"
+                id="Admin_AuditLogDetailsLogId"
+                inputType="text"
+                value={String(details?.logId)}
+                readonly
+              />
+              <TextField
+                label="User"
+                id="Admin_AuditLogDetailsUser"
+                inputType="text"
+                value={String(details?.userName)}
+                readonly
+              />
+              <TextField
+                label="User type"
+                id="Admin_AuditLogDetailsUserType"
+                inputType="text"
+                value={String(details?.userType)}
+                readonly
+              />
+              <TextField
+                label="Activity"
+                id="Admin_AuditLogDetailsActivity"
+                inputType="text"
+                value={String(details?.activity)}
+                readonly
+              />
+              <TextField
+                label="Table"
+                id="Admin_AuditLogDetailsTable"
+                inputType="text"
+                value={String(details?.table)}
+                readonly
+              />
+              <Separator />
+              <Field>
+                <FieldLabel>Old Values</FieldLabel>
+                <div className="grid grid-cols-2">
+                  {Object.entries(details?.oldValues ?? {}).map(
+                    ([key, value]) => {
+                      return (
+                        <>
+                          <TextField
+                            label={key}
+                            id={`Admin_AuditLogDetailsOld${key}`}
+                            inputType="text"
+                            value={String(value)}
+                            readonly
+                          />
+                        </>
+                      );
+                    },
+                  )}
+                </div>
+              </Field>
+              <Separator />
+              <Field>
+                <FieldLabel>New Values</FieldLabel>
+                <div className="grid grid-cols-2 gap-2">
+                  {Object.entries(details?.newValues ?? {}).map(
+                    ([key, value]) => {
+                      return (
+                        <>
+                          <TextField
+                            label={key}
+                            id={`Admin_AuditLogDetailsNew${key}`}
+                            inputType="text"
+                            value={String(value)}
+                            readonly
+                          />
+                        </>
+                      );
+                    },
+                  )}
+                </div>
+              </Field>
+              <Separator />
+              <TextField
+                label="IP Address"
+                id="Admin_AuditLogDetailsIP"
+                inputType="text"
+                value={String(details?.ipAddress)}
+                readonly
+              />
+              <Field>
+                <FieldLabel style={{ color: colors.label }}>
+                  User Agend
+                </FieldLabel>
+                <Textarea
+                  id="Admin_AuditLogDetailsUserAgent"
+                  value={String(details?.userAgent)}
+                  readOnly
+                />
+              </Field>
+              <TextField
+                label="Action Date"
+                id="Admin_AuditLogDetailsDate"
+                inputType="text"
+                value={convertDateTime(details?.actionDate ?? "")}
+                readonly
+              />
             </div>
-          </Field>
-          <Separator />
-          <TextField
-            label="IP Address"
-            id="Admin_AuditLogDetailsIP"
-            inputType="text"
-            value={String(details?.ipAddress)}
-            readonly
-          />
-          <Field>
-            <FieldLabel style={{ color: colors.label }}>User Agend</FieldLabel>
-            <Textarea
-              id="Admin_AuditLogDetailsUserAgent"
-              value={String(details?.userAgent)}
-              readOnly
-            />
-          </Field>
-          <TextField
-            label="Action Date"
-            id="Admin_AuditLogDetailsDate"
-            inputType="text"
-            value={convertDateTime(details?.actionDate ?? "")}
-            readonly
-          />
-        </div>
-      )}
-    </FormLayout>
+          )}
+        </FormLayout>
+      </div>
+      <div className="hidden md:block">
+        <FormLayout>
+          <div className="flex flex-col gap-8 mx-18">
+            <p className="text-2xl font-bold" style={{ color: colors.heading }}>
+              Barangay User Details
+            </p>
+            <div>
+              {loading ? (
+                <div className="w-full h-full flex flex-col items-center p-12 mt-8 mb-2 gap-4">
+                  <FormDesktopSkeleton />
+                </div>
+              ) : (
+                <>
+                  <div className="bg-gray-400/20 p-8 rounded-lg">
+                    <div className="w-full grid grid-flow-col grid-rows-3 gap-4">
+                      <TextField
+                        label="ID"
+                        id="Admin_AuditLogDetailsId"
+                        inputType="text"
+                        value={String(details?.id)}
+                        readonly
+                      />
+                      <TextField
+                        label="Log ID"
+                        id="Admin_AuditLogDetailsLogId"
+                        inputType="text"
+                        value={String(details?.logId)}
+                        readonly
+                      />
+                      <TextField
+                        label="User"
+                        id="Admin_AuditLogDetailsUser"
+                        inputType="text"
+                        value={String(details?.userName)}
+                        readonly
+                      />
+                      <TextField
+                        label="User type"
+                        id="Admin_AuditLogDetailsUserType"
+                        inputType="text"
+                        value={String(details?.userType)}
+                        readonly
+                      />
+                      <TextField
+                        label="Activity"
+                        id="Admin_AuditLogDetailsActivity"
+                        inputType="text"
+                        value={String(details?.activity)}
+                        readonly
+                      />
+                      <TextField
+                        label="Table"
+                        id="Admin_AuditLogDetailsTable"
+                        inputType="text"
+                        value={String(details?.table)}
+                        readonly
+                      />
+                    </div>
+                    <div className="mt-6 flex flex-col gap-2">
+                      <Separator />
+                      <Field>
+                        <FieldLabel>Old Values</FieldLabel>
+                        <div className="grid grid-cols-2">
+                          {Object.entries(details?.oldValues ?? {}).map(
+                            ([key, value]) => {
+                              return (
+                                <>
+                                  <TextField
+                                    label={key}
+                                    id={`Admin_AuditLogDetailsOld${key}`}
+                                    inputType="text"
+                                    value={String(value)}
+                                    readonly
+                                  />
+                                </>
+                              );
+                            },
+                          )}
+                        </div>
+                      </Field>
+                    </div>
+                    <div className="mt-6 flex flex-col gap-2">
+                      <Separator />
+                      <Field>
+                        <FieldLabel>New Values</FieldLabel>
+                        <div className="grid grid-cols-2 gap-2">
+                          {Object.entries(details?.newValues ?? {}).map(
+                            ([key, value]) => {
+                              return (
+                                <>
+                                  <TextField
+                                    label={key}
+                                    id={`Admin_AuditLogDetailsNew${key}`}
+                                    inputType="text"
+                                    value={String(value)}
+                                    readonly
+                                  />
+                                </>
+                              );
+                            },
+                          )}
+                        </div>
+                      </Field>
+                    </div>
+
+                    <Separator className="my-6" />
+                    <div className="flex flex-col gap-4">
+                      <TextField
+                        label="IP Address"
+                        id="Admin_AuditLogDetailsIP"
+                        inputType="text"
+                        value={String(details?.ipAddress)}
+                        readonly
+                      />
+                      <Field>
+                        <FieldLabel style={{ color: colors.label }}>
+                          User Agend
+                        </FieldLabel>
+                        <Textarea
+                          id="Admin_AuditLogDetailsUserAgent"
+                          value={String(details?.userAgent)}
+                          readOnly
+                        />
+                      </Field>
+                      <TextField
+                        label="Action Date"
+                        id="Admin_AuditLogDetailsDate"
+                        inputType="text"
+                        value={convertDateTime(details?.actionDate ?? "")}
+                        readonly
+                      />
+                    </div>
+                  </div>
+                </>
+              )}
+            </div>
+          </div>
+        </FormLayout>
+      </div>
+    </>
   );
 }
 

@@ -142,41 +142,52 @@ function App() {
                 <Route path="/admin-sensors" element={<Sensors />} />
                 <Route path="/admin-hotlines" element={<HotlinesAdmin />} />
                 <Route path="/admin-logs" element={<AuditLogs />} />
+                <Route
+                  path="/admin-userDetails/:id"
+                  element={<UserDetails />}
+                />
+                <Route
+                  path="/admin-brgyDetails/:id"
+                  element={<GovopDetails />}
+                />
+                <Route
+                  path="/admin-sensorDetails/:id"
+                  element={<SensorDetails />}
+                />
+                <Route path="/admin-brgyAdd" element={<BrgyAdd />} />
+                <Route path="/admin-flagged/:id" element={<FlaggedDetails />} />
+                <Route
+                  path="/admin-hazardDetails/:id"
+                  element={<HazardDetails />}
+                />
+                <Route
+                  path="/admin-sensorlogs/:sensorcode"
+                  element={<SensorLogs />}
+                />
+                <Route
+                  path="/admin-evacDetails/:id"
+                  element={<EvacDetails />}
+                />
+                <Route
+                  path="/admin-pins/:pinId/comments"
+                  element={<EvacComments />}
+                />
+                <Route
+                  path="/admin-pins/comments/:id"
+                  element={<CommentDetails />}
+                />
+                <Route
+                  path="/admin-flaggedComment/:id"
+                  element={<FlaggedCommentDetails />}
+                />
+                <Route path="/admin-logs/:id" element={<AuditLogDetails />} />
+
+                <Route path="/admin-hotlines/add" element={<HotlinesAdd />} />
+                <Route
+                  path="/admin-hotlines/:id"
+                  element={<HotlineDetails />}
+                />
               </Route>
-
-              <Route path="/admin-userDetails/:id" element={<UserDetails />} />
-              <Route path="/admin-brgyDetails/:id" element={<GovopDetails />} />
-              <Route
-                path="/admin-sensorDetails/:id"
-                element={<SensorDetails />}
-              />
-              <Route path="/admin-brgyAdd" element={<BrgyAdd />} />
-              <Route path="/admin-flagged/:id" element={<FlaggedDetails />} />
-              <Route
-                path="/admin-hazardDetails/:id"
-                element={<HazardDetails />}
-              />
-              <Route
-                path="/admin-sensorlogs/:sensorcode"
-                element={<SensorLogs />}
-              />
-              <Route path="/admin-evacDetails/:id" element={<EvacDetails />} />
-              <Route
-                path="/admin-pins/:pinId/comments"
-                element={<EvacComments />}
-              />
-              <Route
-                path="/admin-pins/comments/:id"
-                element={<CommentDetails />}
-              />
-              <Route
-                path="/admin-flaggedComment/:id"
-                element={<FlaggedCommentDetails />}
-              />
-              <Route path="/admin-logs/:id" element={<AuditLogDetails />} />
-
-              <Route path="/admin-hotlines/add" element={<HotlinesAdd />} />
-              <Route path="/admin-hotlines/:id" element={<HotlineDetails />} />
             </Route>
 
             <Route element={<ProtectedRoute />}>

@@ -5,6 +5,7 @@ import { useNavigate } from "react-router";
 import React, { useEffect, useState } from "react";
 import { toast } from "sonner";
 import SelectDropdown from "@/components/SelectDropdown";
+import colors from "@/constants/colors";
 
 type Barangays = {
   id: number;
@@ -181,7 +182,6 @@ function BrgyAdd() {
         const brgyRes = await api.get(`/locations/barangays?city_id=${cityId}`);
 
         const barangays = brgyRes.data.Barangays;
-        console.log(barangays);
         setBarangays(barangays);
       } catch (err: any) {
         console.log(err.message);
@@ -195,110 +195,227 @@ function BrgyAdd() {
 
   return (
     <>
-      <FormLayout
-        formTitle="Add a Barangay User"
-        updateId="Admin_NewSubmitBtn"
-        updBtnLabel="Create"
-        btnType="submit"
-        formId="Admin_BrgyAddForm"
-      >
-        <>
-          <form
-            onSubmit={handleSubmit}
-            className="flex flex-col gap-4"
-            id="Admin_BrgyAddForm"
-          >
-            <TextField
-              label="Username"
-              inputType="text"
-              id="Admin_NewBrgyUsernameField"
-              onSubmit={(e) => setUsername(e.target.value)}
-              isRequired
-              maxLength={20}
-            />
-            <TextField
-              label="Email"
-              inputType="text"
-              id="Admin_NewBrgyEmailField"
-              onSubmit={(e) => setEmail(e.target.value)}
-              isRequired
-              error={errors.email}
-              maxLength={50}
-            />
-            <SelectDropdown
-              value={String(levelId)}
-              onValueChange={(val) => setLevelId(Number(val))}
-              label="Government Level"
-              id="Admin_NewGovopLevelField"
-              onSubmit={(e) => setLevelId(Number(e.target.value))}
-              options={[
-                { label: "City", value: "1" },
-                { label: "Barangay", value: "2" },
-              ]}
-              isRequired
-            />
-            <SelectDropdown
-              value={String(cityId)}
-              onValueChange={(val) => setCityId(Number(val))}
-              label="City"
-              placeholder="Select the Govop's City"
-              id="Admin_NewGovopCityField"
-              onSubmit={(e) => setCityId(Number(e.target.value))}
-              options={cities?.map((city) => ({
-                label: city.name,
-                value: String(city.id),
-              }))}
-              isRequired
-              loading={loading}
-            />
-            <SelectDropdown
-              value={String(brgyId)}
-              onValueChange={(val) => setBrgyId(Number(val))}
-              label="Barangay"
-              placeholder="Select a Barangay (Please select a city first)"
-              id="Admin_GovopBrgyField"
-              onSubmit={(e) => setBrgyId(Number(e.target.value))}
-              options={barangays?.map((brgy) => ({
-                label: brgy.name,
-                value: String(brgy.id),
-              }))}
-              isRequired={!disabled}
-              disabled={disabled}
-              loading={brgyLoad}
-            />
-            <TextField
-              label="Point person"
-              inputType="text"
-              id="Admin_NewBrgyPointPersonField"
-              onSubmit={(e) => setPointPerson(e.target.value)}
-              maxLength={100}
-            />
-            <TextField
-              label="Point person's position"
-              inputType="text"
-              id="Admin_NewBrgyPointPositionField"
-              onSubmit={(e) => setPointPosition(e.target.value)}
-              maxLength={50}
-            />
-            <TextField
-              label="Password"
-              inputType="password"
-              id="Admin_NewGovopPasswordField"
-              onSubmit={(e) => setPw(e.target.value)}
-              isPassword
-              error={errors.pw}
-            />
-            <TextField
-              label="Confirm Password"
-              inputType="password"
-              id="Admin_NewGovopConfirmPasswordField"
-              onSubmit={(e) => setConfirmPw(e.target.value)}
-              isPassword
-              error={errors.confirmPw}
-            />
-          </form>
-        </>
-      </FormLayout>
+      <div className="md:hidden">
+        <FormLayout
+          formTitle="Add a Barangay User"
+          updateId="Admin_NewSubmitBtn"
+          updBtnLabel="Create"
+          btnType="submit"
+          formId="Admin_BrgyAddForm"
+        >
+          <>
+            <form
+              onSubmit={handleSubmit}
+              className="flex flex-col gap-4"
+              id="Admin_BrgyAddForm"
+            >
+              <TextField
+                label="Username"
+                inputType="text"
+                id="Admin_NewBrgyUsernameField"
+                onSubmit={(e) => setUsername(e.target.value)}
+                isRequired
+                maxLength={20}
+              />
+              <TextField
+                label="Email"
+                inputType="text"
+                id="Admin_NewBrgyEmailField"
+                onSubmit={(e) => setEmail(e.target.value)}
+                isRequired
+                error={errors.email}
+                maxLength={50}
+              />
+              <SelectDropdown
+                value={String(levelId)}
+                onValueChange={(val) => setLevelId(Number(val))}
+                label="Government Level"
+                id="Admin_NewGovopLevelField"
+                onSubmit={(e) => setLevelId(Number(e.target.value))}
+                options={[
+                  { label: "City", value: "1" },
+                  { label: "Barangay", value: "2" },
+                ]}
+                isRequired
+              />
+              <SelectDropdown
+                value={String(cityId)}
+                onValueChange={(val) => setCityId(Number(val))}
+                label="City"
+                placeholder="Select the Govop's City"
+                id="Admin_NewGovopCityField"
+                onSubmit={(e) => setCityId(Number(e.target.value))}
+                options={cities?.map((city) => ({
+                  label: city.name,
+                  value: String(city.id),
+                }))}
+                isRequired
+                loading={loading}
+              />
+              <SelectDropdown
+                value={String(brgyId)}
+                onValueChange={(val) => setBrgyId(Number(val))}
+                label="Barangay"
+                placeholder="Select a Barangay (Please select a city first)"
+                id="Admin_GovopBrgyField"
+                onSubmit={(e) => setBrgyId(Number(e.target.value))}
+                options={barangays?.map((brgy) => ({
+                  label: brgy.name,
+                  value: String(brgy.id),
+                }))}
+                isRequired={!disabled}
+                disabled={disabled}
+                loading={brgyLoad}
+              />
+              <TextField
+                label="Point person"
+                inputType="text"
+                id="Admin_NewBrgyPointPersonField"
+                onSubmit={(e) => setPointPerson(e.target.value)}
+                maxLength={100}
+              />
+              <TextField
+                label="Point person's position"
+                inputType="text"
+                id="Admin_NewBrgyPointPositionField"
+                onSubmit={(e) => setPointPosition(e.target.value)}
+                maxLength={50}
+              />
+              <TextField
+                label="Password"
+                inputType="password"
+                id="Admin_NewGovopPasswordField"
+                onSubmit={(e) => setPw(e.target.value)}
+                isPassword
+                error={errors.pw}
+              />
+              <TextField
+                label="Confirm Password"
+                inputType="password"
+                id="Admin_NewGovopConfirmPasswordField"
+                onSubmit={(e) => setConfirmPw(e.target.value)}
+                isPassword
+                error={errors.confirmPw}
+              />
+            </form>
+          </>
+        </FormLayout>
+      </div>
+      <div className="hidden md:block">
+        <FormLayout
+          updateId="Admin_NewSubmitBtn"
+          updBtnLabel="Create"
+          btnType="submit"
+          formId="Admin_BrgyAddForm_Desktop"
+        >
+          <>
+            <div className="flex flex-col gap-8 mx-18">
+              <p
+                className="text-2xl font-bold"
+                style={{ color: colors.heading }}
+              >
+                Add a Barangay User
+              </p>
+              <form
+                onSubmit={handleSubmit}
+                className="flex flex-col gap-4 bg-gray-400/20 p-8 rounded-lg"
+                id="Admin_BrgyAddForm_Desktop"
+              >
+                <div className="w-full grid grid-flow-col grid-rows-5 gap-6 px-8">
+                  <TextField
+                    label="Username"
+                    inputType="text"
+                    id="Admin_NewBrgyUsernameField"
+                    onSubmit={(e) => setUsername(e.target.value)}
+                    isRequired
+                    maxLength={20}
+                  />
+                  <TextField
+                    label="Email"
+                    inputType="text"
+                    id="Admin_NewBrgyEmailField"
+                    onSubmit={(e) => setEmail(e.target.value)}
+                    isRequired
+                    error={errors.email}
+                    maxLength={50}
+                  />
+                  <SelectDropdown
+                    value={String(levelId)}
+                    onValueChange={(val) => setLevelId(Number(val))}
+                    label="Government Level"
+                    id="Admin_NewGovopLevelField"
+                    onSubmit={(e) => setLevelId(Number(e.target.value))}
+                    options={[
+                      { label: "City", value: "1" },
+                      { label: "Barangay", value: "2" },
+                    ]}
+                    isRequired
+                  />
+                  <SelectDropdown
+                    value={String(cityId)}
+                    onValueChange={(val) => setCityId(Number(val))}
+                    label="City"
+                    placeholder="Select the Govop's City"
+                    id="Admin_NewGovopCityField"
+                    onSubmit={(e) => setCityId(Number(e.target.value))}
+                    options={cities?.map((city) => ({
+                      label: city.name,
+                      value: String(city.id),
+                    }))}
+                    isRequired
+                    loading={loading}
+                  />
+                  <SelectDropdown
+                    value={String(brgyId)}
+                    onValueChange={(val) => setBrgyId(Number(val))}
+                    label="Barangay"
+                    placeholder="Select a Barangay (Please select a city first)"
+                    id="Admin_GovopBrgyField"
+                    onSubmit={(e) => setBrgyId(Number(e.target.value))}
+                    options={barangays?.map((brgy) => ({
+                      label: brgy.name,
+                      value: String(brgy.id),
+                    }))}
+                    isRequired={!disabled}
+                    disabled={disabled}
+                    loading={brgyLoad}
+                  />
+                  <TextField
+                    label="Point person"
+                    inputType="text"
+                    id="Admin_NewBrgyPointPersonField"
+                    onSubmit={(e) => setPointPerson(e.target.value)}
+                    maxLength={100}
+                  />
+                  <TextField
+                    label="Point person's position"
+                    inputType="text"
+                    id="Admin_NewBrgyPointPositionField"
+                    onSubmit={(e) => setPointPosition(e.target.value)}
+                    maxLength={50}
+                  />
+                  <TextField
+                    label="Password"
+                    inputType="password"
+                    id="Admin_NewGovopPasswordField"
+                    onSubmit={(e) => setPw(e.target.value)}
+                    isPassword
+                    error={errors.pw}
+                  />
+                  <TextField
+                    label="Confirm Password"
+                    inputType="password"
+                    id="Admin_NewGovopConfirmPasswordField"
+                    onSubmit={(e) => setConfirmPw(e.target.value)}
+                    isPassword
+                    error={errors.confirmPw}
+                  />
+                </div>
+              </form>
+            </div>
+          </>
+        </FormLayout>
+      </div>
     </>
   );
 }
