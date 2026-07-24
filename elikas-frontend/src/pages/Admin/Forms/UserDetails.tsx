@@ -10,6 +10,8 @@ import SelectDropdown from "@/components/SelectDropdown";
 import { bigSmile } from "@dicebear/collection";
 import { createAvatar } from "@dicebear/core";
 import { User } from "lucide-react";
+import colors from "@/constants/colors";
+import FormDesktopSkeleton from "@/pages/Skeletons/FormDesktopSkeleton";
 
 type UserData = {
   created_at: string;
@@ -266,146 +268,300 @@ function UserDetails() {
           onClick={deacIndiv}
         />
       )}
-      <FormLayout
-        updateId="Admin_IndivUpdateBtn"
-        deleteId="Admin_IndivDeleteBtn"
-        deleteClick={() => setWillDeac(true)}
-        submitUpdId="Admin_IndivSubmitUpdBtn"
-        closeUpdId="Admin_IndivCloseUpdBtn"
-        isEditable={isEditable}
-        updateClick={() => setIsEditable(true)}
-        closeUpdClick={() => {
-          setIsEditable(false);
-          getIndivDetails();
-        }}
-        formId="Admin_IndivUpdateForm"
-        isDisabled={disabled}
-        isDeactivated={userData?.deactivated_at ? true : false}
-      >
-        {loading ? (
-          <div className="flex justify-center">
-            <FormSkeleton />
-          </div>
-        ) : (
-          <>
-            <form
-              onSubmit={updateIndiv}
-              className="flex flex-col gap-4"
-              id="Admin_IndivUpdateForm"
-            >
-              <div className="w-full flex justify-center">
-                {seed ? (
-                  <img src={dataUri} className="w-24" />
-                ) : (
-                  <User className="w-24" />
-                )}
-              </div>
-              <TextField
-                label="User ID"
-                inputType="text"
-                id="Admin_IndivIdField"
-                value={id}
-                readonly
-              />
-              <TextField
-                label="Username"
-                inputType="text"
-                id="Admin_IndivUsernameField"
-                value={username}
-                readonly={!isEditable}
-                onSubmit={(e) => setUsername(e.target.value)}
-                maxLength={20}
-              />
-              <TextField
-                label="First Name"
-                inputType="text"
-                id="Admin_IndivFirstnameField"
-                value={firstname}
-                readonly={!isEditable}
-                onSubmit={(e) => setFirstname(e.target.value)}
-                maxLength={50}
-              />
-              <TextField
-                label="Last Name"
-                inputType="text"
-                id="Admin_IndivLastnameField"
-                value={lastname}
-                readonly={!isEditable}
-                onSubmit={(e) => setLastname(e.target.value)}
-                maxLength={50}
-              />
-              <TextField
-                label="Email"
-                inputType="text"
-                id="Admin_IndivEmailField"
-                value={email}
-                readonly={!isEditable}
-                onSubmit={(e) => setEmail(e.target.value)}
-                maxLength={50}
-              />
-              {!isEditable ? (
-                <TextField
-                  label="Address"
-                  inputType="text"
-                  id="Admin_IndivAddressField"
-                  value={location}
-                  readonly
-                />
-              ) : (
-                <>
-                  <SelectDropdown
-                    value={String(cityId)}
-                    onValueChange={(val) => {
-                      setCityId;
-                      setCityId(Number(val));
-                    }}
-                    label="City"
-                    placeholder="Select a City"
-                    id="Admin_IndivCityField"
-                    onSubmit={(e) => setLocation(e.target.value)}
-                    options={cities?.map((city) => ({
-                      label: city.name,
-                      value: String(city.id),
-                    }))}
-                    isRequired={!id ? true : false}
+      <div className="md:hidden">
+        <FormLayout
+          formTitle="User Details"
+          updateId="Admin_IndivUpdateBtn"
+          deleteId="Admin_IndivDeleteBtn"
+          deleteClick={() => setWillDeac(true)}
+          submitUpdId="Admin_IndivSubmitUpdBtn"
+          closeUpdId="Admin_IndivCloseUpdBtn"
+          isEditable={isEditable}
+          updateClick={() => setIsEditable(true)}
+          closeUpdClick={() => {
+            setIsEditable(false);
+            getIndivDetails();
+          }}
+          formId="Admin_IndivUpdateForm"
+          isDisabled={disabled}
+          isDeactivated={userData?.deactivated_at ? true : false}
+        >
+          {loading ? (
+            <div className="flex justify-center">
+              <FormSkeleton />
+            </div>
+          ) : (
+            <>
+              <div className="flex justify-center">
+                <form
+                  onSubmit={updateIndiv}
+                  className="flex flex-col gap-4 w-full max-w-md"
+                  id="Admin_IndivUpdateForm"
+                >
+                  <div className="w-full flex justify-center">
+                    {seed ? (
+                      <img src={dataUri} className="w-24" />
+                    ) : (
+                      <User className="w-24" />
+                    )}
+                  </div>
+                  <TextField
+                    label="User ID"
+                    inputType="text"
+                    id="Admin_IndivIdField"
+                    value={id}
+                    readonly
                   />
-                  <SelectDropdown
-                    value={String(locationId)}
-                    onValueChange={setLocationId}
-                    label="Barangay"
-                    placeholder="Select a Barangay (Please select a city first)"
-                    id="Admin_IndivBrgyField"
-                    onSubmit={(e) => setLocation(e.target.value)}
-                    options={barangays?.map((brgy) => ({
-                      label: brgy.name,
-                      value: String(brgy.id),
-                    }))}
-                    isRequired={!id ? true : false}
-                    loading={brgyLoad}
+                  <TextField
+                    label="Username"
+                    inputType="text"
+                    id="Admin_IndivUsernameField"
+                    value={username}
+                    readonly={!isEditable}
+                    onSubmit={(e) => setUsername(e.target.value)}
+                    maxLength={20}
                   />
-                </>
-              )}
+                  <TextField
+                    label="First Name"
+                    inputType="text"
+                    id="Admin_IndivFirstnameField"
+                    value={firstname}
+                    readonly={!isEditable}
+                    onSubmit={(e) => setFirstname(e.target.value)}
+                    maxLength={50}
+                  />
+                  <TextField
+                    label="Last Name"
+                    inputType="text"
+                    id="Admin_IndivLastnameField"
+                    value={lastname}
+                    readonly={!isEditable}
+                    onSubmit={(e) => setLastname(e.target.value)}
+                    maxLength={50}
+                  />
+                  <TextField
+                    label="Email"
+                    inputType="text"
+                    id="Admin_IndivEmailField"
+                    value={email}
+                    readonly={!isEditable}
+                    onSubmit={(e) => setEmail(e.target.value)}
+                    maxLength={50}
+                  />
+                  {!isEditable ? (
+                    <TextField
+                      label="Address"
+                      inputType="text"
+                      id="Admin_IndivAddressField"
+                      value={location}
+                      readonly
+                    />
+                  ) : (
+                    <>
+                      <SelectDropdown
+                        value={String(cityId)}
+                        onValueChange={(val) => {
+                          setCityId;
+                          setCityId(Number(val));
+                        }}
+                        label="City"
+                        placeholder="Select a City"
+                        id="Admin_IndivCityField"
+                        onSubmit={(e) => setLocation(e.target.value)}
+                        options={cities?.map((city) => ({
+                          label: city.name,
+                          value: String(city.id),
+                        }))}
+                        isRequired={!id ? true : false}
+                      />
+                      <SelectDropdown
+                        value={String(locationId)}
+                        onValueChange={setLocationId}
+                        label="Barangay"
+                        placeholder="Select a Barangay (Please select a city first)"
+                        id="Admin_IndivBrgyField"
+                        onSubmit={(e) => setLocation(e.target.value)}
+                        options={barangays?.map((brgy) => ({
+                          label: brgy.name,
+                          value: String(brgy.id),
+                        }))}
+                        isRequired={!id ? true : false}
+                        loading={brgyLoad}
+                      />
+                    </>
+                  )}
 
-              <TextField
-                label="Contact Number"
-                inputType="text"
-                id="Admin_IndivContactNoField"
-                value={phone ?? ""}
-                readonly={!isEditable}
-                onSubmit={(e) => setPhone(e.target.value)}
-                maxLength={12}
-              />
-              <TextField
-                label="Created At"
-                inputType="text"
-                id="Admin_IndivCreatedField"
-                value={createdAt}
-                readonly
-              />
-            </form>
-          </>
-        )}
-      </FormLayout>
+                  <TextField
+                    label="Contact Number"
+                    inputType="text"
+                    id="Admin_IndivContactNoField"
+                    value={phone ?? ""}
+                    readonly={!isEditable}
+                    onSubmit={(e) => setPhone(e.target.value)}
+                    maxLength={12}
+                  />
+                  <TextField
+                    label="Created At"
+                    inputType="text"
+                    id="Admin_IndivCreatedField"
+                    value={createdAt}
+                    readonly
+                  />
+                </form>
+              </div>
+            </>
+          )}
+        </FormLayout>
+      </div>
+      <div className="hidden md:block">
+        <FormLayout
+          updateId="Admin_IndivUpdateBtn"
+          deleteId="Admin_IndivDeleteBtn"
+          deleteClick={() => setWillDeac(true)}
+          submitUpdId="Admin_IndivSubmitUpdBtn"
+          closeUpdId="Admin_IndivCloseUpdBtn"
+          isEditable={isEditable}
+          updateClick={() => setIsEditable(true)}
+          closeUpdClick={() => {
+            setIsEditable(false);
+            getIndivDetails();
+          }}
+          formId="Admin_IndivUpdateForm_Desktop"
+          isDisabled={disabled}
+          isDeactivated={userData?.deactivated_at ? true : false}
+        >
+          <div className="flex flex-col gap-8 mx-18">
+            <p className="text-2xl font-bold" style={{ color: colors.heading }}>
+              User Details
+            </p>
+            <div>
+              {loading ? (
+                <div className="flex justify-center">
+                  <FormDesktopSkeleton />
+                </div>
+              ) : (
+                <form
+                  onSubmit={updateIndiv}
+                  className="flex flex-col gap-4 bg-gray-400/20 p-8 rounded-lg"
+                  id="Admin_IndivUpdateForm_Desktop"
+                >
+                  <div>
+                    {seed ? (
+                      <img src={dataUri} className="w-24" />
+                    ) : (
+                      <User className="w-24" />
+                    )}
+                  </div>
+                  <div className="w-full grid grid-flow-col grid-rows-4 gap-6">
+                    <TextField
+                      label="User ID"
+                      inputType="text"
+                      id="Admin_IndivIdField"
+                      value={id}
+                      readonly
+                    />
+                    <TextField
+                      label="Username"
+                      inputType="text"
+                      id="Admin_IndivUsernameField"
+                      value={username}
+                      readonly={!isEditable}
+                      onSubmit={(e) => setUsername(e.target.value)}
+                      maxLength={20}
+                    />
+                    <TextField
+                      label="First Name"
+                      inputType="text"
+                      id="Admin_IndivFirstnameField"
+                      value={firstname}
+                      readonly={!isEditable}
+                      onSubmit={(e) => setFirstname(e.target.value)}
+                      maxLength={50}
+                    />
+                    <TextField
+                      label="Last Name"
+                      inputType="text"
+                      id="Admin_IndivLastnameField"
+                      value={lastname}
+                      readonly={!isEditable}
+                      onSubmit={(e) => setLastname(e.target.value)}
+                      maxLength={50}
+                    />
+                    <TextField
+                      label="Email"
+                      inputType="text"
+                      id="Admin_IndivEmailField"
+                      value={email}
+                      readonly={!isEditable}
+                      onSubmit={(e) => setEmail(e.target.value)}
+                      maxLength={50}
+                    />
+                    {!isEditable ? (
+                      <TextField
+                        label="Address"
+                        inputType="text"
+                        id="Admin_IndivAddressField"
+                        value={location}
+                        readonly
+                      />
+                    ) : (
+                      <>
+                        <SelectDropdown
+                          value={String(cityId)}
+                          onValueChange={(val) => {
+                            setCityId;
+                            setCityId(Number(val));
+                          }}
+                          label="City"
+                          placeholder="Select a City"
+                          id="Admin_IndivCityField"
+                          onSubmit={(e) => setLocation(e.target.value)}
+                          options={cities?.map((city) => ({
+                            label: city.name,
+                            value: String(city.id),
+                          }))}
+                          isRequired={!id ? true : false}
+                        />
+                        <SelectDropdown
+                          value={String(locationId)}
+                          onValueChange={setLocationId}
+                          label="Barangay"
+                          placeholder="Select a Barangay (Please select a city first)"
+                          id="Admin_IndivBrgyField"
+                          onSubmit={(e) => setLocation(e.target.value)}
+                          options={barangays?.map((brgy) => ({
+                            label: brgy.name,
+                            value: String(brgy.id),
+                          }))}
+                          isRequired={!id ? true : false}
+                          loading={brgyLoad}
+                        />
+                      </>
+                    )}
+
+                    <TextField
+                      label="Contact Number"
+                      inputType="text"
+                      id="Admin_IndivContactNoField"
+                      value={phone ?? ""}
+                      readonly={!isEditable}
+                      onSubmit={(e) => setPhone(e.target.value)}
+                      maxLength={12}
+                    />
+                    <TextField
+                      label="Created At"
+                      inputType="text"
+                      id="Admin_IndivCreatedField"
+                      value={createdAt}
+                      readonly
+                    />
+                  </div>
+                </form>
+              )}
+            </div>
+          </div>
+        </FormLayout>
+      </div>
     </>
   );
 }

@@ -13,6 +13,8 @@ import { renderToString } from "react-dom/server";
 import { toast } from "sonner";
 import SelectDropdown from "@/components/SelectDropdown";
 import { handleDelete } from "@/lib/hazardUtils";
+import colors from "@/constants/colors";
+import FormDesktopSkeleton from "@/pages/Skeletons/FormDesktopSkeleton";
 
 type FloodLevel = {
   id: number;
@@ -140,6 +142,7 @@ function HazardDetails() {
     response
       .then(() => {
         setIsEditable?.(false);
+        getAll();
       })
       .catch((err: string | any) => {
         console.log(err.message || "An error occurred");
@@ -187,135 +190,123 @@ function HazardDetails() {
 
   return (
     <>
-      <FormLayout
-        formTitle="Hazard Details"
-        updateId="Admin_HazardUpdBtn"
-        deleteId="Admin_HazardDelBtn"
-        submitUpdId="Admin_HazardUpdSubmit"
-        closeUpdId="Admin_HazardUpdClose"
-        updateClick={() => setIsEditable(true)}
-        closeUpdClick={() => setIsEditable(false)}
-        formId="Admin_HazardUpdateForm"
-        deleteClick={() => deleteHaz()}
-        isEditable={isEditable}
-        isDisabled={disabled}
-        isDeactivated={floodDetails?.is_deactivated}
-      >
-        {loading ? (
-          <div className="flex justify-center">
-            <FormSkeleton />
-          </div>
-        ) : (
-          <>
-            <form
-              onSubmit={handleUpdate}
-              id="Admin_HazardUpdateForm"
-              className="flex flex-col gap-4"
-            >
-              <TextField
-                label="Flood Path Id"
-                value={String(floodDetails?.id)}
-                inputType="text"
-                id="Admin_HazardId"
-                readonly
-              />
-              <Field>
-                <FieldLabel>Media</FieldLabel>
-                {floodDetails?.media && floodDetails?.media.length > 0 ? (
-                  floodDetails?.media.map((media) => <img src={media} />)
-                ) : (
-                  <p>No Media</p>
-                )}
-              </Field>
-              <MapContainer
-                center={midpoint}
-                zoom={17}
-                scrollWheelZoom={false}
-                style={{ height: "30vh", width: "100%" }}
-                id="Admin_HazardMapContainer"
+      <div className="md:hidden">
+        <FormLayout
+          formTitle="Hazard Details"
+          updateId="Admin_HazardUpdBtn"
+          deleteId="Admin_HazardDelBtn"
+          submitUpdId="Admin_HazardUpdSubmit"
+          closeUpdId="Admin_HazardUpdClose"
+          updateClick={() => setIsEditable(true)}
+          closeUpdClick={() => setIsEditable(false)}
+          formId="Admin_HazardUpdateForm"
+          deleteClick={() => deleteHaz()}
+          isEditable={isEditable}
+          isDisabled={disabled}
+          isDeactivated={floodDetails?.is_deactivated}
+        >
+          {loading ? (
+            <div className="flex justify-center">
+              <FormSkeleton />
+            </div>
+          ) : (
+            <>
+              <form
+                onSubmit={handleUpdate}
+                id="Admin_HazardUpdateForm"
+                className="flex flex-col gap-4"
               >
-                <TileLayer
-                  attribution='&copy; <a href="https://www.maptiler.com/copyright/">MapTiler</a> &copy; <a href="https://openstreetmap.org">OpenStreetMap</a> contributors'
-                  url={`https://api.maptiler.com/maps/base-v4/{z}/{x}/{y}.png?key=6RBKItdaX8o4QX31GhTm`}
+                <TextField
+                  label="Flood Path Id"
+                  value={String(floodDetails?.id)}
+                  inputType="text"
+                  id="Admin_HazardId"
+                  readonly
                 />
-                <Marker
-                  position={midpoint as LatLngExpression}
-                  icon={floodIcon}
+                <Field>
+                  <FieldLabel>Media</FieldLabel>
+                  {floodDetails?.media && floodDetails?.media.length > 0 ? (
+                    floodDetails?.media.map((media) => <img src={media} />)
+                  ) : (
+                    <p>No Media</p>
+                  )}
+                </Field>
+                <MapContainer
+                  center={midpoint}
+                  zoom={17}
+                  scrollWheelZoom={false}
+                  style={{ height: "30vh", width: "100%" }}
+                  id="Admin_HazardMapContainer"
+                >
+                  <TileLayer
+                    attribution='&copy; <a href="https://www.maptiler.com/copyright/">MapTiler</a> &copy; <a href="https://openstreetmap.org">OpenStreetMap</a> contributors'
+                    url={`https://api.maptiler.com/maps/base-v4/{z}/{x}/{y}.png?key=6RBKItdaX8o4QX31GhTm`}
+                  />
+                  <Marker
+                    position={midpoint as LatLngExpression}
+                    icon={floodIcon}
+                  />
+                  <Polyline
+                    positions={floodDetails?.path as LatLngTuple[]}
+                    weight={6}
+                    color={getColor(floodDetails?.flood_levels.id)}
+                  />
+                </MapContainer>
+                {isEditable ? (
+                  <div className="w-full">
+                    <SelectDropdown
+                      value={String(levelId)}
+                      onValueChange={(val) => setLevelId(Number(val))}
+                      label="Flood Level*"
+                      id="Admin_HazardLevelField"
+                      onSubmit={(e) => setLevelId(Number(e.target.value))}
+                      options={levels?.map((level) => ({
+                        label: level.level_name,
+                        value: String(level.id),
+                        description: level.description,
+                      }))}
+                      isRequired={!id ? true : false}
+                    />
+                  </div>
+                ) : (
+                  <TextField
+                    label="Flood Level"
+                    value={String(floodDetails?.flood_levels.level_name)}
+                    inputType="text"
+                    id="Admin_HazardLevel"
+                    readonly
+                  />
+                )}
+                <TextField
+                  label="Description"
+                  value={String(floodDetails?.description)}
+                  inputType="text"
+                  id="Admin_HazardDesc"
+                  readonly
                 />
-                <Polyline
-                  positions={floodDetails?.path as LatLngTuple[]}
-                  weight={6}
-                  color={getColor(floodDetails?.flood_levels.id)}
-                />
-              </MapContainer>
-              {isEditable ? (
-                <div className="w-full">
-                  <SelectDropdown
-                    value={String(levelId)}
-                    onValueChange={(val) => setLevelId(Number(val))}
-                    label="Flood Level*"
-                    id="Admin_HazardLevelField"
-                    onSubmit={(e) => setLevelId(Number(e.target.value))}
-                    options={levels?.map((level) => ({
-                      label: level.level_name,
-                      value: String(level.id),
-                      description: level.description,
-                    }))}
-                    isRequired={!id ? true : false}
+                <div className="flex gap-2">
+                  <TextField
+                    label="Upvotes"
+                    value={String(floodDetails?.upvotes)}
+                    inputType="text"
+                    id="Admin_HazardUpvotes"
+                    readonly
+                  />
+                  <TextField
+                    label="Downvotes"
+                    value={String(floodDetails?.downvotes)}
+                    inputType="text"
+                    id="Admin_HazardDownvotes"
+                    readonly
                   />
                 </div>
-              ) : (
                 <TextField
-                  label="Flood Level"
-                  value={String(floodDetails?.flood_levels.level_name)}
+                  label="Last Confirmed"
+                  value={String(floodDetails?.last_confirmed)}
                   inputType="text"
-                  id="Admin_HazardLevel"
+                  id="Admin_HazardLastConfirmed"
                   readonly
                 />
-              )}
-              <TextField
-                label="Description"
-                value={String(floodDetails?.description)}
-                inputType="text"
-                id="Admin_HazardDesc"
-                readonly
-              />
-              <div className="flex gap-2">
-                <TextField
-                  label="Upvotes"
-                  value={String(floodDetails?.upvotes)}
-                  inputType="text"
-                  id="Admin_HazardUpvotes"
-                  readonly
-                />
-                <TextField
-                  label="Downvotes"
-                  value={String(floodDetails?.downvotes)}
-                  inputType="text"
-                  id="Admin_HazardDownvotes"
-                  readonly
-                />
-              </div>
-              <TextField
-                label="Last Confirmed"
-                value={String(floodDetails?.last_confirmed)}
-                inputType="text"
-                id="Admin_HazardLastConfirmed"
-                readonly
-              />
-              <div className="flex flex-col gap-1">
-                <TextField
-                  label="Expiry Date"
-                  value={String(floodDetails?.expiry)}
-                  inputType="text"
-                  id="Admin_HazardExpiry"
-                  readonly
-                />
-                <p className="text-xs italic" id="Admin_HazardIsExpired">
-                  Has expired: {String(floodDetails?.is_expired)}
-                </p>
-              </div>
-              {floodDetails?.is_deactivated && (
                 <div className="flex flex-col gap-1">
                   <TextField
                     label="Expiry Date"
@@ -324,36 +315,236 @@ function HazardDetails() {
                     id="Admin_HazardExpiry"
                     readonly
                   />
-                  <p className="text-xs italic" id="Admin_HazardIsDeac">
-                    Has deactivated: {String(floodDetails?.is_deactivated)}
+                  <p className="text-xs italic" id="Admin_HazardIsExpired">
+                    Has expired: {String(floodDetails?.is_expired)}
                   </p>
                 </div>
+                {floodDetails?.is_deactivated && (
+                  <div className="flex flex-col gap-1">
+                    <TextField
+                      label="Expiry Date"
+                      value={String(floodDetails?.expiry)}
+                      inputType="text"
+                      id="Admin_HazardExpiry"
+                      readonly
+                    />
+                    <p className="text-xs italic" id="Admin_HazardIsDeac">
+                      Has deactivated: {String(floodDetails?.is_deactivated)}
+                    </p>
+                  </div>
+                )}
+                <TextField
+                  label="Posted By"
+                  value={String(floodDetails?.posted_by)}
+                  inputType="text"
+                  id="Admin_HazardPostedBy"
+                  readonly
+                />
+                <TextField
+                  label="Posted On"
+                  value={String(floodDetails?.posted_at)}
+                  inputType="text"
+                  id="Admin_HazardPostedOn"
+                  readonly
+                />
+                <TextField
+                  label="Last Updated"
+                  value={String(floodDetails?.last_confirmed)}
+                  inputType="text"
+                  id="Admin_HazardLastUpdated"
+                  readonly
+                />
+              </form>
+            </>
+          )}
+        </FormLayout>
+      </div>
+      <div className="hidden md:block">
+        <FormLayout
+          updateId="Admin_HazardUpdBtn"
+          deleteId="Admin_HazardDelBtn"
+          submitUpdId="Admin_HazardUpdSubmit"
+          closeUpdId="Admin_HazardUpdClose"
+          updateClick={() => setIsEditable(true)}
+          closeUpdClick={() => setIsEditable(false)}
+          formId="Admin_HazardUpdateForm_Desktop"
+          deleteClick={() => deleteHaz()}
+          isEditable={isEditable}
+          isDisabled={disabled}
+          isDeactivated={floodDetails?.is_deactivated}
+        >
+          <div className="flex flex-col gap-8 mx-18">
+            <p className="text-2xl font-bold" style={{ color: colors.heading }}>
+              Hazard Pin Details
+            </p>
+            <div>
+              {loading ? (
+                <div className="flex justify-center">
+                  <FormDesktopSkeleton />
+                </div>
+              ) : (
+                <>
+                  <form
+                    onSubmit={handleUpdate}
+                    id="Admin_HazardUpdateForm_Desktop"
+                    className="flex gap-12 justify-center"
+                  >
+                    <div className="flex flex-col gap-4 w-1/2">
+                      <TextField
+                        label="Flood Path Id"
+                        value={String(floodDetails?.id)}
+                        inputType="text"
+                        id="Admin_HazardId"
+                        readonly
+                      />
+                      <Field>
+                        <FieldLabel>Media</FieldLabel>
+                        {floodDetails?.media &&
+                        floodDetails?.media.length > 0 ? (
+                          floodDetails?.media.map((media) => (
+                            <img src={media} />
+                          ))
+                        ) : (
+                          <p>No Media</p>
+                        )}
+                      </Field>
+                      {isEditable ? (
+                        <div className="w-full">
+                          <SelectDropdown
+                            value={String(levelId)}
+                            onValueChange={(val) => setLevelId(Number(val))}
+                            label="Flood Level*"
+                            id="Admin_HazardLevelField"
+                            onSubmit={(e) => setLevelId(Number(e.target.value))}
+                            options={levels?.map((level) => ({
+                              label: level.level_name,
+                              value: String(level.id),
+                              description: level.description,
+                            }))}
+                            isRequired={!id ? true : false}
+                          />
+                        </div>
+                      ) : (
+                        <TextField
+                          label="Flood Level"
+                          value={String(floodDetails?.flood_levels.level_name)}
+                          inputType="text"
+                          id="Admin_HazardLevel"
+                          readonly
+                        />
+                      )}
+                      <TextField
+                        label="Description"
+                        value={String(floodDetails?.description)}
+                        inputType="text"
+                        id="Admin_HazardDesc"
+                        readonly
+                      />
+                      <div className="flex gap-2">
+                        <TextField
+                          label="Upvotes"
+                          value={String(floodDetails?.upvotes)}
+                          inputType="text"
+                          id="Admin_HazardUpvotes"
+                          readonly
+                        />
+                        <TextField
+                          label="Downvotes"
+                          value={String(floodDetails?.downvotes)}
+                          inputType="text"
+                          id="Admin_HazardDownvotes"
+                          readonly
+                        />
+                      </div>
+                      <TextField
+                        label="Last Confirmed"
+                        value={String(floodDetails?.last_confirmed)}
+                        inputType="text"
+                        id="Admin_HazardLastConfirmed"
+                        readonly
+                      />
+                      <div className="flex flex-col gap-1">
+                        <TextField
+                          label="Expiry Date"
+                          value={String(floodDetails?.expiry)}
+                          inputType="text"
+                          id="Admin_HazardExpiry"
+                          readonly
+                        />
+                        <p
+                          className="text-xs italic"
+                          id="Admin_HazardIsExpired"
+                        >
+                          Has expired: {String(floodDetails?.is_expired)}
+                        </p>
+                      </div>
+                      {floodDetails?.is_deactivated && (
+                        <div className="flex flex-col gap-1">
+                          <TextField
+                            label="Expiry Date"
+                            value={String(floodDetails?.expiry)}
+                            inputType="text"
+                            id="Admin_HazardExpiry"
+                            readonly
+                          />
+                          <p className="text-xs italic" id="Admin_HazardIsDeac">
+                            Has deactivated:{" "}
+                            {String(floodDetails?.is_deactivated)}
+                          </p>
+                        </div>
+                      )}
+                      <TextField
+                        label="Posted By"
+                        value={String(floodDetails?.posted_by)}
+                        inputType="text"
+                        id="Admin_HazardPostedBy"
+                        readonly
+                      />
+                      <TextField
+                        label="Posted On"
+                        value={String(floodDetails?.posted_at)}
+                        inputType="text"
+                        id="Admin_HazardPostedOn"
+                        readonly
+                      />
+                      <TextField
+                        label="Last Updated"
+                        value={String(floodDetails?.last_confirmed)}
+                        inputType="text"
+                        id="Admin_HazardLastUpdated"
+                        readonly
+                      />
+                    </div>
+                    <div className="w-1/2">
+                      <MapContainer
+                        center={midpoint}
+                        zoom={17}
+                        scrollWheelZoom={false}
+                        style={{ height: "60vh", width: "100%" }}
+                        id="Admin_HazardMapContainer"
+                      >
+                        <TileLayer
+                          attribution='&copy; <a href="https://www.maptiler.com/copyright/">MapTiler</a> &copy; <a href="https://openstreetmap.org">OpenStreetMap</a> contributors'
+                          url={`https://api.maptiler.com/maps/base-v4/{z}/{x}/{y}.png?key=6RBKItdaX8o4QX31GhTm`}
+                        />
+                        <Marker
+                          position={midpoint as LatLngExpression}
+                          icon={floodIcon}
+                        />
+                        <Polyline
+                          positions={floodDetails?.path as LatLngTuple[]}
+                          weight={6}
+                          color={getColor(floodDetails?.flood_levels.id)}
+                        />
+                      </MapContainer>
+                    </div>
+                  </form>
+                </>
               )}
-              <TextField
-                label="Posted By"
-                value={String(floodDetails?.posted_by)}
-                inputType="text"
-                id="Admin_HazardPostedBy"
-                readonly
-              />
-              <TextField
-                label="Posted On"
-                value={String(floodDetails?.posted_at)}
-                inputType="text"
-                id="Admin_HazardPostedOn"
-                readonly
-              />
-              <TextField
-                label="Last Updated"
-                value={String(floodDetails?.last_confirmed)}
-                inputType="text"
-                id="Admin_HazardLastUpdated"
-                readonly
-              />
-            </form>
-          </>
-        )}
-      </FormLayout>
+            </div>
+          </div>
+        </FormLayout>
+      </div>
     </>
   );
 }

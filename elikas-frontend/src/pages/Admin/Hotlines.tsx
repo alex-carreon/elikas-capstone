@@ -250,7 +250,7 @@ function Hotlines() {
             {loading && (
               <>
                 <div className="w-full flex flex-col items-center">
-                  <div className="flex w-full max-w-sm flex-col gap-7 pt-4">
+                  <div className="flex w-full flex-col gap-7 pt-4">
                     <div className="flex flex-col gap-3">
                       <Skeleton className="h-24 w-full bg-[#59260B]/30" />
                     </div>

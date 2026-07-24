@@ -312,7 +312,7 @@ function IndivUsersPage() {
               </Tabs>
             </div>
 
-            <Collapsible className="w-full flex-col items-center gap-2">
+            <Collapsible className="w-full flex-col items-center gap-2 md:px-8">
               <div className="w-full flex justify-between">
                 <InputGroup className="w-2/3">
                   <InputGroupInput
@@ -453,7 +453,7 @@ function IndivUsersPage() {
                 </>
               ) : isActiveUsers ? (
                 <>
-                  <div className="hidden md:block">
+                  <div className="hidden md:block px-8">
                     <DataTable columns={IndivColumns} data={activeUsers} />
                   </div>
                   <div className="md:hidden">
@@ -474,7 +474,7 @@ function IndivUsersPage() {
                 </>
               ) : isFeedback ? (
                 <>
-                  <div className="hidden md:block">
+                  <div className="hidden md:block px-8">
                     <DataTable columns={FeedbackColumns} data={feedback} />
                   </div>
                   <div className="md:hidden">

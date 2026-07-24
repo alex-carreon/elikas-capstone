@@ -8,6 +8,8 @@ import FormSkeleton from "@/pages/Skeletons/FormSkeleton";
 import { toast } from "sonner";
 import AlertDialogue from "@/components/AlertDialogue";
 import SelectDropdown from "@/components/SelectDropdown";
+import colors from "@/constants/colors";
+import FormDesktopSkeleton from "@/pages/Skeletons/FormDesktopSkeleton";
 
 type UserData = {
   created_at: string;
@@ -70,7 +72,6 @@ function BrgyDetails() {
   const getGovopDetails = async (signal?: AbortSignal) => {
     try {
       const response = await api.get(`/admin/users/${id}`, { signal });
-      console.log("response", response);
 
       if (!response) {
         return new Error("Failed to retrieve data");
@@ -304,140 +305,284 @@ function BrgyDetails() {
           onClick={deacGovop}
         />
       )}
-      <FormLayout
-        updateId="Admin_GovopUpdateBtn"
-        updBtnLabel="Update"
-        deleteId="Admin_GovopDeleteBtn"
-        deleteClick={() => setWillDeac(true)}
-        submitUpdId="Admin_GovopSubmitUpdBtn"
-        closeUpdId="Admin_GovopCloseUpdBtn"
-        isEditable={isEditable}
-        updateClick={() => setIsEditable(true)}
-        closeUpdClick={() => {
-          setIsEditable(false);
-          getGovopDetails();
-        }}
-        formId="Admin_GovopUpdateForm"
-        isDisabled={disabled}
-        isDeactivated={userData?.deactivated_at ? true : false}
-      >
-        {loading ? (
-          <div className="flex justify-center">
-            <FormSkeleton />
-          </div>
-        ) : (
-          <>
-            <form
-              onSubmit={updateGovop}
-              className="flex flex-col gap-4"
-              id="Admin_GovopUpdateForm"
-            >
-              <TextField
-                label="User ID"
-                inputType="text"
-                id="Admin_GovopIdField"
-                value={id}
-                readonly
-              />
-              <TextField
-                label="Username"
-                inputType="text"
-                id="Admin_GovopUsernameField"
-                value={username}
-                readonly={!isEditable}
-                onSubmit={(e) => setUsername(e.target.value)}
-                maxLength={20}
-              />
-              <TextField
-                label="Email"
-                inputType="text"
-                id="Admin_GovopEmailField"
-                value={email}
-                readonly
-              />
-              {!isEditable ? (
-                <>
-                  <TextField
-                    label="Government Level"
-                    inputType="text"
-                    id="Admin_GovopLevelField"
-                    value={locLevel}
-                    readonly={!isEditable}
-                    onSubmit={(e) => setLocLevel(e.target.value)}
-                  />
-                  <TextField
-                    label="Address"
-                    inputType="text"
-                    id="Admin_GovopAddressField"
-                    value={location}
-                    readonly={!isEditable}
-                    // onSubmit={(e) => setLocation(e.target.value)}
-                  />
-                </>
-              ) : (
-                <>
-                  <SelectDropdown
-                    value={String(cityId)}
-                    onValueChange={(val) => {
-                      setCityId(Number(val));
-                    }}
-                    label="City"
-                    placeholder="Select a City"
-                    id="Admin_GovopCityField"
-                    onSubmit={(e) => setLocation(e.target.value)}
-                    options={cities?.map((city) => ({
-                      label: city.name,
-                      value: String(city.id),
-                    }))}
-                    isRequired={!id ? true : false}
-                  />
-                  {isCity ? null : (
+      <div className="md:hidden">
+        <FormLayout
+          updateId="Admin_GovopUpdateBtn"
+          updBtnLabel="Update"
+          deleteId="Admin_GovopDeleteBtn"
+          deleteClick={() => setWillDeac(true)}
+          submitUpdId="Admin_GovopSubmitUpdBtn"
+          closeUpdId="Admin_GovopCloseUpdBtn"
+          isEditable={isEditable}
+          updateClick={() => setIsEditable(true)}
+          closeUpdClick={() => {
+            setIsEditable(false);
+            getGovopDetails();
+          }}
+          formId="Admin_GovopUpdateForm"
+          isDisabled={disabled}
+          isDeactivated={userData?.deactivated_at ? true : false}
+        >
+          {loading ? (
+            <div className="flex justify-center">
+              <FormSkeleton />
+            </div>
+          ) : (
+            <>
+              <form
+                onSubmit={updateGovop}
+                className="flex flex-col gap-4 bg-gray-400/20 p-8 rounded-lg"
+                id="Admin_GovopUpdateForm"
+              >
+                <TextField
+                  label="User ID"
+                  inputType="text"
+                  id="Admin_GovopIdField"
+                  value={id}
+                  readonly
+                />
+                <TextField
+                  label="Username"
+                  inputType="text"
+                  id="Admin_GovopUsernameField"
+                  value={username}
+                  readonly={!isEditable}
+                  onSubmit={(e) => setUsername(e.target.value)}
+                  maxLength={20}
+                />
+                <TextField
+                  label="Email"
+                  inputType="text"
+                  id="Admin_GovopEmailField"
+                  value={email}
+                  readonly
+                />
+                {!isEditable ? (
+                  <>
+                    <TextField
+                      label="Government Level"
+                      inputType="text"
+                      id="Admin_GovopLevelField"
+                      value={locLevel}
+                      readonly={!isEditable}
+                      onSubmit={(e) => setLocLevel(e.target.value)}
+                    />
+                    <TextField
+                      label="Address"
+                      inputType="text"
+                      id="Admin_GovopAddressField"
+                      value={location}
+                      readonly={!isEditable}
+                      // onSubmit={(e) => setLocation(e.target.value)}
+                    />
+                  </>
+                ) : (
+                  <>
                     <SelectDropdown
-                      value={String(locationId)}
-                      onValueChange={setLocationId}
-                      label="Barangay"
-                      placeholder="Select a Barangay (Please select a city first)"
-                      id="Admin_GovopBrgyField"
+                      value={String(cityId)}
+                      onValueChange={(val) => {
+                        setCityId(Number(val));
+                      }}
+                      label="City"
+                      placeholder="Select a City"
+                      id="Admin_GovopCityField"
                       onSubmit={(e) => setLocation(e.target.value)}
-                      options={barangays?.map((brgy) => ({
-                        label: brgy.name,
-                        value: String(brgy.id),
+                      options={cities?.map((city) => ({
+                        label: city.name,
+                        value: String(city.id),
                       }))}
                       isRequired={!id ? true : false}
-                      loading={brgyLoad}
                     />
-                  )}
-                </>
-              )}
+                    {isCity ? null : (
+                      <SelectDropdown
+                        value={String(locationId)}
+                        onValueChange={setLocationId}
+                        label="Barangay"
+                        placeholder="Select a Barangay (Please select a city first)"
+                        id="Admin_GovopBrgyField"
+                        onSubmit={(e) => setLocation(e.target.value)}
+                        options={barangays?.map((brgy) => ({
+                          label: brgy.name,
+                          value: String(brgy.id),
+                        }))}
+                        isRequired={!id ? true : false}
+                        loading={brgyLoad}
+                      />
+                    )}
+                  </>
+                )}
 
-              <TextField
-                label="Point person"
-                inputType="text"
-                id="Admin_GovopPointPersonField"
-                value={pointPerson}
-                readonly={!isEditable}
-                onSubmit={(e) => setPointPerson(e.target.value)}
-                maxLength={100}
-              />
-              <TextField
-                label="Point person's position"
-                inputType="text"
-                id="Admin_GovopPointPositionField"
-                value={pointPosition}
-                readonly
-                maxLength={50}
-              />
-              <TextField
-                label="Created At"
-                inputType="text"
-                id="Admin_GovopCreatedField"
-                value={createdAt}
-                readonly
-              />
-            </form>
-          </>
-        )}
-      </FormLayout>
+                <TextField
+                  label="Point person"
+                  inputType="text"
+                  id="Admin_GovopPointPersonField"
+                  value={pointPerson}
+                  readonly={!isEditable}
+                  onSubmit={(e) => setPointPerson(e.target.value)}
+                  maxLength={100}
+                />
+                <TextField
+                  label="Point person's position"
+                  inputType="text"
+                  id="Admin_GovopPointPositionField"
+                  value={pointPosition}
+                  readonly
+                  maxLength={50}
+                />
+                <TextField
+                  label="Created At"
+                  inputType="text"
+                  id="Admin_GovopCreatedField"
+                  value={createdAt}
+                  readonly
+                />
+              </form>
+            </>
+          )}
+        </FormLayout>
+      </div>
+      <div className="hidden md:block">
+        <FormLayout
+          updBtnLabel="Update"
+          deleteId="Admin_GovopDeleteBtn"
+          deleteClick={() => setWillDeac(true)}
+          submitUpdId="Admin_GovopSubmitUpdBtn"
+          closeUpdId="Admin_GovopCloseUpdBtn"
+          isEditable={isEditable}
+          updateClick={() => setIsEditable(true)}
+          closeUpdClick={() => {
+            setIsEditable(false);
+            getGovopDetails();
+          }}
+          formId="Admin_GovopUpdateForm_Desktop"
+          isDisabled={disabled}
+          isDeactivated={userData?.deactivated_at ? true : false}
+        >
+          <div className="flex flex-col gap-8 mx-18">
+            <p className="text-2xl font-bold" style={{ color: colors.heading }}>
+              Barangay User Details
+            </p>
+            <div>
+              {loading ? (
+                <div className="flex justify-center">
+                  <FormDesktopSkeleton />
+                </div>
+              ) : (
+                <form
+                  onSubmit={updateGovop}
+                  className="flex flex-col gap-4 bg-gray-400/20 p-8 rounded-lg"
+                  id="Admin_IndivUpdateForm_Desktop"
+                >
+                  <div className="w-full grid grid-flow-col grid-rows-4 gap-6">
+                    <TextField
+                      label="User ID"
+                      inputType="text"
+                      id="Admin_GovopIdField"
+                      value={id}
+                      readonly
+                    />
+                    <TextField
+                      label="Username"
+                      inputType="text"
+                      id="Admin_GovopUsernameField"
+                      value={username}
+                      readonly={!isEditable}
+                      onSubmit={(e) => setUsername(e.target.value)}
+                      maxLength={20}
+                    />
+                    <TextField
+                      label="Email"
+                      inputType="text"
+                      id="Admin_GovopEmailField"
+                      value={email}
+                      readonly
+                    />
+                    {!isEditable ? (
+                      <>
+                        <TextField
+                          label="Government Level"
+                          inputType="text"
+                          id="Admin_GovopLevelField"
+                          value={locLevel}
+                          readonly={!isEditable}
+                          onSubmit={(e) => setLocLevel(e.target.value)}
+                        />
+                        <TextField
+                          label="Address"
+                          inputType="text"
+                          id="Admin_GovopAddressField"
+                          value={location}
+                          readonly={!isEditable}
+                          // onSubmit={(e) => setLocation(e.target.value)}
+                        />
+                      </>
+                    ) : (
+                      <>
+                        <SelectDropdown
+                          value={String(cityId)}
+                          onValueChange={(val) => {
+                            setCityId(Number(val));
+                          }}
+                          label="City"
+                          placeholder="Select a City"
+                          id="Admin_GovopCityField"
+                          onSubmit={(e) => setLocation(e.target.value)}
+                          options={cities?.map((city) => ({
+                            label: city.name,
+                            value: String(city.id),
+                          }))}
+                          isRequired={!id ? true : false}
+                        />
+                        {isCity ? null : (
+                          <SelectDropdown
+                            value={String(locationId)}
+                            onValueChange={setLocationId}
+                            label="Barangay"
+                            placeholder="Select a Barangay (Please select a city first)"
+                            id="Admin_GovopBrgyField"
+                            onSubmit={(e) => setLocation(e.target.value)}
+                            options={barangays?.map((brgy) => ({
+                              label: brgy.name,
+                              value: String(brgy.id),
+                            }))}
+                            isRequired={!id ? true : false}
+                            loading={brgyLoad}
+                          />
+                        )}
+                      </>
+                    )}
+
+                    <TextField
+                      label="Point person"
+                      inputType="text"
+                      id="Admin_GovopPointPersonField"
+                      value={pointPerson}
+                      readonly={!isEditable}
+                      onSubmit={(e) => setPointPerson(e.target.value)}
+                      maxLength={100}
+                    />
+                    <TextField
+                      label="Point person's position"
+                      inputType="text"
+                      id="Admin_GovopPointPositionField"
+                      value={pointPosition}
+                      readonly
+                      maxLength={50}
+                    />
+                    <TextField
+                      label="Created At"
+                      inputType="text"
+                      id="Admin_GovopCreatedField"
+                      value={createdAt}
+                      readonly
+                    />
+                  </div>
+                </form>
+              )}
+            </div>
+          </div>
+        </FormLayout>
+      </div>
     </>
   );
 }

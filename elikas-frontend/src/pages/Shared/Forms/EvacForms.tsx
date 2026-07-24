@@ -115,7 +115,7 @@ function EvacPin() {
   const [address, setAddress] = useState("");
   const [latLng, setLatLng] = useState<[number, number]>();
   const [isPersistent, setIsPersistent] = useState(false);
-  const [other, setOther] = useState("");
+  // const [other, setOther] = useState("");
   const [otherFields, setOtherFields] = useState([""]);
   const [contactPerson, setContactPerson] = useState("");
   const [contactNumber, setContactNumber] = useState("");
@@ -294,7 +294,7 @@ function EvacPin() {
       } else {
         setHasBreastfeed(false);
       }
-      setOther(evacDetails.other_facilities);
+      setOtherFields(evacDetails.other_facilities);
       setContactPerson(evacDetails.contact_person);
       setContactNumber(evacDetails.contact_number);
       setIsPersistent(evacDetails.is_persistent);
@@ -554,7 +554,9 @@ function EvacPin() {
     if (breastfeedCount !== 0 || breastfeedCount !== null) {
       formData.append("breastfeed_count", String(breastfeedCount));
     }
-    formData.append("other_facilities", other);
+    otherFields.forEach((facility, index) => {
+      formData.append(`other_facilities[${index}]`, facility);
+    });
     formData.append("contact_person", contactPerson);
     formData.append("contact_number", contactNumber);
     formData.append(
@@ -667,7 +669,7 @@ function EvacPin() {
       kitchen_count: Number(editedKitchen),
       child_prayer_count: Number(editedChildPrayer),
       breastfeed_count: Number(editedBreastfeed),
-      other_facilities: other,
+      other_facilities: otherFields,
       ...(contactPerson && { contact_person: contactPerson }),
       ...(contactNumber && { contact_number: contactNumber }),
       role: role ? role : "",

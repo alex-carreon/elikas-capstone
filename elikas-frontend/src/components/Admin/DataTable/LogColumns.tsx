@@ -22,7 +22,7 @@ function ActionsCell({ row }: { row: Row<log> }) {
         text="View Details"
         variant="important"
         id="Admin_LogsShowDetails"
-        onClick={() => navigate(`/admin-logs/${row.id}`)}
+        onClick={() => navigate(`/admin-logs/${row.original.id}`)}
       />
     </div>
   );
