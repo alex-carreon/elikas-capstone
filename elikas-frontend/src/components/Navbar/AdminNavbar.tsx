@@ -8,7 +8,6 @@ function AdminNavbar() {
 
   return (
     <>
-      {/* <div className="sticky top-0 z-50 w-full h-content flex justify-center "> */}
       <div className="w-full flex flex-row justify-between items-center p-3 shadow-lg bg-[#FFB13B]">
         <div className="flex flex-row items-center gap-2">
           <Menu
@@ -21,7 +20,6 @@ function AdminNavbar() {
         </div>
         <WhiteLogo />
       </div>
-      {/* </div> */}
     </>
   );
 }

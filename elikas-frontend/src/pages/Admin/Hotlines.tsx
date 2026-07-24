@@ -15,20 +15,11 @@ import { ChevronDownIcon, ChevronUpIcon, X } from "lucide-react";
 import SelectDropdown from "@/components/SelectDropdown";
 import ButtonComp from "@/components/Button";
 import { Link } from "react-router";
-
-type Hotline = {
-  id: number;
-  location_id: number;
-  location_name: string;
-  name: string;
-  address: string;
-  phone_number: string;
-  mobile_number: string;
-  last_updated: string;
-  posted_by: string;
-  is_deactivated: boolean;
-  deactivated_at: string;
-};
+import { DataTable } from "@/components/Admin/DataTable/DataTable";
+import {
+  type Hotline,
+  HotlineColumns,
+} from "@/components/Admin/DataTable/HotlineColumns";
 
 type Barangays = {
   id: number;
@@ -161,7 +152,7 @@ function Hotlines() {
 
   return (
     <div className="w-full flex flex-col items-center">
-      <div className="w-full max-w-md">
+      <div className="w-full">
         <DashboardHeader title="Emergency Contacts">
           <CountRow
             title="Active Hotlines"
@@ -177,39 +168,48 @@ function Hotlines() {
           />
         </DashboardHeader>
         <div className="bg-white -mt-8 rounded-4xl p-4 flex flex-col gap-2">
-          <Tabs
-            defaultValue="overview"
-            className="w-full max-w-md flex items-center"
-          >
-            <TabsList className="w-full flex justify-between">
-              <TabsTrigger
-                value="Active Hotlines"
-                onClick={() => {
-                  setIsActive(true);
-                }}
-                id="Admin_HotlinesActiveTrigger"
-              >
-                Active Hotlines
-              </TabsTrigger>
-              <TabsTrigger
-                value="Inactive Hotlines"
-                onClick={() => {
-                  setIsActive(false);
-                }}
-                id="Admin_HotlinesInactiveTrigger"
-              >
-                Inactive Hotlines
-              </TabsTrigger>
-            </TabsList>
-          </Tabs>
+          <div className="w-full flex flex-col items-center">
+            <Tabs
+              defaultValue="overview"
+              className="w-full max-w-md flex items-center"
+            >
+              <TabsList className="w-full flex justify-between">
+                <TabsTrigger
+                  value="Active Hotlines"
+                  onClick={() => {
+                    setIsActive(true);
+                  }}
+                  id="Admin_HotlinesActiveTrigger"
+                >
+                  Active Hotlines
+                </TabsTrigger>
+                <TabsTrigger
+                  value="Inactive Hotlines"
+                  onClick={() => {
+                    setIsActive(false);
+                  }}
+                  id="Admin_HotlinesInactiveTrigger"
+                >
+                  Inactive Hotlines
+                </TabsTrigger>
+              </TabsList>
+            </Tabs>
+          </div>
+
           <Collapsible className="w-full flex-col items-center gap-2 mt-2">
             <div className="w-full flex justify-between">
+              <Link to="/admin-hotlines/add">
+                <ButtonComp
+                  text="Add Hotline"
+                  variant="primary"
+                  id="Admin_HotlinesAddBtn"
+                />
+              </Link>
               <CollapsibleTrigger
                 onClick={() => setOpenCollapse(!openCollapse)}
                 id="Admin_HotlinesFilterTrigger"
-                className="w-full flex flex-row justify-between"
               >
-                <div className="w-full flex flex-row mb-2">
+                <div className="flex flex-row mb-2">
                   Filters
                   {openCollapse ? (
                     <ChevronUpIcon className="ml-2 group-data-[state=open]:rotate-180" />
@@ -218,13 +218,6 @@ function Hotlines() {
                   )}
                 </div>
               </CollapsibleTrigger>
-              <Link to="/admin-hotlines/add">
-                <ButtonComp
-                  text="Add Hotline"
-                  variant="primary"
-                  id="Admin_HotlinesAddBtn"
-                />
-              </Link>
             </div>
             <CollapsibleContent
               id="Admin_HotlinesFilterContent"
@@ -271,78 +264,98 @@ function Hotlines() {
                 </div>
               </>
             )}
-            {!loading &&
-              isActive &&
-              hotlines.map((hotline) => {
-                if (!hotline.deactivated_at)
-                  return (
-                    <Row
-                      key={hotline.id}
-                      postId={String(hotline.id)}
-                      title={hotline.name}
-                      address={hotline.location_name}
-                      datePosted={hotline.posted_by}
-                      link={`/admin-hotlines/${hotline.id}`}
-                      buttonId="Admin_HotlinesDetailsBtn"
-                      showBtn
-                    >
-                      <p
-                        className="text-sm"
-                        style={{ color: colors.heading }}
-                        id="Admin_HotlinesPrimary"
-                      >
-                        {`Primary Contact: ${hotline.phone_number}`}
-                      </p>
-                      {hotline.mobile_number && (
-                        <p
-                          className="text-sm"
-                          style={{ color: colors.heading }}
-                          id="Admin_HotlinesSecondary"
+            {!loading && isActive && (
+              <>
+                <div className="hidden md:block">
+                  <DataTable
+                    columns={HotlineColumns}
+                    data={hotlines.filter((hotline) => !hotline.deactivated_at)}
+                  />
+                </div>
+                <div className="md:hidden">
+                  {hotlines.map((hotline) => {
+                    if (!hotline.deactivated_at)
+                      return (
+                        <Row
+                          key={hotline.id}
+                          postId={String(hotline.id)}
+                          title={hotline.name}
+                          address={hotline.location_name}
+                          datePosted={hotline.posted_by}
+                          link={`/admin-hotlines/${hotline.id}`}
+                          buttonId="Admin_HotlinesDetailsBtn"
+                          showBtn
                         >
-                          {`Secondary Contact: ${hotline.mobile_number}`}
-                        </p>
-                      )}
-                    </Row>
-                  );
-              })}
-            {!loading &&
-              !isActive &&
-              hotlines.map((hotline) => {
-                if (hotline.deactivated_at)
-                  return (
-                    <Row
-                      postId={String(hotline.id)}
-                      title={hotline.name}
-                      address={hotline.location_name}
-                      datePosted={hotline.posted_by}
-                      link={`/admin-hotlines/${hotline.id}`}
-                      buttonId="Admin_HotlinesDetailsBtn"
-                      isDeactivated={hotline.is_deactivated}
-                    >
-                      <p
-                        className="text-sm"
-                        style={{ color: colors.heading }}
-                        id="Admin_HotlinesPrimary"
-                      >
-                        {`Primary Contact: ${hotline.phone_number}`}
-                      </p>
-                      <p
-                        className="text-sm"
-                        style={{ color: colors.heading }}
-                        id="Admin_HotlinesSecondary"
-                      >
-                        {`Secondary Contact: ${hotline.mobile_number}`}
-                      </p>
-                      <p
-                        className="text-sm"
-                        style={{ color: colors.heading }}
-                        id="Admin_HotlinesDeacAt"
-                      >
-                        {`Deactivated at: ${hotline.deactivated_at}`}
-                      </p>
-                    </Row>
-                  );
-              })}
+                          <p
+                            className="text-sm"
+                            style={{ color: colors.heading }}
+                            id="Admin_HotlinesPrimary"
+                          >
+                            {`Primary Contact: ${hotline.phone_number}`}
+                          </p>
+                          {hotline.mobile_number && (
+                            <p
+                              className="text-sm"
+                              style={{ color: colors.heading }}
+                              id="Admin_HotlinesSecondary"
+                            >
+                              {`Secondary Contact: ${hotline.mobile_number}`}
+                            </p>
+                          )}
+                        </Row>
+                      );
+                  })}
+                </div>
+              </>
+            )}
+            {!loading && !isActive && (
+              <>
+                <div className="hidden md:block">
+                  <DataTable
+                    columns={HotlineColumns}
+                    data={hotlines.filter((hotline) => hotline.deactivated_at)}
+                  />
+                </div>
+                <div className="md:hidden">
+                  {hotlines.map((hotline) => {
+                    if (hotline.deactivated_at)
+                      return (
+                        <Row
+                          postId={String(hotline.id)}
+                          title={hotline.name}
+                          address={hotline.location_name}
+                          datePosted={hotline.posted_by}
+                          link={`/admin-hotlines/${hotline.id}`}
+                          buttonId="Admin_HotlinesDetailsBtn"
+                          isDeactivated={hotline.is_deactivated}
+                        >
+                          <p
+                            className="text-sm"
+                            style={{ color: colors.heading }}
+                            id="Admin_HotlinesPrimary"
+                          >
+                            {`Primary Contact: ${hotline.phone_number}`}
+                          </p>
+                          <p
+                            className="text-sm"
+                            style={{ color: colors.heading }}
+                            id="Admin_HotlinesSecondary"
+                          >
+                            {`Secondary Contact: ${hotline.mobile_number}`}
+                          </p>
+                          <p
+                            className="text-sm"
+                            style={{ color: colors.heading }}
+                            id="Admin_HotlinesDeacAt"
+                          >
+                            {`Deactivated at: ${hotline.deactivated_at}`}
+                          </p>
+                        </Row>
+                      );
+                  })}
+                </div>
+              </>
+            )}
           </div>
         </div>
       </div>

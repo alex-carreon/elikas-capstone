@@ -68,11 +68,11 @@ function FlaggedDetails() {
   };
 
   const getColor = (level: number | null | undefined): string => {
-    if (level === 1 || level === 2) {
+    if (level === 8 || level === 9) {
       return colorHazard.lightBlue;
-    } else if (level === 3 || level === 4) {
+    } else if (level === 10 || level === 11) {
       return colorHazard.darkBlue;
-    } else if (level === 5 || level === 6 || level === 7) {
+    } else if (level === 12 || level === 13 || level === 14) {
       return colorHazard.red;
     } else return colorHazard.fallback;
   };
@@ -183,6 +183,7 @@ function FlaggedDetails() {
         formTitle="Flagged Hazard Details"
         updateId="Admin_FlaggedPathIgnore"
         updBtnLabel="Ignore"
+        deleteBtnLabel="Remove"
         deleteId="Admin_FlaggedPathDelete"
         updateClick={(e) => ignoreFlag(e)}
         deleteClick={(e) => rejectFlag(e)}

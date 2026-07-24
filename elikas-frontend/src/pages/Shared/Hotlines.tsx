@@ -195,27 +195,30 @@ function Hotlines() {
             />
           </div>
         </div>
-
-        {/* Hotline rows */}
-        {hotlines.length > 0 ? (
-          hotlines.map((hotline) => {
-            return (
-              <HotlineRow
-                lastUpdate={hotline.last_updated}
-                name={hotline.name}
-                address={`${hotline.address}, ${hotline.location_name}`}
-                primary={hotline.phone_number}
-                secondary={hotline.mobile_number}
-                postedBy={hotline.posted_by}
-                id={hotline.id}
-              />
-            );
-          })
-        ) : (
-          <p className="text-sm pt-4 text-center">
-            There are no registered emergency hotlines yet!
-          </p>
-        )}
+        <div className="flex justify-center">
+          <div className="w-full self-center grid grid-cols-1 sm:grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4 gap-8">
+            {/* Hotline rows */}
+            {hotlines.length > 0 ? (
+              hotlines.map((hotline) => {
+                return (
+                  <HotlineRow
+                    lastUpdate={hotline.last_updated}
+                    name={hotline.name}
+                    address={`${hotline.address}, ${hotline.location_name}`}
+                    primary={hotline.phone_number}
+                    secondary={hotline.mobile_number}
+                    postedBy={hotline.posted_by}
+                    id={hotline.id}
+                  />
+                );
+              })
+            ) : (
+              <p className="text-sm pt-4 text-center">
+                There are no registered emergency hotlines yet!
+              </p>
+            )}
+          </div>
+        </div>
       </div>
     </>
   );

@@ -26,6 +26,7 @@ import AlertDialogue from "@/components/AlertDialogue";
 import { toast } from "sonner";
 import { Skeleton } from "@/components/ui/skeleton";
 import Radio from "@/components/Radio";
+import { X } from "lucide-react";
 
 type EvacType = {
   id: number;
@@ -115,6 +116,7 @@ function EvacPin() {
   const [latLng, setLatLng] = useState<[number, number]>();
   const [isPersistent, setIsPersistent] = useState(false);
   const [other, setOther] = useState("");
+  const [otherFields, setOtherFields] = useState([""]);
   const [contactPerson, setContactPerson] = useState("");
   const [contactNumber, setContactNumber] = useState("");
   const [safetyCheck, setSafetyCheck] = useState(false);
@@ -153,6 +155,7 @@ function EvacPin() {
   const [brgyLoad, setBrgyLoad] = useState(false);
   const [barangays, setBarangays] = useState<Barangays[]>([]);
   const [brgyId, setBrgyId] = useState(0);
+  const [showCreate, setShowCreate] = useState(false);
 
   const location = useLocation();
   const navigate = useNavigate();
@@ -323,6 +326,20 @@ function EvacPin() {
     }
   };
 
+  const addOtherField = () => {
+    setOtherFields([...otherFields, ""]);
+  };
+
+  const updateOtherField = (index: number, value: string) => {
+    const updated = [...otherFields];
+    updated[index] = value;
+    setOtherFields(updated);
+  };
+
+  const removeOtherField = (index: number) => {
+    setOtherFields(otherFields.filter((_, i) => i !== index));
+  };
+
   useEffect(() => {
     if (id) {
       getEvacDetails();
@@ -414,10 +431,7 @@ function EvacPin() {
     setExpiry(defaultExpiry);
   }, [willReopen]);
 
-  const submit = (e: React.FormEvent) => {
-    // const dateTime = formatInTimeZone(new Date(), "Asia/Manila", "yyyy-MM-dd");
-    e.preventDefault();
-
+  const submitValidation = () => {
     if (!regFlood && !heavyFlood) {
       toast.error("Please check either regular or heavy flooding");
       return;
@@ -425,24 +439,7 @@ function EvacPin() {
 
     if (!contactValidate.test(contactNumber)) {
       toast.error("Invalid Contact Number.");
-    }
-
-    const formData = new FormData();
-
-    const expDate = expiry ? new Date(expiry) : addDays(new Date(), 7);
-
-    const now = new Date();
-    const expDateWithTime = new Date(
-      expDate.getFullYear(),
-      expDate.getMonth(),
-      expDate.getDate(),
-      now.getHours(),
-      now.getMinutes(),
-      now.getSeconds(),
-    );
-
-    if (fileName) {
-      formData.append("file", fileName);
+      return;
     }
 
     if (
@@ -498,6 +495,31 @@ function EvacPin() {
       return;
     }
 
+    setShowCreate(true);
+  };
+
+  const submit = (e: React.FormEvent) => {
+    // const dateTime = formatInTimeZone(new Date(), "Asia/Manila", "yyyy-MM-dd");
+    e.preventDefault();
+
+    const formData = new FormData();
+
+    const expDate = expiry ? new Date(expiry) : addDays(new Date(), 7);
+
+    const now = new Date();
+    const expDateWithTime = new Date(
+      expDate.getFullYear(),
+      expDate.getMonth(),
+      expDate.getDate(),
+      now.getHours(),
+      now.getMinutes(),
+      now.getSeconds(),
+    );
+
+    if (fileName) {
+      formData.append("file", fileName);
+    }
+
     formData.append("name", pinName);
     formData.append(
       "address",
@@ -543,6 +565,8 @@ function EvacPin() {
         "yyyy-MM-dd HH:mm:ssXXX",
       ),
     );
+
+    console.log(otherFields);
 
     handleSubmit({
       e: e,
@@ -833,6 +857,22 @@ function EvacPin() {
             />
           )}
         </AlertDialogue>
+      )}
+      {showCreate && (
+        <AlertDialogue
+          contentId="EvacPin_CreateContent"
+          closeId="EvacPin_CreateClose"
+          actionId="EvacPin_CreateBtn"
+          open={showCreate}
+          title="Mark this pin on the map?"
+          description="By marking this pin, you accept responsibility for its accuracy."
+          buttonText="Mark on the map"
+          onClose={() => {
+            setShowCreate(false);
+          }}
+          onClick={(e) => submit(e)}
+          disabled={disabled}
+        />
       )}
       <div className="w-full h-full flex flex-col items-center p-12 mt-8 mb-2 gap-4">
         <div>
@@ -1151,56 +1191,6 @@ function EvacPin() {
                   </div>
                   <div className="flex gap-6">
                     <CheckBox
-                      text="Toilet"
-                      id="EvacPin_ToiletChckbox"
-                      checked={
-                        hasToilet ||
-                        (hasToilet && toiletCount !== 0 && toiletCount !== null)
-                      }
-                      onCheckedChange={() => setHasToilet(!hasToilet)}
-                      readOnly={!id || isEditable ? false : true}
-                    />
-                    <CheckBox
-                      text="Kitchen"
-                      id="EvacPin_KitchenChckbox"
-                      checked={
-                        hasKitchen ||
-                        (hasKitchen &&
-                          kitchenCount !== 0 &&
-                          kitchenCount !== null)
-                      }
-                      onCheckedChange={() => setHasKitchen(!hasKitchen)}
-                      readOnly={!id || isEditable ? false : true}
-                    />
-                  </div>
-                  <div className="flex gap-6">
-                    <CheckBox
-                      text="Child/Prayer Area"
-                      id="EvacPin_ChildPrayerChckbox"
-                      checked={
-                        hasChildPrayer ||
-                        (hasChildPrayer &&
-                          childPrayerCount !== 0 &&
-                          childPrayerCount !== null)
-                      }
-                      onCheckedChange={() => setHasChildPrayer(!hasChildPrayer)}
-                      readOnly={!id || isEditable ? false : true}
-                    />
-                    <CheckBox
-                      text="Breastfeeding Area"
-                      id="EvacPin_BreastfeedChckbox"
-                      checked={
-                        hasBreastfeed ||
-                        (hasBreastfeed &&
-                          breastfeedCount !== 0 &&
-                          breastfeedCount !== null)
-                      }
-                      onCheckedChange={() => setHasBreastfeed(!hasBreastfeed)}
-                      readOnly={!id || isEditable ? false : true}
-                    />
-                  </div>
-                  <div className="flex gap-4">
-                    <CheckBox
                       text="Rainwater Catchment Facility"
                       id="EvacPin_RainCatchChckbox"
                       checked={hasCatchment}
@@ -1208,63 +1198,144 @@ function EvacPin() {
                       readOnly={!id || isEditable ? false : true}
                     />
                   </div>
-                </div>
-                <div className="flex gap-4 flex-col">
-                  {hasToilet && (
-                    <TextField
-                      label="Number of Toilets*"
-                      id="EvacPin_ToiletField"
-                      inputType="number"
-                      onSubmit={(e) => setToilet(e.target.value)}
-                      value={toilet ?? ""}
-                      isRequired
-                      readonly={!id || isEditable ? false : true}
-                    />
-                  )}
-                  {hasKitchen && (
-                    <TextField
-                      label="Number of Kitchens*"
-                      id="EvacPin_KitchenField"
-                      inputType="number"
-                      onSubmit={(e) => setKicthen(e.target.value)}
-                      value={kitchen ?? ""}
-                      isRequired
-                      readonly={!id || isEditable ? false : true}
-                    />
-                  )}
-                  {hasChildPrayer && (
-                    <TextField
-                      label="Number of Prayer Areas/Child-friendly areas*"
-                      id="EvacPin_PrayerChildField"
-                      inputType="number"
-                      onSubmit={(e) => setChildPrayer(e.target.value)}
-                      value={childPrayer ?? ""}
-                      isRequired
-                      readonly={!id || isEditable ? false : true}
-                    />
-                  )}
-                  {hasBreastfeed && (
-                    <TextField
-                      label="Number of Breastfeeding areas*"
-                      id="EvacPin_BreastfeedField"
-                      inputType="number"
-                      onSubmit={(e) => setBreastfeed(e.target.value)}
-                      value={breastfeed ?? ""}
-                      isRequired
-                      readonly={!id || isEditable ? false : true}
-                    />
-                  )}
+                  <div className="flex flex-col gap-3">
+                    <div className="flex flex-col gap-2">
+                      <CheckBox
+                        text="Toilet"
+                        id="EvacPin_ToiletChckbox"
+                        checked={
+                          hasToilet ||
+                          (hasToilet &&
+                            toiletCount !== 0 &&
+                            toiletCount !== null)
+                        }
+                        onCheckedChange={() => setHasToilet(!hasToilet)}
+                        readOnly={!id || isEditable ? false : true}
+                      />
+                      {hasToilet && (
+                        <TextField
+                          label="Number of Toilets*"
+                          id="EvacPin_ToiletField"
+                          inputType="number"
+                          onSubmit={(e) => setToilet(e.target.value)}
+                          value={toilet ?? ""}
+                          isRequired
+                          readonly={!id || isEditable ? false : true}
+                        />
+                      )}
+                    </div>
+                    <div className="flex flex-col gap-2">
+                      <CheckBox
+                        text="Kitchen"
+                        id="EvacPin_KitchenChckbox"
+                        checked={
+                          hasKitchen ||
+                          (hasKitchen &&
+                            kitchenCount !== 0 &&
+                            kitchenCount !== null)
+                        }
+                        onCheckedChange={() => setHasKitchen(!hasKitchen)}
+                        readOnly={!id || isEditable ? false : true}
+                      />
+                      {hasKitchen && (
+                        <TextField
+                          label="Number of Kitchens*"
+                          id="EvacPin_KitchenField"
+                          inputType="number"
+                          onSubmit={(e) => setKicthen(e.target.value)}
+                          value={kitchen ?? ""}
+                          isRequired
+                          readonly={!id || isEditable ? false : true}
+                        />
+                      )}
+                    </div>
+                    <div className="flex flex-col gap-2">
+                      <CheckBox
+                        text="Child/Prayer Area"
+                        id="EvacPin_ChildPrayerChckbox"
+                        checked={
+                          hasChildPrayer ||
+                          (hasChildPrayer &&
+                            childPrayerCount !== 0 &&
+                            childPrayerCount !== null)
+                        }
+                        onCheckedChange={() =>
+                          setHasChildPrayer(!hasChildPrayer)
+                        }
+                        readOnly={!id || isEditable ? false : true}
+                      />
+                      {hasChildPrayer && (
+                        <TextField
+                          label="Number of Prayer Areas/Child-friendly areas*"
+                          id="EvacPin_PrayerChildField"
+                          inputType="number"
+                          onSubmit={(e) => setChildPrayer(e.target.value)}
+                          value={childPrayer ?? ""}
+                          isRequired
+                          readonly={!id || isEditable ? false : true}
+                        />
+                      )}
+                    </div>
+                    <div className="flex flex-col gap-2">
+                      <CheckBox
+                        text="Breastfeeding Area"
+                        id="EvacPin_BreastfeedChckbox"
+                        checked={
+                          hasBreastfeed ||
+                          (hasBreastfeed &&
+                            breastfeedCount !== 0 &&
+                            breastfeedCount !== null)
+                        }
+                        onCheckedChange={() => setHasBreastfeed(!hasBreastfeed)}
+                        readOnly={!id || isEditable ? false : true}
+                      />
+                      {hasBreastfeed && (
+                        <TextField
+                          label="Number of Breastfeeding areas*"
+                          id="EvacPin_BreastfeedField"
+                          inputType="number"
+                          onSubmit={(e) => setBreastfeed(e.target.value)}
+                          value={breastfeed ?? ""}
+                          isRequired
+                          readonly={!id || isEditable ? false : true}
+                        />
+                      )}
+                    </div>
+                  </div>
                 </div>
               </div>
             </Field>
-            <TextField
-              label="Other Facilities (optional)"
-              id="EvacPin_OtherFacilitiesField"
-              inputType="text"
-              onSubmit={(e) => setOther(e.target.value)}
-              value={other || ""}
-              readonly={!id || isEditable ? false : true}
-            ></TextField>
+            <Field>
+              <FieldLabel
+                className={"text-sm w-s"}
+                style={{ color: colors.label }}
+              >
+                Other Facilities (optional)
+              </FieldLabel>
+              {otherFields.map((value, index) => (
+                <div className="flex items-center gap-2">
+                  <TextField
+                    label=""
+                    key={index}
+                    id="EvacPin_OtherFacilitiesField"
+                    inputType="text"
+                    onSubmit={(e) => updateOtherField(index, e.target.value)}
+                    value={value}
+                    readonly={!id || isEditable ? false : true}
+                  ></TextField>
+                  <X onClick={() => removeOtherField(index)} />
+                </div>
+              ))}
+              <div className="w-full flex justify-end">
+                <ButtonComp
+                  text="Add More"
+                  variant="outline"
+                  id="EvacPin_AddFacilityBtn"
+                  onClick={addOtherField}
+                  widthSize="10px"
+                />
+              </div>
+            </Field>
             <TextField
               label="Contact Person*"
               id="EvacPin_ContactPersonField"
@@ -1301,15 +1372,12 @@ function EvacPin() {
             )}
             {role === "indiv" && (
               <DatePickerInput
-                label="Expiry Date (optional)"
+                label="Expiry Date"
                 idField="EvacPin_ExpiryField"
                 idBtn="EvacPin_CalendarBtn"
                 value={expiry}
-                onChange={setExpiry}
-                readonly={!id ? false : true}
-                edit={!id}
+                readonly={true}
                 desc="The default expiration date is 7 days from now"
-                clearDate={!id}
               />
             )}
             {id ? (
@@ -1441,7 +1509,7 @@ or account restriction."
                     isDisabled={!safetyCheck || !infoCheck || disabled}
                     heightSize="38px"
                     widthSize="100%"
-                    onClick={(e) => submit(e)}
+                    onClick={() => submitValidation()}
                   />
                 </div>
               </>

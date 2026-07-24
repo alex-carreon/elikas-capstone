@@ -62,7 +62,7 @@ function DashboardHeader({
             )}
           </div>
         </div>
-        <div className="flex flex-col gap-2">{children}</div>
+        <div className="flex flex-col md:flex-row gap-2">{children}</div>
       </div>
       <Outlet />
     </>

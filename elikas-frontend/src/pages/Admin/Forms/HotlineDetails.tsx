@@ -70,6 +70,8 @@ function HotlineDetails() {
   };
 
   const update = (e: React.FormEvent) => {
+    e.preventDefault();
+
     if (!contactValidate.test(primaryNo)) {
       setError({ primary: "Enter a valid contact number", secondary: "" });
       return;

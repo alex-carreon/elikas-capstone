@@ -105,7 +105,7 @@ export const handleUpdate = ({
 
   toast.promise(response, {
     loading: "Updating your contact...",
-    success: "Contact updated added!",
+    success: "Contact updated!",
     error: (err: any) => {
       if (err.response.data.error === "Failed to update emergency contact") {
         return "Please fill in all the fields";

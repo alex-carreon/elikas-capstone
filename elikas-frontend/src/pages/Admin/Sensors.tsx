@@ -21,29 +21,17 @@ import { toZonedTime } from "date-fns-tz";
 import { format } from "date-fns";
 import { Toggle } from "@/components/ui/toggle";
 import { toast } from "sonner";
+import { DataTable } from "@/components/Admin/DataTable/DataTable";
+import {
+  type SensorsDetails,
+  SensorsColumns,
+} from "@/components/Admin/DataTable/SensorsColumns";
 
 type Barangays = {
   id: number;
   name: string;
   role: string;
   location: string;
-};
-
-type SensorsDetails = {
-  id: number;
-  sensorCode: string;
-  name: string;
-  waterLevel: any | null;
-  lastOnline: any | null;
-  mountHeight: number;
-  location: [number, number];
-  address: string;
-  yellowLevel: number;
-  redLevel: number;
-  currentStatus: string;
-  mountLocation: string;
-  deactivatedAt: any | null;
-  registeredBy: string;
 };
 
 function Sensors() {
@@ -278,7 +266,7 @@ function Sensors() {
 
   return (
     <div className="w-full flex flex-col items-center">
-      <div className="w-full max-w-md">
+      <div className="w-full">
         <DashboardHeader title="Sensors">
           <CountRow
             title="Active Sensors"
@@ -294,50 +282,53 @@ function Sensors() {
           />
         </DashboardHeader>
         <div className="bg-white -mt-8 rounded-4xl p-4 flex flex-col gap-2">
-          <Tabs
-            defaultValue="overview"
-            className="w-full max-w-md flex items-center"
-          >
-            <TabsList className="w-full flex justify-between">
-              <TabsTrigger
-                value="Sensors"
-                onClick={() => {
-                  setIsSensors(true);
-                  setIsSensorLogs(false);
-                }}
-                id="Admin_SensorsTrigger"
-              >
-                All Sensors
-              </TabsTrigger>
-            </TabsList>
-          </Tabs>
-          <Tabs
-            defaultValue="overview"
-            className="w-full max-w-md flex items-center"
-          >
-            {isSensors && !isSensorLogs && (
-              <TabsList
-                variant="line"
-                className="w-full flex justify-between"
-                id="Admin_SensorTabs"
-              >
+          <div className="w-full flex flex-col items-center">
+            <Tabs
+              defaultValue="overview"
+              className="w-full max-w-md flex items-center"
+            >
+              <TabsList className="w-full flex justify-between">
                 <TabsTrigger
-                  value="ActiveSensors"
-                  id="Admin_ActiveSensorTrigger"
-                  onClick={() => setIsActiveSensor(true)}
+                  value="Sensors"
+                  onClick={() => {
+                    setIsSensors(true);
+                    setIsSensorLogs(false);
+                  }}
+                  id="Admin_SensorsTrigger"
                 >
-                  Active Sensors
-                </TabsTrigger>
-                <TabsTrigger
-                  value="ExpiredEvac"
-                  id="Admin_InactiveSensorTrigger"
-                  onClick={() => setIsActiveSensor(false)}
-                >
-                  Inactive Sensors
+                  All Sensors
                 </TabsTrigger>
               </TabsList>
-            )}
-          </Tabs>
+            </Tabs>
+            <Tabs
+              defaultValue="overview"
+              className="w-full max-w-md flex items-center"
+            >
+              {isSensors && !isSensorLogs && (
+                <TabsList
+                  variant="line"
+                  className="w-full flex justify-between"
+                  id="Admin_SensorTabs"
+                >
+                  <TabsTrigger
+                    value="ActiveSensors"
+                    id="Admin_ActiveSensorTrigger"
+                    onClick={() => setIsActiveSensor(true)}
+                  >
+                    Active Sensors
+                  </TabsTrigger>
+                  <TabsTrigger
+                    value="ExpiredEvac"
+                    id="Admin_InactiveSensorTrigger"
+                    onClick={() => setIsActiveSensor(false)}
+                  >
+                    Inactive Sensors
+                  </TabsTrigger>
+                </TabsList>
+              )}
+            </Tabs>
+          </div>
+
           <Collapsible className="w-full items-center gap-2">
             <div className="w-full flex justify-between">
               <InputGroup className="w-2/3">
@@ -465,7 +456,7 @@ function Sensors() {
             {loading ? (
               <>
                 <div className="w-full flex flex-col items-center">
-                  <div className="flex w-full max-w-sm flex-col gap-7 pt-4">
+                  <div className="flex w-full flex-col gap-7 pt-4">
                     <div className="flex flex-col gap-3">
                       <Skeleton className="h-24 w-full bg-[#59260B]/30" />
                     </div>
@@ -479,51 +470,65 @@ function Sensors() {
                 </div>
               </>
             ) : isActiveSensor ? (
-              activeSensors.map((sensors) => (
-                <Fragment key={sensors.id}>
-                  <Row
-                    postId={String(sensors.sensorCode)}
-                    title={sensors.name}
-                    desc={`Status: ${sensors.currentStatus}`}
-                    address={`${sensors.address}`}
-                    datePosted={
-                      sensors.lastOnline
-                        ? `Last Online: ${convertDateTime(sensors.lastOnline)}`
-                        : "Not yet installed"
-                    }
-                    link={`/admin-sensorDetails/${sensors.id}`}
-                    buttonId="Admin_SensorDetailsBtn"
-                    showBtn
-                  >
-                    <div className="flex flex-row gap-2">
-                      {!sensors.deactivatedAt && (
-                        <div
-                          className={`mt-2 px-2 py-1 rounded-3xl ${sensors.currentStatus == "normal" ? "bg-green-700/60" : sensors.currentStatus == "yellow" ? "bg-yellow-700/60" : sensors.currentStatus == "orange" ? "bg-amber-700/60" : sensors.currentStatus == "red" ? "bg-red-700/60" : "bg-gray-500/30"} w-fit text-sm`}
-                        >
-                          {sensors.currentStatus
-                            ? sensors.currentStatus
-                            : "No Level Detected"}
+              <>
+                <div className="hidden md:block">
+                  <DataTable columns={SensorsColumns} data={activeSensors} />
+                </div>
+                <div className="md:hidden">
+                  {activeSensors.map((sensors) => (
+                    <Fragment key={sensors.id}>
+                      <Row
+                        postId={String(sensors.sensorCode)}
+                        title={sensors.name}
+                        desc={`Status: ${sensors.currentStatus}`}
+                        address={`${sensors.address}`}
+                        datePosted={
+                          sensors.lastOnline
+                            ? `Last Online: ${convertDateTime(sensors.lastOnline)}`
+                            : "Not yet installed"
+                        }
+                        link={`/admin-sensorDetails/${sensors.id}`}
+                        buttonId="Admin_SensorDetailsBtn"
+                        showBtn
+                      >
+                        <div className="flex flex-row gap-2">
+                          {!sensors.deactivatedAt && (
+                            <div
+                              className={`mt-2 px-2 py-1 rounded-3xl ${sensors.currentStatus == "normal" ? "bg-green-700/60" : sensors.currentStatus == "yellow" ? "bg-yellow-700/60" : sensors.currentStatus == "orange" ? "bg-amber-700/60" : sensors.currentStatus == "red" ? "bg-red-700/60" : "bg-gray-500/30"} w-fit text-sm`}
+                            >
+                              {sensors.currentStatus
+                                ? sensors.currentStatus
+                                : "No Level Detected"}
+                            </div>
+                          )}
                         </div>
-                      )}
-                    </div>
-                  </Row>
-                </Fragment>
-              ))
+                      </Row>
+                    </Fragment>
+                  ))}
+                </div>
+              </>
             ) : (
-              inactiveSensors.map((sensors) => (
-                <Fragment key={sensors.id}>
-                  <Row
-                    postId={String(sensors.sensorCode)}
-                    title={sensors.name}
-                    desc={`Status: ${sensors.currentStatus}`}
-                    address={`${sensors.address}`}
-                    datePosted={`Deactivated at: ${convertDateTime(sensors.deactivatedAt)}`}
-                    link={`/admin-sensorDetails/${sensors.id}`}
-                    buttonId="Admin_SensorDetailsBtn"
-                    showBtn
-                  ></Row>
-                </Fragment>
-              ))
+              <>
+                <div className="hidden md:block">
+                  <DataTable columns={SensorsColumns} data={inactiveSensors} />
+                </div>
+                <div className="md:hidden">
+                  {inactiveSensors.map((sensors) => (
+                    <Fragment key={sensors.id}>
+                      <Row
+                        postId={String(sensors.sensorCode)}
+                        title={sensors.name}
+                        desc={`Status: ${sensors.currentStatus}`}
+                        address={`${sensors.address}`}
+                        datePosted={`Deactivated at: ${convertDateTime(sensors.deactivatedAt)}`}
+                        link={`/admin-sensorDetails/${sensors.id}`}
+                        buttonId="Admin_SensorDetailsBtn"
+                        showBtn
+                      ></Row>
+                    </Fragment>
+                  ))}
+                </div>
+              </>
             )}
           </div>
         </div>

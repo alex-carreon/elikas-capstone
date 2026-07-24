@@ -43,7 +43,7 @@ function Permissions() {
       ln: localStorage.getItem("last_name") ?? "",
       email: localStorage.getItem("email") ?? "",
       pw: localStorage.getItem("pw") ?? "",
-      username: localStorage.getItem("username") ?? "",
+      displayName: localStorage.getItem("displayName") ?? "",
       phone: localStorage.getItem("contact") ?? "",
       loc: localStorage.getItem("brgy") ?? "",
       firebase_uid: localStorage.getItem("firebaseUser") ?? "",
@@ -71,20 +71,26 @@ function Permissions() {
 
       localStorage.setItem("firebaseUser", firebaseUser.uid);
 
-      await api.post(
-        "/auth/register",
+      (await toast.promise(
+        api.post(
+          "/auth/register",
+          {
+            username: formData.displayName,
+            email: formData.email,
+            first_name: formData.fn,
+            last_name: formData.ln,
+            phone: formData.phone,
+            location_id: Number(formData.loc),
+            firebase_uid: localStorage.getItem("firebaseUser"),
+            avatar_seed: formData.avatarSeed,
+          },
+          { headers: { "X-Firebase-AppCheck": token } },
+        ),
+      ),
         {
-          username: formData.username,
-          email: formData.email,
-          first_name: formData.fn,
-          last_name: formData.ln,
-          phone: formData.phone,
-          location_id: Number(formData.loc),
-          firebase_uid: localStorage.getItem("firebaseUser"),
-          avatar_seed: formData.avatarSeed,
-        },
-        { headers: { "X-Firebase-AppCheck": token } },
-      );
+          loading: "Registering you to the system...",
+          success: "One last step!",
+        });
 
       toast.success("One last step!");
       navigate("/Registration/Verify");
@@ -100,9 +106,10 @@ function Permissions() {
         }
       }
       if (
-        err.response?.data?.message === "The username has already been taken."
+        err.response?.data?.message ===
+        "The display name has already been taken."
       ) {
-        toast.error("This username has already been taken.");
+        toast.error("This displayName has already been taken.");
       } else if (err.message === "auth/password-does-not-meet-requirements") {
         toast.error(
           "Your password must have at least 1 uppercase, 1 lowercase, 1 special character, and 1 number. Please go back and try again",
@@ -112,7 +119,7 @@ function Permissions() {
         setDisabled(false);
         return;
       } else if (
-        err.response.data.errors.phone[0] ===
+        err.response.data.errors.phone?.[0] ===
         "The phone has already been taken."
       ) {
         toast.error("This phone has already been taken.");
@@ -122,6 +129,7 @@ function Permissions() {
         navigate("/Login");
       }
       setToForm(true);
+    } finally {
       setDisabled(false);
     }
   };

@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\PinControllers;
 
 use App\Http\Controllers\Controller;
+use App\Models\CapacityLevel;
 use App\Models\EvacArea;
 use Illuminate\Http\Request;
 
@@ -43,7 +44,7 @@ class GetEvacAreaDetailsController extends Controller
                 'area_type_id' => $pin->area_type,
                 'area_type' => $pin->evac_type?->evac_type,
                 'capacity_level_id' => $pin->capacity_level,
-                'capacity_name' => $pin->capacity_level_info?->capacity_level,
+                'capacity_name' => CapacityLevel::describe($pin->capacity_level_info?->capacity_level),
                 'is_persistent' => $pin->is_persistent,
                 'for_reg_flood' => $pin->for_reg_flood,
                 'for_heavy_flood' => $pin->for_heavy_flood,
