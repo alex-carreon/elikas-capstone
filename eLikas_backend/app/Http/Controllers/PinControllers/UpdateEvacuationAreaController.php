@@ -37,7 +37,9 @@ class UpdateEvacuationAreaController extends Controller
                 'kitchen_count'      => 'nullable|integer|min:0',
                 'child_prayer_count' => 'nullable|integer|min:0',
                 'breastfeed_count'   => 'nullable|integer|min:0',
-                'other_facilities'   => 'nullable|string',
+                // will only accept correctly formatted comma-separated strings
+                // example: alpha, bravo, charlie
+                'other_facilities' => ['nullable', 'string', 'regex:/^[^,]+(,\s*[^,]+)*$/'],
                 'contact_person'     => 'nullable|string|max:100',
                 'contact_number'     => 'nullable|string|max:15',
                 'expiry'             => 'nullable|date|after:now',
@@ -134,13 +136,24 @@ class UpdateEvacuationAreaController extends Controller
                 'kitchen_count',
                 'child_prayer_count',
                 'breastfeed_count',
-                'other_facilities',
                 'contact_person',
                 'contact_number',
             ] as $field) {
                 if ($request->has($field)) {
                     $pin->$field = $request->$field;
                 }
+            }
+
+            $otherFacilities = null;
+
+            if ($request->filled('other_facilities')) {
+                $otherFacilities = collect(explode(',', $request->other_facilities))
+                    ->map(fn ($f) => trim($f))
+                    ->filter()
+                    ->values()
+                    ->all();
+
+                $pin->other_facilities = $otherFacilities;
             }
 
             // ── Expiry — only reached here when is_persistent check passes ───────

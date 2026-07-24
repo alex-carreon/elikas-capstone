@@ -37,6 +37,7 @@ class EvacArea extends Model implements Auditable
         'child_prayer_count' => 'int',
         'breastfeed_count'   => 'int',
         'expiry'             => 'datetime',
+        'other_facilities'   => 'array',
     ];
 
     protected $fillable = [
