@@ -80,7 +80,7 @@ type EvacPin = {
   kitchen_count: number;
   child_prayer_count: number;
   breastfeed_count: number;
-  other_facilities: string;
+  other_facilities: string[];
   contact_person: string;
   contact_number: string;
   is_deactivated: boolean;

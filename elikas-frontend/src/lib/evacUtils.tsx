@@ -153,7 +153,7 @@ export const handleUpdate = async ({
     ...(contact_person && { contact_person: contact_person }),
     ...(contact_number && { contact_number: contact_number }),
     ...(role === "brgy_op" && { expiry: expiry }),
-    expiry: expiry,
+    ...(is_persistent && { expiry: expiry }),
   });
 
   toast.promise(responsePromise, {

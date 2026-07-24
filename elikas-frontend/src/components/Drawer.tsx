@@ -199,7 +199,7 @@ function DrawerComp({
       >
         <DrawerContent
           className={cn(
-            "transition-all duration-300 inset-x-0 mx-auto w-full max-w-md",
+            "transition-all duration-300 inset-x-0 mx-auto w-full",
             expanded ? "h-content" : isHazard ? "h-content" : "h-content",
           )}
           id="Drawer_DrawerContent"
