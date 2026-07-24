@@ -19,18 +19,13 @@ class EmergencyContactController extends Controller
                     $q->whereNull('deactivated_at');
                 });
 
-            if ($request->has('location_id')) {
-                $query->where('location_id', $request->query('location_id'));
-            }
+            $this->applyLocationIdFilter($query, $request->query('location_id'));
 
             if ($request->has('location_name')) {
                 $locationName = '%' . $this->escapeLike($request->query('location_name')) . '%';
                 $query->whereHas('location', function ($q) use ($locationName) {
                     $q->where('name', 'LIKE', $locationName);
                 });
-            }
-            if ($request->filled('location_id')) {
-                $query->where('location_id', $request->query('location_id'));
             }
 
             $contacts = $query->orderByDesc('updated_at')
@@ -56,9 +51,7 @@ class EmergencyContactController extends Controller
         try {
             $query = EmergencyContact::with(['social_element.user', 'location:id,name']);
 
-            if ($request->filled('location_id')) {
-                $query->where('location_id', $request->query('location_id'));
-            }
+            $this->applyLocationIdFilter($query, $request->query('location_id'));
 
             if ($request->filled('location_name')) {
                 $locationName = '%' . $this->escapeLike($request->query('location_name')) . '%';
@@ -103,14 +96,21 @@ class EmergencyContactController extends Controller
         }
     }
 
-    public function show(int $id)
+    public function show(Request $request, int $id)
     {
         try {
-            $contact = EmergencyContact::with(['social_element.user', 'location:id,name'])
-                ->whereHas('social_element', function ($q) {
+            $user = $request->attributes->get('firebase_user');
+            $canViewDeactivated = $user && in_array($user->role_id, [1, 2], true); // admin or govop
+
+            $query = EmergencyContact::with(['social_element.user', 'location:id,name']);
+
+            if (!$canViewDeactivated) {
+                $query->whereHas('social_element', function ($q) {
                     $q->whereNull('deactivated_at');
-                })
-                ->find($id);
+                });
+            }
+
+            $contact = $query->find($id);
 
             if (!$contact) {
                 return response()->json([
@@ -282,11 +282,10 @@ class EmergencyContactController extends Controller
     public function destroy(int $id)
     {
         try {
-            $contact = EmergencyContact::with('social_element')
-                ->whereHas('social_element', function ($q) {
-                    $q->whereNull('deactivated_at');
-                })
-                ->find($id);
+            // No status filter here (unlike before) — deliberately load the contact
+            // regardless of its current deactivated state, so a retried/offline-sync
+            // request lands on the same 200 response instead of a 404.
+            $contact = EmergencyContact::with('social_element.user')->find($id);
 
             if (!$contact) {
                 return response()->json([
@@ -300,6 +299,18 @@ class EmergencyContactController extends Controller
                 ], 422);
             }
 
+            // Idempotent short-circuit: already deactivated (e.g. a retried offline
+            // submission) — return the same success shape instead of erroring.
+            if ($contact->social_element->deactivated_at !== null) {
+                return response()->json([
+                    'message' => 'Emergency contact deactivated successfully',
+                    'emergency_contact_id' => $contact->id,
+                    'deactivated_at' => $contact->social_element->deactivated_at
+                        ->timezone('Asia/Manila')->toDateTimeString(),
+                    'is_deactivated' => true,
+                ], 200);
+            }
+
             $contact->social_element->deactivated_at = Carbon::now('UTC');
             $contact->social_element->save();
 
@@ -307,9 +318,8 @@ class EmergencyContactController extends Controller
                 'message' => 'Emergency contact deactivated successfully',
                 'emergency_contact_id' => $contact->id,
                 'deactivated_at' => $contact->social_element->deactivated_at
-                    ? $contact->social_element->deactivated_at->timezone('Asia/Manila')->toDateTimeString()
-                    : null,
-                'is_deactivated' => $contact->social_element->deactivated_at !== null,
+                    ->timezone('Asia/Manila')->toDateTimeString(),
+                'is_deactivated' => true,
             ], 200);
 
         } catch (\Exception $e) {
@@ -319,50 +329,51 @@ class EmergencyContactController extends Controller
             ], 500);
         }
     }
-        public function restore(int $id)
-{
-    try {
-        $contact = EmergencyContact::with('social_element')->find($id);
+    public function restore(int $id)
+    {
+        try {
+            $contact = EmergencyContact::with('social_element')->find($id);
 
-        if (!$contact) {
-            return response()->json([
-                'error' => 'Emergency contact not found',
-            ], 404);
-        }
+            if (!$contact) {
+                return response()->json([
+                    'error' => 'Emergency contact not found',
+                ], 404);
+            }
 
-        if (!$contact->social_element) {
-            return response()->json([
-                'error' => 'Emergency contact has no linked social element',
-            ], 422);
-        }
+            if (!$contact->social_element) {
+                return response()->json([
+                    'error' => 'Emergency contact has no linked social element',
+                ], 422);
+            }
 
-        if ($contact->social_element->deactivated_at === null) {
+            // Already idempotent — a retried offline-sync restore lands here safely.
+            if ($contact->social_element->deactivated_at === null) {
+                return response()->json([
+                    'message' => 'Emergency contact is already active',
+                    'emergency_contact' => $this->formatContact($contact->load('social_element.user')),
+                ], 200);
+            }
+
+            $contact->social_element->deactivated_at = null;
+            $contact->social_element->save();
+
+            $contact->updated_at = now();
+            $contact->save();
+
+            $contact->load(['social_element.user', 'location:id,name']);
+
             return response()->json([
-                'message' => 'Emergency contact is already active',
-                'emergency_contact' => $this->formatContact($contact->load('social_element.user')),
+                'message' => 'Emergency contact restored successfully',
+                'emergency_contact' => $this->formatContact($contact),
             ], 200);
+
+        } catch (\Exception $e) {
+            return response()->json([
+                'error' => 'Failed to restore emergency contact',
+                'details' => $e->getMessage(),
+            ], 500);
         }
-
-        $contact->social_element->deactivated_at = null;
-        $contact->social_element->save();
-
-        $contact->updated_at = now();
-        $contact->save();
-
-        $contact->load(['social_element.user', 'location:id,name']);
-
-        return response()->json([
-            'message' => 'Emergency contact restored successfully',
-            'emergency_contact' => $this->formatContact($contact),
-        ], 200);
-
-    } catch (\Exception $e) {
-        return response()->json([
-            'error' => 'Failed to restore emergency contact',
-            'details' => $e->getMessage(),
-        ], 500);
     }
-}
 
     private function formatContact(EmergencyContact $contact, $authenticatedUser = null): array
     {
@@ -391,5 +402,26 @@ class EmergencyContactController extends Controller
     private function escapeLike(string $value): string
     {
         return str_replace(['\\', '%', '_'], ['\\\\', '\\%', '\\_'], $value);
+    }
+
+
+    private function applyLocationIdFilter($query, $rawValue): void
+    {
+        if ($rawValue === null) {
+            return;
+        }
+
+        $value = trim((string) $rawValue);
+
+        if ($value === '' || in_array(strtolower($value), ['all', 'null', 'undefined'], true)) {
+            return;
+        }
+
+        if (!ctype_digit($value)) {
+            // Not a valid numeric id — ignore rather than error, same as "no filter".
+            return;
+        }
+
+        $query->where('location_id', (int) $value);
     }
 }

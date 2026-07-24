@@ -61,8 +61,7 @@ Route::get('/public/sensors/{sensor}', [PublicSensorController::class, 'show']);
 Route::get('/locations/cities', [LocationsController::class, 'cities']);
 Route::get('/locations/barangays', [LocationsController::class, 'barangays']);
 Route::get('/emergency-contacts', [EmergencyContactController::class, 'index']);
-Route::get('/emergency-contacts/{id}', [EmergencyContactController::class, 'show'])
-    ->whereNumber('id');
+
 Route::get('/evac-types', [EvacTypeController::class, 'index']);
 Route::get('/capacity-levels', [CapacityLevelController::class, 'index']);
 
@@ -91,6 +90,8 @@ Route::middleware('optional.firebase.auth')->group(function () {
     Route::get('/flood-paths', [FloodPathController::class, 'index']);
     Route::get('/pins', [GetEvacAreasController::class, 'getEvacAreas']);
     Route::get('/pins/{id}', [GetEvacAreaDetailsController::class, 'getEvacAreaDetails'])->whereNumber('id');
+    Route::get('/emergency-contacts/{id}', [EmergencyContactController::class, 'show'])
+    ->whereNumber('id');
 });
 
 // ---------------------------------------------------------------
