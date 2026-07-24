@@ -109,10 +109,7 @@ class StoreEvacuationAreaController extends Controller
             } else {
                 $normalized = collect();
             }
-            // EvacArea casts other_facilities as 'array' — assign a plain array
-            // here so Eloquent's cast encodes it exactly once. Passing an
-            // already-JSON string (->toJson()) into an array-cast attribute
-            // double-encodes it, which is what produced malformed reads later.
+
             $otherFacilities = $normalized->isEmpty() ? null : $normalized->all();
 
 
