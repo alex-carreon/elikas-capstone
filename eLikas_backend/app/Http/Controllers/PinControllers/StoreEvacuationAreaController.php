@@ -100,12 +100,17 @@ class StoreEvacuationAreaController extends Controller
 
             $otherFacilities = $request->input('other_facilities');
             if (is_array($otherFacilities)) {
-                $otherFacilities = collect($otherFacilities)
-                    ->map(fn ($v) => trim($v))
+                $normalized = collect($otherFacilities)
+                    ->map(fn ($v) => trim((string) $v))
                     ->filter(fn ($v) => $v !== '')
-                    ->implode(', ');
-                $otherFacilities = $otherFacilities === '' ? null : $otherFacilities;
+                    ->values();
+            } elseif (is_string($otherFacilities) && trim($otherFacilities) !== '') {
+                $normalized = collect([trim($otherFacilities)]);
+            } else {
+                $normalized = collect();
             }
+
+            $otherFacilities = $normalized->isEmpty() ? null : $normalized->all();
 
 
             if ($request->hasFile('file')) {

@@ -153,14 +153,18 @@ class UpdateEvacuationAreaController extends Controller
             if ($request->has('other_facilities')) {
                 $facilities = $request->input('other_facilities');
 
-                if (is_array($facilities)) {
-                    $facilities = collect($facilities)
-                        ->map(fn ($v) => trim($v))
-                        ->filter(fn ($v) => $v !== '')
-                        ->implode(', ');
+
+                if (is_string($facilities)) {
+                    $facilities = explode(',', $facilities);
                 }
 
-                $pin->other_facilities = $facilities === '' ? null : $facilities;
+                $facilities = collect($facilities)
+                    ->map(fn ($v) => trim((string) $v))
+                    ->filter(fn ($v) => $v !== '')
+                    ->values()
+                    ->all();
+
+                $pin->other_facilities = empty($facilities) ? null : $facilities;
             }
 
             // ── Expiry — only reached here when is_persistent check passes ───────
