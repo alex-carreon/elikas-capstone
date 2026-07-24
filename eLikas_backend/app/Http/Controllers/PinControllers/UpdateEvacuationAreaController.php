@@ -37,9 +37,15 @@ class UpdateEvacuationAreaController extends Controller
                 'kitchen_count'      => 'nullable|integer|min:0',
                 'child_prayer_count' => 'nullable|integer|min:0',
                 'breastfeed_count'   => 'nullable|integer|min:0',
-                // will only accept correctly formatted comma-separated strings
-                // example: alpha, bravo, charlie
-                'other_facilities' => ['nullable', 'string', 'regex:/^[^,]+(,\s*[^,]+)*$/'],
+                'other_facilities'   => ['nullable', function ($attribute, $value, $fail) {
+                    if (is_string($value)) {
+                        return;
+                    }
+                    if (is_array($value) && collect($value)->every(fn ($v) => is_string($v))) {
+                        return;
+                    }
+                    $fail('The other facilities field must be a string or an array of strings.');
+                }],
                 'contact_person'     => 'nullable|string|max:100',
                 'contact_number'     => 'nullable|string|max:15',
                 'expiry'             => 'nullable|date|after:now',
@@ -144,16 +150,17 @@ class UpdateEvacuationAreaController extends Controller
                 }
             }
 
-            $otherFacilities = null;
+            if ($request->has('other_facilities')) {
+                $facilities = $request->input('other_facilities');
 
-            if ($request->filled('other_facilities')) {
-                $otherFacilities = collect(explode(',', $request->other_facilities))
-                    ->map(fn ($f) => trim($f))
-                    ->filter()
-                    ->values()
-                    ->all();
+                if (is_array($facilities)) {
+                    $facilities = collect($facilities)
+                        ->map(fn ($v) => trim($v))
+                        ->filter(fn ($v) => $v !== '')
+                        ->implode(', ');
+                }
 
-                $pin->other_facilities = $otherFacilities;
+                $pin->other_facilities = $facilities === '' ? null : $facilities;
             }
 
             // ── Expiry — only reached here when is_persistent check passes ───────
