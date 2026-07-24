@@ -100,12 +100,20 @@ class StoreEvacuationAreaController extends Controller
 
             $otherFacilities = $request->input('other_facilities');
             if (is_array($otherFacilities)) {
-                $otherFacilities = collect($otherFacilities)
-                    ->map(fn ($v) => trim($v))
+                $normalized = collect($otherFacilities)
+                    ->map(fn ($v) => trim((string) $v))
                     ->filter(fn ($v) => $v !== '')
-                    ->implode(', ');
-                $otherFacilities = $otherFacilities === '' ? null : $otherFacilities;
+                    ->values();
+            } elseif (is_string($otherFacilities) && trim($otherFacilities) !== '') {
+                $normalized = collect([trim($otherFacilities)]);
+            } else {
+                $normalized = collect();
             }
+            // EvacArea casts other_facilities as 'array' — assign a plain array
+            // here so Eloquent's cast encodes it exactly once. Passing an
+            // already-JSON string (->toJson()) into an array-cast attribute
+            // double-encodes it, which is what produced malformed reads later.
+            $otherFacilities = $normalized->isEmpty() ? null : $normalized->all();
 
 
             if ($request->hasFile('file')) {

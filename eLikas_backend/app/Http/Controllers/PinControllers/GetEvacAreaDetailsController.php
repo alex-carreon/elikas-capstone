@@ -9,6 +9,26 @@ use Illuminate\Http\Request;
 
 class GetEvacAreaDetailsController extends Controller
 {
+    private function decodeFacilities(array|string|null $raw): array
+    {
+        if ($raw === null || $raw === '') {
+            return [];
+        }
+
+        if (is_array($raw)) {
+            return array_values(array_filter(array_map('strval', $raw), fn ($v) => $v !== ''));
+        }
+
+        $decoded = json_decode($raw, true);
+
+        if (json_last_error() === JSON_ERROR_NONE && is_array($decoded)) {
+            return array_values(array_filter(array_map('strval', $decoded), fn ($v) => $v !== ''));
+        }
+
+        // Legacy row: plain string or comma-joined string from before this fix.
+        return array_values(array_filter(array_map('trim', explode(',', $raw)), fn ($v) => $v !== ''));
+    }
+
     public function getEvacAreaDetails(Request $request, $id)
     {
         try {
@@ -57,9 +77,7 @@ class GetEvacAreaDetailsController extends Controller
                 'kitchen_count' => $pin->kitchen_count,
                 'child_prayer_count' => $pin->child_prayer_count,
                 'breastfeed_count' => $pin->breastfeed_count,
-                'other_facilities' => $pin->other_facilities
-                    ? array_values(array_filter(array_map('trim', explode(',', $pin->other_facilities)), fn ($v) => $v !== ''))
-                    : [],
+                'other_facilities' => $this->decodeFacilities($pin->other_facilities),
                 'contact_person' => $pin->contact_person,
                 'contact_number' => $pin->contact_number,
                 'is_deactivated' => $pin->social_element?->deactivated_at !== null,
