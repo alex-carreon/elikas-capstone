@@ -108,7 +108,7 @@ type EvacPin = {
   kitchen_count: number;
   child_prayer_count: number;
   breastfeed_count: number;
-  other_facilities: string;
+  other_facilities: string[];
   contact_person: string;
   contact_number: string;
   is_deactivated: boolean;
@@ -694,7 +694,11 @@ function EvacPinDrawer({
                   ))}
                 </div>
                 <p className="text-sm pt-4">Other Facilities</p>
-                <p className="text-xs">{evacPinDetails?.other_facilities}</p>
+                <div className="pl-6">
+                  {evacPinDetails?.other_facilities.map((facility) => (
+                    <li className="text-xs">{facility}</li>
+                  ))}
+                </div>
               </CollapsibleContent>
             </Collapsible>
             {evacPinDetails?.media?.[0]?.url ? (
