@@ -150,10 +150,6 @@ class UpdateEvacuationAreaController extends Controller
                 }
             }
 
-            // other_facilities may arrive as a plain string (legacy text field) or
-            // as an array from a tag/multi-select input — the column itself is
-            // just `text`, so normalize array input into a readable comma-separated
-            // string before it's stored.
             if ($request->has('other_facilities')) {
                 $facilities = $request->input('other_facilities');
 
