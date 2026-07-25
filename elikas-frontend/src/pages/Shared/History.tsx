@@ -33,6 +33,7 @@ import {
 type FloodLevel = {
   id: number;
   level_name: string;
+  level_description: string;
 };
 
 type myFloodPaths = {

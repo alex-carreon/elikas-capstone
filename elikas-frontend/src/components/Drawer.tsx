@@ -18,6 +18,7 @@ import SensorDrawer from "./DrawerContent/SensorDrawer";
 type FloodLevel = {
   id: number;
   level_name: string;
+  level_description: string;
 };
 
 type FloodPath = {
