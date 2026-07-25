@@ -38,6 +38,7 @@ interface PostRowProps {
   timePosted: string;
   description: string;
   level?: string;
+  levelDescription?: string;
   locationVerified?: boolean;
   flagCount?: number;
   expiryDays?: number;
@@ -57,6 +58,7 @@ function PostRow({
   timePosted,
   description,
   level,
+  levelDescription,
   image,
   isSimple,
   children,
@@ -369,9 +371,22 @@ function PostRow({
                 </div>
                 <div className="flex flex-row justify-between">
                   <div>
-                    {level && <p className="text-xs">Flood Level: {level}</p>}
-                    <p className="text-xs">{description}</p>
-                  </div>
+                    {level && (
+                      <p className="text-xs font-semibold text-700">
+                        Flood Level: {level}
+                      </p>
+                    )}
+
+                    {levelDescription && (
+                      <p className="text-xs text-gray-500 italic">
+                        {levelDescription}
+                      </p>
+                    )}
+
+                    <p className="text-sm mt-2">
+                      {description}
+                    </p>
+                </div>
                   {isMyHazard && (
                     <div>
                       <Link to={`/HazardForm/${id}`} state={{ from: "/map" }}>

@@ -15,6 +15,7 @@ import { cn } from "@/lib/utils";
 type FloodLevel = {
   id: number;
   level_name: string;
+  level_description: string;
 };
 
 type FloodPath = {
@@ -151,6 +152,7 @@ function HazardDrawer({ selectedPin }: { selectedPin: FloodPath }) {
             // upvotes={upVote}
             // downvotes={downVote}
             level={floodDetails.flood_levels.level_name}
+            levelDescription={floodDetails.flood_levels.level_description}
             expiryDays={daysLeft}
             id={floodDetails.id}
             isSimple
