@@ -29,7 +29,7 @@ class AuthController extends Controller
             'location_id'  => 'required|integer',
             'avatar_seed'  => 'required|string|size:8',
         ]);
-        
+
 
         // Step 2: Verify the Firebase UID actually exists in Firebase
         try {
@@ -46,7 +46,7 @@ class AuthController extends Controller
                 'username'   => $request->username,
                 'email'      => $request->email,
                 'role_id'    => 3,
-                'created_at' => now(), 
+                'created_at' => now(),
                 'avatar_seed' => $request->avatar_seed,
             ]);
 
@@ -78,7 +78,7 @@ class AuthController extends Controller
             $verificationLink = $this->firebaseAuth
                 ->getEmailVerificationLink($request->email);
 
-            // Step 9:  email sending 
+            // Step 9:  email sending
             Mail::to($user->email)->send(
                 new VerifyEmailMail(
                     $user->username,
@@ -86,7 +86,7 @@ class AuthController extends Controller
                 )
             );
 
-            DB::commit(); 
+            DB::commit();
 
             return response()->json([
                 'message' => 'User registered successfully',
@@ -95,7 +95,7 @@ class AuthController extends Controller
 
         } catch (\Exception $e) {
 
-            DB::rollBack(); 
+            DB::rollBack();
 
             return response()->json([
                 'message' => 'Registration failed',
@@ -110,7 +110,15 @@ class AuthController extends Controller
         // The React app sends the Firebase ID token in the Authorization header
         $token = $request->bearerToken();
 
+        \Log::info('Token debug - incoming', [
+            'has_token' => !is_null($token),
+            'token_preview' => $token ? substr($token, 0, 20) . '...' : null,
+            'server_time_now' => time(),
+        ]);
+
+
         if (!$token) {
+            \Log::warning('Token debug - rejected: no token');
             return response()->json(['error' => 'No token provided'], 401);
         }
 
@@ -130,6 +138,9 @@ class AuthController extends Controller
             }
 
         } catch (\Exception $e) {
+            \Log::error('Token debug - verification failed', [
+                'error_message' => $e->getMessage(),
+            ]);
             return response()->json([
                 'error' => 'Unauthorized',
                 'details' => $e->getMessage()
