@@ -464,13 +464,13 @@ function SMS() {
         />
       )}
       <div className="w-full h-full flex flex-col items-center ">
-        <div className="w-full max-w-md pt-12 p-6 mt-8 mb-2 flex flex-col gap-4 items-center">
+        <div className="w-full pt-12 p-6 mt-8 mb-2 flex flex-col gap-4 items-center">
           <div>
             <p
               className="font-bold text-lg text-center"
               style={{ color: colors.heading }}
             >
-              Emergency SMS Broadcast{" "}
+              Emergency SMS Broadcast
             </p>
             <p
               className="text-align text-center italic text-sm"
@@ -483,140 +483,143 @@ function SMS() {
               numbers.
             </p>
           </div>
-          <div className="w-full max-w-sm flex flex-col gap-4">
-            <div className="flex w-full h-fit items-center justify-between">
-              <div className="w-58 min-w-0 mr-2">
-                <SelectDropdown
-                  value={templateId}
-                  onValueChange={setTemplateId}
-                  label="Templates"
-                  placeholder="Choose a template to use"
-                  id="SMS_SelectTemplateField"
-                  onSubmit={(e) => setTemplateId(e.target.value)}
-                  options={templates.map((item) => ({
-                    label: item.template_name,
-                    value: item.id.toString(),
-                  }))}
-                  clearClick={() => setTemplateId("")}
-                  clearId="SMS_TemplateClear"
-                  showClear={!!templateId}
-                  loading={templateLoad}
-                />
-              </div>
-              <div className="shrink-0">
-                <ButtonComp
-                  text="SMS History"
-                  variant="primary"
-                  id="SMS_SMSHistoryBtn"
-                  onClick={() => safeNavigate("/SMSHistory")}
-                />
-              </div>
-            </div>
-
-            <div>
-              <div className="flex flex-col gap-1">
-                <p className="font-semibold text-xs">
-                  Total Recipients: {recipients}
-                </p>
-              </div>
-              <div className="">
-                <p
-                  className="italic text-xs justify-self-start"
-                  style={{ color: colors.label }}
-                >
-                  Estimated Price:{" "}
-                  {message
-                    ? message?.length <= 160
-                      ? `P${1 * recipients}`
-                      : `P${Math.ceil(message?.length / 153) * recipients}`
-                    : "P0"}
-                </p>
-                <p
-                  className="italic text-xs justify-self-end"
-                  style={{ color: colors.label }}
-                >
-                  Character Count: {message?.length} / 160
-                </p>
-              </div>
-              <Textarea
-                className="mt-2 h-100 text-xs"
-                placeholder="Place your text message here"
-                onChange={(e) => setMessage(e.target.value)}
-                value={message}
-                id="SMS_MessageField"
-                maxLength={600}
-              />
-              <p className="text-xs text-red-500">{error.message}</p>
-            </div>
+          <div className="shrink-0">
+            <ButtonComp
+              text="SMS History"
+              variant="primary"
+              id="SMS_SMSHistoryBtn"
+              onClick={() => safeNavigate("/SMSHistory")}
+              widthSize="150px"
+            />
           </div>
-          <div className="w-full">
-            <div className="flex gap-2">
-              <ButtonComp
-                id="SMS_ClearBtn"
-                text="Clear"
-                variant="outline"
-                heightSize="30px"
-                widthSize="70px"
-                onClick={handleClear}
-              />
-              {!templateId ? (
+          <div className="w-full flex flex-col gap-4 bg-gray-400/20 p-8 rounded-lg">
+            <div className="w-full flex flex-col gap-4">
+              <div className="flex w-full h-fit items-center justify-between">
+                <div className="w-58 min-w-0 mr-2">
+                  <SelectDropdown
+                    value={templateId}
+                    onValueChange={setTemplateId}
+                    label="Templates"
+                    placeholder="Choose a template to use"
+                    id="SMS_SelectTemplateField"
+                    onSubmit={(e) => setTemplateId(e.target.value)}
+                    options={templates.map((item) => ({
+                      label: item.template_name,
+                      value: item.id.toString(),
+                    }))}
+                    clearClick={() => setTemplateId("")}
+                    clearId="SMS_TemplateClear"
+                    showClear={!!templateId}
+                    loading={templateLoad}
+                  />
+                </div>
+              </div>
+
+              <div>
+                <div className="flex flex-col gap-1">
+                  <p className="font-semibold text-xs">
+                    Total Recipients: {recipients}
+                  </p>
+                </div>
+                <div className="">
+                  <p
+                    className="italic text-xs justify-self-start"
+                    style={{ color: colors.label }}
+                  >
+                    Estimated Price:{" "}
+                    {message
+                      ? message?.length <= 160
+                        ? `P${1 * recipients}`
+                        : `P${Math.ceil(message?.length / 153) * recipients}`
+                      : "P0"}
+                  </p>
+                  <p
+                    className="italic text-xs justify-self-end"
+                    style={{ color: colors.label }}
+                  >
+                    Character Count: {message?.length} / 160
+                  </p>
+                </div>
+                <Textarea
+                  className="mt-2 h-100 text-xs"
+                  placeholder="Place your text message here"
+                  onChange={(e) => setMessage(e.target.value)}
+                  value={message}
+                  id="SMS_MessageField"
+                  maxLength={600}
+                />
+                <p className="text-xs text-red-500">{error.message}</p>
+              </div>
+            </div>
+            <div className="w-full">
+              <div className="flex gap-2">
                 <ButtonComp
-                  id="SMS_AddTemplateBtn"
-                  text="Add to Templates"
+                  id="SMS_ClearBtn"
+                  text="Clear"
                   variant="outline"
                   heightSize="30px"
-                  widthSize="140px"
-                  onClick={() => setAddTemplate(!addTemplate)}
+                  widthSize="70px"
+                  onClick={handleClear}
                 />
-              ) : null}
+                {!templateId ? (
+                  <ButtonComp
+                    id="SMS_AddTemplateBtn"
+                    text="Add to Templates"
+                    variant="outline"
+                    heightSize="30px"
+                    widthSize="140px"
+                    onClick={() => setAddTemplate(!addTemplate)}
+                  />
+                ) : null}
+              </div>
             </div>
-          </div>
-          <DatePickerInput
-            label="Schedule Send (Optional)"
-            desc="Enter a date and time to send your message."
-            idField="SMS_ScheduleDateField"
-            idTime="SMS_ScheduleTimeField"
-            idBtn="SMS_CalendarBtn"
-            showTime
-            edit
-            timeNow={false}
-            onChange={setSchedSend}
-            isRequired={schedSend ? true : false}
-            value={schedSend}
-            clearDate
-            clearTime
-          />
-          <div className="w-full flex flex-col items-center gap-2">
-            {schedSend === undefined ? (
-              <ButtonComp
-                id="SMS_SendBtn"
-                text="Send Text"
-                variant="primary"
-                heightSize="38px"
-                widthSize="100%"
-                onClick={() => setShowSendDialog(true)}
-                isDisabled={disabled}
-              />
-            ) : (
-              <ButtonComp
-                id="SMS_SchedBtn"
-                text="Schedule Send"
-                variant="primary"
-                heightSize="38px"
-                widthSize="100%"
-                onClick={() => setShowSendDialog(true)}
-                isDisabled={disabled}
-              />
-            )}
-            <ButtonComp
-              id="SMS_DeleteTemplate"
-              text="Delete Template"
-              variant="important"
-              heightSize="38px"
-              widthSize="100%"
-              onClick={() => setWillDelete(true)}
-              isDisabled={disabled}
+            <DatePickerInput
+              label="Schedule Send (Optional)"
+              desc="Enter a date and time to send your message."
+              idField="SMS_ScheduleDateField"
+              idTime="SMS_ScheduleTimeField"
+              idBtn="SMS_CalendarBtn"
+              showTime
+              edit
+              timeNow={false}
+              onChange={setSchedSend}
+              isRequired={schedSend ? true : false}
+              value={schedSend}
+              clearDate
+              clearTime
             />
+            <div className="w-full flex flex-col items-center gap-2">
+              {schedSend === undefined ? (
+                <ButtonComp
+                  id="SMS_SendBtn"
+                  text="Send Text"
+                  variant="primary"
+                  heightSize="38px"
+                  widthSize="100%"
+                  onClick={() => setShowSendDialog(true)}
+                  isDisabled={disabled}
+                />
+              ) : (
+                <ButtonComp
+                  id="SMS_SchedBtn"
+                  text="Schedule Send"
+                  variant="primary"
+                  heightSize="38px"
+                  widthSize="100%"
+                  onClick={() => setShowSendDialog(true)}
+                  isDisabled={disabled}
+                />
+              )}
+              <ButtonComp
+                id="SMS_DeleteTemplate"
+                text="Delete Template"
+                variant="important"
+                heightSize="38px"
+                widthSize="100%"
+                onClick={() => setWillDelete(true)}
+                isDisabled={disabled}
+              />
+            </div>
           </div>
         </div>
       </div>

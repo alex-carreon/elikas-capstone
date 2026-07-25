@@ -504,7 +504,8 @@ class FloodPathController extends Controller
             // 'element_id'     => $floodPath->element_id,
             'flood_levels'    => [
                         "id" => $floodPath->floodLevel->id,
-                        "level_name" => $floodPath->floodLevel->level_name ],
+                        "level_name" => $floodPath->floodLevel->level_name,
+                        "level_description" => $floodPath->floodLevel->description ],
             'posted_by'      => $floodPath->socialElement->user?->username,
             'role'           => $floodPath->socialElement->user?->role?->role_name,
             'avatar_seed' => $floodPath->socialElement->user?->avatar_seed,

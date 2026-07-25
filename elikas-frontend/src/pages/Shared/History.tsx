@@ -9,6 +9,7 @@ import {
   X,
   GlobeOff,
   Globe,
+  MapPin,
 } from "lucide-react";
 import {
   InputGroup,
@@ -32,6 +33,7 @@ import {
 type FloodLevel = {
   id: number;
   level_name: string;
+  level_description: string;
 };
 
 type myFloodPaths = {
@@ -371,10 +373,17 @@ function History() {
 
   return (
     <div className="overflow-hidden h-screen flex justify-center pt-20 p-5">
-      <div className="w-full max-w-sm flex flex-col gap-4">
-        <p className="font-bold text-2xl" style={{ color: colors.heading }}>
-          Pin History
-        </p>
+      <div className="w-full flex flex-col gap-4">
+        <div className="flex flex-col items-center gap-2">
+          <MapPin />
+          <p
+            className="font-bold text-center text-2xl"
+            style={{ color: colors.heading }}
+          >
+            Pin History
+          </p>
+        </div>
+
         {loading ? (
           <>
             <div className="flex flex-col justify-center items-center gap-2">
@@ -466,7 +475,7 @@ function History() {
                 ) : null}
               </Tabs>
             </div>
-            <div className="flex w-full max-w-sm flex-col gap-7 pt-4">
+            <div className="flex w-full flex-col gap-7 pt-4">
               <div className="flex flex-col gap-3 items-end">
                 <Skeleton className="h-4 w-24 bg-[#59260B]/30" />
               </div>

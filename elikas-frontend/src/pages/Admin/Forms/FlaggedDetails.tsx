@@ -17,6 +17,7 @@ import FormDesktopSkeleton from "@/pages/Skeletons/FormDesktopSkeleton";
 type floodLevel = {
   id: number;
   level_name: string;
+  level_description: string;
 };
 
 type postedBy = {

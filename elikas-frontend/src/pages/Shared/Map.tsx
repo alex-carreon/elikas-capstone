@@ -370,7 +370,7 @@ function Map() {
         )}
       >
         {role === "brgy_op" && (
-          <div className="w-full max-w-md bg-[#5f80aa] h-12 flex flex-row items-center justify-left p-4 gap-2">
+          <div className="w-full bg-[#5f80aa] h-12 flex flex-row items-center justify-left p-4 gap-2">
             <Info color="white" size="30" strokeWidth={1.5} />
             <p className="text-white text-sm">
               You are accessing eLikas as a Barangay Operator
