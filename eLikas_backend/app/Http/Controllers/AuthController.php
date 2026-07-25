@@ -112,8 +112,10 @@ class AuthController extends Controller
 
         \Log::info('Token debug - incoming', [
             'has_token' => !is_null($token),
-            'token_preview' => $token ? substr($token, 0, 20) . '...' : null,
             'server_time_now' => time(),
+            'token_iat' => $payload['iat'] ?? null,
+            'token_iat_readable' => isset($payload['iat']) ? date('Y-m-d H:i:s', $payload['iat']) : null,
+            'diff_seconds' => isset($payload['iat']) ? ($payload['iat'] - time()) : null,
         ]);
 
 
