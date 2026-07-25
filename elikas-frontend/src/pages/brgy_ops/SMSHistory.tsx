@@ -20,6 +20,8 @@ import {
 import { Separator } from "@/components/ui/separator";
 import { toast } from "sonner";
 import PaginationComp from "@/components/Pagination";
+import { DataTable } from "@/components/Admin/DataTable/DataTable";
+import { SMSBrgyColumns } from "@/components/Admin/DataTable/SMSBrgyColumns";
 
 type StatusType = {
   id: number;
@@ -33,6 +35,8 @@ type BroadcastsType = {
   scheduled_for: string;
   sent_at: string;
   total_recipients: number;
+  sender: string;
+  location: string;
 };
 
 type SmsStatus = {
@@ -207,9 +211,9 @@ function SMSHistory() {
   }, [statusFilter]);
 
   return (
-    <div className="h-screen flex flex-col justify-center items-center pt-20 p-5 overflow-hidden">
-      <div className="w-full max-w-sm flex flex-col min-h-0 flex-1">
-        <div>
+    <div className="h-screen flex flex-col justify-center items-center pt-20 p-5">
+      <div className="w-full flex flex-col min-h-0 flex-1">
+        <div className="text-center">
           <p className="font-bold text-2xl" style={{ color: colors.heading }}>
             SMS History
           </p>
@@ -311,7 +315,7 @@ function SMSHistory() {
         </div>
         {loading ? (
           <>
-            <div className="flex w-full max-w-sm flex-col gap-7 pt-4">
+            <div className="flex w-full flex-col gap-7 pt-4">
               <div className="flex flex-col gap-3">
                 <Skeleton className="h-24 w-full bg-[#59260B]/30" />
               </div>
@@ -332,38 +336,43 @@ function SMSHistory() {
         ) : (
           <>
             <Separator className="mt-6" />
-            <div className="flex flex-col gap-2 overflow-y-auto flex-1 min-h-0 pb-10 pt-6">
-              {broadcasts.length > 0 ? (
-                broadcasts.map((broadcast) => (
-                  <Row
-                    key={broadcast.id}
-                    title={`Sent to: ${broadcast.total_recipients} recipient/s`}
-                    desc={
-                      broadcast.status.name === "Scheduled"
-                        ? `Sending on: ${convertDateTime(broadcast.scheduled_for)}`
-                        : broadcast.status.name === "Cancelled"
-                          ? "Canceled"
-                          : broadcast.status.name === "Failed"
-                            ? undefined
-                            : `Sent on: ${convertDateTime(broadcast.sent_at)}`
-                    }
-                    address={broadcast.status.name}
-                    onClick={() => cancelSend({ id: broadcast.id })}
-                    buttonId="SMSHistory_CancelSend"
-                    btnText="Cancel Send"
-                    showBtn={
-                      broadcast.status.name === "Scheduled" &&
-                      new Date(broadcast.scheduled_for) > manilaNow
-                    }
-                    showCollapsible
-                    collapseContent={broadcast.message_content}
-                  />
-                ))
-              ) : (
-                <p className="text-sm pt-4 text-center">
-                  You haven't sent any SMS yet!
-                </p>
-              )}
+            <div className="hidden md:block m-6 pb-12">
+              <DataTable columns={SMSBrgyColumns} data={broadcasts} />
+            </div>
+            <div className="md:hidden">
+              <div className="flex flex-col gap-2 overflow-y-auto flex-1 min-h-0 pb-10 pt-6">
+                {broadcasts.length > 0 ? (
+                  broadcasts.map((broadcast) => (
+                    <Row
+                      key={broadcast.id}
+                      title={`Sent to: ${broadcast.total_recipients} recipient/s`}
+                      desc={
+                        broadcast.status.name === "Scheduled"
+                          ? `Sending on: ${convertDateTime(broadcast.scheduled_for)}`
+                          : broadcast.status.name === "Cancelled"
+                            ? "Canceled"
+                            : broadcast.status.name === "Failed"
+                              ? undefined
+                              : `Sent on: ${convertDateTime(broadcast.sent_at)}`
+                      }
+                      address={broadcast.status.name}
+                      onClick={() => cancelSend({ id: broadcast.id })}
+                      buttonId="SMSHistory_CancelSend"
+                      btnText="Cancel Send"
+                      showBtn={
+                        broadcast.status.name === "Scheduled" &&
+                        new Date(broadcast.scheduled_for) > manilaNow
+                      }
+                      showCollapsible
+                      collapseContent={broadcast.message_content}
+                    />
+                  ))
+                ) : (
+                  <p className="text-sm pt-4 text-center">
+                    You haven't sent any SMS yet!
+                  </p>
+                )}
+              </div>
             </div>
           </>
         )}

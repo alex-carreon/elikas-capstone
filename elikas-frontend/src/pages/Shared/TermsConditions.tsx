@@ -4,7 +4,7 @@ import { Separator } from "@/components/ui/separator";
 function TermsConditions() {
   return (
     <div className="w-full flex justify-center">
-      <div className="w-full max-w-md mt-13 p-8 flex flex-col gap-8">
+      <div className="w-full mt-13 p-8 flex flex-col gap-8">
         <Header />
         <div className="flex flex-col gap-2">
           <SectionHeader Title="Introduction" />

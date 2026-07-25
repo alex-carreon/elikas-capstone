@@ -32,7 +32,8 @@ export function DataTable<TData, TValue>({
     columns,
     getCoreRowModel: getCoreRowModel(),
     ...(location.pathname !== "/admin-logs" &&
-      !location.pathname.startsWith("/admin-sensorlogs/") && {
+      !location.pathname.startsWith("/admin-sensorlogs/") &&
+      location.pathname !== "/SMSHistory" && {
         getPaginationRowModel: getPaginationRowModel(),
       }),
   });
@@ -90,7 +91,8 @@ export function DataTable<TData, TValue>({
         </Table>
       </div>
       {location.pathname !== "/admin-logs" &&
-        !location.pathname.startsWith("/admin-sensorlogs/") && (
+        !location.pathname.startsWith("/admin-sensorlogs/") &&
+        location.pathname !== "/SMSHistory" && (
           <div className="flex items-center justify-end space-x-2 py-4">
             <Button
               variant="outline"

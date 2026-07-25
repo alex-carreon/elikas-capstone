@@ -403,10 +403,10 @@ function Profile() {
         />
       )}
       <div className="min-h-screen flex justify-center p-6 pt-20">
-        <div className="w-full max-w-sm flex flex-col gap-10 items-center">
+        <div className="w-full flex flex-col gap-10 items-center">
           <div className="w-full flex justify-between flex-col">
             <div className="w-full flex gap-10 flex-col">
-              <div>
+              <div className="flex flex-col md:items-center gap-8">
                 <div className="flex flex-col">
                   <div className="w-full flex flex-col items-center gap-2">
                     {seed ? (
@@ -443,7 +443,7 @@ function Profile() {
                     )}
                   </div>
                 </div>
-                <div className="flex flex-col gap-4">
+                <div className="w-full flex flex-col gap-4 md:max-w-3/4 md:grid md:grid-flow-col md:grid-rows-2 md:gap-6 md:bg-gray-400/20 md:p-8 md:rounded-lg">
                   {isEditable ? (
                     <TextField
                       label="User Name"
@@ -486,7 +486,7 @@ function Profile() {
                       />
                     </>
                   )}
-                  <div className="w-full flex flex-col gap-1">
+                  <div className="w-full flex flex-col gap-1 md:h-fit">
                     <TextField
                       label="Email Address"
                       inputType="email"
