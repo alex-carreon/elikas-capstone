@@ -10,7 +10,7 @@ function AuthNavbar() {
   return (
     <>
       <div className="fixed top-0 left-0 z-50 w-full h-content flex justify-center">
-        <div className="w-full max-w-md flex flex-row justify-between items-center p-2 shadow-lg bg-white">
+        <div className="w-full flex flex-row justify-between items-center p-2 shadow-lg bg-white">
           <div>
             <LogoComp />
           </div>
