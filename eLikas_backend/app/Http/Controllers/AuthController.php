@@ -110,6 +110,9 @@ class AuthController extends Controller
         // The React app sends the Firebase ID token in the Authorization header
         $token = $request->bearerToken();
 
+        $parts = explode('.', $token);
+        $payload = json_decode(base64_decode(strtr($parts[1], '-_', '+/')), true);
+
         \Log::info('Token debug - incoming', [
             'has_token' => !is_null($token),
             'server_time_now' => time(),
