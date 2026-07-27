@@ -5,7 +5,6 @@ import carousel3 from "@/assets/Registration/Carousel3.svg";
 import carousel4 from "@/assets/Registration/Carousel4.svg";
 import carousel5 from "@/assets/Registration/Carousel5.svg";
 
-import privacyPdf from "@/assets/Registration/eLikas_DataPrivacy.pdf";
 import {
   Carousel,
   CarouselContent,
@@ -99,7 +98,7 @@ function SplashRegistration() {
                 <div className="flex justify-center mt-3">
                   <button
                     className="text-sm text-blue-600 underline hover:text-blue-800"
-                    onClick={() => window.open(privacyPdf, "_blank")}
+                    onClick={() => window.open("/eLikas_DataPrivacy.pdf", "_blank", "noopener,noreferrer")}
                   >
                     Read Full Data Privacy Notice
                   </button>
