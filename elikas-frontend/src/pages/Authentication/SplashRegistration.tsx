@@ -3,6 +3,9 @@ import carousel1 from "@/assets/Registration/Carousel1.svg";
 import carousel2 from "@/assets/Registration/Carousel2.svg";
 import carousel3 from "@/assets/Registration/Carousel3.svg";
 import carousel4 from "@/assets/Registration/Carousel4.svg";
+import carousel5 from "@/assets/Registration/Carousel5.svg";
+
+import privacyPdf from "@/assets/Registration/eLikas_DataPrivacy.pdf";
 import {
   Carousel,
   CarouselContent,
@@ -85,6 +88,24 @@ function SplashRegistration() {
                   text="Flood situations and evacuation centers can change minute to minute. We update as fast as we can, but always verify with local authorities when it really matters."
                 ></CarouselCard>
               </CarouselItem>
+              <CarouselItem key={5} id="Splash_CarouselItem5">
+              <Card style={{ border: "none", boxShadow: "none" }}>
+                <CarouselCard
+                  img={carousel5}
+                  alt="Carousel Image 5"
+                  header="Your Privacy Matters"
+                  text="eLikas only collects information necessary to provide its services. Comments may be processed through OpenAI for automated content moderation. Please review our complete Data Privacy Notice before creating your account."
+                />
+                <div className="flex justify-center mt-3">
+                  <button
+                    className="text-sm text-blue-600 underline hover:text-blue-800"
+                    onClick={() => window.open(privacyPdf, "_blank")}
+                  >
+                    Read Full Data Privacy Notice
+                  </button>
+                </div>
+              </Card>
+            </CarouselItem>
             </CarouselContent>
           </Carousel>
           <div
@@ -119,11 +140,18 @@ function SplashRegistration() {
                 (current === 3 ? "fill-gray-500" : "fill-gray-300")
               }
             />
+            <Circle
+              id="Splash_CarouselIndicator5"
+              className={
+                "h-3 w-3 stroke-none " +
+                (current === 4 ? "fill-gray-500" : "fill-gray-300")
+              }
+            />
           </div>
         </div>
         <br />
         <div className="w-full flex flex-col justify-center items-center m-0 gap-2">
-          {current === 3 ? (
+          {current === 4 ? (
             <Link to="/Registration/Form" className="w-full max-w-xs">
               <ButtonComp
                 text="Get Started"
@@ -139,7 +167,7 @@ function SplashRegistration() {
               id="Splash_NextBtn"
               variant="primary"
               onClick={
-                current === 3
+                current === 4
                   ? () => api?.scrollNext()
                   : () => api?.scrollNext()
               }
