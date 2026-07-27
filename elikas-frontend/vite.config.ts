@@ -45,8 +45,8 @@ export default defineConfig({
       },
       workbox: {
         maximumFileSizeToCacheInBytes: 4000000,
-        navigateFallbackDenylist: [/^\/api/, /^\/sanctum/],
-        globPatterns: ["**/*.{js,css,html,ico,png,svg,woff2}"],
+        navigateFallbackDenylist: [/^\/api/, /^\/sanctum/, /\.pdf$/],
+        globPatterns: ["**/*.{js,css,html,ico,png,svg,woff2,pdf}"],
         runtimeCaching: [
           {
             // Cache API calls from your Laravel backend
