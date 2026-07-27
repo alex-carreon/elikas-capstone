@@ -285,11 +285,20 @@ function TermsConditions() {
                 the transmission of your personal data to OpenStreetMap. <br />
                 <br />
                 <b>OpenAI Moderation API:</b> <br />
-                User-submitted content is reviewed by the OpenAI Moderation API
-                to detect and filter harmful, false, or policy-violating content
-                before it is published. Submitted content may be temporarily
-                processed by OpenAI's systems. Please refer to OpenAI's Privacy
-                Policy for details on how they handle data. <br />
+                User-submitted content is reviewed by the OpenAI Moderation API to 
+                detect and filter harmful, false, or policy-violating content before 
+                it is published. Comments submitted through eLikas may be processed 
+                using OpenAI services for semantic analysis to identify potentially 
+                harmful, abusive, or inappropriate content. This automated processing 
+                is performed solely for content moderation purposes. By submitting 
+                comments through the platform, users acknowledge and consent to this 
+                processing. <br />
+                <br />
+                However, automated semantic analysis may occasionally produce inaccurate 
+                results. Comments may be incorrectly flagged or may not be detected despite 
+                the system's best efforts. OpenAI moderation is intended to assist the
+                 moderation process and should not be considered a substitute for administrative 
+                 review when necessary. <br />
                 <br />
                 <b>Firebase Authentication (Google):</b> <br />
                 We use Firebase Authentication, a service provided by Google
@@ -473,7 +482,7 @@ function Footer() {
     <div className="flex flex-col gap-2 text-center text-xs italic">
       <Separator className="bg-orange-300" />
       <p style={{ color: colors.heading }}>
-        This document was last updated on May 19, 2025. eLikas reserves the
+        This document was last updated on July 27, 2025. eLikas reserves the
         right to amend these terms at any time. Continued use of the platform
         after any amendments constitutes your acceptance of the revised
         document.

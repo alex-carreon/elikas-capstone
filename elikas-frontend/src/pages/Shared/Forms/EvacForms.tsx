@@ -27,7 +27,7 @@ import { toast } from "sonner";
 import { Skeleton } from "@/components/ui/skeleton";
 import Radio from "@/components/Radio";
 import { X } from "lucide-react";
-
+import privacyPdf from "@/assets/Registration/eLikas_DataPrivacy.pdf";
 type EvacType = {
   id: number;
   evac_type: string;
@@ -121,6 +121,7 @@ function EvacPin() {
   const [contactNumber, setContactNumber] = useState("");
   const [safetyCheck, setSafetyCheck] = useState(false);
   const [infoCheck, setInfoCheck] = useState(false);
+  const [acceptedPrivacy, setAcceptedPrivacy] = useState(false);
   const [regFlood, setRegFlood] = useState(false);
   const [heavyFlood, setHeavyFlood] = useState(false);
   const [hasAccom, setHasAccom] = useState(false);
@@ -1503,12 +1504,38 @@ or account restriction."
                     }}
                   />
                 </div>
+                <div>
+                  <CheckBox
+                    id="EvacPin_PrivacyCheck"
+                    checked={acceptedPrivacy}
+                    onCheckedChange={(val) => {
+                      setAcceptedPrivacy(!!val);
+                    }}
+                    text={
+                      <>
+                        I have read and agree to the{" "}
+                        <button
+                          type="button"
+                          onClick={(e) => {
+                            e.preventDefault();
+                            e.stopPropagation();
+                            window.open(privacyPdf, "_blank");
+                          }}
+                          className="text-blue-600 underline hover:text-blue-800"
+                        >
+                          Data Privacy Notice
+                        </button>
+                        .
+                      </>
+                    }
+                  />
+                </div>
                 <div className="w-full max-w-md flex justify-center">
                   <ButtonComp
                     text="Create Pin"
                     variant="primary"
                     id="EvacPin_SubmitBtn"
-                    isDisabled={!safetyCheck || !infoCheck || disabled}
+                    isDisabled={!safetyCheck || !infoCheck || !acceptedPrivacy || disabled}
                     heightSize="38px"
                     widthSize="100%"
                     onClick={() => submitValidation()}

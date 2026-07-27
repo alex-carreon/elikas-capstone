@@ -9,6 +9,7 @@ import SelectDropdown from "@/components/SelectDropdown";
 import { handleDeac, handleSubmit, handleUpdate } from "@/lib/hotlineUtils";
 import FormSkeleton from "@/pages/Skeletons/FormSkeleton";
 import AlertDialogue from "@/components/AlertDialogue";
+import privacyPdf from "@/assets/Registration/eLikas_DataPrivacy.pdf";
 
 type Barangays = {
   id: number;
@@ -55,6 +56,7 @@ function HotlinesForm() {
   const [cityId, setCityId] = useState(0);
   const [barangays, setBarangays] = useState<Barangays[]>([]);
   const [infoCheck, setInfoCheck] = useState(false);
+  const [acceptedPrivacy, setAcceptedPrivacy] = useState(false);
   const [hotlines, setHotlines] = useState<HotlineDetails>();
   const [isEditable, setIsEditable] = useState(false);
   const [disabled, setDisabled] = useState(false);
@@ -410,12 +412,38 @@ evacuation use."
                       }}
                     />
                   </div>
+                  <div>
+                  <CheckBox
+                    id="EvacPin_PrivacyCheck"
+                    checked={acceptedPrivacy}
+                    onCheckedChange={(val) => {
+                      setAcceptedPrivacy(!!val);
+                    }}
+                    text={
+                      <>
+                        I have read and agree to the{" "}
+                        <button
+                          type="button"
+                          onClick={(e) => {
+                            e.preventDefault();
+                            e.stopPropagation();
+                            window.open(privacyPdf, "_blank");
+                          }}
+                          className="text-blue-600 underline hover:text-blue-800"
+                        >
+                          Data Privacy Notice
+                        </button>
+                        .
+                      </>
+                    }
+                  />
+                </div>
                   <div className="w-full max-w-md flex justify-center">
                     <ButtonComp
                       text="Add Hotline"
                       variant="primary"
                       id="Hotline_SubmitBtn"
-                      isDisabled={!infoCheck || disabled}
+                      isDisabled={!infoCheck || !acceptedPrivacy || disabled}
                       heightSize="38px"
                       widthSize="100%"
                     />
