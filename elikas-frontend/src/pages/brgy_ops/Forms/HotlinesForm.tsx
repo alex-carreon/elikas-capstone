@@ -9,7 +9,6 @@ import SelectDropdown from "@/components/SelectDropdown";
 import { handleDeac, handleSubmit, handleUpdate } from "@/lib/hotlineUtils";
 import FormSkeleton from "@/pages/Skeletons/FormSkeleton";
 import AlertDialogue from "@/components/AlertDialogue";
-import privacyPdf from "@/assets/Registration/eLikas_DataPrivacy.pdf";
 
 type Barangays = {
   id: number;
@@ -427,7 +426,7 @@ evacuation use."
                           onClick={(e) => {
                             e.preventDefault();
                             e.stopPropagation();
-                            window.open(privacyPdf, "_blank");
+                            window.open("/eLikas_DataPrivacy.pdf", "_blank", "noopener,noreferrer");
                           }}
                           className="text-blue-600 underline hover:text-blue-800"
                         >

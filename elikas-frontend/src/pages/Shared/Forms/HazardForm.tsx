@@ -28,7 +28,6 @@ import FormSkeleton from "../../Skeletons/FormSkeleton";
 import { Separator } from "@/components/ui/separator";
 import DatePickerInput from "@/components/DateField";
 import { toast } from "sonner";
-import privacyPdf from "@/assets/Registration/eLikas_DataPrivacy.pdf";
 
 const brouterBaseUrl = import.meta.env.VITE_BROUTER_BASE_URL;
 
@@ -783,7 +782,7 @@ function HazardForm() {
                           onClick={(e) => {
                             e.preventDefault();
                             e.stopPropagation();
-                            window.open(privacyPdf, "_blank");
+                            window.open("/eLikas_DataPrivacy.pdf", "_blank", "noopener,noreferrer");
                           }}
                           className="text-blue-600 underline hover:text-blue-800"
                         >
