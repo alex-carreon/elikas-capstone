@@ -27,7 +27,6 @@ import { toast } from "sonner";
 import { Skeleton } from "@/components/ui/skeleton";
 import Radio from "@/components/Radio";
 import { X } from "lucide-react";
-import privacyPdf from "@/assets/Registration/eLikas_DataPrivacy.pdf";
 type EvacType = {
   id: number;
   evac_type: string;
@@ -1519,7 +1518,7 @@ or account restriction."
                           onClick={(e) => {
                             e.preventDefault();
                             e.stopPropagation();
-                            window.open(privacyPdf, "_blank");
+                            window.open("/eLikas_DataPrivacy.pdf", "_blank", "noopener,noreferrer");
                           }}
                           className="text-blue-600 underline hover:text-blue-800"
                         >
