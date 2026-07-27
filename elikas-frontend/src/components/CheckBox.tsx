@@ -1,3 +1,5 @@
+import type { ReactNode } from "react";
+
 import "../App.css";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Field } from "@/components/ui/field";
@@ -5,7 +7,7 @@ import { Label } from "@/components/ui/label";
 import colors from "@/constants/colors";
 
 interface CheckBoxProps {
-  text: string;
+  text: ReactNode;
   id: string;
   checked?: boolean;
   onCheckedChange?: (checked: boolean) => void;

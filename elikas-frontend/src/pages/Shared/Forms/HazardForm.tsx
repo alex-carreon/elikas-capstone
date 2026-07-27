@@ -28,6 +28,7 @@ import FormSkeleton from "../../Skeletons/FormSkeleton";
 import { Separator } from "@/components/ui/separator";
 import DatePickerInput from "@/components/DateField";
 import { toast } from "sonner";
+import privacyPdf from "@/assets/Registration/eLikas_DataPrivacy.pdf";
 
 const brouterBaseUrl = import.meta.env.VITE_BROUTER_BASE_URL;
 
@@ -65,6 +66,7 @@ function HazardForm() {
   const [floodLevel, setFloodLevel] = useState("");
   const [validCheck, setValidCheck] = useState(false);
   const [infoCheck, setInfoCheck] = useState(false);
+  const [acceptedPrivacy, setAcceptedPrivacy] = useState(false);
   const [routePoints, setRoutePoints] = useState<[number, number][]>([]);
   const [newRoutePoints, setNewRoutePoints] = useState<[number, number][]>([]);
   const [newSnapped, setNewSnapped] = useState<[number, number][]>([]);
@@ -503,7 +505,7 @@ function HazardForm() {
               >
                 <TileLayer
                   attribution='&copy; <a href="https://www.maptiler.com/copyright/">MapTiler</a> &copy; <a href="https://openstreetmap.org">OpenStreetMap</a> contributors'
-                  url={`https://api.maptiler.com/maps/base-v4/{z}/{x}/{y}.png?key=6RBKItdaX8o4QX31GhTm`}
+                  url={`https://api.maptiler.com/maps/base-v4/{z}/{x}/{y}.png?key=fvhZKnEDjdbWySpYqEZM`}
                 />
                 <RoadMapping onPinClick={() => {}} />
                 {id ? (
@@ -766,12 +768,38 @@ function HazardForm() {
                     }}
                   />
                 </div>
+                <div>
+                  <CheckBox
+                    id="EvacPin_PrivacyCheck"
+                    checked={acceptedPrivacy}
+                    onCheckedChange={(val) => {
+                      setAcceptedPrivacy(!!val);
+                    }}
+                    text={
+                      <>
+                        I have read and agree to the{" "}
+                        <button
+                          type="button"
+                          onClick={(e) => {
+                            e.preventDefault();
+                            e.stopPropagation();
+                            window.open(privacyPdf, "_blank");
+                          }}
+                          className="text-blue-600 underline hover:text-blue-800"
+                        >
+                          Data Privacy Notice
+                        </button>
+                        .
+                      </>
+                    }
+                  />
+                </div>
                 <div className="w-full max-w-md flex justify-center">
                   <ButtonComp
                     text="Create Road Status"
                     variant="primary"
                     id="HazardPin_SubmitBtn"
-                    isDisabled={!validCheck || !infoCheck || disabled}
+                    isDisabled={!validCheck || !infoCheck || !acceptedPrivacy || disabled}
                     heightSize="46px"
                   />
                 </div>
